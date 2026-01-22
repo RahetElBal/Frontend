@@ -293,4 +293,44 @@ export const ar: TranslationKeys = {
     ar: 'العربية',
     selectLanguage: 'اختر اللغة',
   },
+
+  // ============================================
+  // NAVIGATION
+  // ============================================
+  nav: {
+    dashboard: 'لوحة التحكم',
+    clients: 'العملاء',
+    agenda: 'جدول المواعيد',
+    services: 'الخدمات',
+    products: 'المنتجات',
+    sales: 'المبيعات',
+    loyalty: 'الولاء',
+    giftCards: 'بطاقات الهدايا',
+    marketing: 'التسويق',
+    analytics: 'التحليلات',
+    settings: 'الإعدادات',
+    sections: {
+      management: 'الإدارة',
+      inventory: 'المخزون',
+      engagement: 'التفاعل',
+      insights: 'الرؤى',
+      account: 'الحساب',
+      administration: 'الإدارة',
+      system: 'النظام',
+    },
+    admin: {
+      dashboard: 'لوحة تحكم المدير',
+      users: 'المستخدمون',
+      salons: 'الصالونات',
+      tags: 'العلامات',
+      templates: 'القوالب',
+      permissions: 'الصلاحيات',
+      settings: 'الإعدادات',
+    },
+    user: {
+      profile: 'الملف الشخصي',
+      settings: 'الإعدادات',
+      logout: 'تسجيل الخروج',
+    },
+  },
 };

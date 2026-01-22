@@ -234,6 +234,42 @@ export interface TranslationKeys {
     ar: string;
     selectLanguage: string;
   };
+  nav: {
+    dashboard: string;
+    clients: string;
+    agenda: string;
+    services: string;
+    products: string;
+    sales: string;
+    loyalty: string;
+    giftCards: string;
+    marketing: string;
+    analytics: string;
+    settings: string;
+    sections: {
+      management: string;
+      inventory: string;
+      engagement: string;
+      insights: string;
+      account: string;
+      administration: string;
+      system: string;
+    };
+    admin: {
+      dashboard: string;
+      users: string;
+      salons: string;
+      tags: string;
+      templates: string;
+      permissions: string;
+      settings: string;
+    };
+    user: {
+      profile: string;
+      settings: string;
+      logout: string;
+    };
+  };
 }
 
 // ============================================
@@ -532,5 +568,45 @@ export const en: TranslationKeys = {
     es: 'Spanish',
     ar: 'Arabic',
     selectLanguage: 'Select language',
+  },
+
+  // ============================================
+  // NAVIGATION
+  // ============================================
+  nav: {
+    dashboard: 'Dashboard',
+    clients: 'Clients',
+    agenda: 'Agenda',
+    services: 'Services',
+    products: 'Products',
+    sales: 'Sales',
+    loyalty: 'Loyalty',
+    giftCards: 'Gift Cards',
+    marketing: 'Marketing',
+    analytics: 'Analytics',
+    settings: 'Settings',
+    sections: {
+      management: 'Management',
+      inventory: 'Inventory',
+      engagement: 'Engagement',
+      insights: 'Insights',
+      account: 'Account',
+      administration: 'Administration',
+      system: 'System',
+    },
+    admin: {
+      dashboard: 'Admin Dashboard',
+      users: 'Users',
+      salons: 'Salons',
+      tags: 'Tags',
+      templates: 'Templates',
+      permissions: 'Permissions',
+      settings: 'Settings',
+    },
+    user: {
+      profile: 'Profile',
+      settings: 'Settings',
+      logout: 'Sign out',
+    },
   },
 };

@@ -293,4 +293,44 @@ export const fr: TranslationKeys = {
     ar: 'Arabe',
     selectLanguage: 'Sélectionner la langue',
   },
+
+  // ============================================
+  // NAVIGATION
+  // ============================================
+  nav: {
+    dashboard: 'Tableau de bord',
+    clients: 'Clients',
+    agenda: 'Agenda',
+    services: 'Services',
+    products: 'Produits',
+    sales: 'Ventes',
+    loyalty: 'Fidélité',
+    giftCards: 'Cartes cadeaux',
+    marketing: 'Marketing',
+    analytics: 'Analytique',
+    settings: 'Paramètres',
+    sections: {
+      management: 'Gestion',
+      inventory: 'Inventaire',
+      engagement: 'Engagement',
+      insights: 'Analyses',
+      account: 'Compte',
+      administration: 'Administration',
+      system: 'Système',
+    },
+    admin: {
+      dashboard: 'Tableau de bord admin',
+      users: 'Utilisateurs',
+      salons: 'Salons',
+      tags: 'Tags',
+      templates: 'Modèles',
+      permissions: 'Permissions',
+      settings: 'Paramètres',
+    },
+    user: {
+      profile: 'Profil',
+      settings: 'Paramètres',
+      logout: 'Se déconnecter',
+    },
+  },
 };
