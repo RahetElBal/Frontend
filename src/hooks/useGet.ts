@@ -64,8 +64,8 @@ export function useGet<TData>(
     onError,
   } = options || {};
 
-  // Build URL: /api/{endpoint} or /api/{endpoint}/{id}
-  const url = id ? `/api/${endpoint}/${id}` : `/api/${endpoint}`;
+  // Build URL: /{endpoint} or /{endpoint}/{id}
+  const url = id ? `${endpoint}/${id}` : endpoint;
 
   // Build query key
   const queryKey = id 

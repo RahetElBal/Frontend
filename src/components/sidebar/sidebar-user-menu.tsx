@@ -23,11 +23,10 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { useAuthContext } from '@/contexts/AuthProvider';
 import { useAuthentication } from '@/hooks/useAuthentication';
 import { useLanguage } from '@/hooks/useLanguage';
 import { ROUTES } from '@/constants/navigation';
-import type { User as UserType } from '@/types/user';
+import type { User as UserType } from '@/types/entities';
 
 interface SidebarUserMenuProps {
   user: UserType;
@@ -39,14 +38,16 @@ export function SidebarUserMenu({ user, collapsed }: SidebarUserMenuProps) {
   const navigate = useNavigate();
   const { logout } = useAuthentication();
   const { languages, currentLanguage, changeLanguage } = useLanguage();
-  const { } = useAuthContext();
 
-  const initials = user.name
-    .split(' ')
+  // Build display name from firstName and lastName
+  const displayName = [user.firstName, user.lastName].filter(Boolean).join(' ') || user.email;
+
+  const initials = [user.firstName, user.lastName]
+    .filter(Boolean)
     .map((n) => n[0])
     .join('')
     .toUpperCase()
-    .slice(0, 2);
+    .slice(0, 2) || user.email[0].toUpperCase();
 
   const handleLogout = () => {
     logout();
@@ -63,14 +64,14 @@ export function SidebarUserMenu({ user, collapsed }: SidebarUserMenuProps) {
           )}
         >
           <Avatar className="h-9 w-9 shrink-0">
-            <AvatarImage src={user.picture} alt={user.name} />
+            <AvatarImage src={user.picture} alt={displayName} />
             <AvatarFallback>{initials}</AvatarFallback>
           </Avatar>
           {!collapsed && (
             <>
               <div className="flex-1 truncate">
                 <p className="truncate text-sm font-medium text-foreground">
-                  {user.name}
+                  {displayName}
                 </p>
                 <p className="truncate text-xs text-muted-foreground">
                   {user.email}
@@ -89,7 +90,7 @@ export function SidebarUserMenu({ user, collapsed }: SidebarUserMenuProps) {
       >
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">{user.name}</p>
+            <p className="text-sm font-medium leading-none">{displayName}</p>
             <p className="text-xs leading-none text-muted-foreground">
               {user.email}
             </p>
@@ -143,7 +144,7 @@ export function SidebarUserMenu({ user, collapsed }: SidebarUserMenuProps) {
       <Tooltip delayDuration={0}>
         <TooltipTrigger asChild>{menuContent}</TooltipTrigger>
         <TooltipContent side="right">
-          <p className="font-medium">{user.name}</p>
+          <p className="font-medium">{displayName}</p>
           <p className="text-xs text-muted-foreground">{user.email}</p>
         </TooltipContent>
       </Tooltip>

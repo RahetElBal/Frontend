@@ -1,0 +1,354 @@
+// ============================================
+// BASE ENTITY
+// ============================================
+
+export interface BaseEntity {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ============================================
+// USER ENTITY
+// ============================================
+
+export const UserRole = {
+  USER: 'user',
+  ADMIN: 'admin',
+} as const;
+
+export type UserRole = (typeof UserRole)[keyof typeof UserRole];
+
+export interface User extends BaseEntity {
+  email: string;
+  firstName: string;
+  lastName: string;
+  picture?: string;
+  role: UserRole;
+  isActive: boolean;
+  googleId?: string;
+  salonId?: string;
+  salon?: Salon;
+}
+
+// ============================================
+// SALON ENTITY
+// ============================================
+
+export interface Salon extends BaseEntity {
+  name: string;
+  address?: string;
+  phone?: string;
+  email?: string;
+  logo?: string;
+  isActive: boolean;
+  settings?: SalonSettings;
+  users?: User[];
+}
+
+export interface SalonSettings {
+  currency: string;
+  timezone: string;
+  language: string;
+  workingHours?: WorkingHours;
+}
+
+export interface WorkingHours {
+  [day: string]: {
+    open: string;
+    close: string;
+    closed?: boolean;
+  };
+}
+
+// ============================================
+// CLIENT ENTITY
+// ============================================
+
+export const Gender = {
+  MALE: 'male',
+  FEMALE: 'female',
+  OTHER: 'other',
+} as const;
+
+export type Gender = (typeof Gender)[keyof typeof Gender];
+
+export interface Client extends BaseEntity {
+  firstName: string;
+  lastName: string;
+  email?: string;
+  phone?: string;
+  birthDate?: string;
+  gender?: Gender;
+  address?: string;
+  notes?: string;
+  loyaltyPoints: number;
+  totalSpent: number;
+  visitCount: number;
+  lastVisit?: string;
+  isActive: boolean;
+  salonId: string;
+  salon?: Salon;
+  appointments?: Appointment[];
+  sales?: Sale[];
+}
+
+// ============================================
+// SERVICE ENTITY
+// ============================================
+
+export interface Service extends BaseEntity {
+  name: string;
+  description?: string;
+  duration: number; // in minutes
+  price: number;
+  categoryId?: string;
+  category?: Category;
+  isActive: boolean;
+  salonId: string;
+  salon?: Salon;
+}
+
+export interface Category extends BaseEntity {
+  name: string;
+  description?: string;
+  color?: string;
+  icon?: string;
+  salonId: string;
+  services?: Service[];
+  products?: Product[];
+}
+
+// ============================================
+// PRODUCT ENTITY
+// ============================================
+
+export interface Product extends BaseEntity {
+  name: string;
+  description?: string;
+  sku?: string;
+  barcode?: string;
+  price: number;
+  cost?: number;
+  stock: number;
+  minStock?: number;
+  categoryId?: string;
+  category?: Category;
+  image?: string;
+  isActive: boolean;
+  salonId: string;
+  salon?: Salon;
+}
+
+// ============================================
+// APPOINTMENT ENTITY
+// ============================================
+
+export const AppointmentStatus = {
+  PENDING: 'pending',
+  CONFIRMED: 'confirmed',
+  IN_PROGRESS: 'in_progress',
+  COMPLETED: 'completed',
+  CANCELLED: 'cancelled',
+  NO_SHOW: 'no_show',
+} as const;
+
+export type AppointmentStatus = (typeof AppointmentStatus)[keyof typeof AppointmentStatus];
+
+export interface Appointment extends BaseEntity {
+  clientId: string;
+  client?: Client;
+  serviceId: string;
+  service?: Service;
+  staffId?: string;
+  staff?: User;
+  salonId: string;
+  salon?: Salon;
+  date: string;
+  startTime: string;
+  endTime: string;
+  status: AppointmentStatus;
+  notes?: string;
+  price: number;
+  reminderSent: boolean;
+}
+
+// ============================================
+// SALE ENTITY
+// ============================================
+
+export const PaymentMethod = {
+  CASH: 'cash',
+  CARD: 'card',
+  BANK_TRANSFER: 'bank_transfer',
+  OTHER: 'other',
+} as const;
+
+export type PaymentMethod = (typeof PaymentMethod)[keyof typeof PaymentMethod];
+
+export const SaleStatus = {
+  PENDING: 'pending',
+  COMPLETED: 'completed',
+  REFUNDED: 'refunded',
+  CANCELLED: 'cancelled',
+} as const;
+
+export type SaleStatus = (typeof SaleStatus)[keyof typeof SaleStatus];
+
+export interface Sale extends BaseEntity {
+  clientId?: string;
+  client?: Client;
+  staffId?: string;
+  staff?: User;
+  salonId: string;
+  salon?: Salon;
+  items: SaleItem[];
+  subtotal: number;
+  discount: number;
+  tax: number;
+  total: number;
+  paymentMethod: PaymentMethod;
+  status: SaleStatus;
+  notes?: string;
+  appointmentId?: string;
+  appointment?: Appointment;
+}
+
+export interface SaleItem {
+  id: string;
+  type: 'service' | 'product';
+  itemId: string;
+  name: string;
+  quantity: number;
+  price: number;
+  discount: number;
+  total: number;
+}
+
+// ============================================
+// GIFT CARD ENTITY
+// ============================================
+
+export const GiftCardStatus = {
+  ACTIVE: 'active',
+  REDEEMED: 'redeemed',
+  EXPIRED: 'expired',
+  CANCELLED: 'cancelled',
+} as const;
+
+export type GiftCardStatus = (typeof GiftCardStatus)[keyof typeof GiftCardStatus];
+
+export interface GiftCard extends BaseEntity {
+  code: string;
+  initialValue: number;
+  currentValue: number;
+  status: GiftCardStatus;
+  purchasedById?: string;
+  purchasedBy?: Client;
+  redeemedById?: string;
+  redeemedBy?: Client;
+  expiresAt?: string;
+  salonId: string;
+  salon?: Salon;
+}
+
+// ============================================
+// LOYALTY ENTITY
+// ============================================
+
+export interface LoyaltyProgram extends BaseEntity {
+  name: string;
+  pointsPerCurrency: number; // points earned per currency unit spent
+  redemptionRate: number; // currency value per point
+  minimumPoints: number; // minimum points for redemption
+  isActive: boolean;
+  salonId: string;
+  salon?: Salon;
+  tiers?: LoyaltyTier[];
+}
+
+export interface LoyaltyTier {
+  id: string;
+  name: string;
+  minPoints: number;
+  multiplier: number; // bonus multiplier for points
+  benefits?: string[];
+}
+
+export interface LoyaltyTransaction extends BaseEntity {
+  clientId: string;
+  client?: Client;
+  salonId: string;
+  type: 'earn' | 'redeem' | 'adjust' | 'expire';
+  points: number;
+  description?: string;
+  saleId?: string;
+  sale?: Sale;
+}
+
+// ============================================
+// ANALYTICS TYPES
+// ============================================
+
+export interface DashboardStats {
+  todayRevenue: number;
+  todayAppointments: number;
+  newClients: number;
+  averageTicket: number;
+  revenueChange: number;
+  appointmentsChange: number;
+  clientsChange: number;
+  ticketChange: number;
+}
+
+export interface RevenueData {
+  date: string;
+  revenue: number;
+  appointments: number;
+}
+
+export interface TopService {
+  id: string;
+  name: string;
+  count: number;
+  revenue: number;
+}
+
+export interface TopProduct {
+  id: string;
+  name: string;
+  count: number;
+  revenue: number;
+}
+
+export interface ClientAnalytics {
+  totalClients: number;
+  activeClients: number;
+  newClientsThisMonth: number;
+  retentionRate: number;
+  averageVisits: number;
+  averageSpend: number;
+}
+
+// ============================================
+// NOTIFICATION TYPES
+// ============================================
+
+export const NotificationType = {
+  APPOINTMENT_REMINDER: 'appointment_reminder',
+  APPOINTMENT_CONFIRMATION: 'appointment_confirmation',
+  APPOINTMENT_CANCELLATION: 'appointment_cancellation',
+  MARKETING: 'marketing',
+  LOYALTY: 'loyalty',
+} as const;
+
+export type NotificationType = (typeof NotificationType)[keyof typeof NotificationType];
+
+export interface Notification extends BaseEntity {
+  type: NotificationType;
+  recipientPhone: string;
+  message: string;
+  status: 'pending' | 'sent' | 'failed';
+  sentAt?: string;
+  error?: string;
+}

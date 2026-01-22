@@ -8,7 +8,7 @@ import { SidebarLogo } from './sidebar-logo';
 import { SidebarNavSection } from './sidebar-nav-section';
 import { SidebarUserMenu } from './sidebar-user-menu';
 import type { NavSection } from '@/types/navigation';
-import type { User, UserRole } from '@/types/user';
+import type { User, UserRole } from '@/types/entities';
 
 interface AppSidebarProps {
   navigation: NavSection[];

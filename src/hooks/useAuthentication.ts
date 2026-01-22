@@ -1,153 +1,123 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useAuthContext } from '@/contexts/AuthProvider';
-import { GOOGLE_OAUTH } from '@/constants/auth';
-import type { User } from '@/types/user';
-import { UserRole } from '@/types/user';
+import { AUTH_STORAGE_KEY } from '@/constants/auth';
+import { get } from '@/lib/http';
+import type { User } from '@/types/entities';
 
-interface GoogleAuthResponse {
-  access_token: string;
-  token_type: string;
-  expires_in: number;
-}
-
-interface GoogleUserInfo {
-  id: string;
-  email: string;
-  name: string;
-  picture: string;
-}
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 interface UseAuthenticationReturn {
   isLoading: boolean;
   error: string | null;
-  loginWithGoogle: () => Promise<void>;
+  loginWithGoogle: () => void;
   logout: () => void;
+  checkAuth: () => Promise<void>;
 }
 
+/**
+ * Hook for handling authentication with Google OAuth via backend
+ * 
+ * @example
+ * const { loginWithGoogle, logout, isLoading } = useAuthentication();
+ * 
+ * // Trigger Google OAuth login
+ * <Button onClick={loginWithGoogle}>Sign in with Google</Button>
+ */
 export function useAuthentication(): UseAuthenticationReturn {
-  const { login, logout } = useAuthContext();
+  const { login, logout: contextLogout, updateUser } = useAuthContext();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const loginWithGoogle = useCallback(async () => {
+  /**
+   * Initiates Google OAuth flow by redirecting to backend
+   */
+  const loginWithGoogle = useCallback(() => {
+    setIsLoading(true);
+    setError(null);
+    
+    // Redirect to backend's Google OAuth endpoint
+    // The backend will redirect to Google, then back to our callback URL with the token
+    window.location.href = `${API_BASE_URL}/auth/google`;
+  }, []);
+
+  /**
+   * Checks if there's a valid auth token and fetches user data
+   */
+  const checkAuth = useCallback(async () => {
+    const token = localStorage.getItem(AUTH_STORAGE_KEY);
+    
+    if (!token) {
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
 
     try {
-      // Build OAuth URL
-      const params = new URLSearchParams({
-        client_id: GOOGLE_OAUTH.CLIENT_ID,
-        redirect_uri: GOOGLE_OAUTH.REDIRECT_URI,
-        response_type: 'token',
-        scope: GOOGLE_OAUTH.SCOPE,
-        prompt: 'select_account',
-      });
-
-      const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
-
-      // Open popup for OAuth
-      const popup = window.open(
-        authUrl,
-        'google-oauth',
-        'width=500,height=600,scrollbars=yes'
-      );
-
-      if (!popup) {
-        throw new Error('popup');
-      }
-
-      // Listen for OAuth callback
-      const authResponse = await new Promise<GoogleAuthResponse>(
-        (resolve, reject) => {
-          const checkPopup = setInterval(() => {
-            try {
-              if (popup.closed) {
-                clearInterval(checkPopup);
-                reject(new Error('cancelled'));
-                return;
-              }
-
-              // Check if we're back on our domain
-              if (popup.location.origin === window.location.origin) {
-                const hash = popup.location.hash.substring(1);
-                const params = new URLSearchParams(hash);
-                const accessToken = params.get('access_token');
-
-                if (accessToken) {
-                  clearInterval(checkPopup);
-                  popup.close();
-                  resolve({
-                    access_token: accessToken,
-                    token_type: params.get('token_type') || 'Bearer',
-                    expires_in: parseInt(params.get('expires_in') || '3600', 10),
-                  });
-                }
-              }
-            } catch {
-              // Cross-origin error - popup is still on Google's domain
-            }
-          }, 500);
-
-          // Timeout after 5 minutes
-          setTimeout(() => {
-            clearInterval(checkPopup);
-            popup.close();
-            reject(new Error('cancelled'));
-          }, 300000);
-        }
-      );
-
-      // Fetch user info from Google
-      const userInfoResponse = await fetch(
-        'https://www.googleapis.com/oauth2/v2/userinfo',
-        {
-          headers: {
-            Authorization: `Bearer ${authResponse.access_token}`,
-          },
-        }
-      );
-
-      if (!userInfoResponse.ok) {
-        throw new Error('generic');
-      }
-
-      const googleUser: GoogleUserInfo = await userInfoResponse.json();
-
-      // Transform to our User type
-      // In production, this would be handled by the backend
-      // which would determine the role based on the user's email/database
-      const user: User = {
-        id: googleUser.id,
-        email: googleUser.email,
-        name: googleUser.name,
-        picture: googleUser.picture,
-        role: determineUserRole(googleUser.email),
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-
-      login(user, authResponse.access_token);
+      // Fetch current user from backend
+      const user = await get<User>('auth/me');
+      updateUser(user);
     } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : 'generic';
-      setError(errorMessage);
+      // Token is invalid, clear it
+      localStorage.removeItem(AUTH_STORAGE_KEY);
+      localStorage.removeItem('user');
+      console.error('Auth check failed:', err);
     } finally {
       setIsLoading(false);
     }
-  }, [login]);
+  }, [updateUser]);
+
+  /**
+   * Logs out the user
+   */
+  const logout = useCallback(() => {
+    contextLogout();
+  }, [contextLogout]);
+
+  /**
+   * Handle OAuth callback - check URL for token on mount
+   */
+  useEffect(() => {
+    const handleCallback = () => {
+      // Check URL params for token (from backend OAuth callback)
+      const urlParams = new URLSearchParams(window.location.search);
+      const token = urlParams.get('token');
+      const userParam = urlParams.get('user');
+
+      if (token) {
+        // Save token
+        localStorage.setItem(AUTH_STORAGE_KEY, token);
+        
+        // Parse and save user if provided
+        if (userParam) {
+          try {
+            const user = JSON.parse(decodeURIComponent(userParam));
+            login(user, token);
+          } catch {
+            // If user parsing fails, fetch from API
+            checkAuth();
+          }
+        } else {
+          // Fetch user from API
+          checkAuth();
+        }
+        
+        // Clean URL
+        window.history.replaceState({}, document.title, window.location.pathname);
+      } else {
+        // Check existing auth
+        checkAuth();
+      }
+    };
+
+    handleCallback();
+  }, [login, checkAuth]);
 
   return {
     isLoading,
     error,
     loginWithGoogle,
     logout,
+    checkAuth,
   };
-}
-
-// Mock function to determine user role
-// In production, this would come from the backend
-function determineUserRole(email: string): UserRole {
-  // Admin emails (for demo purposes)
-  const adminEmails = ['admin@beautysalon.com'];
-  return adminEmails.includes(email) ? UserRole.ADMIN : UserRole.USER;
 }

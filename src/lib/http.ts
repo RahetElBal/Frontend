@@ -6,7 +6,7 @@ import type { ApiError } from '@/types/api';
 // API CONFIGURATION
 // ============================================
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 const API_TIMEOUT = 30000; // 30 seconds
 
 // ============================================
@@ -173,6 +173,46 @@ export async function del<T>(
 ): Promise<T> {
   try {
     return await http.delete(url, options).json<T>();
+  } catch (error) {
+    throw await parseError(error);
+  }
+}
+
+// ============================================
+// FILE UPLOAD
+// ============================================
+
+export async function uploadFile<T>(
+  url: string,
+  file: File,
+  fieldName = 'file'
+): Promise<T> {
+  const formData = new FormData();
+  formData.append(fieldName, file);
+
+  try {
+    return await http
+      .post(url, { body: formData, headers: {} })
+      .json<T>();
+  } catch (error) {
+    throw await parseError(error);
+  }
+}
+
+export async function uploadFiles<T>(
+  url: string,
+  files: File[],
+  fieldName = 'files'
+): Promise<T> {
+  const formData = new FormData();
+  files.forEach((file) => {
+    formData.append(fieldName, file);
+  });
+
+  try {
+    return await http
+      .post(url, { body: formData, headers: {} })
+      .json<T>();
   } catch (error) {
     throw await parseError(error);
   }
