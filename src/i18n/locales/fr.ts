@@ -34,6 +34,16 @@ export const fr: TranslationKeys = {
     noResults: 'Aucun résultat trouvé',
     required: 'Obligatoire',
     optional: 'Facultatif',
+    selectAll: 'Tout sélectionner',
+    selectRow: 'Sélectionner la ligne',
+    selectedCount: '{{count}} sélectionné(s)',
+    showingCount: 'Affichage de {{from}} à {{to}} sur {{total}}',
+    pageOf: 'Page {{page}} sur {{total}}',
+    actions: 'Actions',
+    create: 'Créer',
+    update: 'Mettre à jour',
+    view: 'Voir',
+    archive: 'Archiver',
   },
 
   // ============================================
