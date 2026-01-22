@@ -33,6 +33,16 @@ export interface TranslationKeys {
     noResults: string;
     required: string;
     optional: string;
+    selectAll: string;
+    selectRow: string;
+    selectedCount: string;
+    showingCount: string;
+    pageOf: string;
+    actions: string;
+    create: string;
+    update: string;
+    view: string;
+    archive: string;
   };
   auth: {
     login: {
@@ -310,6 +320,16 @@ export const en: TranslationKeys = {
     noResults: 'No results found',
     required: 'Required',
     optional: 'Optional',
+    selectAll: 'Select all',
+    selectRow: 'Select row',
+    selectedCount: '{{count}} selected',
+    showingCount: 'Showing {{from}} to {{to}} of {{total}}',
+    pageOf: 'Page {{page}} of {{total}}',
+    actions: 'Actions',
+    create: 'Create',
+    update: 'Update',
+    view: 'View',
+    archive: 'Archive',
   },
 
   // ============================================

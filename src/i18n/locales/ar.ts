@@ -34,6 +34,16 @@ export const ar: TranslationKeys = {
     noResults: 'لم يتم العثور على نتائج',
     required: 'مطلوب',
     optional: 'اختياري',
+    selectAll: 'تحديد الكل',
+    selectRow: 'تحديد الصف',
+    selectedCount: '{{count}} محدد',
+    showingCount: 'عرض {{from}} إلى {{to}} من {{total}}',
+    pageOf: 'صفحة {{page}} من {{total}}',
+    actions: 'الإجراءات',
+    create: 'إنشاء',
+    update: 'تحديث',
+    view: 'عرض',
+    archive: 'أرشفة',
   },
 
   // ============================================
