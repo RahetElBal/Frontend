@@ -26,6 +26,7 @@ import { UserRole } from '@/types/user';
 export const ROUTES = {
   // Auth
   LOGIN: '/login',
+  AUTH_CALLBACK: '/auth/callback',
   
   // Dashboard
   DASHBOARD: '/dashboard',

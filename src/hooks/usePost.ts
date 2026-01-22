@@ -32,14 +32,14 @@ interface UsePostOptions<TData, TVariables> {
  * // Update a client
  * const updateClient = usePost<Client, UpdateClientDto>('clients', {
  *   id: '123',
- *   method: 'PUT',
+ *   method: 'PATCH',
  * });
  * 
  * @example
  * // Update with dynamic ID from variables
  * const updateClient = usePost<Client, { id: string; name: string }>('clients', {
  *   id: (vars) => vars.id,
- *   method: 'PUT',
+ *   method: 'PATCH',
  * });
  * 
  * @example
@@ -65,9 +65,9 @@ export function usePost<TData, TVariables = void>(
 
   return useMutation<TData, ApiError, TVariables>({
     mutationFn: async (variables) => {
-      // Build URL: /api/{endpoint} or /api/{endpoint}/{id}
+      // Build URL: /{endpoint} or /{endpoint}/{id}
       const resolvedId = typeof id === 'function' ? id(variables) : id;
-      const url = resolvedId ? `/api/${endpoint}/${resolvedId}` : `/api/${endpoint}`;
+      const url = resolvedId ? `${endpoint}/${resolvedId}` : endpoint;
 
       switch (method) {
         case 'POST':

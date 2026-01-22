@@ -1,22 +1,15 @@
-export const UserRole = {
-  USER: 'User',
-  ADMIN: 'Admin',
-} as const;
-
-export type UserRole = (typeof UserRole)[keyof typeof UserRole];
-
-export interface User {
-  id: string;
-  email: string;
-  name: string;
-  picture?: string;
-  role: UserRole;
-  createdAt: string;
-  updatedAt: string;
-}
+// Re-export from entities for backwards compatibility
+export { UserRole } from './entities';
+export type { User, Salon, SalonSettings, WorkingHours } from './entities';
 
 export interface AuthState {
-  user: User | null;
+  user: import('./entities').User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+}
+
+// Auth response from backend
+export interface AuthResponse {
+  access_token: string;
+  user: import('./entities').User;
 }

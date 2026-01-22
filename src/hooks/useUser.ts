@@ -2,8 +2,8 @@ import { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthContext } from '@/contexts/AuthProvider';
 import { AUTH_ROUTES } from '@/constants/auth';
-import { UserRole } from '@/types/user';
-import type { User } from '@/types/user';
+import { UserRole } from '@/types/entities';
+import type { User } from '@/types/entities';
 
 interface UseUserOptions {
   redirectTo?: string;

@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 
 import { LoginPage } from '@/routes/login';
+import AuthCallback from '@/routes/auth-callback';
 import { UserLayout } from '@/layouts/user-layout';
 import { AdminLayout } from '@/layouts/admin-layout';
 import { ROUTES } from '@/constants/navigation';
@@ -14,6 +15,7 @@ function App() {
       <Routes>
         {/* Auth routes - no layout */}
         <Route path={ROUTES.LOGIN} element={<LoginPage />} />
+        <Route path={ROUTES.AUTH_CALLBACK} element={<AuthCallback />} />
 
         {/* User routes - with UserLayout */}
         <Route element={<UserLayout />}>

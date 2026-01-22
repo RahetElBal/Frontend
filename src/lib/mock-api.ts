@@ -3,8 +3,8 @@
  * This simulates backend responses while the real API is being developed
  */
 
-import type { User } from '@/types/user';
-import { UserRole } from '@/types/user';
+import type { User } from '@/types/entities';
+import { UserRole } from '@/types/entities';
 
 // ============================================
 // MOCK DATA
@@ -14,18 +14,22 @@ export const mockUsers: User[] = [
   {
     id: '1',
     email: 'admin@beautiq.com',
-    name: 'Admin User',
+    firstName: 'Admin',
+    lastName: 'User',
     picture: 'https://api.dicebear.com/7.x/avataaars/svg?seed=admin',
     role: UserRole.ADMIN,
+    isActive: true,
     createdAt: '2024-01-01T00:00:00Z',
     updatedAt: '2024-01-01T00:00:00Z',
   },
   {
     id: '2',
     email: 'user@beautiq.com',
-    name: 'John Doe',
+    firstName: 'John',
+    lastName: 'Doe',
     picture: 'https://api.dicebear.com/7.x/avataaars/svg?seed=john',
     role: UserRole.USER,
+    isActive: true,
     createdAt: '2024-01-02T00:00:00Z',
     updatedAt: '2024-01-02T00:00:00Z',
   },
@@ -41,6 +45,7 @@ export interface MockClient {
   totalSpent: number;
   loyaltyPoints: number;
   lastVisit: string | null;
+  isActive: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -56,6 +61,7 @@ export const mockClients: MockClient[] = [
     totalSpent: 1240,
     loyaltyPoints: 1240,
     lastVisit: '2024-01-10T14:30:00Z',
+    isActive: true,
     createdAt: '2023-01-15T00:00:00Z',
     updatedAt: '2024-01-10T14:30:00Z',
   },
@@ -69,6 +75,7 @@ export const mockClients: MockClient[] = [
     totalSpent: 680,
     loyaltyPoints: 680,
     lastVisit: '2024-01-08T10:00:00Z',
+    isActive: true,
     createdAt: '2023-06-20T00:00:00Z',
     updatedAt: '2024-01-08T10:00:00Z',
   },
@@ -82,6 +89,7 @@ export const mockClients: MockClient[] = [
     totalSpent: 420,
     loyaltyPoints: 420,
     lastVisit: '2024-01-05T16:00:00Z',
+    isActive: true,
     createdAt: '2023-09-01T00:00:00Z',
     updatedAt: '2024-01-05T16:00:00Z',
   },
@@ -260,8 +268,10 @@ export const mockApi = {
       const newUser: User = {
         id: Math.random().toString(36).substr(2, 9),
         email,
-        name: email.split('@')[0],
+        firstName: email.split('@')[0],
+        lastName: '',
         role: UserRole.USER,
+        isActive: true,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
@@ -299,6 +309,7 @@ export const mockApi = {
       totalSpent: 0,
       loyaltyPoints: 0,
       lastVisit: null,
+      isActive: true,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };

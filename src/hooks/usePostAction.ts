@@ -4,6 +4,7 @@ import {
   type UseMutationResult,
 } from '@tanstack/react-query';
 import { post, put, patch, del } from '@/lib/http';
+import { toast } from '@/lib/toast';
 import type { ApiError } from '@/types/api';
 
 type ActionMethod = 'POST' | 'PUT' | 'PATCH' | 'DELETE';
@@ -16,6 +17,7 @@ interface UsePostActionOptions<TData, TVariables> {
   showSuccessToast?: boolean;
   showErrorToast?: boolean;
   successMessage?: string;
+  errorMessage?: string;
   onSuccess?: (data: TData, variables: TVariables) => void;
   onError?: (error: ApiError, variables: TVariables) => void;
   onSettled?: (data: TData | undefined, error: ApiError | null, variables: TVariables) => void;
@@ -29,7 +31,7 @@ interface UsePostActionOptions<TData, TVariables> {
  * @param options - Action options including method, id, action, and toast settings
  * 
  * @example
- * // Archive a client: POST /api/clients/{id}/archive
+ * // Archive a client: POST /clients/{id}/archive
  * const archiveClient = usePostAction<void, string>('clients', {
  *   id: (clientId) => clientId,
  *   action: 'archive',
@@ -39,14 +41,14 @@ interface UsePostActionOptions<TData, TVariables> {
  * archiveClient.mutate('client-123');
  * 
  * @example
- * // Toggle status: POST /api/clients/{id}/toggle
+ * // Toggle status: POST /clients/{id}/toggle
  * const toggleClient = usePostAction<Client, { id: string; isActive: boolean }>('clients', {
  *   id: (vars) => vars.id,
  *   action: 'toggle',
  * });
  * 
  * @example
- * // Bulk delete: POST /api/clients/bulk-delete
+ * // Bulk delete: POST /clients/bulk-delete
  * const bulkDelete = usePostAction<void, { ids: string[] }>('clients', {
  *   action: 'bulk-delete',
  * });
@@ -63,9 +65,10 @@ export function usePostAction<TData, TVariables = void>(
     id,
     method = 'POST',
     invalidateQueries,
-    showSuccessToast: _showSuccessToast = false,
-    showErrorToast: _showErrorToast = true,
-    successMessage: _successMessage,
+    showSuccessToast = false,
+    showErrorToast = true,
+    successMessage,
+    errorMessage,
     onSuccess,
     onError,
     onSettled,
@@ -73,9 +76,9 @@ export function usePostAction<TData, TVariables = void>(
 
   const mutation = useMutation<TData, ApiError, TVariables>({
     mutationFn: async (variables) => {
-      // Build URL: /api/{endpoint}/{id?}/{action?}
+      // Build URL: /{endpoint}/{id?}/{action?}
       const resolvedId = typeof id === 'function' ? id(variables) : id;
-      let url = `/api/${endpoint}`;
+      let url = endpoint;
       if (resolvedId) url += `/${resolvedId}`;
       if (action) url += `/${action}`;
 
@@ -99,20 +102,20 @@ export function usePostAction<TData, TVariables = void>(
         queryClient.invalidateQueries({ queryKey: [queryKey] });
       });
 
-      // Show success toast (when toast system is implemented)
-      // if (showSuccessToast) {
-      //   toast.success(successMessage || 'Action completed successfully');
-      // }
+      // Show success toast
+      if (showSuccessToast) {
+        toast.success(successMessage || 'Action completed successfully');
+      }
 
       if (onSuccess) {
         onSuccess(data, variables);
       }
     },
     onError: (error, variables) => {
-      // Show error toast (when toast system is implemented)
-      // if (showErrorToast) {
-      //   toast.error(error.message || 'An error occurred');
-      // }
+      // Show error toast
+      if (showErrorToast) {
+        toast.error(errorMessage || error.message || 'An error occurred');
+      }
 
       if (onError) {
         onError(error, variables);
@@ -148,6 +151,7 @@ export function useToggleAction<TData = void>(
   return usePostAction<TData, string>(endpoint, {
     id: (itemId) => itemId,
     action,
+    showSuccessToast: true,
     ...options,
   });
 }
