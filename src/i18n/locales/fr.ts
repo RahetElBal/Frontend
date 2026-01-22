@@ -209,6 +209,17 @@ export const fr: TranslationKeys = {
     serverError: 'Erreur serveur. Veuillez réessayer plus tard.',
     timeout: 'La requête a expiré. Veuillez réessayer.',
     validation: 'Veuillez vérifier les erreurs dans le formulaire.',
+    somethingWentWrong: 'Une erreur est survenue',
+    unexpectedError: 'Une erreur inattendue s\'est produite. Veuillez réessayer.',
+    pageError: 'Erreur de page',
+    pageErrorDescription: 'Un problème est survenu lors du chargement de cette page.',
+  },
+
+  confirm: {
+    title: 'Êtes-vous sûr ?',
+    description: 'Cette action est irréversible.',
+    delete: 'Supprimer',
+    deleteDescription: 'Êtes-vous sûr de vouloir supprimer cet élément ? Cette action est irréversible.',
   },
 
   // ============================================

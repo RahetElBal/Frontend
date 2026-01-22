@@ -209,6 +209,17 @@ export const es: TranslationKeys = {
     serverError: 'Error del servidor. Por favor, inténtalo más tarde.',
     timeout: 'La solicitud expiró. Por favor, inténtalo de nuevo.',
     validation: 'Por favor, verifica los errores en el formulario.',
+    somethingWentWrong: 'Algo salió mal',
+    unexpectedError: 'Ocurrió un error inesperado. Por favor, inténtalo de nuevo.',
+    pageError: 'Error de página',
+    pageErrorDescription: 'Hubo un problema al cargar esta página.',
+  },
+
+  confirm: {
+    title: '¿Estás seguro?',
+    description: 'Esta acción no se puede deshacer.',
+    delete: 'Eliminar',
+    deleteDescription: '¿Estás seguro de que deseas eliminar este elemento? Esta acción no se puede deshacer.',
   },
 
   // ============================================
