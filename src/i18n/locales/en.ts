@@ -168,6 +168,16 @@ export interface TranslationKeys {
     serverError: string;
     timeout: string;
     validation: string;
+    somethingWentWrong: string;
+    unexpectedError: string;
+    pageError: string;
+    pageErrorDescription: string;
+  };
+  confirm: {
+    title: string;
+    description: string;
+    delete: string;
+    deleteDescription: string;
   };
   success: {
     saved: string;
@@ -495,6 +505,17 @@ export const en: TranslationKeys = {
     serverError: 'Server error. Please try again later.',
     timeout: 'Request timed out. Please try again.',
     validation: 'Please check the form for errors.',
+    somethingWentWrong: 'Something went wrong',
+    unexpectedError: 'An unexpected error occurred. Please try again.',
+    pageError: 'Page Error',
+    pageErrorDescription: 'There was a problem loading this page.',
+  },
+
+  confirm: {
+    title: 'Are you sure?',
+    description: 'This action cannot be undone.',
+    delete: 'Delete',
+    deleteDescription: 'Are you sure you want to delete this item? This action cannot be undone.',
   },
 
   // ============================================
