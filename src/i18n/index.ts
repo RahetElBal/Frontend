@@ -6,16 +6,16 @@ import { fr } from './locales/fr';
 import { es } from './locales/es';
 import { ar } from './locales/ar';
 
-export const SUPPORTED_LANGUAGES = {
-  EN: 'en',
-  FR: 'fr',
-  ES: 'es',
-  AR: 'ar',
-} as const;
+import {
+  SUPPORTED_LANGUAGES,
+  RTL_LANGUAGES,
+  DEFAULT_LANGUAGE,
+  LANGUAGE_STORAGE_KEY,
+  type SupportedLanguage,
+} from '@/constants/i18n';
 
-export type SupportedLanguage = (typeof SUPPORTED_LANGUAGES)[keyof typeof SUPPORTED_LANGUAGES];
-
-export const RTL_LANGUAGES: SupportedLanguage[] = ['ar'];
+// Re-export for convenience
+export { SUPPORTED_LANGUAGES, RTL_LANGUAGES, type SupportedLanguage };
 
 const resources = {
   en: { translation: en },
@@ -24,32 +24,57 @@ const resources = {
   ar: { translation: ar },
 };
 
-const savedLanguage = localStorage.getItem('language') as SupportedLanguage | null;
-const browserLanguage = navigator.language.split('-')[0] as SupportedLanguage;
-const defaultLanguage = savedLanguage || (Object.values(SUPPORTED_LANGUAGES).includes(browserLanguage) ? browserLanguage : SUPPORTED_LANGUAGES.EN);
+// Get saved or browser language
+const getSavedLanguage = (): SupportedLanguage => {
+  const saved = localStorage.getItem(LANGUAGE_STORAGE_KEY) as SupportedLanguage | null;
+  if (saved && Object.values(SUPPORTED_LANGUAGES).includes(saved)) {
+    return saved;
+  }
+  
+  const browserLang = navigator.language.split('-')[0] as SupportedLanguage;
+  if (Object.values(SUPPORTED_LANGUAGES).includes(browserLang)) {
+    return browserLang;
+  }
+  
+  return DEFAULT_LANGUAGE;
+};
 
+const initialLanguage = getSavedLanguage();
+
+// Update document direction and attributes
+const updateDocumentDirection = (language: SupportedLanguage) => {
+  const isRTL = RTL_LANGUAGES.includes(language);
+  const direction = isRTL ? 'rtl' : 'ltr';
+  
+  document.documentElement.dir = direction;
+  document.documentElement.lang = language;
+  
+  // Update body classes for CSS targeting
+  document.body.classList.remove('ltr', 'rtl');
+  document.body.classList.add(direction);
+};
+
+// Initialize i18next
 i18n.use(initReactI18next).init({
   resources,
-  lng: defaultLanguage,
-  fallbackLng: SUPPORTED_LANGUAGES.EN,
+  lng: initialLanguage,
+  fallbackLng: DEFAULT_LANGUAGE,
   interpolation: {
     escapeValue: false,
   },
+  // Enable nested keys
+  keySeparator: '.',
+  // Return key if translation not found (useful for debugging)
+  returnNull: false,
+  returnEmptyString: false,
 });
 
-// Update document direction based on language
-const updateDocumentDirection = (language: SupportedLanguage) => {
-  const isRTL = RTL_LANGUAGES.includes(language);
-  document.documentElement.dir = isRTL ? 'rtl' : 'ltr';
-  document.documentElement.lang = language;
-};
-
 // Set initial direction
-updateDocumentDirection(defaultLanguage);
+updateDocumentDirection(initialLanguage);
 
 // Listen for language changes
 i18n.on('languageChanged', (lng) => {
-  localStorage.setItem('language', lng);
+  localStorage.setItem(LANGUAGE_STORAGE_KEY, lng);
   updateDocumentDirection(lng as SupportedLanguage);
 });
 

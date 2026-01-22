@@ -75,10 +75,121 @@
   html[dir="rtl"] {
     direction: rtl;
   }
+
+  /* RTL body class for additional styling hooks */
+  body.rtl {
+    direction: rtl;
+    text-align: right;
+  }
+
+  body.ltr {
+    direction: ltr;
+    text-align: left;
+  }
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+  
+  /* RTL-aware spacing utilities */
+  .rtl-space-x-reverse > :not([hidden]) ~ :not([hidden]) {
+    --tw-space-x-reverse: 1;
+  }
+  
+  /* Flip icons in RTL mode */
+  .rtl\:flip {
+    transform: scaleX(1);
+  }
+  
+  html[dir="rtl"] .rtl\:flip {
+    transform: scaleX(-1);
+  }
+  
+  /* RTL-aware margin utilities */
+  html[dir="rtl"] .rtl\:mr-auto {
+    margin-right: auto;
+    margin-left: 0;
+  }
+  
+  html[dir="rtl"] .rtl\:ml-auto {
+    margin-left: auto;
+    margin-right: 0;
+  }
+  
+  /* RTL-aware padding utilities */
+  html[dir="rtl"] .rtl\:pr-0 {
+    padding-right: 0;
+  }
+  
+  html[dir="rtl"] .rtl\:pl-0 {
+    padding-left: 0;
+  }
+  
+  /* RTL-aware text alignment */
+  html[dir="rtl"] .rtl\:text-right {
+    text-align: right;
+  }
+  
+  html[dir="rtl"] .rtl\:text-left {
+    text-align: left;
+  }
+  
+  /* RTL-aware flex direction */
+  html[dir="rtl"] .rtl\:flex-row-reverse {
+    flex-direction: row-reverse;
+  }
+  
+  /* RTL-aware positioning */
+  html[dir="rtl"] .rtl\:right-0 {
+    right: 0;
+    left: auto;
+  }
+  
+  html[dir="rtl"] .rtl\:left-0 {
+    left: 0;
+    right: auto;
+  }
+  
+  /* Logical properties for automatic RTL support */
+  .start-0 {
+    inset-inline-start: 0;
+  }
+  
+  .end-0 {
+    inset-inline-end: 0;
+  }
+  
+  .ps-4 {
+    padding-inline-start: 1rem;
+  }
+  
+  .pe-4 {
+    padding-inline-end: 1rem;
+  }
+  
+  .ms-4 {
+    margin-inline-start: 1rem;
+  }
+  
+  .me-4 {
+    margin-inline-end: 1rem;
+  }
+  
+  .ms-auto {
+    margin-inline-start: auto;
+  }
+  
+  .me-auto {
+    margin-inline-end: auto;
+  }
+  
+  .text-start {
+    text-align: start;
+  }
+  
+  .text-end {
+    text-align: end;
   }
 }
