@@ -4,7 +4,6 @@ import { PanelLeftClose, PanelLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { TooltipProvider } from '@/components/ui/tooltip';
-import { Separator } from '@/components/ui/separator';
 import { SidebarLogo } from './sidebar-logo';
 import { SidebarNavSection } from './sidebar-nav-section';
 import { SidebarUserMenu } from './sidebar-user-menu';
