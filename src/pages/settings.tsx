@@ -37,7 +37,7 @@ type Theme = 'light' | 'dark' | 'system';
 export function SettingsPage() {
   const { t } = useTranslation();
   const { user } = useUser();
-  const { currentLanguage, languages, changeLanguage, currency } = useLanguage();
+  const { currentLanguage, languages, changeLanguage, currency, availableCurrencies, changeCurrency } = useLanguage();
   
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
   const [theme, setTheme] = useState<Theme>('light');
@@ -141,8 +141,8 @@ export function SettingsPage() {
             </Select>
           </div>
 
-          {/* Currency (auto-set by language) */}
-          <div className="flex items-center justify-between p-4 rounded-lg border bg-muted/30">
+          {/* Currency Selection */}
+          <div className="flex items-center justify-between p-4 rounded-lg border">
             <div className="flex items-center gap-4">
               <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center">
                 <Coins className="h-5 w-5 text-muted-foreground" />
@@ -152,10 +152,24 @@ export function SettingsPage() {
                 <p className="text-sm text-muted-foreground">{t('settings.currencyDescription')}</p>
               </div>
             </div>
-            <div className="text-end">
-              <p className="font-semibold">{currency.symbol} {currency.code}</p>
-              <p className="text-sm text-muted-foreground">{currency.name}</p>
-            </div>
+            <Select value={currency.code} onValueChange={(value) => changeCurrency(value)}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue>
+                  {currency.flag} {currency.symbol} - {currency.code}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {availableCurrencies.map((curr) => (
+                  <SelectItem key={curr.code} value={curr.code}>
+                    <span className="flex items-center gap-2">
+                      <span>{curr.flag}</span>
+                      <span>{curr.symbol}</span>
+                      <span className="text-muted-foreground">- {curr.name}</span>
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Theme */}
