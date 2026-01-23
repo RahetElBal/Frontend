@@ -1,6 +1,4 @@
-import type { TranslationKeys } from './en';
-
-export const ar: TranslationKeys = {
+export const ar = {
   // ============================================
   // COMMON
   // ============================================
@@ -44,6 +42,14 @@ export const ar: TranslationKeys = {
     update: 'تحديث',
     view: 'عرض',
     archive: 'أرشفة',
+    viewAll: 'عرض الكل',
+    welcome: 'مرحباً، {{name}}',
+    item: 'عنصر',
+    items: 'عناصر',
+    inactive: 'غير نشط',
+    active: 'نشط',
+    deactivate: 'تعطيل',
+    activate: 'تفعيل',
   },
 
   // ============================================
@@ -124,6 +130,23 @@ export const ar: TranslationKeys = {
     pending: 'قيد الانتظار',
     completed: 'مكتمل',
     cancelled: 'ملغي',
+    
+    // Table columns
+    name: 'الاسم',
+    loyaltyPoints: 'نقاط الولاء',
+    totalSpent: 'إجمالي الإنفاق',
+    visits: 'الزيارات',
+    lastVisit: 'آخر زيارة',
+    product: 'المنتج',
+    category: 'الفئة',
+    stock: 'المخزون',
+    receipt: 'الإيصال',
+    client: 'العميل',
+    items: 'العناصر',
+    payment: 'الدفع',
+    salon: 'الصالون',
+    role: 'الدور',
+    createdAt: 'تاريخ الإنشاء',
     
     // Placeholders
     placeholders: {
@@ -354,4 +377,196 @@ export const ar: TranslationKeys = {
       logout: 'تسجيل الخروج',
     },
   },
-};
+
+  dashboard: {
+    todayRevenue: 'إيرادات اليوم',
+    todayAppointments: 'مواعيد اليوم',
+    newClients: 'عملاء جدد',
+    averageTicket: 'متوسط الفاتورة',
+    vsLastWeek: 'مقارنة بالأسبوع الماضي',
+    todaysAppointments: 'مواعيد اليوم',
+    topServices: 'الخدمات الأكثر طلباً',
+    bookings: 'حجز',
+  },
+
+  clients: {
+    description: '{{count}} عميل في قاعدة البيانات',
+    addClient: 'إضافة عميل',
+    searchPlaceholder: 'البحث بالاسم أو البريد أو الهاتف...',
+    noClients: 'لم يتم العثور على عملاء',
+  },
+
+  agenda: {
+    description: 'إدارة المواعيد',
+    newAppointment: 'موعد جديد',
+    today: 'اليوم',
+    confirmed: 'مؤكد',
+    pending: 'قيد الانتظار',
+    appointments: 'مواعيد',
+  },
+
+  services: {
+    description: '{{count}} خدمة متاحة',
+    addService: 'إضافة خدمة',
+    services: 'خدمات',
+  },
+
+  products: {
+    description: '{{count}} منتج في المخزون',
+    addProduct: 'إضافة منتج',
+    searchPlaceholder: 'البحث بالاسم أو الرمز...',
+    noProducts: 'لم يتم العثور على منتجات',
+    cost: 'التكلفة',
+    outOfStock: 'نفذ من المخزون',
+    lowStock: 'مخزون منخفض',
+    stockAlerts: 'تنبيهات المخزون',
+  },
+
+  sales: {
+    description: 'عرض وإدارة المبيعات',
+    newSale: 'عملية بيع جديدة',
+    searchPlaceholder: 'بحث...',
+    noSales: 'لم يتم العثور على مبيعات',
+    walkIn: 'عميل بدون موعد',
+    discount: 'خصم',
+    todayTotal: 'إجمالي اليوم',
+    transactions: 'المعاملات',
+    averageTicket: 'متوسط الفاتورة',
+    printReceipt: 'طباعة الإيصال',
+  },
+
+  giftCards: {
+    description: 'إدارة بطاقات الهدايا',
+    createCard: 'إنشاء بطاقة هدية',
+    outstandingValue: 'القيمة المتبقية',
+    activeCards: 'البطاقات النشطة',
+    redeemedCards: 'البطاقات المستخدمة',
+    balance: 'الرصيد',
+    purchasedBy: 'تم الشراء بواسطة',
+    expires: 'تنتهي في',
+    viewHistory: 'عرض السجل',
+    deactivate: 'تعطيل',
+  },
+
+  loyalty: {
+    programSettings: 'إعدادات البرنامج',
+    activeMembers: 'الأعضاء النشطون',
+    pointsIssued: 'النقاط الممنوحة',
+    pointsRedeemed: 'النقاط المستخدمة',
+    redemptionValue: 'قيمة الاستبدال',
+    tiers: 'مستويات الولاء',
+    multiplier: 'مضاعف',
+    points: 'نقاط',
+    topMembers: 'أفضل الأعضاء',
+    spent: 'أنفق',
+    recentActivity: 'النشاط الأخير',
+  },
+
+  analytics: {
+    description: 'عرض التحليلات والتقارير',
+    last7Days: 'آخر 7 أيام',
+    last30Days: 'آخر 30 يوم',
+    thisMonth: 'هذا الشهر',
+    totalRevenue: 'إجمالي الإيرادات',
+    totalAppointments: 'إجمالي المواعيد',
+    newClients: 'عملاء جدد',
+    averageTicket: 'متوسط الفاتورة',
+    revenueOverTime: 'تطور الإيرادات',
+    revenue: 'الإيرادات',
+    appointments: 'المواعيد',
+    topServices: 'الخدمات الأكثر طلباً',
+    topProducts: 'المنتجات الأكثر مبيعاً',
+    bookings: 'حجوزات',
+    sold: 'مباع',
+    kpis: 'مؤشرات الأداء الرئيسية',
+    conversionRate: 'معدل التحويل',
+    clientRetention: 'الاحتفاظ بالعملاء',
+    noShowRate: 'معدل عدم الحضور',
+    productSalesRatio: 'نسبة مبيعات المنتجات',
+    vsLastMonth: 'مقارنة بالشهر الماضي',
+  },
+
+  marketing: {
+    description: 'إنشاء وإدارة الحملات التسويقية',
+    newCampaign: 'حملة جديدة',
+    campaignsSent: 'الحملات المرسلة',
+    totalRecipients: 'إجمالي المستلمين',
+    avgOpenRate: 'متوسط معدل الفتح',
+    scheduled: 'مجدولة',
+    campaigns: 'الحملات',
+    sentOn: 'أرسلت في',
+    scheduledFor: 'مجدولة لـ',
+    sent: 'مرسل',
+    opened: 'مفتوح',
+    clicked: 'نقرات',
+    recipients: 'مستلمين',
+    sendEmail: 'إرسال حملة بريد إلكتروني',
+    sendEmailDescription: 'إنشاء وإرسال رسائل بريد إلكتروني لعملائك',
+    sendWhatsApp: 'إرسال رسالة واتساب',
+    sendWhatsAppDescription: 'إرسال رسائل ترويجية عبر واتساب',
+  },
+
+  settings: {
+    description: 'إدارة حسابك وتفضيلاتك',
+    profile: 'الملف الشخصي',
+    account: 'الحساب',
+    accountSettings: 'إعدادات الحساب',
+    personalInfo: 'المعلومات الشخصية',
+    personalInfoDescription: 'تحديث الاسم والبريد والصورة',
+    security: 'الأمان',
+    securityDescription: 'إدارة كلمة المرور والأمان',
+    notifications: 'الإشعارات',
+    notificationsDescription: 'تكوين تفضيلات الإشعارات',
+    preferences: 'التفضيلات',
+    language: 'اللغة',
+    languageDescription: 'اختر لغتك المفضلة',
+    appearance: 'المظهر',
+    appearanceDescription: 'تخصيص مظهر التطبيق',
+    light: 'فاتح',
+    dark: 'داكن',
+    businessSettings: 'إعدادات العمل',
+    salonInfo: 'معلومات الصالون',
+    salonInfoDescription: 'تحديث تفاصيل الصالون وساعات العمل',
+    billing: 'الفواتير والاشتراك',
+    billingDescription: 'إدارة طرق الدفع والاشتراك',
+  },
+
+  admin: {
+    dashboard: {
+      title: 'لوحة تحكم المدير',
+      welcome: 'مرحباً، {{name}}',
+      recentSalons: 'الصالونات الأخيرة',
+      recentUsers: 'المستخدمون الأخيرون',
+      users: 'مستخدمين',
+      systemStatus: 'حالة النظام',
+    },
+    stats: {
+      totalSalons: 'إجمالي الصالونات',
+      totalUsers: 'إجمالي المستخدمين',
+      totalRevenue: 'إجمالي الإيرادات',
+      activeSubscriptions: 'الاشتراكات النشطة',
+    },
+    status: {
+      apiOnline: 'API متصل',
+      allSystemsOperational: 'جميع الأنظمة تعمل',
+      databaseOnline: 'قاعدة البيانات متصلة',
+      storageOnline: 'التخزين متصل',
+      used: 'مستخدم',
+    },
+    users: {
+      description: '{{count}} مستخدم في النظام',
+      addUser: 'إضافة مستخدم',
+      searchPlaceholder: 'البحث عن مستخدمين...',
+      noUsers: 'لم يتم العثور على مستخدمين',
+    },
+    salons: {
+      description: 'إدارة جميع الصالونات في النظام',
+      addSalon: 'إضافة صالون',
+      totalSalons: 'إجمالي الصالونات',
+      activeSalons: 'الصالونات النشطة',
+      totalUsers: 'إجمالي المستخدمين',
+      monthlyRevenue: 'الإيرادات الشهرية',
+      users: 'مستخدمين',
+    },
+  },
+} as const;
