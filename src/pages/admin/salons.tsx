@@ -45,7 +45,7 @@ export function AdminSalonsPage() {
     email: '',
   });
 
-  // Fetch salons from API
+  // Fetch salons from API (returns array directly)
   const { data: salons = [], isLoading } = useGet<Salon[]>('salons');
 
   // Create salon mutation

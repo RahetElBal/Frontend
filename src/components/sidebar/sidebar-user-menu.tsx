@@ -39,15 +39,15 @@ export function SidebarUserMenu({ user, collapsed }: SidebarUserMenuProps) {
   const { logout } = useAuthentication();
   const { languages, currentLanguage, changeLanguage } = useLanguage();
 
-  // Build display name from firstName and lastName
-  const displayName = [user.firstName, user.lastName].filter(Boolean).join(' ') || user.email;
+  // Build display name from name, firstName, or lastName
+  const displayName = (user as any).name || [user.firstName, user.lastName].filter(Boolean).join(' ') || user.email;
 
-  const initials = [user.firstName, user.lastName]
-    .filter(Boolean)
-    .map((n) => n[0])
+  const initials = ((user as any).name || [user.firstName, user.lastName].filter(Boolean).join(' ') || user.email)
+    .split(' ')
+    .map((n: string) => n[0] || '')
     .join('')
     .toUpperCase()
-    .slice(0, 2) || user.email[0].toUpperCase();
+    .slice(0, 2) || user.email[0]?.toUpperCase() || 'U';
 
   const handleLogout = () => {
     logout();

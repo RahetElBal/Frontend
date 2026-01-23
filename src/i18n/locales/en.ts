@@ -726,6 +726,11 @@ export const en = {
     addSlot: 'Add',
     selectClient: 'Select a client',
     selectService: 'Select a service',
+    reminderTitle: 'Upcoming Appointment',
+    upcomingAppointment: 'Upcoming appointment',
+    notificationsEnabled: 'Notifications enabled',
+    notificationsOn: 'Notifications are on',
+    enableNotifications: 'Enable notifications',
   },
 
   // ============================================

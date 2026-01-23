@@ -419,6 +419,11 @@ export const fr = {
     addSlot: 'Ajouter',
     selectClient: 'Sélectionner un client',
     selectService: 'Sélectionner un service',
+    reminderTitle: 'Rendez-vous imminent',
+    upcomingAppointment: 'Rendez-vous à venir',
+    notificationsEnabled: 'Notifications activées',
+    notificationsOn: 'Notifications actives',
+    enableNotifications: 'Activer les notifications',
   },
 
   services: {

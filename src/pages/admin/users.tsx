@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Plus, MoreHorizontal, Eye, Edit, Trash2, Shield, Users } from 'lucide-react';
+import { Plus, MoreHorizontal, Eye, Edit, Trash2, Shield, Users, Building2 } from 'lucide-react';
 
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
@@ -34,34 +34,49 @@ import { useGet } from '@/hooks/useGet';
 import { usePost } from '@/hooks/usePost';
 import { toast } from '@/lib/toast';
 import { UserRole } from '@/types/entities';
-import type { User } from '@/types/entities';
+import type { User, Salon } from '@/types/entities';
+
+// Paginated response type from backend
+interface PaginatedResponse<T> {
+  data: T[];
+  meta: {
+    currentPage: number;
+    lastPage: number;
+    perPage: number;
+    total: number;
+  };
+}
 
 interface CreateUserDto {
-  firstName: string;
-  lastName: string;
+  name: string;
   email: string;
   role: UserRole;
+  salonId: string;
 }
 
 export function AdminUsersPage() {
   const { t } = useTranslation();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [formData, setFormData] = useState<CreateUserDto>({
-    firstName: '',
-    lastName: '',
+    name: '',
     email: '',
     role: 'user' as UserRole,
+    salonId: '',
   });
 
-  // Fetch users from API
-  const { data: users = [], isLoading } = useGet<User[]>('users');
+  // Fetch users from API (paginated response)
+  const { data: usersResponse, isLoading } = useGet<PaginatedResponse<User>>('users');
+  const users = usersResponse?.data || [];
+
+  // Fetch all salons for selection (returns array directly)
+  const { data: salons = [] } = useGet<Salon[]>('salons');
 
   // Create user mutation
   const createUser = usePost<User, CreateUserDto>('users', {
     onSuccess: () => {
       toast.success(t('admin.users.addUser') + ' - ' + t('common.success'));
       setIsAddModalOpen(false);
-      setFormData({ firstName: '', lastName: '', email: '', role: 'user' as UserRole });
+      setFormData({ name: '', email: '', role: 'user' as UserRole, salonId: '' });
     },
     onError: (error) => {
       toast.error(error.message || t('common.error'));
@@ -70,7 +85,7 @@ export function AdminUsersPage() {
 
   const table = useTable<User>({
     data: users,
-    searchKeys: ['firstName', 'lastName', 'email'],
+    searchKeys: ['name', 'email'],
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -83,24 +98,43 @@ export function AdminUsersPage() {
       key: 'name',
       header: t('fields.name'),
       sortable: true,
+      render: (user) => {
+        // Handle both name formats (name or firstName/lastName)
+        const displayName = (user as any).name || `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'N/A';
+        const initials = displayName.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase();
+        
+        return (
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-full bg-accent-pink/10 flex items-center justify-center">
+              {user.picture ? (
+                <img src={user.picture} alt={displayName} className="h-10 w-10 rounded-full" />
+              ) : (
+                <span className="font-medium text-accent-pink">
+                  {initials}
+                </span>
+              )}
+            </div>
+            <div>
+              <p className="font-medium">{displayName}</p>
+              <p className="text-sm text-muted-foreground">{user.email}</p>
+            </div>
+          </div>
+        );
+      },
+    },
+    {
+      key: 'salon',
+      header: t('fields.salon'),
       render: (user) => (
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-full bg-accent-pink/10 flex items-center justify-center">
-            {user.picture ? (
-              <img src={user.picture} alt={user.firstName} className="h-10 w-10 rounded-full" />
-            ) : (
-              <span className="font-medium text-accent-pink">
-                {user.firstName?.[0]}
-                {user.lastName?.[0]}
-              </span>
-            )}
-          </div>
-          <div>
-            <p className="font-medium">
-              {user.firstName} {user.lastName}
-            </p>
-            <p className="text-sm text-muted-foreground">{user.email}</p>
-          </div>
+        <div className="flex items-center gap-2">
+          {user.salon ? (
+            <>
+              <Building2 className="h-4 w-4 text-muted-foreground" />
+              <span>{user.salon.name}</span>
+            </>
+          ) : (
+            <span className="text-muted-foreground text-sm">-</span>
+          )}
         </div>
       ),
     },
@@ -202,33 +236,24 @@ export function AdminUsersPage() {
           </DialogHeader>
           <form onSubmit={handleSubmit}>
             <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="firstName">{t('fields.firstName')}</Label>
-                  <Input
-                    id="firstName"
-                    value={formData.firstName}
-                    onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="lastName">{t('fields.lastName')}</Label>
-                  <Input
-                    id="lastName"
-                    value={formData.lastName}
-                    onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                    required
-                  />
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="name">{t('fields.fullName')} *</Label>
+                <Input
+                  id="name"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  placeholder="Jean Dupont"
+                  required
+                />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="email">{t('fields.email')}</Label>
+                <Label htmlFor="email">{t('fields.email')} *</Label>
                 <Input
                   id="email"
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  placeholder="jean@example.com"
                   required
                 />
               </div>
@@ -246,6 +271,36 @@ export function AdminUsersPage() {
                     <SelectItem value="admin">Administrateur</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="salon">{t('fields.salon')} *</Label>
+                <Select
+                  value={formData.salonId}
+                  onValueChange={(value: string) => setFormData({ ...formData, salonId: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner un salon" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {salons.length === 0 ? (
+                      <div className="p-2 text-center text-muted-foreground text-sm">
+                        Aucun salon disponible
+                      </div>
+                    ) : (
+                      salons.map((salon) => (
+                        <SelectItem key={salon.id} value={salon.id}>
+                          <div className="flex items-center gap-2">
+                            <Building2 className="h-4 w-4 text-muted-foreground" />
+                            {salon.name}
+                          </div>
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  L'utilisateur aura accès uniquement à ce salon
+                </p>
               </div>
             </div>
             <DialogFooter>

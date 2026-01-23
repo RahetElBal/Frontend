@@ -21,14 +21,16 @@ export type UserRole = (typeof UserRole)[keyof typeof UserRole];
 
 export interface User extends BaseEntity {
   email: string;
-  firstName: string;
-  lastName: string;
+  name?: string;           // Backend uses 'name' field
+  firstName?: string;      // Some contexts use firstName/lastName
+  lastName?: string;
   picture?: string;
   role: UserRole;
   isActive: boolean;
   googleId?: string;
   salonId?: string;
   salon?: Salon;
+  lastLoginAt?: string;
 }
 
 // ============================================

@@ -1,10 +1,12 @@
 import { useTranslation } from 'react-i18next';
-import { Building2, MapPin, Phone, Users, ChevronRight, Loader2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Building2, MapPin, Phone, Users, ChevronRight, Loader2, LogOut } from 'lucide-react';
 
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/badge';
 import { useSalon } from '@/contexts/SalonProvider';
+import { useAuthentication } from '@/hooks/useAuthentication';
 import type { Salon } from '@/types/entities';
 
 interface SalonSelectorProps {
@@ -13,7 +15,9 @@ interface SalonSelectorProps {
 
 export function SalonSelector({ onSelect }: SalonSelectorProps) {
   const { t } = useTranslation();
-  const { salons, isLoading, selectSalon } = useSalon();
+  const navigate = useNavigate();
+  const { salons, isLoading, selectSalon, clearSalon } = useSalon();
+  const { logout } = useAuthentication();
 
   const handleSelect = (salon: Salon) => {
     selectSalon(salon);
@@ -31,6 +35,12 @@ export function SalonSelector({ onSelect }: SalonSelectorProps) {
     );
   }
 
+  const handleLogout = () => {
+    clearSalon();
+    logout();
+    navigate('/login');
+  };
+
   if (salons.length === 0) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-accent-pink/5 to-accent-blue/5 p-4">
@@ -38,8 +48,9 @@ export function SalonSelector({ onSelect }: SalonSelectorProps) {
           <Building2 className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
           <h2 className="text-2xl font-bold mb-2">{t('salon.noSalons')}</h2>
           <p className="text-muted-foreground mb-6">{t('salon.noSalonsDescription')}</p>
-          <Button variant="outline" onClick={() => window.location.href = '/login'}>
-            {t('common.back')}
+          <Button variant="outline" onClick={handleLogout} className="gap-2">
+            <LogOut className="h-4 w-4" />
+            {t('auth.logout')}
           </Button>
         </Card>
       </div>

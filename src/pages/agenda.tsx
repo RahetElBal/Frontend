@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Plus,
@@ -8,6 +8,8 @@ import {
   User,
   Scissors,
   Calendar,
+  Bell,
+  BellRing,
 } from 'lucide-react';
 
 import { PageHeader } from '@/components/page-header';
@@ -37,6 +39,13 @@ import type { Appointment, Client, Service } from '@/types/entities';
 import { useSalonGet, useSalonPost } from '@/hooks/useSalonData';
 import { useLanguage } from '@/hooks/useLanguage';
 import { toast } from '@/lib/toast';
+import { 
+  showNotification, 
+  requestNotificationPermission,
+  scheduleReminder,
+  cancelAllReminders,
+  type AppointmentReminder 
+} from '@/lib/notifications';
 
 interface CreateAppointmentDto {
   clientId: string;
@@ -67,6 +76,7 @@ export function AgendaPage() {
   const { formatCurrency } = useLanguage();
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [formData, setFormData] = useState({
     clientId: '',
     serviceId: '',
@@ -79,6 +89,54 @@ export function AgendaPage() {
   const { data: appointments = [], isLoading } = useSalonGet<Appointment[]>('appointments');
   const { data: clients = [] } = useSalonGet<Client[]>('clients');
   const { data: services = [] } = useSalonGet<Service[]>('services');
+
+  // Request notification permission on mount
+  useEffect(() => {
+    requestNotificationPermission().then(setNotificationsEnabled);
+  }, []);
+
+  // Handle appointment reminder
+  const handleReminder = useCallback((reminder: AppointmentReminder) => {
+    showNotification(
+      `${t('agenda.reminderTitle')} - ${reminder.time}`,
+      {
+        body: `${reminder.clientName} - ${reminder.serviceName}`,
+        playSound: true,
+        onClick: () => {
+          // Navigate to the appointment date
+          setSelectedDate(new Date(reminder.date));
+        },
+      }
+    );
+    toast.info(`${t('agenda.upcomingAppointment')}: ${reminder.clientName} - ${reminder.serviceName} à ${reminder.time}`);
+  }, [t]);
+
+  // Schedule reminders for today's appointments
+  useEffect(() => {
+    if (!notificationsEnabled || appointments.length === 0) return;
+
+    const today = new Date().toISOString().split('T')[0];
+    const todayAppointments = appointments.filter(
+      apt => apt.date === today && apt.status !== 'cancelled' && apt.status !== 'completed'
+    );
+
+    // Schedule reminders (15 minutes before)
+    todayAppointments.forEach(apt => {
+      const reminder: AppointmentReminder = {
+        id: `reminder-${apt.id}`,
+        appointmentId: apt.id,
+        clientName: apt.client ? `${apt.client.firstName} ${apt.client.lastName}` : 'Client',
+        serviceName: apt.service?.name || 'Service',
+        time: apt.startTime,
+        date: apt.date,
+        reminderTime: new Date(),
+      };
+      scheduleReminder(reminder, 15, handleReminder);
+    });
+
+    // Cleanup on unmount
+    return () => cancelAllReminders();
+  }, [appointments, notificationsEnabled, handleReminder]);
 
   // Create appointment mutation (includes salonId automatically)
   const createAppointment = useSalonPost<Appointment, CreateAppointmentDto>('appointments', {
@@ -174,10 +232,33 @@ export function AgendaPage() {
         title={t('nav.agenda')}
         description={t('agenda.description')}
         actions={
-          <Button className="gap-2" onClick={() => setIsAddModalOpen(true)}>
-            <Plus className="h-4 w-4" />
-            {t('agenda.newAppointment')}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant={notificationsEnabled ? 'default' : 'outline'}
+              size="icon"
+              onClick={() => {
+                if (!notificationsEnabled) {
+                  requestNotificationPermission().then(granted => {
+                    setNotificationsEnabled(granted);
+                    if (granted) {
+                      toast.success(t('agenda.notificationsEnabled'));
+                    }
+                  });
+                }
+              }}
+              title={notificationsEnabled ? t('agenda.notificationsOn') : t('agenda.enableNotifications')}
+            >
+              {notificationsEnabled ? (
+                <BellRing className="h-4 w-4" />
+              ) : (
+                <Bell className="h-4 w-4" />
+              )}
+            </Button>
+            <Button className="gap-2" onClick={() => setIsAddModalOpen(true)}>
+              <Plus className="h-4 w-4" />
+              {t('agenda.newAppointment')}
+            </Button>
+          </div>
         }
       />
 
