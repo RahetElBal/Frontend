@@ -6,8 +6,23 @@ import { UserLayout } from '@/layouts/user-layout';
 import { AdminLayout } from '@/layouts/admin-layout';
 import { ROUTES } from '@/constants/navigation';
 
-// Placeholder pages - will be replaced with actual implementations
-import { DashboardPage, AdminDashboardPage } from '@/routes/index';
+// Pages
+import {
+  DashboardPage,
+  ClientsPage,
+  AgendaPage,
+  ServicesPage,
+  ProductsPage,
+  SalesPage,
+  GiftCardsPage,
+  LoyaltyPage,
+  AnalyticsPage,
+  MarketingPage,
+  SettingsPage,
+  AdminDashboardPage,
+  AdminUsersPage,
+  AdminSalonsPage,
+} from '@/pages';
 
 function App() {
   return (
@@ -20,25 +35,25 @@ function App() {
         {/* User routes - with UserLayout */}
         <Route element={<UserLayout />}>
           <Route path={ROUTES.DASHBOARD} element={<DashboardPage />} />
-          <Route path={ROUTES.CLIENTS} element={<PlaceholderPage title="Clients" />} />
-          <Route path={ROUTES.AGENDA} element={<PlaceholderPage title="Agenda" />} />
-          <Route path={ROUTES.SERVICES} element={<PlaceholderPage title="Services" />} />
-          <Route path={ROUTES.PRODUCTS} element={<PlaceholderPage title="Products" />} />
-          <Route path={ROUTES.SALES} element={<PlaceholderPage title="Sales" />} />
-          <Route path={ROUTES.LOYALTY} element={<PlaceholderPage title="Loyalty" />} />
-          <Route path={ROUTES.GIFT_CARDS} element={<PlaceholderPage title="Gift Cards" />} />
-          <Route path={ROUTES.MARKETING} element={<PlaceholderPage title="Marketing" />} />
-          <Route path={ROUTES.ANALYTICS} element={<PlaceholderPage title="Analytics" />} />
-          <Route path={ROUTES.SETTINGS} element={<PlaceholderPage title="Settings" />} />
-          <Route path={ROUTES.PROFILE} element={<PlaceholderPage title="Profile" />} />
+          <Route path={ROUTES.CLIENTS} element={<ClientsPage />} />
+          <Route path={ROUTES.AGENDA} element={<AgendaPage />} />
+          <Route path={ROUTES.SERVICES} element={<ServicesPage />} />
+          <Route path={ROUTES.PRODUCTS} element={<ProductsPage />} />
+          <Route path={ROUTES.SALES} element={<SalesPage />} />
+          <Route path={ROUTES.LOYALTY} element={<LoyaltyPage />} />
+          <Route path={ROUTES.GIFT_CARDS} element={<GiftCardsPage />} />
+          <Route path={ROUTES.MARKETING} element={<MarketingPage />} />
+          <Route path={ROUTES.ANALYTICS} element={<AnalyticsPage />} />
+          <Route path={ROUTES.SETTINGS} element={<SettingsPage />} />
+          <Route path={ROUTES.PROFILE} element={<SettingsPage />} />
         </Route>
 
         {/* Admin routes - with AdminLayout */}
         <Route element={<AdminLayout />}>
           <Route path={ROUTES.ADMIN} element={<AdminDashboardPage />} />
-          <Route path={ROUTES.ADMIN_USERS} element={<PlaceholderPage title="Admin - Users" />} />
-          <Route path={ROUTES.ADMIN_SALONS} element={<PlaceholderPage title="Admin - Salons" />} />
-          <Route path={ROUTES.ADMIN_SETTINGS} element={<PlaceholderPage title="Admin - Settings" />} />
+          <Route path={ROUTES.ADMIN_USERS} element={<AdminUsersPage />} />
+          <Route path={ROUTES.ADMIN_SALONS} element={<AdminSalonsPage />} />
+          <Route path={ROUTES.ADMIN_SETTINGS} element={<SettingsPage />} />
         </Route>
 
         {/* Default redirect */}
@@ -48,16 +63,6 @@ function App() {
         <Route path="*" element={<Navigate to={ROUTES.LOGIN} replace />} />
       </Routes>
     </BrowserRouter>
-  );
-}
-
-// Temporary placeholder component for routes not yet implemented
-function PlaceholderPage({ title }: { title: string }) {
-  return (
-    <div className="flex flex-col items-center justify-center py-20">
-      <h1 className="text-2xl font-bold text-foreground">{title}</h1>
-      <p className="mt-2 text-muted-foreground">This page is coming soon...</p>
-    </div>
   );
 }
 

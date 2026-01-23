@@ -296,7 +296,7 @@ export interface TranslationKeys {
 // ENGLISH TRANSLATIONS
 // ============================================
 
-export const en: TranslationKeys = {
+export const en = {
   // ============================================
   // COMMON
   // ============================================
@@ -340,6 +340,14 @@ export const en: TranslationKeys = {
     update: 'Update',
     view: 'View',
     archive: 'Archive',
+    viewAll: 'View all',
+    welcome: 'Welcome, {{name}}',
+    item: 'item',
+    items: 'items',
+    inactive: 'Inactive',
+    active: 'Active',
+    deactivate: 'Deactivate',
+    activate: 'Activate',
   },
 
   // ============================================
@@ -420,6 +428,23 @@ export const en: TranslationKeys = {
     pending: 'Pending',
     completed: 'Completed',
     cancelled: 'Cancelled',
+    
+    // Table columns
+    name: 'Name',
+    loyaltyPoints: 'Loyalty Points',
+    totalSpent: 'Total Spent',
+    visits: 'Visits',
+    lastVisit: 'Last Visit',
+    product: 'Product',
+    category: 'Category',
+    stock: 'Stock',
+    receipt: 'Receipt',
+    client: 'Client',
+    items: 'Items',
+    payment: 'Payment',
+    salon: 'Salon',
+    role: 'Role',
+    createdAt: 'Created At',
     
     // Placeholders
     placeholders: {
@@ -650,4 +675,232 @@ export const en: TranslationKeys = {
       logout: 'Sign out',
     },
   },
-};
+
+  // ============================================
+  // DASHBOARD
+  // ============================================
+  dashboard: {
+    todayRevenue: "Today's Revenue",
+    todayAppointments: "Today's Appointments",
+    newClients: 'New Clients',
+    averageTicket: 'Average Ticket',
+    vsLastWeek: 'vs last week',
+    todaysAppointments: "Today's Appointments",
+    topServices: 'Top Services',
+    bookings: 'bookings',
+  },
+
+  // ============================================
+  // CLIENTS
+  // ============================================
+  clients: {
+    description: '{{count}} clients in your database',
+    addClient: 'Add Client',
+    searchPlaceholder: 'Search clients by name, email or phone...',
+    noClients: 'No clients found',
+  },
+
+  // ============================================
+  // AGENDA
+  // ============================================
+  agenda: {
+    description: 'Manage your appointments',
+    newAppointment: 'New Appointment',
+    today: 'Today',
+    confirmed: 'confirmed',
+    pending: 'pending',
+    appointments: 'appointments',
+  },
+
+  // ============================================
+  // SERVICES
+  // ============================================
+  services: {
+    description: '{{count}} services available',
+    addService: 'Add Service',
+    services: 'services',
+  },
+
+  // ============================================
+  // PRODUCTS
+  // ============================================
+  products: {
+    description: '{{count}} products in inventory',
+    addProduct: 'Add Product',
+    searchPlaceholder: 'Search products by name or SKU...',
+    noProducts: 'No products found',
+    cost: 'Cost',
+    outOfStock: 'Out of Stock',
+    lowStock: 'Low Stock',
+    stockAlerts: 'Stock Alerts',
+  },
+
+  // ============================================
+  // SALES
+  // ============================================
+  sales: {
+    description: 'View and manage sales',
+    newSale: 'New Sale',
+    searchPlaceholder: 'Search sales...',
+    noSales: 'No sales found',
+    walkIn: 'Walk-in customer',
+    discount: 'discount',
+    todayTotal: "Today's Total",
+    transactions: 'Transactions',
+    averageTicket: 'Average Ticket',
+    printReceipt: 'Print Receipt',
+  },
+
+  // ============================================
+  // GIFT CARDS
+  // ============================================
+  giftCards: {
+    description: 'Manage gift cards',
+    createCard: 'Create Gift Card',
+    outstandingValue: 'Outstanding Value',
+    activeCards: 'Active Cards',
+    redeemedCards: 'Redeemed Cards',
+    balance: 'Balance',
+    purchasedBy: 'Purchased by',
+    expires: 'Expires',
+    viewHistory: 'View History',
+    deactivate: 'Deactivate',
+  },
+
+  // ============================================
+  // LOYALTY
+  // ============================================
+  loyalty: {
+    programSettings: 'Program Settings',
+    activeMembers: 'Active Members',
+    pointsIssued: 'Points Issued',
+    pointsRedeemed: 'Points Redeemed',
+    redemptionValue: 'Redemption Value',
+    tiers: 'Loyalty Tiers',
+    multiplier: 'multiplier',
+    points: 'points',
+    topMembers: 'Top Members',
+    spent: 'spent',
+    recentActivity: 'Recent Activity',
+  },
+
+  // ============================================
+  // ANALYTICS
+  // ============================================
+  analytics: {
+    description: 'View business insights and reports',
+    last7Days: 'Last 7 days',
+    last30Days: 'Last 30 days',
+    thisMonth: 'This month',
+    totalRevenue: 'Total Revenue',
+    totalAppointments: 'Total Appointments',
+    newClients: 'New Clients',
+    averageTicket: 'Average Ticket',
+    revenueOverTime: 'Revenue Over Time',
+    revenue: 'Revenue',
+    appointments: 'Appointments',
+    topServices: 'Top Services',
+    topProducts: 'Top Products',
+    bookings: 'bookings',
+    sold: 'sold',
+    kpis: 'Key Performance Indicators',
+    conversionRate: 'Conversion Rate',
+    clientRetention: 'Client Retention',
+    noShowRate: 'No-Show Rate',
+    productSalesRatio: 'Product Sales Ratio',
+    vsLastMonth: 'vs last month',
+  },
+
+  // ============================================
+  // MARKETING
+  // ============================================
+  marketing: {
+    description: 'Create and manage marketing campaigns',
+    newCampaign: 'New Campaign',
+    campaignsSent: 'Campaigns Sent',
+    totalRecipients: 'Total Recipients',
+    avgOpenRate: 'Avg. Open Rate',
+    scheduled: 'Scheduled',
+    campaigns: 'Campaigns',
+    sentOn: 'Sent on',
+    scheduledFor: 'Scheduled for',
+    sent: 'Sent',
+    opened: 'Opened',
+    clicked: 'Clicked',
+    recipients: 'recipients',
+    sendEmail: 'Send Email Campaign',
+    sendEmailDescription: 'Create and send email campaigns to your clients',
+    sendWhatsApp: 'Send WhatsApp Message',
+    sendWhatsAppDescription: 'Send promotional messages via WhatsApp',
+  },
+
+  // ============================================
+  // SETTINGS
+  // ============================================
+  settings: {
+    description: 'Manage your account and preferences',
+    profile: 'Profile',
+    account: 'account',
+    accountSettings: 'Account Settings',
+    personalInfo: 'Personal Information',
+    personalInfoDescription: 'Update your name, email, and profile picture',
+    security: 'Security',
+    securityDescription: 'Manage password and security settings',
+    notifications: 'Notifications',
+    notificationsDescription: 'Configure notification preferences',
+    preferences: 'Preferences',
+    language: 'Language',
+    languageDescription: 'Choose your preferred language',
+    appearance: 'Appearance',
+    appearanceDescription: 'Customize the app appearance',
+    light: 'Light',
+    dark: 'Dark',
+    businessSettings: 'Business Settings',
+    salonInfo: 'Salon Information',
+    salonInfoDescription: 'Update your salon details and business hours',
+    billing: 'Billing & Subscription',
+    billingDescription: 'Manage payment methods and subscription',
+  },
+
+  // ============================================
+  // ADMIN
+  // ============================================
+  admin: {
+    dashboard: {
+      title: 'Admin Dashboard',
+      welcome: 'Welcome, {{name}}',
+      recentSalons: 'Recent Salons',
+      recentUsers: 'Recent Users',
+      users: 'users',
+      systemStatus: 'System Status',
+    },
+    stats: {
+      totalSalons: 'Total Salons',
+      totalUsers: 'Total Users',
+      totalRevenue: 'Total Revenue',
+      activeSubscriptions: 'Active Subscriptions',
+    },
+    status: {
+      apiOnline: 'API Online',
+      allSystemsOperational: 'All systems operational',
+      databaseOnline: 'Database Online',
+      storageOnline: 'Storage Online',
+      used: 'used',
+    },
+    users: {
+      description: '{{count}} users in the system',
+      addUser: 'Add User',
+      searchPlaceholder: 'Search users...',
+      noUsers: 'No users found',
+    },
+    salons: {
+      description: 'Manage all salons in the system',
+      addSalon: 'Add Salon',
+      totalSalons: 'Total Salons',
+      activeSalons: 'Active Salons',
+      totalUsers: 'Total Users',
+      monthlyRevenue: 'Monthly Revenue',
+      users: 'users',
+    },
+  },
+} as const;
