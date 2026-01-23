@@ -24,9 +24,16 @@ import { Label } from '@/components/ui/label';
 import { GiftCardStatus } from '@/types/entities';
 import type { GiftCard } from '@/types/entities';
 import { cn } from '@/lib/utils';
+import { useGet } from '@/hooks/useGet';
+import { usePost } from '@/hooks/usePost';
+import { useLanguage } from '@/hooks/useLanguage';
+import { toast } from '@/lib/toast';
 
-// TODO: Replace with real API data
-const giftCards: GiftCard[] = [];
+interface CreateGiftCardDto {
+  initialValue: number;
+  recipientName?: string;
+  recipientEmail?: string;
+}
 
 const statusColors: Record<GiftCardStatus, 'default' | 'success' | 'warning' | 'error'> = {
   [GiftCardStatus.ACTIVE]: 'success',
@@ -37,16 +44,28 @@ const statusColors: Record<GiftCardStatus, 'default' | 'success' | 'warning' | '
 
 export function GiftCardsPage() {
   const { t } = useTranslation();
+  const { formatCurrency } = useLanguage();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [formData, setFormData] = useState({
-    value: 50,
+  const [formData, setFormData] = useState<CreateGiftCardDto>({
+    initialValue: 50,
     recipientName: '',
     recipientEmail: '',
-    message: '',
   });
 
-  const formatCurrency = (value: number) =>
-    new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(value);
+  // Fetch gift cards from API
+  const { data: giftCards = [], isLoading } = useGet<GiftCard[]>('gift-cards');
+
+  // Create gift card mutation
+  const createGiftCard = usePost<GiftCard, CreateGiftCardDto>('gift-cards', {
+    onSuccess: () => {
+      toast.success(t('giftCards.createCard') + ' - ' + t('common.success'));
+      setIsAddModalOpen(false);
+      setFormData({ initialValue: 50, recipientName: '', recipientEmail: '' });
+    },
+    onError: (error) => {
+      toast.error(error.message || t('common.error'));
+    },
+  });
 
   const totalValue = giftCards
     .filter((gc) => gc.status === GiftCardStatus.ACTIVE)
@@ -56,10 +75,7 @@ export function GiftCardsPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Call API to create gift card
-    console.log('Creating gift card:', formData);
-    setIsAddModalOpen(false);
-    setFormData({ value: 50, recipientName: '', recipientEmail: '', message: '' });
+    createGiftCard.mutate(formData);
   };
 
   return (
@@ -92,7 +108,9 @@ export function GiftCardsPage() {
       </div>
 
       {/* Gift Cards Grid */}
-      {giftCards.length === 0 ? (
+      {isLoading ? (
+        <div className="text-center py-8 text-muted-foreground">{t('common.loading')}</div>
+      ) : giftCards.length === 0 ? (
         <Card className="p-12 text-center">
           <Gift className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
           <h3 className="text-lg font-semibold mb-2">{t('giftCards.noCards')}</h3>
@@ -184,14 +202,14 @@ export function GiftCardsPage() {
           <form onSubmit={handleSubmit}>
             <div className="grid gap-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="value">{t('giftCards.value')} (€)</Label>
+                <Label htmlFor="value">{t('giftCards.value')}</Label>
                 <Input
                   id="value"
                   type="number"
                   min="10"
                   step="10"
-                  value={formData.value}
-                  onChange={(e) => setFormData({ ...formData, value: parseFloat(e.target.value) })}
+                  value={formData.initialValue}
+                  onChange={(e) => setFormData({ ...formData, initialValue: parseFloat(e.target.value) })}
                   required
                 />
               </div>
@@ -217,7 +235,9 @@ export function GiftCardsPage() {
               <Button type="button" variant="outline" onClick={() => setIsAddModalOpen(false)}>
                 {t('common.cancel')}
               </Button>
-              <Button type="submit">{t('giftCards.createCard')}</Button>
+              <Button type="submit" disabled={createGiftCard.isPending}>
+                {createGiftCard.isPending ? t('common.loading') : t('giftCards.createCard')}
+              </Button>
             </DialogFooter>
           </form>
         </DialogContent>

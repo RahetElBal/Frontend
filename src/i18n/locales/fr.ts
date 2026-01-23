@@ -147,6 +147,8 @@ export const fr = {
     salon: 'Salon',
     role: 'Rôle',
     createdAt: 'Créé le',
+    service: 'Service',
+    minStock: 'Stock minimum',
     
     // Placeholders
     placeholders: {
@@ -403,6 +405,11 @@ export const fr = {
     confirmed: 'confirmés',
     pending: 'en attente',
     appointments: 'rendez-vous',
+    noAppointments: 'Aucun rendez-vous',
+    noAppointmentsDescription: 'Vous n\'avez pas encore de rendez-vous programmé pour cette journée.',
+    addSlot: 'Ajouter',
+    selectClient: 'Sélectionner un client',
+    selectService: 'Sélectionner un service',
   },
 
   services: {
@@ -420,6 +427,7 @@ export const fr = {
     outOfStock: 'Rupture de stock',
     lowStock: 'Stock faible',
     stockAlerts: 'Alertes de stock',
+    minStock: 'Stock minimum',
   },
 
   sales: {
@@ -433,6 +441,17 @@ export const fr = {
     transactions: 'Transactions',
     averageTicket: 'Ticket moyen',
     printReceipt: 'Imprimer le reçu',
+    selectClient: 'Sélectionner un client',
+    selectProduct: 'Ajouter un produit ou service',
+    addItem: 'Ajouter un article',
+    removeItem: 'Retirer',
+    paymentMethod: 'Mode de paiement',
+    card: 'Carte bancaire',
+    cash: 'Espèces',
+    bankTransfer: 'Virement',
+    other: 'Autre',
+    quantity: 'Qté',
+    unitPrice: 'Prix unitaire',
   },
 
   giftCards: {
@@ -446,6 +465,11 @@ export const fr = {
     expires: 'Expire le',
     viewHistory: "Voir l'historique",
     deactivate: 'Désactiver',
+    noCards: 'Aucune carte cadeau',
+    noCardsDescription: 'Créez votre première carte cadeau pour commencer.',
+    value: 'Valeur',
+    recipientName: 'Nom du destinataire',
+    recipientEmail: 'Email du destinataire',
   },
 
   loyalty: {
@@ -484,6 +508,8 @@ export const fr = {
     noShowRate: 'Taux de non-présentation',
     productSalesRatio: 'Ratio ventes produits',
     vsLastMonth: 'vs mois dernier',
+    noData: 'Aucune donnée à afficher',
+    noDataDescription: 'Commencez à enregistrer des ventes et rendez-vous pour voir vos analyses.',
   },
 
   marketing: {
@@ -532,6 +558,16 @@ export const fr = {
     salonInfoDescription: 'Modifier les détails du salon et les horaires',
     billing: 'Facturation et abonnement',
     billingDescription: 'Gérer les moyens de paiement et abonnement',
+  },
+
+  salon: {
+    selectSalon: 'Sélectionnez votre salon',
+    selectSalonDescription: 'Choisissez le salon dans lequel vous souhaitez travailler',
+    noSalons: 'Aucun salon disponible',
+    noSalonsDescription: 'Vous n\'avez accès à aucun salon. Contactez votre administrateur.',
+    currentSalon: 'Salon actuel',
+    switchSalon: 'Changer de salon',
+    allSalons: 'Tous les salons',
   },
 
   admin: {

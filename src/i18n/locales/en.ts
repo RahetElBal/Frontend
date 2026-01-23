@@ -445,6 +445,8 @@ export const en = {
     salon: 'Salon',
     role: 'Role',
     createdAt: 'Created At',
+    service: 'Service',
+    minStock: 'Min stock',
     
     // Placeholders
     placeholders: {
@@ -710,6 +712,11 @@ export const en = {
     confirmed: 'confirmed',
     pending: 'pending',
     appointments: 'appointments',
+    noAppointments: 'No appointments',
+    noAppointmentsDescription: 'You have no appointments scheduled for this day.',
+    addSlot: 'Add',
+    selectClient: 'Select a client',
+    selectService: 'Select a service',
   },
 
   // ============================================
@@ -733,6 +740,7 @@ export const en = {
     outOfStock: 'Out of Stock',
     lowStock: 'Low Stock',
     stockAlerts: 'Stock Alerts',
+    minStock: 'Min stock',
   },
 
   // ============================================
@@ -749,6 +757,17 @@ export const en = {
     transactions: 'Transactions',
     averageTicket: 'Average Ticket',
     printReceipt: 'Print Receipt',
+    selectClient: 'Select a client',
+    selectProduct: 'Add a product or service',
+    addItem: 'Add item',
+    removeItem: 'Remove',
+    paymentMethod: 'Payment method',
+    card: 'Credit card',
+    cash: 'Cash',
+    bankTransfer: 'Bank transfer',
+    other: 'Other',
+    quantity: 'Qty',
+    unitPrice: 'Unit price',
   },
 
   // ============================================
@@ -765,6 +784,11 @@ export const en = {
     expires: 'Expires',
     viewHistory: 'View History',
     deactivate: 'Deactivate',
+    noCards: 'No gift cards',
+    noCardsDescription: 'Create your first gift card to get started.',
+    value: 'Value',
+    recipientName: 'Recipient name',
+    recipientEmail: 'Recipient email',
   },
 
   // ============================================
@@ -809,6 +833,8 @@ export const en = {
     noShowRate: 'No-Show Rate',
     productSalesRatio: 'Product Sales Ratio',
     vsLastMonth: 'vs last month',
+    noData: 'No data to display',
+    noDataDescription: 'Start recording sales and appointments to see your analytics.',
   },
 
   // ============================================
@@ -863,6 +889,19 @@ export const en = {
     salonInfoDescription: 'Update your salon details and business hours',
     billing: 'Billing & Subscription',
     billingDescription: 'Manage payment methods and subscription',
+  },
+
+  // ============================================
+  // SALON SELECTION
+  // ============================================
+  salon: {
+    selectSalon: 'Select your salon',
+    selectSalonDescription: 'Choose the salon you want to work in',
+    noSalons: 'No salons available',
+    noSalonsDescription: 'You don\'t have access to any salon. Contact your administrator.',
+    currentSalon: 'Current salon',
+    switchSalon: 'Switch salon',
+    allSalons: 'All salons',
   },
 
   // ============================================

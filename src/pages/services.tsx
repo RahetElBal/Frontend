@@ -23,26 +23,47 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
+import { useSalonGet, useSalonPost } from '@/hooks/useSalonData';
+import { useLanguage } from '@/hooks/useLanguage';
+import { toast } from '@/lib/toast';
 import type { Service, Category } from '@/types/entities';
 
-// TODO: Replace with real API data
-const services: Service[] = [];
-const categories: Category[] = [];
+interface CreateServiceDto {
+  name: string;
+  description?: string;
+  duration: number;
+  price: number;
+  categoryId?: string;
+}
 
 export function ServicesPage() {
   const { t } = useTranslation();
+  const { formatCurrency } = useLanguage();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<CreateServiceDto>({
     name: '',
     description: '',
     duration: 30,
     price: 0,
-    category: '',
+    categoryId: '',
   });
 
-  const formatCurrency = (value: number) =>
-    new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(value);
+  // Fetch services and categories from API (scoped to current salon)
+  const { data: services = [], isLoading } = useSalonGet<Service[]>('services');
+  const { data: categories = [] } = useSalonGet<Category[]>('categories');
+
+  // Create service mutation (includes salonId automatically)
+  const createService = useSalonPost<Service, CreateServiceDto>('services', {
+    onSuccess: () => {
+      toast.success(t('services.addService') + ' - ' + t('common.success'));
+      setIsAddModalOpen(false);
+      setFormData({ name: '', description: '', duration: 30, price: 0, categoryId: '' });
+    },
+    onError: (error) => {
+      toast.error(error.message || t('common.error'));
+    },
+  });
 
   const filteredServices = selectedCategory
     ? services.filter((s) => s.categoryId === selectedCategory)
@@ -55,10 +76,7 @@ export function ServicesPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Call API to create service
-    console.log('Creating service:', formData);
-    setIsAddModalOpen(false);
-    setFormData({ name: '', description: '', duration: 30, price: 0, category: '' });
+    createService.mutate(formData);
   };
 
   return (
@@ -101,7 +119,9 @@ export function ServicesPage() {
       </div>
 
       {/* Services Grid */}
-      {selectedCategory === null ? (
+      {isLoading ? (
+        <div className="text-center py-8 text-muted-foreground">{t('common.loading')}</div>
+      ) : selectedCategory === null ? (
         <div className="space-y-8">
           {servicesByCategory.map((category) => (
             <div key={category.id}>
@@ -122,6 +142,16 @@ export function ServicesPage() {
               </div>
             </div>
           ))}
+          {services.filter(s => !s.categoryId).length > 0 && (
+            <div>
+              <h2 className="text-lg font-semibold mb-4">{t('common.other')}</h2>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {services.filter(s => !s.categoryId).map((service) => (
+                  <ServiceCard key={service.id} service={service} t={t} formatCurrency={formatCurrency} />
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -171,7 +201,7 @@ export function ServicesPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="price">{t('fields.price')} (€)</Label>
+                  <Label htmlFor="price">{t('fields.price')}</Label>
                   <Input
                     id="price"
                     type="number"
@@ -188,7 +218,9 @@ export function ServicesPage() {
               <Button type="button" variant="outline" onClick={() => setIsAddModalOpen(false)}>
                 {t('common.cancel')}
               </Button>
-              <Button type="submit">{t('common.save')}</Button>
+              <Button type="submit" disabled={createService.isPending}>
+                {createService.isPending ? t('common.loading') : t('common.save')}
+              </Button>
             </DialogFooter>
           </form>
         </DialogContent>

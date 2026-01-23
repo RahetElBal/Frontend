@@ -22,19 +22,42 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useTable } from '@/hooks/useTable';
+import { useSalonGet, useSalonPost } from '@/hooks/useSalonData';
+import { useLanguage } from '@/hooks/useLanguage';
+import { toast } from '@/lib/toast';
 import type { Client } from '@/types/entities';
 
-// TODO: Replace with real API data
-const clients: Client[] = [];
+interface CreateClientDto {
+  firstName: string;
+  lastName: string;
+  email?: string;
+  phone?: string;
+}
 
 export function ClientsPage() {
   const { t } = useTranslation();
+  const { formatCurrency } = useLanguage();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<CreateClientDto>({
     firstName: '',
     lastName: '',
     email: '',
     phone: '',
+  });
+
+  // Fetch clients from API (scoped to current salon)
+  const { data: clients = [], isLoading } = useSalonGet<Client[]>('clients');
+
+  // Create client mutation (includes salonId automatically)
+  const createClient = useSalonPost<Client, CreateClientDto>('clients', {
+    onSuccess: () => {
+      toast.success(t('clients.addClient') + ' - ' + t('common.success'));
+      setIsAddModalOpen(false);
+      setFormData({ firstName: '', lastName: '', email: '', phone: '' });
+    },
+    onError: (error) => {
+      toast.error(error.message || t('common.error'));
+    },
   });
 
   const table = useTable<Client>({
@@ -42,15 +65,9 @@ export function ClientsPage() {
     searchKeys: ['firstName', 'lastName', 'email', 'phone'],
   });
 
-  const formatCurrency = (value: number) =>
-    new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(value);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Call API to create client
-    console.log('Creating client:', formData);
-    setIsAddModalOpen(false);
-    setFormData({ firstName: '', lastName: '', email: '', phone: '' });
+    createClient.mutate(formData);
   };
 
   const columns: Column<Client>[] = [
@@ -170,7 +187,7 @@ export function ClientsPage() {
         columns={columns}
         selectable
         searchPlaceholder={t('clients.searchPlaceholder')}
-        emptyMessage={t('clients.noClients')}
+        emptyMessage={isLoading ? t('common.loading') : t('clients.noClients')}
       />
 
       {/* Add Client Modal */}
@@ -224,7 +241,9 @@ export function ClientsPage() {
               <Button type="button" variant="outline" onClick={() => setIsAddModalOpen(false)}>
                 {t('common.cancel')}
               </Button>
-              <Button type="submit">{t('common.save')}</Button>
+              <Button type="submit" disabled={createClient.isPending}>
+                {createClient.isPending ? t('common.loading') : t('common.save')}
+              </Button>
             </DialogFooter>
           </form>
         </DialogContent>

@@ -1,168 +1,279 @@
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  BarChart3,
   TrendingUp,
+  TrendingDown,
   Users,
-  DollarSign,
   Calendar,
-  Package,
+  DollarSign,
+  ShoppingCart,
+  BarChart3,
 } from 'lucide-react';
 
 import { PageHeader } from '@/components/page-header';
 import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { StatsCard } from '@/components/stats-card';
+import { useSalonGet } from '@/hooks/useSalonData';
+import { useLanguage } from '@/hooks/useLanguage';
+import type { Sale, Appointment, Client, Service, Product } from '@/types/entities';
 
 export function AnalyticsPage() {
   const { t } = useTranslation();
+  const { formatCurrency } = useLanguage();
 
-  const formatCurrency = (value: number) =>
-    new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(value);
+  // Fetch all data (scoped to current salon)
+  const { data: sales = [], isLoading: loadingSales } = useSalonGet<Sale[]>('sales');
+  const { data: appointments = [], isLoading: loadingAppointments } = useSalonGet<Appointment[]>('appointments');
+  const { data: clients = [], isLoading: loadingClients } = useSalonGet<Client[]>('clients');
+  const { data: services = [] } = useSalonGet<Service[]>('services');
+  const { data: products = [] } = useSalonGet<Product[]>('products');
+
+  const isLoading = loadingSales || loadingAppointments || loadingClients;
+
+  // Calculate metrics
+  const metrics = useMemo(() => {
+    const totalRevenue = sales.reduce((sum, sale) => sum + sale.total, 0);
+    const totalAppointments = appointments.length;
+    const totalClients = clients.length;
+    const averageTicket = sales.length > 0 ? totalRevenue / sales.length : 0;
+
+    // Count new clients this month
+    const thisMonth = new Date().getMonth();
+    const thisYear = new Date().getFullYear();
+    const newClientsThisMonth = clients.filter(c => {
+      const createdAt = new Date(c.createdAt);
+      return createdAt.getMonth() === thisMonth && createdAt.getFullYear() === thisYear;
+    }).length;
+
+    // Calculate service popularity from appointments
+    const serviceBookings: Record<string, { name: string; count: number; revenue: number }> = {};
+    appointments.forEach(apt => {
+      if (apt.service) {
+        const id = apt.service.id;
+        if (!serviceBookings[id]) {
+          serviceBookings[id] = { name: apt.service.name, count: 0, revenue: 0 };
+        }
+        serviceBookings[id].count += 1;
+        serviceBookings[id].revenue += apt.service.price;
+      }
+    });
+
+    // Calculate product sales from sales items
+    const productSales: Record<string, { name: string; count: number; revenue: number }> = {};
+    sales.forEach(sale => {
+      sale.items.forEach(item => {
+        if (item.type === 'product') {
+          const product = products.find(p => p.id === item.itemId);
+          if (product) {
+            if (!productSales[item.itemId]) {
+              productSales[item.itemId] = { name: product.name, count: 0, revenue: 0 };
+            }
+            productSales[item.itemId].count += item.quantity;
+            productSales[item.itemId].revenue += item.price * item.quantity;
+          }
+        }
+      });
+    });
+
+    const topServices = Object.values(serviceBookings)
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
+
+    const topProducts = Object.values(productSales)
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
+
+    return {
+      totalRevenue,
+      totalAppointments,
+      totalClients,
+      newClientsThisMonth,
+      averageTicket,
+      topServices,
+      topProducts,
+    };
+  }, [sales, appointments, clients, products]);
+
+  const hasData = sales.length > 0 || appointments.length > 0 || clients.length > 0;
 
   return (
     <div className="space-y-6">
       <PageHeader
         title={t('nav.analytics')}
         description={t('analytics.description')}
-        actions={
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm">
-              {t('analytics.last7Days')}
-            </Button>
-            <Button variant="outline" size="sm">
-              {t('analytics.last30Days')}
-            </Button>
-            <Button variant="outline" size="sm">
-              {t('analytics.thisMonth')}
-            </Button>
-          </div>
-        }
       />
 
-      {/* Overview Stats */}
+      {/* Stats Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatsCard
           title={t('analytics.totalRevenue')}
-          value={formatCurrency(0)}
-          change={0}
+          value={formatCurrency(metrics.totalRevenue)}
           icon={DollarSign}
           iconColor="text-green-600"
           iconBgColor="bg-green-100"
         />
         <StatsCard
           title={t('analytics.totalAppointments')}
-          value={0}
-          change={0}
+          value={metrics.totalAppointments.toString()}
           icon={Calendar}
-          iconColor="text-accent-blue"
-          iconBgColor="bg-accent-blue/10"
+          iconColor="text-blue-600"
+          iconBgColor="bg-blue-100"
         />
         <StatsCard
           title={t('analytics.newClients')}
-          value={0}
-          change={0}
+          value={metrics.newClientsThisMonth.toString()}
+          changeLabel={t('analytics.thisMonth')}
           icon={Users}
-          iconColor="text-accent-pink"
-          iconBgColor="bg-accent-pink/10"
-        />
-        <StatsCard
-          title={t('analytics.averageTicket')}
-          value={formatCurrency(0)}
-          change={0}
-          icon={BarChart3}
           iconColor="text-purple-600"
           iconBgColor="bg-purple-100"
         />
+        <StatsCard
+          title={t('analytics.averageTicket')}
+          value={formatCurrency(metrics.averageTicket)}
+          icon={ShoppingCart}
+        />
       </div>
 
-      {/* Empty Revenue Chart */}
-      <Card className="p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-lg font-semibold">{t('analytics.revenueOverTime')}</h2>
-          <div className="flex items-center gap-4 text-sm">
-            <div className="flex items-center gap-2">
-              <span className="h-3 w-3 rounded-full bg-accent-pink" />
-              <span className="text-muted-foreground">{t('analytics.revenue')}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="h-3 w-3 rounded-full bg-accent-blue" />
-              <span className="text-muted-foreground">{t('analytics.appointments')}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Empty state chart */}
-        <div className="h-64 flex items-center justify-center text-muted-foreground">
-          <div className="text-center">
-            <BarChart3 className="h-12 w-12 mx-auto mb-2 opacity-50" />
-            <p>Aucune donnée à afficher</p>
-            <p className="text-sm">Les données apparaîtront ici après vos premières ventes</p>
-          </div>
-        </div>
-      </Card>
-
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* Top Services - Empty */}
-        <Card className="p-6">
-          <h2 className="text-lg font-semibold mb-4">{t('analytics.topServices')}</h2>
-          <div className="h-48 flex items-center justify-center text-muted-foreground">
-            <div className="text-center">
-              <Calendar className="h-8 w-8 mx-auto mb-2 opacity-50" />
-              <p>Aucun service réservé</p>
-            </div>
-          </div>
+      {/* Main Content */}
+      {isLoading ? (
+        <Card className="p-12 text-center">
+          <p className="text-muted-foreground">{t('common.loading')}</p>
         </Card>
-
-        {/* Top Products - Empty */}
-        <Card className="p-6">
-          <h2 className="text-lg font-semibold mb-4">{t('analytics.topProducts')}</h2>
-          <div className="h-48 flex items-center justify-center text-muted-foreground">
-            <div className="text-center">
-              <Package className="h-8 w-8 mx-auto mb-2 opacity-50" />
-              <p>Aucun produit vendu</p>
-            </div>
-          </div>
+      ) : !hasData ? (
+        <Card className="p-12 text-center">
+          <BarChart3 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+          <h3 className="text-lg font-semibold mb-2">{t('analytics.noData')}</h3>
+          <p className="text-muted-foreground">{t('analytics.noDataDescription')}</p>
         </Card>
-      </div>
+      ) : (
+        <div className="grid gap-6 lg:grid-cols-2">
+          {/* Top Services */}
+          <Card className="p-6">
+            <h3 className="text-lg font-semibold mb-4">{t('analytics.topServices')}</h3>
+            {metrics.topServices.length === 0 ? (
+              <p className="text-muted-foreground text-center py-8">{t('common.noResults')}</p>
+            ) : (
+              <div className="space-y-4">
+                {metrics.topServices.map((service, index) => (
+                  <div key={index} className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-accent-pink/10 flex items-center justify-center text-accent-pink font-bold text-sm">
+                        {index + 1}
+                      </div>
+                      <div>
+                        <p className="font-medium">{service.name}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {service.count} {t('analytics.bookings')}
+                        </p>
+                      </div>
+                    </div>
+                    <p className="font-semibold text-green-600">
+                      {formatCurrency(service.revenue)}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Card>
 
-      {/* Performance Indicators */}
-      <Card className="p-6">
-        <h2 className="text-lg font-semibold mb-4">{t('analytics.kpis')}</h2>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="p-4 rounded-lg bg-muted/50">
-            <div className="flex items-center gap-2 mb-2">
-              <TrendingUp className="h-4 w-4 text-green-600" />
-              <span className="text-sm text-muted-foreground">{t('analytics.conversionRate')}</span>
+          {/* Top Products */}
+          <Card className="p-6">
+            <h3 className="text-lg font-semibold mb-4">{t('analytics.topProducts')}</h3>
+            {metrics.topProducts.length === 0 ? (
+              <p className="text-muted-foreground text-center py-8">{t('common.noResults')}</p>
+            ) : (
+              <div className="space-y-4">
+                {metrics.topProducts.map((product, index) => (
+                  <div key={index} className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500 font-bold text-sm">
+                        {index + 1}
+                      </div>
+                      <div>
+                        <p className="font-medium">{product.name}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {product.count} {t('analytics.sold')}
+                        </p>
+                      </div>
+                    </div>
+                    <p className="font-semibold text-green-600">
+                      {formatCurrency(product.revenue)}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Card>
+
+          {/* KPIs */}
+          <Card className="p-6 lg:col-span-2">
+            <h3 className="text-lg font-semibold mb-4">{t('analytics.kpis')}</h3>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="p-4 bg-muted/50 rounded-lg">
+                <p className="text-sm text-muted-foreground">{t('analytics.clientRetention')}</p>
+                <div className="flex items-center gap-2 mt-1">
+                  <p className="text-2xl font-bold">
+                    {clients.length > 0 
+                      ? Math.round((clients.filter(c => c.visitCount > 1).length / clients.length) * 100) 
+                      : 0}%
+                  </p>
+                  {clients.filter(c => c.visitCount > 1).length > 0 && (
+                    <TrendingUp className="h-4 w-4 text-green-600" />
+                  )}
+                </div>
+              </div>
+              <div className="p-4 bg-muted/50 rounded-lg">
+                <p className="text-sm text-muted-foreground">{t('analytics.noShowRate')}</p>
+                <div className="flex items-center gap-2 mt-1">
+                  <p className="text-2xl font-bold">
+                    {appointments.length > 0 
+                      ? Math.round((appointments.filter(a => a.status === 'no_show').length / appointments.length) * 100)
+                      : 0}%
+                  </p>
+                  {appointments.filter(a => a.status === 'no_show').length === 0 && appointments.length > 0 && (
+                    <TrendingDown className="h-4 w-4 text-green-600" />
+                  )}
+                </div>
+              </div>
+              <div className="p-4 bg-muted/50 rounded-lg">
+                <p className="text-sm text-muted-foreground">{t('fields.totalSpent')}</p>
+                <div className="flex items-center gap-2 mt-1">
+                  <p className="text-2xl font-bold">
+                    {formatCurrency(clients.reduce((sum, c) => sum + c.totalSpent, 0))}
+                  </p>
+                </div>
+              </div>
+              <div className="p-4 bg-muted/50 rounded-lg">
+                <p className="text-sm text-muted-foreground">{t('fields.loyaltyPoints')}</p>
+                <div className="flex items-center gap-2 mt-1">
+                  <p className="text-2xl font-bold">
+                    {clients.reduce((sum, c) => sum + c.loyaltyPoints, 0)}
+                  </p>
+                </div>
+              </div>
             </div>
-            <p className="text-2xl font-bold">0%</p>
-            <p className="text-xs text-muted-foreground">-</p>
-          </div>
-          <div className="p-4 rounded-lg bg-muted/50">
-            <div className="flex items-center gap-2 mb-2">
-              <Users className="h-4 w-4 text-accent-blue" />
-              <span className="text-sm text-muted-foreground">{t('analytics.clientRetention')}</span>
+          </Card>
+
+          {/* Summary Stats */}
+          <Card className="p-6 lg:col-span-2">
+            <h3 className="text-lg font-semibold mb-4">{t('common.viewAll')}</h3>
+            <div className="grid gap-4 sm:grid-cols-3">
+              <div className="text-center p-4 bg-muted/50 rounded-lg">
+                <p className="text-3xl font-bold text-accent-pink">{clients.length}</p>
+                <p className="text-sm text-muted-foreground">{t('nav.clients')}</p>
+              </div>
+              <div className="text-center p-4 bg-muted/50 rounded-lg">
+                <p className="text-3xl font-bold text-blue-500">{services.length}</p>
+                <p className="text-sm text-muted-foreground">{t('nav.services')}</p>
+              </div>
+              <div className="text-center p-4 bg-muted/50 rounded-lg">
+                <p className="text-3xl font-bold text-green-600">{products.length}</p>
+                <p className="text-sm text-muted-foreground">{t('nav.products')}</p>
+              </div>
             </div>
-            <p className="text-2xl font-bold">0%</p>
-            <p className="text-xs text-muted-foreground">-</p>
-          </div>
-          <div className="p-4 rounded-lg bg-muted/50">
-            <div className="flex items-center gap-2 mb-2">
-              <Calendar className="h-4 w-4 text-accent-pink" />
-              <span className="text-sm text-muted-foreground">{t('analytics.noShowRate')}</span>
-            </div>
-            <p className="text-2xl font-bold">0%</p>
-            <p className="text-xs text-muted-foreground">-</p>
-          </div>
-          <div className="p-4 rounded-lg bg-muted/50">
-            <div className="flex items-center gap-2 mb-2">
-              <Package className="h-4 w-4 text-purple-600" />
-              <span className="text-sm text-muted-foreground">{t('analytics.productSalesRatio')}</span>
-            </div>
-            <p className="text-2xl font-bold">0%</p>
-            <p className="text-xs text-muted-foreground">-</p>
-          </div>
+          </Card>
         </div>
-      </Card>
+      )}
     </div>
   );
 }

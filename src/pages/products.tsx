@@ -24,16 +24,27 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useTable } from '@/hooks/useTable';
+import { useSalonGet, useSalonPost } from '@/hooks/useSalonData';
+import { useLanguage } from '@/hooks/useLanguage';
+import { toast } from '@/lib/toast';
 import type { Product } from '@/types/entities';
 import { cn } from '@/lib/utils';
 
-// TODO: Replace with real API data
-const products: Product[] = [];
+interface CreateProductDto {
+  name: string;
+  description?: string;
+  sku?: string;
+  price: number;
+  cost?: number;
+  stock: number;
+  minStock?: number;
+}
 
 export function ProductsPage() {
   const { t } = useTranslation();
+  const { formatCurrency } = useLanguage();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<CreateProductDto>({
     name: '',
     description: '',
     sku: '',
@@ -43,13 +54,25 @@ export function ProductsPage() {
     minStock: 5,
   });
 
+  // Fetch products from API (scoped to current salon)
+  const { data: products = [], isLoading } = useSalonGet<Product[]>('products');
+
+  // Create product mutation (includes salonId automatically)
+  const createProduct = useSalonPost<Product, CreateProductDto>('products', {
+    onSuccess: () => {
+      toast.success(t('products.addProduct') + ' - ' + t('common.success'));
+      setIsAddModalOpen(false);
+      setFormData({ name: '', description: '', sku: '', price: 0, cost: 0, stock: 0, minStock: 5 });
+    },
+    onError: (error) => {
+      toast.error(error.message || t('common.error'));
+    },
+  });
+
   const table = useTable<Product>({
     data: products,
     searchKeys: ['name', 'sku', 'barcode'],
   });
-
-  const formatCurrency = (value: number) =>
-    new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(value);
 
   const lowStockCount = products.filter(
     (p) => p.minStock !== undefined && p.stock <= p.minStock
@@ -59,10 +82,7 @@ export function ProductsPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Call API to create product
-    console.log('Creating product:', formData);
-    setIsAddModalOpen(false);
-    setFormData({ name: '', description: '', sku: '', price: 0, cost: 0, stock: 0, minStock: 5 });
+    createProduct.mutate(formData);
   };
 
   const columns: Column<Product>[] = [
@@ -216,7 +236,7 @@ export function ProductsPage() {
         columns={columns}
         selectable
         searchPlaceholder={t('products.searchPlaceholder')}
-        emptyMessage={t('products.noProducts')}
+        emptyMessage={isLoading ? t('common.loading') : t('products.noProducts')}
       />
 
       {/* Add Product Modal */}
@@ -255,7 +275,7 @@ export function ProductsPage() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="price">{t('fields.price')} (€)</Label>
+                  <Label htmlFor="price">{t('fields.price')}</Label>
                   <Input
                     id="price"
                     type="number"
@@ -267,7 +287,7 @@ export function ProductsPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="cost">{t('products.cost')} (€)</Label>
+                  <Label htmlFor="cost">{t('products.cost')}</Label>
                   <Input
                     id="cost"
                     type="number"
@@ -306,7 +326,9 @@ export function ProductsPage() {
               <Button type="button" variant="outline" onClick={() => setIsAddModalOpen(false)}>
                 {t('common.cancel')}
               </Button>
-              <Button type="submit">{t('common.save')}</Button>
+              <Button type="submit" disabled={createProduct.isPending}>
+                {createProduct.isPending ? t('common.loading') : t('common.save')}
+              </Button>
             </DialogFooter>
           </form>
         </DialogContent>

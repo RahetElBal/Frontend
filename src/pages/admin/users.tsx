@@ -30,46 +30,55 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useTable } from '@/hooks/useTable';
+import { useGet } from '@/hooks/useGet';
+import { usePost } from '@/hooks/usePost';
+import { toast } from '@/lib/toast';
 import { UserRole } from '@/types/entities';
+import type { User } from '@/types/entities';
 
-// TODO: Replace with real API data
-const users: AdminUser[] = [];
-
-type AdminUser = {
-  id: string;
+interface CreateUserDto {
   firstName: string;
   lastName: string;
   email: string;
   role: UserRole;
-  isActive: boolean;
-  salonName: string | null;
-  createdAt: string;
-};
+}
 
 export function AdminUsersPage() {
   const { t } = useTranslation();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<CreateUserDto>({
     firstName: '',
     lastName: '',
     email: '',
     role: 'user' as UserRole,
   });
 
-  const table = useTable<AdminUser>({
+  // Fetch users from API
+  const { data: users = [], isLoading } = useGet<User[]>('users');
+
+  // Create user mutation
+  const createUser = usePost<User, CreateUserDto>('users', {
+    onSuccess: () => {
+      toast.success(t('admin.users.addUser') + ' - ' + t('common.success'));
+      setIsAddModalOpen(false);
+      setFormData({ firstName: '', lastName: '', email: '', role: 'user' as UserRole });
+    },
+    onError: (error) => {
+      toast.error(error.message || t('common.error'));
+    },
+  });
+
+  const table = useTable<User>({
     data: users,
-    searchKeys: ['firstName', 'lastName', 'email', 'salonName'],
+    searchKeys: ['firstName', 'lastName', 'email'],
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Call API to create user
-    console.log('Creating user:', formData);
-    setIsAddModalOpen(false);
-    setFormData({ firstName: '', lastName: '', email: '', role: 'user' as UserRole });
+    createUser.mutate(formData);
   };
 
-  const columns: Column<AdminUser>[] = [
+  const columns: Column<User>[] = [
     {
       key: 'name',
       header: t('fields.name'),
@@ -77,10 +86,14 @@ export function AdminUsersPage() {
       render: (user) => (
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-full bg-accent-pink/10 flex items-center justify-center">
-            <span className="font-medium text-accent-pink">
-              {user.firstName[0]}
-              {user.lastName[0]}
-            </span>
+            {user.picture ? (
+              <img src={user.picture} alt={user.firstName} className="h-10 w-10 rounded-full" />
+            ) : (
+              <span className="font-medium text-accent-pink">
+                {user.firstName?.[0]}
+                {user.lastName?.[0]}
+              </span>
+            )}
           </div>
           <div>
             <p className="font-medium">
@@ -100,12 +113,6 @@ export function AdminUsersPage() {
           {user.role}
         </Badge>
       ),
-    },
-    {
-      key: 'salonName',
-      header: t('fields.salon'),
-      render: (user) =>
-        user.salonName || <span className="text-muted-foreground">-</span>,
     },
     {
       key: 'status',
@@ -165,7 +172,9 @@ export function AdminUsersPage() {
         }
       />
 
-      {users.length === 0 ? (
+      {isLoading ? (
+        <div className="text-center py-8 text-muted-foreground">{t('common.loading')}</div>
+      ) : users.length === 0 ? (
         <Card className="p-12 text-center">
           <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
           <h3 className="text-lg font-semibold mb-2">{t('admin.users.noUsers')}</h3>
@@ -243,7 +252,9 @@ export function AdminUsersPage() {
               <Button type="button" variant="outline" onClick={() => setIsAddModalOpen(false)}>
                 {t('common.cancel')}
               </Button>
-              <Button type="submit">{t('common.save')}</Button>
+              <Button type="submit" disabled={createUser.isPending}>
+                {createUser.isPending ? t('common.loading') : t('common.save')}
+              </Button>
             </DialogFooter>
           </form>
         </DialogContent>

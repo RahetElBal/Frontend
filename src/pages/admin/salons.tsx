@@ -21,68 +21,53 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { useGet } from '@/hooks/useGet';
+import { usePost } from '@/hooks/usePost';
+import { useLanguage } from '@/hooks/useLanguage';
+import { toast } from '@/lib/toast';
+import type { Salon } from '@/types/entities';
 
-// TODO: Replace with real API data
-type Salon = {
-  id: string;
+interface CreateSalonDto {
   name: string;
-  address: string;
-  phone: string;
-  email: string;
-  usersCount: number;
-  status: 'active' | 'pending' | 'suspended';
-  subscription: 'trial' | 'basic' | 'premium';
-  createdAt: string;
-  monthlyRevenue: number;
-};
-
-const salons: Salon[] = [];
-
-const statusColors: Record<string, 'success' | 'warning' | 'error'> = {
-  active: 'success',
-  pending: 'warning',
-  suspended: 'error',
-};
-
-const subscriptionColors: Record<string, 'default' | 'info' | 'success'> = {
-  trial: 'default',
-  basic: 'info',
-  premium: 'success',
-};
+  address?: string;
+  phone?: string;
+  email?: string;
+}
 
 export function AdminSalonsPage() {
   const { t } = useTranslation();
+  const { formatCurrency } = useLanguage();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<CreateSalonDto>({
     name: '',
     address: '',
     phone: '',
     email: '',
-    subscription: 'basic' as 'trial' | 'basic' | 'premium',
   });
 
-  const formatCurrency = (value: number) =>
-    new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(value);
+  // Fetch salons from API
+  const { data: salons = [], isLoading } = useGet<Salon[]>('salons');
+
+  // Create salon mutation
+  const createSalon = usePost<Salon, CreateSalonDto>('salons', {
+    onSuccess: () => {
+      toast.success(t('admin.salons.addSalon') + ' - ' + t('common.success'));
+      setIsAddModalOpen(false);
+      setFormData({ name: '', address: '', phone: '', email: '' });
+    },
+    onError: (error) => {
+      toast.error(error.message || t('common.error'));
+    },
+  });
 
   // Stats
   const totalSalons = salons.length;
-  const activeSalons = salons.filter((s) => s.status === 'active').length;
-  const totalUsers = salons.reduce((sum, s) => sum + s.usersCount, 0);
-  const totalRevenue = salons.reduce((sum, s) => sum + s.monthlyRevenue, 0);
+  const activeSalons = salons.filter((s) => s.isActive).length;
+  const totalUsers = salons.reduce((sum, s) => sum + (s.users?.length || 0), 0);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Call API to create salon
-    console.log('Creating salon:', formData);
-    setIsAddModalOpen(false);
-    setFormData({ name: '', address: '', phone: '', email: '', subscription: 'basic' });
+    createSalon.mutate(formData);
   };
 
   return (
@@ -114,12 +99,14 @@ export function AdminSalonsPage() {
         </Card>
         <Card className="p-4">
           <p className="text-sm text-muted-foreground">{t('admin.salons.monthlyRevenue')}</p>
-          <p className="text-2xl font-bold text-accent-pink">{formatCurrency(totalRevenue)}</p>
+          <p className="text-2xl font-bold text-accent-pink">{formatCurrency(0)}</p>
         </Card>
       </div>
 
       {/* Salons Grid */}
-      {salons.length === 0 ? (
+      {isLoading ? (
+        <div className="text-center py-8 text-muted-foreground">{t('common.loading')}</div>
+      ) : salons.length === 0 ? (
         <Card className="p-12 text-center">
           <Building2 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
           <h3 className="text-lg font-semibold mb-2">Aucun salon</h3>
@@ -142,9 +129,8 @@ export function AdminSalonsPage() {
                     <div>
                       <h3 className="font-semibold">{salon.name}</h3>
                       <div className="flex items-center gap-2 mt-1">
-                        <Badge variant={statusColors[salon.status]}>{salon.status}</Badge>
-                        <Badge variant={subscriptionColors[salon.subscription]}>
-                          {salon.subscription}
+                        <Badge variant={salon.isActive ? 'success' : 'warning'}>
+                          {salon.isActive ? 'active' : 'inactive'}
                         </Badge>
                       </div>
                     </div>
@@ -173,18 +159,15 @@ export function AdminSalonsPage() {
                 </div>
 
                 <div className="mt-4 space-y-2 text-sm">
-                  <p className="text-muted-foreground">{salon.address}</p>
-                  <p className="text-muted-foreground">{salon.email}</p>
+                  {salon.address && <p className="text-muted-foreground">{salon.address}</p>}
+                  {salon.email && <p className="text-muted-foreground">{salon.email}</p>}
                 </div>
 
                 <div className="mt-4 pt-4 border-t flex items-center justify-between">
                   <div className="flex items-center gap-1 text-sm text-muted-foreground">
                     <Users className="h-4 w-4" />
-                    {salon.usersCount} {t('admin.salons.users')}
+                    {salon.users?.length || 0} {t('admin.salons.users')}
                   </div>
-                  <p className="font-semibold text-green-600">
-                    {formatCurrency(salon.monthlyRevenue)}/mo
-                  </p>
                 </div>
               </div>
             </Card>
@@ -215,7 +198,6 @@ export function AdminSalonsPage() {
                   id="address"
                   value={formData.address}
                   onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                  required
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -235,32 +217,17 @@ export function AdminSalonsPage() {
                     type="email"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    required
                   />
                 </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="subscription">Abonnement</Label>
-                <Select
-                  value={formData.subscription}
-                  onValueChange={(value: string) => setFormData({ ...formData, subscription: value as 'trial' | 'basic' | 'premium' })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="trial">Essai</SelectItem>
-                    <SelectItem value="basic">Basic</SelectItem>
-                    <SelectItem value="premium">Premium</SelectItem>
-                  </SelectContent>
-                </Select>
               </div>
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setIsAddModalOpen(false)}>
                 {t('common.cancel')}
               </Button>
-              <Button type="submit">{t('common.save')}</Button>
+              <Button type="submit" disabled={createSalon.isPending}>
+                {createSalon.isPending ? t('common.loading') : t('common.save')}
+              </Button>
             </DialogFooter>
           </form>
         </DialogContent>
