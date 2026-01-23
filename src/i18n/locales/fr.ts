@@ -1,6 +1,4 @@
-import type { TranslationKeys } from './en';
-
-export const fr: TranslationKeys = {
+export const fr = {
   // ============================================
   // COMMON
   // ============================================
@@ -44,6 +42,14 @@ export const fr: TranslationKeys = {
     update: 'Mettre à jour',
     view: 'Voir',
     archive: 'Archiver',
+    viewAll: 'Voir tout',
+    welcome: 'Bienvenue, {{name}}',
+    item: 'article',
+    items: 'articles',
+    inactive: 'Inactif',
+    active: 'Actif',
+    deactivate: 'Désactiver',
+    activate: 'Activer',
   },
 
   // ============================================
@@ -124,6 +130,23 @@ export const fr: TranslationKeys = {
     pending: 'En attente',
     completed: 'Terminé',
     cancelled: 'Annulé',
+    
+    // Table columns
+    name: 'Nom',
+    loyaltyPoints: 'Points fidélité',
+    totalSpent: 'Total dépensé',
+    visits: 'Visites',
+    lastVisit: 'Dernière visite',
+    product: 'Produit',
+    category: 'Catégorie',
+    stock: 'Stock',
+    receipt: 'Reçu',
+    client: 'Client',
+    items: 'Articles',
+    payment: 'Paiement',
+    salon: 'Salon',
+    role: 'Rôle',
+    createdAt: 'Créé le',
     
     // Placeholders
     placeholders: {
@@ -354,4 +377,196 @@ export const fr: TranslationKeys = {
       logout: 'Se déconnecter',
     },
   },
-};
+
+  dashboard: {
+    todayRevenue: "Chiffre d'affaires du jour",
+    todayAppointments: "Rendez-vous du jour",
+    newClients: 'Nouveaux clients',
+    averageTicket: 'Ticket moyen',
+    vsLastWeek: 'vs semaine dernière',
+    todaysAppointments: "Rendez-vous d'aujourd'hui",
+    topServices: 'Services populaires',
+    bookings: 'réservations',
+  },
+
+  clients: {
+    description: '{{count}} clients dans votre base',
+    addClient: 'Ajouter un client',
+    searchPlaceholder: 'Rechercher par nom, email ou téléphone...',
+    noClients: 'Aucun client trouvé',
+  },
+
+  agenda: {
+    description: 'Gérer vos rendez-vous',
+    newAppointment: 'Nouveau rendez-vous',
+    today: "Aujourd'hui",
+    confirmed: 'confirmés',
+    pending: 'en attente',
+    appointments: 'rendez-vous',
+  },
+
+  services: {
+    description: '{{count}} services disponibles',
+    addService: 'Ajouter un service',
+    services: 'services',
+  },
+
+  products: {
+    description: '{{count}} produits en stock',
+    addProduct: 'Ajouter un produit',
+    searchPlaceholder: 'Rechercher par nom ou SKU...',
+    noProducts: 'Aucun produit trouvé',
+    cost: 'Coût',
+    outOfStock: 'Rupture de stock',
+    lowStock: 'Stock faible',
+    stockAlerts: 'Alertes de stock',
+  },
+
+  sales: {
+    description: 'Voir et gérer les ventes',
+    newSale: 'Nouvelle vente',
+    searchPlaceholder: 'Rechercher...',
+    noSales: 'Aucune vente trouvée',
+    walkIn: 'Client de passage',
+    discount: 'remise',
+    todayTotal: 'Total du jour',
+    transactions: 'Transactions',
+    averageTicket: 'Ticket moyen',
+    printReceipt: 'Imprimer le reçu',
+  },
+
+  giftCards: {
+    description: 'Gérer les cartes cadeaux',
+    createCard: 'Créer une carte cadeau',
+    outstandingValue: 'Valeur en circulation',
+    activeCards: 'Cartes actives',
+    redeemedCards: 'Cartes utilisées',
+    balance: 'Solde',
+    purchasedBy: 'Achetée par',
+    expires: 'Expire le',
+    viewHistory: "Voir l'historique",
+    deactivate: 'Désactiver',
+  },
+
+  loyalty: {
+    programSettings: 'Paramètres du programme',
+    activeMembers: 'Membres actifs',
+    pointsIssued: 'Points attribués',
+    pointsRedeemed: 'Points utilisés',
+    redemptionValue: 'Valeur de remboursement',
+    tiers: 'Niveaux de fidélité',
+    multiplier: 'multiplicateur',
+    points: 'points',
+    topMembers: 'Meilleurs membres',
+    spent: 'dépensé',
+    recentActivity: 'Activité récente',
+  },
+
+  analytics: {
+    description: "Voir les analyses et rapports de l'activité",
+    last7Days: '7 derniers jours',
+    last30Days: '30 derniers jours',
+    thisMonth: 'Ce mois-ci',
+    totalRevenue: "Chiffre d'affaires total",
+    totalAppointments: 'Total rendez-vous',
+    newClients: 'Nouveaux clients',
+    averageTicket: 'Ticket moyen',
+    revenueOverTime: "Évolution du chiffre d'affaires",
+    revenue: "Chiffre d'affaires",
+    appointments: 'Rendez-vous',
+    topServices: 'Services populaires',
+    topProducts: 'Produits populaires',
+    bookings: 'réservations',
+    sold: 'vendus',
+    kpis: 'Indicateurs clés',
+    conversionRate: 'Taux de conversion',
+    clientRetention: 'Rétention client',
+    noShowRate: 'Taux de non-présentation',
+    productSalesRatio: 'Ratio ventes produits',
+    vsLastMonth: 'vs mois dernier',
+  },
+
+  marketing: {
+    description: 'Créer et gérer les campagnes marketing',
+    newCampaign: 'Nouvelle campagne',
+    campaignsSent: 'Campagnes envoyées',
+    totalRecipients: 'Total destinataires',
+    avgOpenRate: "Taux d'ouverture moyen",
+    scheduled: 'Programmées',
+    campaigns: 'Campagnes',
+    sentOn: 'Envoyée le',
+    scheduledFor: 'Programmée pour le',
+    sent: 'Envoyés',
+    opened: 'Ouverts',
+    clicked: 'Cliqués',
+    recipients: 'destinataires',
+    sendEmail: 'Envoyer une campagne email',
+    sendEmailDescription: 'Créer et envoyer des emails à vos clients',
+    sendWhatsApp: 'Envoyer un message WhatsApp',
+    sendWhatsAppDescription: 'Envoyer des messages promotionnels via WhatsApp',
+  },
+
+  settings: {
+    description: 'Gérer votre compte et préférences',
+    profile: 'Profil',
+    account: 'compte',
+    accountSettings: 'Paramètres du compte',
+    personalInfo: 'Informations personnelles',
+    personalInfoDescription: 'Modifier votre nom, email et photo de profil',
+    security: 'Sécurité',
+    securityDescription: 'Gérer le mot de passe et les paramètres de sécurité',
+    notifications: 'Notifications',
+    notificationsDescription: 'Configurer les préférences de notification',
+    preferences: 'Préférences',
+    language: 'Langue',
+    languageDescription: 'Choisir votre langue préférée',
+    appearance: 'Apparence',
+    appearanceDescription: "Personnaliser l'apparence de l'application",
+    light: 'Clair',
+    dark: 'Sombre',
+    businessSettings: 'Paramètres entreprise',
+    salonInfo: 'Informations du salon',
+    salonInfoDescription: 'Modifier les détails du salon et les horaires',
+    billing: 'Facturation et abonnement',
+    billingDescription: 'Gérer les moyens de paiement et abonnement',
+  },
+
+  admin: {
+    dashboard: {
+      title: 'Tableau de bord admin',
+      welcome: 'Bienvenue, {{name}}',
+      recentSalons: 'Salons récents',
+      recentUsers: 'Utilisateurs récents',
+      users: 'utilisateurs',
+      systemStatus: 'État du système',
+    },
+    stats: {
+      totalSalons: 'Total salons',
+      totalUsers: 'Total utilisateurs',
+      totalRevenue: "Chiffre d'affaires total",
+      activeSubscriptions: 'Abonnements actifs',
+    },
+    status: {
+      apiOnline: 'API en ligne',
+      allSystemsOperational: 'Tous les systèmes opérationnels',
+      databaseOnline: 'Base de données en ligne',
+      storageOnline: 'Stockage en ligne',
+      used: 'utilisé',
+    },
+    users: {
+      description: '{{count}} utilisateurs dans le système',
+      addUser: 'Ajouter un utilisateur',
+      searchPlaceholder: 'Rechercher des utilisateurs...',
+      noUsers: 'Aucun utilisateur trouvé',
+    },
+    salons: {
+      description: 'Gérer tous les salons du système',
+      addSalon: 'Ajouter un salon',
+      totalSalons: 'Total salons',
+      activeSalons: 'Salons actifs',
+      totalUsers: 'Total utilisateurs',
+      monthlyRevenue: 'Revenu mensuel',
+      users: 'utilisateurs',
+    },
+  },
+} as const;

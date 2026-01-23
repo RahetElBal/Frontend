@@ -67,7 +67,7 @@ export function LoginPage() {
       <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
         <CardHeader className="text-center space-y-2 pb-2">
           {/* Logo placeholder - can be replaced with actual logo */}
-          <div className="mx-auto mb-4 w-16 h-16 rounded-2xl bg-gradient-to-br from-accent-pink-400 to-accent-pink-500 flex items-center justify-center shadow-lg">
+          <div className="mx-auto mb-4 w-16 h-16 rounded-2xl bg-linear-to-br from-accent-pink-400 to-accent-pink-500 flex items-center justify-center shadow-lg">
             <span className="text-2xl font-bold text-white">BS</span>
           </div>
           <CardTitle className="text-2xl font-bold text-foreground">

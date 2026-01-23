@@ -1,6 +1,4 @@
-import type { TranslationKeys } from './en';
-
-export const es: TranslationKeys = {
+export const es = {
   // ============================================
   // COMMON
   // ============================================
@@ -44,6 +42,14 @@ export const es: TranslationKeys = {
     update: 'Actualizar',
     view: 'Ver',
     archive: 'Archivar',
+    viewAll: 'Ver todo',
+    welcome: 'Bienvenido, {{name}}',
+    item: 'artículo',
+    items: 'artículos',
+    inactive: 'Inactivo',
+    active: 'Activo',
+    deactivate: 'Desactivar',
+    activate: 'Activar',
   },
 
   // ============================================
@@ -124,6 +130,23 @@ export const es: TranslationKeys = {
     pending: 'Pendiente',
     completed: 'Completado',
     cancelled: 'Cancelado',
+    
+    // Table columns
+    name: 'Nombre',
+    loyaltyPoints: 'Puntos de fidelidad',
+    totalSpent: 'Total gastado',
+    visits: 'Visitas',
+    lastVisit: 'Última visita',
+    product: 'Producto',
+    category: 'Categoría',
+    stock: 'Stock',
+    receipt: 'Recibo',
+    client: 'Cliente',
+    items: 'Artículos',
+    payment: 'Pago',
+    salon: 'Salón',
+    role: 'Rol',
+    createdAt: 'Creado el',
     
     // Placeholders
     placeholders: {
@@ -354,4 +377,196 @@ export const es: TranslationKeys = {
       logout: 'Cerrar sesión',
     },
   },
-};
+
+  dashboard: {
+    todayRevenue: 'Ingresos de hoy',
+    todayAppointments: 'Citas de hoy',
+    newClients: 'Nuevos clientes',
+    averageTicket: 'Ticket promedio',
+    vsLastWeek: 'vs semana pasada',
+    todaysAppointments: 'Citas de hoy',
+    topServices: 'Servicios populares',
+    bookings: 'reservas',
+  },
+
+  clients: {
+    description: '{{count}} clientes en tu base de datos',
+    addClient: 'Añadir cliente',
+    searchPlaceholder: 'Buscar por nombre, email o teléfono...',
+    noClients: 'No se encontraron clientes',
+  },
+
+  agenda: {
+    description: 'Gestiona tus citas',
+    newAppointment: 'Nueva cita',
+    today: 'Hoy',
+    confirmed: 'confirmadas',
+    pending: 'pendientes',
+    appointments: 'citas',
+  },
+
+  services: {
+    description: '{{count}} servicios disponibles',
+    addService: 'Añadir servicio',
+    services: 'servicios',
+  },
+
+  products: {
+    description: '{{count}} productos en inventario',
+    addProduct: 'Añadir producto',
+    searchPlaceholder: 'Buscar por nombre o SKU...',
+    noProducts: 'No se encontraron productos',
+    cost: 'Coste',
+    outOfStock: 'Sin stock',
+    lowStock: 'Stock bajo',
+    stockAlerts: 'Alertas de stock',
+  },
+
+  sales: {
+    description: 'Ver y gestionar ventas',
+    newSale: 'Nueva venta',
+    searchPlaceholder: 'Buscar...',
+    noSales: 'No se encontraron ventas',
+    walkIn: 'Cliente sin cita',
+    discount: 'descuento',
+    todayTotal: 'Total de hoy',
+    transactions: 'Transacciones',
+    averageTicket: 'Ticket promedio',
+    printReceipt: 'Imprimir recibo',
+  },
+
+  giftCards: {
+    description: 'Gestionar tarjetas regalo',
+    createCard: 'Crear tarjeta regalo',
+    outstandingValue: 'Valor pendiente',
+    activeCards: 'Tarjetas activas',
+    redeemedCards: 'Tarjetas canjeadas',
+    balance: 'Saldo',
+    purchasedBy: 'Comprada por',
+    expires: 'Expira',
+    viewHistory: 'Ver historial',
+    deactivate: 'Desactivar',
+  },
+
+  loyalty: {
+    programSettings: 'Configuración del programa',
+    activeMembers: 'Miembros activos',
+    pointsIssued: 'Puntos emitidos',
+    pointsRedeemed: 'Puntos canjeados',
+    redemptionValue: 'Valor de canje',
+    tiers: 'Niveles de fidelidad',
+    multiplier: 'multiplicador',
+    points: 'puntos',
+    topMembers: 'Mejores miembros',
+    spent: 'gastado',
+    recentActivity: 'Actividad reciente',
+  },
+
+  analytics: {
+    description: 'Ver análisis e informes del negocio',
+    last7Days: 'Últimos 7 días',
+    last30Days: 'Últimos 30 días',
+    thisMonth: 'Este mes',
+    totalRevenue: 'Ingresos totales',
+    totalAppointments: 'Total de citas',
+    newClients: 'Nuevos clientes',
+    averageTicket: 'Ticket promedio',
+    revenueOverTime: 'Evolución de ingresos',
+    revenue: 'Ingresos',
+    appointments: 'Citas',
+    topServices: 'Servicios populares',
+    topProducts: 'Productos populares',
+    bookings: 'reservas',
+    sold: 'vendidos',
+    kpis: 'Indicadores clave',
+    conversionRate: 'Tasa de conversión',
+    clientRetention: 'Retención de clientes',
+    noShowRate: 'Tasa de ausencias',
+    productSalesRatio: 'Ratio ventas productos',
+    vsLastMonth: 'vs mes pasado',
+  },
+
+  marketing: {
+    description: 'Crear y gestionar campañas de marketing',
+    newCampaign: 'Nueva campaña',
+    campaignsSent: 'Campañas enviadas',
+    totalRecipients: 'Total destinatarios',
+    avgOpenRate: 'Tasa de apertura promedio',
+    scheduled: 'Programadas',
+    campaigns: 'Campañas',
+    sentOn: 'Enviada el',
+    scheduledFor: 'Programada para el',
+    sent: 'Enviados',
+    opened: 'Abiertos',
+    clicked: 'Clics',
+    recipients: 'destinatarios',
+    sendEmail: 'Enviar campaña de email',
+    sendEmailDescription: 'Crear y enviar emails a tus clientes',
+    sendWhatsApp: 'Enviar mensaje de WhatsApp',
+    sendWhatsAppDescription: 'Enviar mensajes promocionales por WhatsApp',
+  },
+
+  settings: {
+    description: 'Gestionar tu cuenta y preferencias',
+    profile: 'Perfil',
+    account: 'cuenta',
+    accountSettings: 'Configuración de cuenta',
+    personalInfo: 'Información personal',
+    personalInfoDescription: 'Actualizar nombre, email y foto de perfil',
+    security: 'Seguridad',
+    securityDescription: 'Gestionar contraseña y seguridad',
+    notifications: 'Notificaciones',
+    notificationsDescription: 'Configurar preferencias de notificación',
+    preferences: 'Preferencias',
+    language: 'Idioma',
+    languageDescription: 'Elegir tu idioma preferido',
+    appearance: 'Apariencia',
+    appearanceDescription: 'Personalizar la apariencia de la app',
+    light: 'Claro',
+    dark: 'Oscuro',
+    businessSettings: 'Configuración del negocio',
+    salonInfo: 'Información del salón',
+    salonInfoDescription: 'Actualizar detalles del salón y horarios',
+    billing: 'Facturación y suscripción',
+    billingDescription: 'Gestionar métodos de pago y suscripción',
+  },
+
+  admin: {
+    dashboard: {
+      title: 'Panel de administración',
+      welcome: 'Bienvenido, {{name}}',
+      recentSalons: 'Salones recientes',
+      recentUsers: 'Usuarios recientes',
+      users: 'usuarios',
+      systemStatus: 'Estado del sistema',
+    },
+    stats: {
+      totalSalons: 'Total salones',
+      totalUsers: 'Total usuarios',
+      totalRevenue: 'Ingresos totales',
+      activeSubscriptions: 'Suscripciones activas',
+    },
+    status: {
+      apiOnline: 'API en línea',
+      allSystemsOperational: 'Todos los sistemas operativos',
+      databaseOnline: 'Base de datos en línea',
+      storageOnline: 'Almacenamiento en línea',
+      used: 'usado',
+    },
+    users: {
+      description: '{{count}} usuarios en el sistema',
+      addUser: 'Añadir usuario',
+      searchPlaceholder: 'Buscar usuarios...',
+      noUsers: 'No se encontraron usuarios',
+    },
+    salons: {
+      description: 'Gestionar todos los salones del sistema',
+      addSalon: 'Añadir salón',
+      totalSalons: 'Total salones',
+      activeSalons: 'Salones activos',
+      totalUsers: 'Total usuarios',
+      monthlyRevenue: 'Ingresos mensuales',
+      users: 'usuarios',
+    },
+  },
+} as const;
