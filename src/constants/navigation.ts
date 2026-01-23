@@ -12,9 +12,6 @@ import {
   Settings,
   Building2,
   UserCog,
-  Tags,
-  FileText,
-  Shield,
 } from 'lucide-react';
 import type { NavSection } from '@/types/navigation';
 import { UserRole } from '@/types/user';
@@ -218,34 +215,6 @@ export const ADMIN_NAVIGATION: NavSection[] = [
         titleKey: 'nav.admin.salons',
         href: ROUTES.ADMIN_SALONS,
         icon: Building2,
-        roles: [UserRole.ADMIN],
-      },
-    ],
-  },
-  {
-    id: 'system',
-    titleKey: 'nav.sections.system',
-    roles: [UserRole.ADMIN],
-    items: [
-      {
-        id: 'admin-tags',
-        titleKey: 'nav.admin.tags',
-        href: '/admin/tags',
-        icon: Tags,
-        roles: [UserRole.ADMIN],
-      },
-      {
-        id: 'admin-templates',
-        titleKey: 'nav.admin.templates',
-        href: '/admin/templates',
-        icon: FileText,
-        roles: [UserRole.ADMIN],
-      },
-      {
-        id: 'admin-permissions',
-        titleKey: 'nav.admin.permissions',
-        href: '/admin/permissions',
-        icon: Shield,
         roles: [UserRole.ADMIN],
       },
     ],

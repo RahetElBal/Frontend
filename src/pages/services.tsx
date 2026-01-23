@@ -12,6 +12,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import type { Service, Category } from '@/types/entities';
 
@@ -22,6 +32,14 @@ const categories: Category[] = [];
 export function ServicesPage() {
   const { t } = useTranslation();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    description: '',
+    duration: 30,
+    price: 0,
+    category: '',
+  });
 
   const formatCurrency = (value: number) =>
     new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(value);
@@ -35,13 +53,21 @@ export function ServicesPage() {
     services: services.filter((s) => s.categoryId === cat.id),
   }));
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    // TODO: Call API to create service
+    console.log('Creating service:', formData);
+    setIsAddModalOpen(false);
+    setFormData({ name: '', description: '', duration: 30, price: 0, category: '' });
+  };
+
   return (
     <div className="space-y-6">
       <PageHeader
         title={t('nav.services')}
         description={t('services.description', { count: services.length })}
         actions={
-          <Button className="gap-2">
+          <Button className="gap-2" onClick={() => setIsAddModalOpen(true)}>
             <Plus className="h-4 w-4" />
             {t('services.addService')}
           </Button>
@@ -76,7 +102,6 @@ export function ServicesPage() {
 
       {/* Services Grid */}
       {selectedCategory === null ? (
-        // Group by category
         <div className="space-y-8">
           {servicesByCategory.map((category) => (
             <div key={category.id}>
@@ -99,13 +124,75 @@ export function ServicesPage() {
           ))}
         </div>
       ) : (
-        // Filtered view
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filteredServices.map((service) => (
             <ServiceCard key={service.id} service={service} t={t} formatCurrency={formatCurrency} />
           ))}
         </div>
       )}
+
+      {/* Add Service Modal */}
+      <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>{t('services.addService')}</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit}>
+            <div className="grid gap-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">{t('fields.name')}</Label>
+                <Input
+                  id="name"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="description">{t('fields.description')}</Label>
+                <Textarea
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  rows={3}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="duration">{t('fields.duration')} (min)</Label>
+                  <Input
+                    id="duration"
+                    type="number"
+                    min="5"
+                    step="5"
+                    value={formData.duration}
+                    onChange={(e) => setFormData({ ...formData, duration: parseInt(e.target.value) })}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="price">{t('fields.price')} (€)</Label>
+                  <Input
+                    id="price"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={formData.price}
+                    onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) })}
+                    required
+                  />
+                </div>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setIsAddModalOpen(false)}>
+                {t('common.cancel')}
+              </Button>
+              <Button type="submit">{t('common.save')}</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

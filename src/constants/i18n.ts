@@ -22,7 +22,45 @@ export const LANGUAGE_FLAGS: Record<SupportedLanguage, string> = {
   en: '🇬🇧',
   fr: '🇫🇷',
   es: '🇪🇸',
-  ar: '🇸🇦',
+  ar: '🇩🇿',
 };
 
 export const DEFAULT_LANGUAGE: SupportedLanguage = SUPPORTED_LANGUAGES.EN;
+
+// ============================================
+// CURRENCY CONFIGURATION
+// ============================================
+
+export interface CurrencyConfig {
+  code: string;
+  symbol: string;
+  locale: string;
+  name: string;
+}
+
+export const LANGUAGE_CURRENCIES: Record<SupportedLanguage, CurrencyConfig> = {
+  en: {
+    code: 'USD',
+    symbol: '$',
+    locale: 'en-US',
+    name: 'US Dollar',
+  },
+  fr: {
+    code: 'EUR',
+    symbol: '€',
+    locale: 'fr-FR',
+    name: 'Euro',
+  },
+  es: {
+    code: 'EUR',
+    symbol: '€',
+    locale: 'es-ES',
+    name: 'Euro',
+  },
+  ar: {
+    code: 'DZD',
+    symbol: 'د.ج',
+    locale: 'ar-DZ',
+    name: 'Dinar Algérien',
+  },
+};

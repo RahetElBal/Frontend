@@ -1,10 +1,12 @@
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   SUPPORTED_LANGUAGES,
   LANGUAGE_NAMES,
   LANGUAGE_FLAGS,
+  LANGUAGE_CURRENCIES,
   type SupportedLanguage,
+  type CurrencyConfig,
 } from '@/constants/i18n';
 import { useDirection, type Direction } from './useDirection';
 
@@ -23,13 +25,16 @@ interface UseLanguageReturn {
   languages: LanguageOption[];
   changeLanguage: (language: SupportedLanguage) => void;
   t: ReturnType<typeof useTranslation>['t'];
+  // Currency
+  currency: CurrencyConfig;
+  formatCurrency: (value: number) => string;
 }
 
 export function useLanguage(): UseLanguageReturn {
   const { t, i18n } = useTranslation();
   const { direction, isRTL, isLTR } = useDirection();
 
-  const currentLanguage = i18n.language as SupportedLanguage;
+  const currentLanguage = (i18n.language || 'en') as SupportedLanguage;
 
   const languages: LanguageOption[] = Object.values(SUPPORTED_LANGUAGES).map((code) => ({
     code,
@@ -47,6 +52,29 @@ export function useLanguage(): UseLanguageReturn {
     [i18n]
   );
 
+  // Get currency config for current language
+  const currency = useMemo(() => {
+    return LANGUAGE_CURRENCIES[currentLanguage] || LANGUAGE_CURRENCIES.en;
+  }, [currentLanguage]);
+
+  // Format currency based on current language
+  const formatCurrency = useCallback(
+    (value: number): string => {
+      try {
+        return new Intl.NumberFormat(currency.locale, {
+          style: 'currency',
+          currency: currency.code,
+          minimumFractionDigits: currency.code === 'DZD' ? 0 : 2,
+          maximumFractionDigits: currency.code === 'DZD' ? 0 : 2,
+        }).format(value);
+      } catch {
+        // Fallback if locale not supported
+        return `${currency.symbol}${value.toFixed(currency.code === 'DZD' ? 0 : 2)}`;
+      }
+    },
+    [currency]
+  );
+
   return {
     currentLanguage,
     direction,
@@ -55,5 +83,7 @@ export function useLanguage(): UseLanguageReturn {
     languages,
     changeLanguage,
     t,
+    currency,
+    formatCurrency,
   };
 }

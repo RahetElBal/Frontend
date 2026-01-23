@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Plus, Mail, Phone, MoreHorizontal, Eye, Edit, Trash2 } from 'lucide-react';
 
@@ -11,6 +12,15 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { useTable } from '@/hooks/useTable';
 import type { Client } from '@/types/entities';
 
@@ -19,6 +29,13 @@ const clients: Client[] = [];
 
 export function ClientsPage() {
   const { t } = useTranslation();
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+  });
 
   const table = useTable<Client>({
     data: clients,
@@ -27,6 +44,14 @@ export function ClientsPage() {
 
   const formatCurrency = (value: number) =>
     new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(value);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    // TODO: Call API to create client
+    console.log('Creating client:', formData);
+    setIsAddModalOpen(false);
+    setFormData({ firstName: '', lastName: '', email: '', phone: '' });
+  };
 
   const columns: Column<Client>[] = [
     {
@@ -133,7 +158,7 @@ export function ClientsPage() {
         title={t('nav.clients')}
         description={t('clients.description', { count: clients.length })}
         actions={
-          <Button className="gap-2">
+          <Button className="gap-2" onClick={() => setIsAddModalOpen(true)}>
             <Plus className="h-4 w-4" />
             {t('clients.addClient')}
           </Button>
@@ -147,6 +172,63 @@ export function ClientsPage() {
         searchPlaceholder={t('clients.searchPlaceholder')}
         emptyMessage={t('clients.noClients')}
       />
+
+      {/* Add Client Modal */}
+      <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>{t('clients.addClient')}</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit}>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="firstName">{t('fields.firstName')}</Label>
+                  <Input
+                    id="firstName"
+                    value={formData.firstName}
+                    onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="lastName">{t('fields.lastName')}</Label>
+                  <Input
+                    id="lastName"
+                    value={formData.lastName}
+                    onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                    required
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="email">{t('fields.email')}</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="phone">{t('fields.phone')}</Label>
+                <Input
+                  id="phone"
+                  type="tel"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setIsAddModalOpen(false)}>
+                {t('common.cancel')}
+              </Button>
+              <Button type="submit">{t('common.save')}</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

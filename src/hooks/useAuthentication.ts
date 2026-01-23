@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { useAuthContext } from '@/contexts/AuthProvider';
 import { AUTH_STORAGE_KEY } from '@/constants/auth';
 import { get } from '@/lib/http';
@@ -24,7 +24,7 @@ interface UseAuthenticationReturn {
  * <Button onClick={loginWithGoogle}>Sign in with Google</Button>
  */
 export function useAuthentication(): UseAuthenticationReturn {
-  const { login, logout: contextLogout, updateUser } = useAuthContext();
+  const { logout: contextLogout, updateUser } = useAuthContext();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -73,45 +73,6 @@ export function useAuthentication(): UseAuthenticationReturn {
   const logout = useCallback(() => {
     contextLogout();
   }, [contextLogout]);
-
-  /**
-   * Handle OAuth callback - check URL for token on mount
-   */
-  useEffect(() => {
-    const handleCallback = () => {
-      // Check URL params for token (from backend OAuth callback)
-      const urlParams = new URLSearchParams(window.location.search);
-      const token = urlParams.get('token');
-      const userParam = urlParams.get('user');
-
-      if (token) {
-        // Save token
-        localStorage.setItem(AUTH_STORAGE_KEY, token);
-        
-        // Parse and save user if provided
-        if (userParam) {
-          try {
-            const user = JSON.parse(decodeURIComponent(userParam));
-            login(user, token);
-          } catch {
-            // If user parsing fails, fetch from API
-            checkAuth();
-          }
-        } else {
-          // Fetch user from API
-          checkAuth();
-        }
-        
-        // Clean URL
-        window.history.replaceState({}, document.title, window.location.pathname);
-      } else {
-        // Check existing auth
-        checkAuth();
-      }
-    };
-
-    handleCallback();
-  }, [login, checkAuth]);
 
   return {
     isLoading,

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Plus, AlertTriangle, Package, MoreHorizontal, Edit, Trash2 } from 'lucide-react';
 
@@ -12,6 +13,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { useTable } from '@/hooks/useTable';
 import type { Product } from '@/types/entities';
 import { cn } from '@/lib/utils';
@@ -21,6 +32,16 @@ const products: Product[] = [];
 
 export function ProductsPage() {
   const { t } = useTranslation();
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    description: '',
+    sku: '',
+    price: 0,
+    cost: 0,
+    stock: 0,
+    minStock: 5,
+  });
 
   const table = useTable<Product>({
     data: products,
@@ -30,12 +51,19 @@ export function ProductsPage() {
   const formatCurrency = (value: number) =>
     new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(value);
 
-  // Count low stock items
   const lowStockCount = products.filter(
     (p) => p.minStock !== undefined && p.stock <= p.minStock
   ).length;
 
   const outOfStockCount = products.filter((p) => p.stock === 0).length;
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    // TODO: Call API to create product
+    console.log('Creating product:', formData);
+    setIsAddModalOpen(false);
+    setFormData({ name: '', description: '', sku: '', price: 0, cost: 0, stock: 0, minStock: 5 });
+  };
 
   const columns: Column<Product>[] = [
     {
@@ -149,7 +177,7 @@ export function ProductsPage() {
         title={t('nav.products')}
         description={t('products.description', { count: products.length })}
         actions={
-          <Button className="gap-2">
+          <Button className="gap-2" onClick={() => setIsAddModalOpen(true)}>
             <Plus className="h-4 w-4" />
             {t('products.addProduct')}
           </Button>
@@ -190,6 +218,99 @@ export function ProductsPage() {
         searchPlaceholder={t('products.searchPlaceholder')}
         emptyMessage={t('products.noProducts')}
       />
+
+      {/* Add Product Modal */}
+      <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>{t('products.addProduct')}</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit}>
+            <div className="grid gap-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">{t('fields.name')}</Label>
+                <Input
+                  id="name"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="description">{t('fields.description')}</Label>
+                <Textarea
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  rows={2}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="sku">SKU</Label>
+                <Input
+                  id="sku"
+                  value={formData.sku}
+                  onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="price">{t('fields.price')} (€)</Label>
+                  <Input
+                    id="price"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={formData.price}
+                    onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) })}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="cost">{t('products.cost')} (€)</Label>
+                  <Input
+                    id="cost"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={formData.cost}
+                    onChange={(e) => setFormData({ ...formData, cost: parseFloat(e.target.value) })}
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="stock">{t('fields.stock')}</Label>
+                  <Input
+                    id="stock"
+                    type="number"
+                    min="0"
+                    value={formData.stock}
+                    onChange={(e) => setFormData({ ...formData, stock: parseInt(e.target.value) })}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="minStock">{t('products.minStock')}</Label>
+                  <Input
+                    id="minStock"
+                    type="number"
+                    min="0"
+                    value={formData.minStock}
+                    onChange={(e) => setFormData({ ...formData, minStock: parseInt(e.target.value) })}
+                  />
+                </div>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setIsAddModalOpen(false)}>
+                {t('common.cancel')}
+              </Button>
+              <Button type="submit">{t('common.save')}</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
