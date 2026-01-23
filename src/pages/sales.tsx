@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Plus,
@@ -20,6 +21,22 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useTable } from '@/hooks/useTable';
 import type { Sale } from '@/types/entities';
 import { PaymentMethod, SaleStatus } from '@/types/entities';
@@ -44,6 +61,13 @@ const paymentIcons: Record<PaymentMethod, typeof CreditCard> = {
 
 export function SalesPage() {
   const { t } = useTranslation();
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    clientName: '',
+    items: '',
+    total: 0,
+    paymentMethod: 'card' as PaymentMethod,
+  });
 
   const table = useTable<Sale>({
     data: sales,
@@ -58,8 +82,15 @@ export function SalesPage() {
     return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
   };
 
-  // Calculate totals
   const todayTotal = sales.reduce((sum, sale) => sum + sale.total, 0);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    // TODO: Call API to create sale
+    console.log('Creating sale:', formData);
+    setIsAddModalOpen(false);
+    setFormData({ clientName: '', items: '', total: 0, paymentMethod: 'card' as PaymentMethod });
+  };
 
   const columns: Column<Sale>[] = [
     {
@@ -168,7 +199,7 @@ export function SalesPage() {
         title={t('nav.sales')}
         description={t('sales.description')}
         actions={
-          <Button className="gap-2">
+          <Button className="gap-2" onClick={() => setIsAddModalOpen(true)}>
             <Plus className="h-4 w-4" />
             {t('sales.newSale')}
           </Button>
@@ -197,6 +228,75 @@ export function SalesPage() {
         searchPlaceholder={t('sales.searchPlaceholder')}
         emptyMessage={t('sales.noSales')}
       />
+
+      {/* New Sale Modal */}
+      <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>{t('sales.newSale')}</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit}>
+            <div className="grid gap-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="clientName">{t('fields.client')}</Label>
+                <Input
+                  id="clientName"
+                  placeholder={t('sales.walkIn')}
+                  value={formData.clientName}
+                  onChange={(e) => setFormData({ ...formData, clientName: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="items">{t('fields.items')}</Label>
+                <Input
+                  id="items"
+                  placeholder="Service ou produit..."
+                  value={formData.items}
+                  onChange={(e) => setFormData({ ...formData, items: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="total">{t('fields.total')} (€)</Label>
+                  <Input
+                    id="total"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={formData.total}
+                    onChange={(e) => setFormData({ ...formData, total: parseFloat(e.target.value) })}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="paymentMethod">{t('fields.payment')}</Label>
+                  <Select
+                    value={formData.paymentMethod}
+                    onValueChange={(value: string) => setFormData({ ...formData, paymentMethod: value as PaymentMethod })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="card">Carte</SelectItem>
+                      <SelectItem value="cash">Espèces</SelectItem>
+                      <SelectItem value="bank_transfer">Virement</SelectItem>
+                      <SelectItem value="other">Autre</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setIsAddModalOpen(false)}>
+                {t('common.cancel')}
+              </Button>
+              <Button type="submit">{t('common.save')}</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
