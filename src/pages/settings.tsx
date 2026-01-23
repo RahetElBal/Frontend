@@ -14,7 +14,6 @@ import { PageHeader } from '@/components/page-header';
 import { Card } from '@/components/ui/card';
 import { useUser } from '@/hooks/useUser';
 import { useLanguage } from '@/hooks/useLanguage';
-import { cn } from '@/lib/utils';
 
 interface SettingsItemProps {
   icon: typeof User;
@@ -52,7 +51,10 @@ function SettingsItem({ icon: Icon, title, description, onClick, badge }: Settin
 export function SettingsPage() {
   const { t } = useTranslation();
   const { user } = useUser();
-  const { currentLanguage, languageNames } = useLanguage();
+  const { currentLanguage, languages } = useLanguage();
+  
+  // Get the current language name from the languages array
+  const currentLanguageName = languages.find(l => l.code === currentLanguage)?.name || currentLanguage;
 
   return (
     <div className="space-y-6">
@@ -121,7 +123,7 @@ export function SettingsPage() {
             icon={Globe}
             title={t('settings.language')}
             description={t('settings.languageDescription')}
-            badge={languageNames[currentLanguage]}
+            badge={currentLanguageName}
           />
           <SettingsItem
             icon={Palette}

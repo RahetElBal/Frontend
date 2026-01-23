@@ -121,7 +121,7 @@ export function ProductsPage() {
       key: 'actions',
       header: '',
       className: 'w-12',
-      render: (product) => (
+      render: (_product) => (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="h-8 w-8">

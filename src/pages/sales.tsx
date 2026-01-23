@@ -47,7 +47,7 @@ export function SalesPage() {
 
   const table = useTable<Sale>({
     data: sales,
-    searchKeys: ['client.firstName', 'client.lastName'],
+    searchKeys: ['id'],
   });
 
   const formatCurrency = (value: number) =>
@@ -60,7 +60,6 @@ export function SalesPage() {
 
   // Calculate totals
   const todayTotal = sales.reduce((sum, sale) => sum + sale.total, 0);
-  const completedCount = sales.filter((s) => s.status === SaleStatus.COMPLETED).length;
 
   const columns: Column<Sale>[] = [
     {
@@ -141,7 +140,7 @@ export function SalesPage() {
       key: 'actions',
       header: '',
       className: 'w-12',
-      render: (sale) => (
+      render: (_sale) => (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="h-8 w-8">

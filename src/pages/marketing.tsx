@@ -5,7 +5,6 @@ import {
   Users,
   Send,
   Clock,
-  CheckCircle,
   Plus,
 } from 'lucide-react';
 

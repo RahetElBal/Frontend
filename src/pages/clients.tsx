@@ -101,7 +101,7 @@ export function ClientsPage() {
       key: 'actions',
       header: '',
       className: 'w-12',
-      render: (client) => (
+      render: (_client) => (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="h-8 w-8">

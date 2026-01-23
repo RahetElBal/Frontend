@@ -2,7 +2,6 @@ import { useTranslation } from 'react-i18next';
 import {
   BarChart3,
   TrendingUp,
-  TrendingDown,
   Users,
   DollarSign,
   Calendar,
@@ -116,7 +115,7 @@ export function AnalyticsPage() {
 
         {/* Simple bar chart */}
         <div className="h-64 flex items-end gap-2">
-          {revenueData.map((day, index) => (
+          {revenueData.map((day) => (
             <div key={day.date} className="flex-1 flex flex-col items-center gap-1">
               <div className="w-full flex flex-col items-center gap-1 h-52">
                 {/* Revenue bar */}
