@@ -16,6 +16,9 @@ import {
   SalesPage,
   AnalyticsPage,
   SettingsPage,
+  StaffPage,
+  PromotionsPage,
+  SalonSettingsPage,
   AdminDashboardPage,
   AdminUsersPage,
   AdminSalonsPage,
@@ -35,9 +38,12 @@ function App() {
           <Route path={ROUTES.CLIENTS} element={<ClientsPage />} />
           <Route path={ROUTES.AGENDA} element={<AgendaPage />} />
           <Route path={ROUTES.SERVICES} element={<ServicesPage />} />
+          <Route path={ROUTES.STAFF} element={<StaffPage />} />
           <Route path={ROUTES.PRODUCTS} element={<ProductsPage />} />
           <Route path={ROUTES.SALES} element={<SalesPage />} />
+          <Route path={ROUTES.PROMOTIONS} element={<PromotionsPage />} />
           <Route path={ROUTES.ANALYTICS} element={<AnalyticsPage />} />
+          <Route path={ROUTES.SALON_SETTINGS} element={<SalonSettingsPage />} />
           <Route path={ROUTES.SETTINGS} element={<SettingsPage />} />
           <Route path={ROUTES.PROFILE} element={<SettingsPage />} />
         </Route>

@@ -9,6 +9,9 @@ import {
   Settings,
   Building2,
   UserCog,
+  Clock,
+  Tag,
+  Sliders,
 } from 'lucide-react';
 import type { NavSection } from '@/types/navigation';
 import { UserRole } from '@/types/user';
@@ -60,8 +63,15 @@ export const ROUTES = {
   ANALYTICS: '/analytics',
   REPORTS: '/analytics/reports',
   
+  // Staff
+  STAFF: '/staff',
+  
+  // Promotions
+  PROMOTIONS: '/promotions',
+  
   // Settings
   SETTINGS: '/settings',
+  SALON_SETTINGS: '/salon-settings',
   PROFILE: '/settings/profile',
   
   // Admin only
@@ -109,6 +119,12 @@ export const USER_NAVIGATION: NavSection[] = [
         href: ROUTES.SERVICES,
         icon: Scissors,
       },
+      {
+        id: 'staff',
+        titleKey: 'nav.staff',
+        href: ROUTES.STAFF,
+        icon: Clock,
+      },
     ],
   },
   {
@@ -126,6 +142,12 @@ export const USER_NAVIGATION: NavSection[] = [
         titleKey: 'nav.sales',
         href: ROUTES.SALES,
         icon: ShoppingCart,
+      },
+      {
+        id: 'promotions',
+        titleKey: 'nav.promotions',
+        href: ROUTES.PROMOTIONS,
+        icon: Tag,
       },
     ],
   },
@@ -145,6 +167,12 @@ export const USER_NAVIGATION: NavSection[] = [
     id: 'account',
     titleKey: 'nav.sections.account',
     items: [
+      {
+        id: 'salon-settings',
+        titleKey: 'nav.salonSettings',
+        href: ROUTES.SALON_SETTINGS,
+        icon: Sliders,
+      },
       {
         id: 'settings',
         titleKey: 'nav.settings',
