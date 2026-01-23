@@ -4,8 +4,6 @@ import {
   Users,
   DollarSign,
   Activity,
-  TrendingUp,
-  Shield,
 } from 'lucide-react';
 
 import { useUser } from '@/hooks/useUser';

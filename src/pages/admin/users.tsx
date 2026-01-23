@@ -135,6 +135,7 @@ export function AdminUsersPage() {
       key: 'actions',
       header: '',
       className: 'w-12',
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       render: (user) => (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
