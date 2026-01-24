@@ -8,6 +8,7 @@ import {
 } from "react";
 import type { Salon } from "@/types/entities";
 import { get } from "@/lib/http";
+import { AUTH_STORAGE_KEY } from "@/constants/auth";
 
 const SALON_STORAGE_KEY = "selected_salon_id";
 
@@ -33,39 +34,38 @@ export function SalonProvider({ children }: SalonProviderProps) {
 
   // Fetch user's salons
   const refreshSalons = useCallback(async () => {
-    console.log("🔍 refreshSalons called");
     try {
       setIsLoading(true);
-      console.log("🌐 Calling /salons/my-salons...");
       const data = await get<Salon[]>("salons/my-salons");
-      console.log("✅ Salons received:", data);
       setSalons(data);
-      // ... rest of the code
+
+      // Try to restore previously selected salon
+      const storedSalonId = localStorage.getItem(SALON_STORAGE_KEY);
+      if (storedSalonId) {
+        const storedSalon = data.find((s) => s.id === storedSalonId);
+        if (storedSalon) {
+          setCurrentSalon(storedSalon);
+        } else if (data.length === 1) {
+          // If only one salon, auto-select it
+          setCurrentSalon(data[0]);
+          localStorage.setItem(SALON_STORAGE_KEY, data[0].id);
+        }
+      } else if (data.length === 1) {
+        // If only one salon and no stored preference, auto-select
+        setCurrentSalon(data[0]);
+        localStorage.setItem(SALON_STORAGE_KEY, data[0].id);
+      }
     } catch (error) {
-      console.error("❌ Failed to fetch salons:", error);
+      console.error("Failed to fetch salons:", error);
       setSalons([]);
     } finally {
       setIsLoading(false);
     }
   }, []);
 
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    console.log(
-      "🔑 Token check in SalonProvider:",
-      token ? "EXISTS" : "MISSING",
-    );
-    if (token) {
-      console.log("✅ Token found, calling refreshSalons");
-      refreshSalons();
-    } else {
-      console.log("❌ No token, skipping refreshSalons");
-      setIsLoading(false);
-    }
-  }, [refreshSalons]);
   // Initialize on mount
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem(AUTH_STORAGE_KEY);
     if (token) {
       refreshSalons();
     } else {
