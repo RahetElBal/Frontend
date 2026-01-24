@@ -319,10 +319,28 @@ export function AdminUsersPage() {
   };
 
   const handleSubmit = (data: UserFormData) => {
+    // Clean up data before sending - remove empty strings for optional UUID fields
+    // Backend expects either a valid UUID or the field to be absent
+    const cleanedData: Record<string, unknown> = {
+      name: data.name,
+      email: data.email,
+      role: data.role,
+    };
+
+    // Only include salonId if it's a valid non-empty value
+    if (data.salonId && data.salonId.trim() !== "") {
+      cleanedData.salonId = data.salonId;
+    }
+
+    // Only include managedById if it's a valid non-empty value
+    if (data.managedById && data.managedById.trim() !== "") {
+      cleanedData.managedById = data.managedById;
+    }
+
     if (isEditMode) {
-      updateUser(data);
+      updateUser(cleanedData as UserFormData);
     } else {
-      createUser(data);
+      createUser(cleanedData as UserFormData);
     }
   };
 
