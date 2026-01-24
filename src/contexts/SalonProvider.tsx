@@ -10,6 +10,7 @@ import {
 import type { Salon } from "@/types/entities";
 import { get } from "@/lib/http";
 import { AUTH_STORAGE_KEY } from "@/constants/auth";
+import type { AuthUser } from "@/types/user";
 
 const SALON_STORAGE_KEY = "selected_salon_id";
 
@@ -31,6 +32,23 @@ interface SalonProviderProps {
 
 const MAX_RETRIES = 2;
 
+// Helper to check if user is superadmin from stored user data
+function getStoredUserRole(): { isSuperadmin: boolean; isAdmin: boolean } {
+  try {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      const user = JSON.parse(storedUser) as AuthUser;
+      return {
+        isSuperadmin: user.isSuperadmin === true || user.role === "superadmin",
+        isAdmin: user.role === "admin",
+      };
+    }
+  } catch {
+    // Ignore parse errors
+  }
+  return { isSuperadmin: false, isAdmin: false };
+}
+
 export function SalonProvider({ children }: SalonProviderProps) {
   const [currentSalon, setCurrentSalon] = useState<Salon | null>(null);
   const [salons, setSalons] = useState<Salon[]>([]);
@@ -40,6 +58,23 @@ export function SalonProvider({ children }: SalonProviderProps) {
 
   // Fetch user's salons
   const refreshSalons = useCallback(async () => {
+    const token = localStorage.getItem(AUTH_STORAGE_KEY);
+    if (!token) {
+      setIsLoading(false);
+      return;
+    }
+
+    const { isSuperadmin } = getStoredUserRole();
+
+    // Superadmin doesn't need to fetch salons for basic access
+    // They access admin panel which manages all salons
+    if (isSuperadmin) {
+      setIsLoading(false);
+      setSalons([]);
+      setHasError(false);
+      return;
+    }
+
     try {
       setIsLoading(true);
       setHasError(false);
@@ -78,12 +113,7 @@ export function SalonProvider({ children }: SalonProviderProps) {
 
   // Initialize on mount
   useEffect(() => {
-    const token = localStorage.getItem(AUTH_STORAGE_KEY);
-    if (token) {
-      refreshSalons();
-    } else {
-      setIsLoading(false);
-    }
+    refreshSalons();
   }, [refreshSalons]);
 
   const selectSalon = useCallback((salon: Salon) => {

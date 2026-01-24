@@ -1,4 +1,4 @@
-import { Outlet } from 'react-router-dom';
+import { Outlet, Navigate } from 'react-router-dom';
 
 import { cn } from '@/lib/utils';
 import { AppSidebar } from '@/components/sidebar/app-sidebar';
@@ -7,7 +7,7 @@ import { MainLayout } from '@/layouts/main-layout';
 import { SalonSelector } from '@/components/salon-selector';
 import { useUser } from '@/hooks/useUser';
 import { useSalon } from '@/contexts/SalonProvider';
-import { getNavigationForRole } from '@/constants/navigation';
+import { getNavigationForRole, ROUTES } from '@/constants/navigation';
 import type { AppRole } from '@/types/user';
 
 /**
@@ -15,7 +15,7 @@ import type { AppRole } from '@/types/user';
  * Navigation varies based on role:
  * - user: Limited access (no analytics, settings)
  * - admin: Full salon management access
- * - superadmin: Full access (same as admin in salon view)
+ * - superadmin: Redirected to admin panel (shouldn't access user routes directly)
  */
 export function UserLayout() {
   const { user, isLoading: userLoading, isAuthenticated } = useUser();
@@ -37,17 +37,34 @@ export function UserLayout() {
     return null;
   }
 
-  // Superadmin can access without salon selection
+  // Check user roles
   const isSuperadmin = user.isSuperadmin || user.role === 'superadmin';
+  const isAdmin = user.role === 'admin';
 
-  // If user has salons but none selected, show salon selector
-  if (salons.length > 0 && !currentSalon && !isSuperadmin) {
+  // Superadmin should use admin panel, not user routes
+  // Redirect them to admin panel
+  if (isSuperadmin) {
+    return <Navigate to={ROUTES.ADMIN} replace />;
+  }
+
+  // Admin without any salons should go to admin panel to create one
+  if (isAdmin && salons.length === 0) {
+    return <Navigate to={ROUTES.ADMIN} replace />;
+  }
+
+  // Admin with salons but none selected - show salon selector
+  if (isAdmin && salons.length > 0 && !currentSalon) {
     return <SalonSelector onSelect={() => refreshSalons()} />;
   }
 
-  // If user has no salons (new user or not assigned) and is not superadmin, show selector with empty state
-  if (salons.length === 0 && !isSuperadmin) {
+  // Regular user with no salons - show "contact admin" message
+  if (!isAdmin && salons.length === 0) {
     return <SalonSelector />;
+  }
+
+  // Regular user with salons but none selected - show salon selector
+  if (!isAdmin && salons.length > 0 && !currentSalon) {
+    return <SalonSelector onSelect={() => refreshSalons()} />;
   }
 
   // Get navigation based on user role

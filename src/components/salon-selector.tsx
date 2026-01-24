@@ -58,10 +58,12 @@ export function SalonSelector({ onSelect }: SalonSelectorProps) {
           <p className="text-muted-foreground mb-6">
             {t("salon.noSalonsDescription")}
           </p>
-          <Button variant="outline" onClick={handleLogout} className="gap-2">
-            <LogOut className="h-4 w-4" />
-            {t("auth.logout")}
-          </Button>
+          <div className="flex flex-col gap-3">
+            <Button variant="outline" onClick={handleLogout} className="gap-2">
+              <LogOut className="h-4 w-4" />
+              {t("auth.logout")}
+            </Button>
+          </div>
         </Card>
       </div>
     );
