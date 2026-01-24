@@ -541,56 +541,102 @@ export function AdminUsersPage() {
                 <Label htmlFor="role">{t("fields.role")}</Label>
                 <Select
                   value={form.watch("role")}
-                  onValueChange={(value) =>
-                    form.setValue("role", value as "user" | "admin")
-                  }
+                  onValueChange={(value) => {
+                    form.setValue("role", value as "user" | "admin");
+                    // Clear salon when switching to admin (optional for admins)
+                    if (value === "admin") {
+                      form.setValue("salonId", "");
+                      form.clearErrors("salonId");
+                    }
+                  }}
                 >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="user">Utilisateur</SelectItem>
-                    <SelectItem value="admin">Administrateur</SelectItem>
+                    <SelectItem value="user">Utilisateur (Staff)</SelectItem>
+                    <SelectItem value="admin">Administrateur (Propriétaire)</SelectItem>
                   </SelectContent>
                 </Select>
+                <p className="text-xs text-muted-foreground">
+                  {form.watch("role") === "admin" 
+                    ? "Un administrateur peut créer et gérer ses propres salons"
+                    : "Un utilisateur est membre du staff d'un salon existant"}
+                </p>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="salon">{t("fields.salon")} *</Label>
-                <Select
-                  value={form.watch("salonId")}
-                  onValueChange={(value) => form.setValue("salonId", value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner un salon" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {salons.length === 0 ? (
-                      <div className="p-2 text-center text-muted-foreground text-sm">
-                        Aucun salon disponible. Vous devez d'abord créer un
-                        salon.
-                      </div>
-                    ) : (
-                      salons.map((salon) => (
+              {/* Salon field - Required for users, optional for admins */}
+              {form.watch("role") === "user" ? (
+                <div className="space-y-2">
+                  <Label htmlFor="salon">{t("fields.salon")} *</Label>
+                  {salons.length === 0 ? (
+                    <div className="p-4 rounded-lg border border-amber-200 bg-amber-50 text-amber-800">
+                      <p className="font-medium">Aucun salon disponible</p>
+                      <p className="text-sm mt-1">
+                        Vous devez d'abord créer un salon avant d'ajouter un utilisateur (staff).
+                        Les administrateurs peuvent être créés sans salon.
+                      </p>
+                    </div>
+                  ) : (
+                    <>
+                      <Select
+                        value={form.watch("salonId")}
+                        onValueChange={(value) => form.setValue("salonId", value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Sélectionner un salon" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {salons.map((salon) => (
+                            <SelectItem key={salon.id} value={salon.id}>
+                              <div className="flex items-center gap-2">
+                                <Building2 className="h-4 w-4 text-muted-foreground" />
+                                {salon.name}
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {form.hasError("salonId") && (
+                        <p className="text-sm text-destructive">
+                          {form.getError("salonId")}
+                        </p>
+                      )}
+                      <p className="text-xs text-muted-foreground">
+                        L'utilisateur aura accès uniquement à ce salon
+                      </p>
+                    </>
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Label htmlFor="salon">{t("fields.salon")} (optionnel)</Label>
+                  <Select
+                    value={form.watch("salonId")}
+                    onValueChange={(value) => form.setValue("salonId", value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Aucun salon (l'admin créera le sien)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">
+                        <span className="text-muted-foreground">Aucun salon</span>
+                      </SelectItem>
+                      {salons.map((salon) => (
                         <SelectItem key={salon.id} value={salon.id}>
                           <div className="flex items-center gap-2">
                             <Building2 className="h-4 w-4 text-muted-foreground" />
                             {salon.name}
                           </div>
                         </SelectItem>
-                      ))
-                    )}
-                  </SelectContent>
-                </Select>
-                {form.hasError("salonId") && (
-                  <p className="text-sm text-destructive">
-                    {form.getError("salonId")}
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Les administrateurs peuvent créer leurs propres salons après connexion
                   </p>
-                )}
-                <p className="text-xs text-muted-foreground">
-                  L'utilisateur aura accès uniquement à vos salons
-                </p>
-              </div>
+                </div>
+              )}
             </div>
             <DialogFooter>
               <Button
@@ -606,7 +652,7 @@ export function AdminUsersPage() {
                   form.isSubmitting ||
                   isCreating ||
                   isUpdating ||
-                  salons.length === 0
+                  (form.watch("role") === "user" && salons.length === 0)
                 }
               >
                 {form.isSubmitting || isCreating || isUpdating
