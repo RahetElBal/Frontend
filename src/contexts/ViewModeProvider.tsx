@@ -46,7 +46,7 @@ interface ViewModeProviderProps {
 }
 
 export function ViewModeProvider({ children }: ViewModeProviderProps) {
-  const { user, isAdmin, isSuperadmin } = useAuthContext();
+  const { isAdmin, isSuperadmin } = useAuthContext();
   
   // Default mode is based on actual role
   const defaultMode: ViewMode = (isAdmin || isSuperadmin) ? "admin" : "user";

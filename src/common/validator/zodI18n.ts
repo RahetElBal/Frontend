@@ -130,7 +130,7 @@ export function getFieldLabel(key: string): string {
  */
 export function requiredString(fieldLabel: string) {
   const msg = validationMsg('validation.required', { field: fieldLabel });
-  return z.string({ required_error: msg }).min(1, { message: msg });
+  return z.string().min(1, { message: msg });
 }
 
 /**
@@ -248,7 +248,7 @@ export function withPasswordMatch<T extends z.ZodRawShape>(
  */
 export function requiredNumber(fieldLabel: string) {
   const msg = validationMsg('validation.required', { field: fieldLabel });
-  return z.number({ required_error: msg, invalid_type_error: msg });
+  return z.number({ message: msg });
 }
 
 /**
@@ -265,7 +265,7 @@ export function positiveNumber(fieldLabel: string) {
  */
 export function requiredSelect(fieldLabel: string) {
   const msg = validationMsg('validation.required', { field: fieldLabel });
-  return z.string({ required_error: msg }).min(1, { message: msg });
+  return z.string().min(1, { message: msg });
 }
 
 /**
@@ -295,5 +295,5 @@ export function dateError(): string {
  * Creates a date field.
  */
 export function dateField() {
-  return z.date({ invalid_type_error: dateError() });
+  return z.date({ message: dateError() });
 }

@@ -81,17 +81,7 @@ const baseSalonFormSchema = z.object({
   email: optionalEmailField(),
 });
 
-// Schema with ownerId for superadmin (required when creating)
-const superadminSalonFormSchema = baseSalonFormSchema.extend({
-  ownerId: requiredString("Propriétaire"),
-});
-
-// Schema for admin (ownerId not needed - auto-assigned)
-const adminSalonFormSchema = baseSalonFormSchema;
-
 type BaseSalonFormData = z.infer<typeof baseSalonFormSchema>;
-type SuperadminSalonFormData = z.infer<typeof superadminSalonFormSchema>;
-type SalonFormData = BaseSalonFormData | SuperadminSalonFormData;
 
 export function AdminSalonsPage() {
   const { t } = useTranslation();
