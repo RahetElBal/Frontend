@@ -23,21 +23,35 @@ const createQueryClient = () =>
         gcTime: 1000 * 60 * 30, // 30 minutes (formerly cacheTime)
         retry: (failureCount, error) => {
           const apiError = error as ApiError;
+          
           // Don't retry on 4xx errors (client errors)
           if (apiError.status && apiError.status >= 400 && apiError.status < 500) {
             return false;
           }
-          // Retry up to 2 times for other errors
-          return failureCount < 2;
+          
+          // Don't retry on network errors after 1 attempt
+          if (!apiError.status) {
+            return failureCount < 1;
+          }
+          
+          // Retry up to 2 times for 5xx errors only
+          if (apiError.status && apiError.status >= 500) {
+            return failureCount < 2;
+          }
+          
+          return false;
         },
+        retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
         refetchOnWindowFocus: false,
         refetchOnReconnect: true,
+        networkMode: 'offlineFirst',
       },
       mutations: {
         retry: false,
         onError: (error) => {
           defaultErrorHandler(error as ApiError);
         },
+        networkMode: 'offlineFirst',
       },
     },
   });

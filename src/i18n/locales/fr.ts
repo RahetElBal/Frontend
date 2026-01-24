@@ -225,6 +225,7 @@ export const fr = {
       pastDate: 'La date doit être dans le passé',
       fileSize: 'La taille du fichier doit être inférieure à {{size}}',
       fileType: 'Le type de fichier doit être {{types}}',
+      salonRequired: 'Les utilisateurs doivent être assignés à un salon',
     },
   },
 

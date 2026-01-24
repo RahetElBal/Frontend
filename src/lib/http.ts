@@ -100,9 +100,10 @@ const createHttpClient = (): KyInstance => {
       ],
     },
     retry: {
-      limit: 2,
+      limit: 1,
       methods: ['get'],
-      statusCodes: [408, 413, 429, 500, 502, 503, 504],
+      statusCodes: [502, 503, 504],
+      delay: (attemptCount) => Math.min(1000 * attemptCount, 5000),
     },
   });
 };

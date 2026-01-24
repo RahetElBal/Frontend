@@ -522,6 +522,7 @@ export const en = {
       futureDate: 'Date must be in the future',
       pastDate: 'Date must be in the past',
       fileSize: 'File size must be less than {{size}}',
+      salonRequired: 'Users must be assigned to a salon',
       fileType: 'File type must be {{types}}',
     },
   },

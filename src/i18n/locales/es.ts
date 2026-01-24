@@ -217,6 +217,7 @@ export const es = {
       pastDate: 'La fecha debe ser en el pasado',
       fileSize: 'El tamaño del archivo debe ser menor a {{size}}',
       fileType: 'El tipo de archivo debe ser {{types}}',
+      salonRequired: 'Los usuarios deben ser asignados a un salón',
     },
   },
 

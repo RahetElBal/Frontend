@@ -217,6 +217,7 @@ export const ar = {
       pastDate: 'يجب أن يكون التاريخ في الماضي',
       fileSize: 'يجب أن يكون حجم الملف أقل من {{size}}',
       fileType: 'يجب أن يكون نوع الملف {{types}}',
+      salonRequired: 'يجب تعيين المستخدمين إلى صالون',
     },
   },
 

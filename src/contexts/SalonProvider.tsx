@@ -17,6 +17,7 @@ interface SalonContextType {
   currentSalon: Salon | null;
   salons: Salon[];
   isLoading: boolean;
+  hasError: boolean;
   selectSalon: (salon: Salon) => void;
   clearSalon: () => void;
   refreshSalons: () => Promise<void>;
@@ -28,17 +29,23 @@ interface SalonProviderProps {
   children: ReactNode;
 }
 
+const MAX_RETRIES = 2;
+
 export function SalonProvider({ children }: SalonProviderProps) {
   const [currentSalon, setCurrentSalon] = useState<Salon | null>(null);
   const [salons, setSalons] = useState<Salon[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
 
   // Fetch user's salons
   const refreshSalons = useCallback(async () => {
     try {
       setIsLoading(true);
+      setHasError(false);
       const data = await get<Salon[]>("salons/my-salons");
       setSalons(data);
+      setRetryCount(0); // Reset retry count on success
 
       // Try to restore previously selected salon
       const storedSalonId = localStorage.getItem(SALON_STORAGE_KEY);
@@ -59,10 +66,15 @@ export function SalonProvider({ children }: SalonProviderProps) {
     } catch (error) {
       console.error("Failed to fetch salons:", error);
       setSalons([]);
+      setHasError(true);
+      // Don't retry infinitely
+      if (retryCount < MAX_RETRIES) {
+        setRetryCount((prev) => prev + 1);
+      }
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [retryCount]);
 
   // Initialize on mount
   useEffect(() => {
@@ -90,6 +102,7 @@ export function SalonProvider({ children }: SalonProviderProps) {
         currentSalon,
         salons,
         isLoading,
+        hasError,
         selectSalon,
         clearSalon,
         refreshSalons,

@@ -89,14 +89,26 @@ const userFormSchema = z.object({
   name: z.string().min(1, "validation.required"),
   email: z.string().email("validation.email"),
   role: z.enum(["user", "admin"] as const),
-  salonId: z.string().optional(), // Optional because superadmin can create users without salon
-});
+  salonId: z.string().optional(),
+}).refine(
+  (data) => {
+    // If role is 'user', salonId is required
+    if (data.role === 'user') {
+      return !!data.salonId && data.salonId.length > 0;
+    }
+    return true;
+  },
+  {
+    message: "validation.custom.salonRequired",
+    path: ["salonId"],
+  }
+);
 
 type UserFormData = z.infer<typeof userFormSchema>;
 
 export function AdminUsersPage() {
   const { t } = useTranslation();
-  const { user: authUser } = useAuthContext();
+  useAuthContext(); // Used for auth state
 
   // Single state for all modal operations
   const [modalState, setModalState] = useState<UserModalState>(null);
@@ -107,10 +119,13 @@ export function AdminUsersPage() {
     data: usersResponse,
     isLoading,
     refetch,
-  } = useGet<PaginatedResponse<User>>("users");
+  } = useGet<PaginatedResponse<User>>("users", {
+    retry: 1,
+  });
   const users = usersResponse?.data || [];
   const { data: salons = [] } = useGet<Salon[]>(
-    authUser?.id ? (`salons/user/${authUser.id}` as string) : "",
+    "salons/my-salons",
+    { retry: 1 }
   );
 
   // Helper functions
