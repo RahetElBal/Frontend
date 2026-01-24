@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  Plus,
   MoreHorizontal,
   Eye,
   Edit,
@@ -14,6 +13,8 @@ import {
   Crown,
   ToggleLeft,
   ToggleRight,
+  UserPlus,
+  UserCog,
 } from "lucide-react";
 import { z } from "zod";
 import { requiredString, emailField, optionalString } from "@/common/validator/zodI18n";
@@ -83,6 +84,7 @@ interface PaginatedResponse<T> {
 type UserModalState = {
   userId: string | "create";
   mode: "view" | "edit" | "delete";
+  initialRole?: "user" | "admin"; // Pre-select role when creating
 } | null;
 
 // Zod schema for user form
@@ -178,10 +180,12 @@ export function AdminUsersPage() {
   // Reset form when modal state changes
   useEffect(() => {
     if (isCreateMode) {
+      // Use initialRole if provided, otherwise default to "admin" (easier to start)
+      const initialRole = modalState?.initialRole || "admin";
       form.reset({
         name: "",
         email: "",
-        role: "user",
+        role: initialRole,
         salonId: "",
       });
     } else if (selectedUser && isEditMode) {
@@ -448,13 +452,25 @@ export function AdminUsersPage() {
         title={t("nav.admin.users")}
         description={t("admin.users.description", { count: users.length })}
         actions={
-          <Button
-            className="gap-2"
-            onClick={() => setModalState({ userId: "create", mode: "edit" })}
-          >
-            <Plus className="h-4 w-4" />
-            {t("admin.users.addUser")}
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              className="gap-2"
+              onClick={() => setModalState({ userId: "create", mode: "edit", initialRole: "admin" })}
+            >
+              <UserCog className="h-4 w-4" />
+              Ajouter un admin
+            </Button>
+            <Button
+              className="gap-2"
+              onClick={() => setModalState({ userId: "create", mode: "edit", initialRole: "user" })}
+              disabled={salons.length === 0}
+              title={salons.length === 0 ? "Créez d'abord un admin et un salon" : undefined}
+            >
+              <UserPlus className="h-4 w-4" />
+              Ajouter un utilisateur
+            </Button>
+          </div>
         }
       />
 
@@ -469,14 +485,19 @@ export function AdminUsersPage() {
             {t("admin.users.noUsers")}
           </h3>
           <p className="text-muted-foreground mb-4">
-            Aucun utilisateur pour le moment
+            Commencez par créer un administrateur
           </p>
-          <Button
-            onClick={() => setModalState({ userId: "create", mode: "edit" })}
-          >
-            <Plus className="h-4 w-4 me-2" />
-            {t("admin.users.addUser")}
-          </Button>
+          <div className="flex justify-center gap-3">
+            <Button
+              onClick={() => setModalState({ userId: "create", mode: "edit", initialRole: "admin" })}
+            >
+              <UserCog className="h-4 w-4 me-2" />
+              Ajouter un administrateur
+            </Button>
+          </div>
+          <p className="text-sm text-muted-foreground mt-4">
+            Un administrateur pourra ensuite créer des salons et y ajouter du staff
+          </p>
         </Card>
       ) : (
         <DataTable
@@ -497,14 +518,16 @@ export function AdminUsersPage() {
           <DialogHeader>
             <DialogTitle>
               {isCreateMode
-                ? t("admin.users.addUser")
+                ? (form.watch("role") === "admin" ? "Ajouter un administrateur" : "Ajouter un utilisateur (staff)")
                 : "Modifier l'utilisateur"}
             </DialogTitle>
-            {isEditMode && selectedUser && (
-              <DialogDescription>
-                Modifier les informations de {getDisplayName(selectedUser)}
-              </DialogDescription>
-            )}
+            <DialogDescription>
+              {isCreateMode
+                ? (form.watch("role") === "admin" 
+                    ? "Les administrateurs peuvent créer et gérer leurs propres salons" 
+                    : "Les utilisateurs sont membres du staff d'un salon")
+                : `Modifier les informations de ${selectedUser ? getDisplayName(selectedUser) : ""}`}
+            </DialogDescription>
           </DialogHeader>
           <form onSubmit={form.handleSubmit(handleSubmit)}>
             <div className="grid gap-4 py-4">
@@ -537,97 +560,117 @@ export function AdminUsersPage() {
                 )}
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="role">{t("fields.role")}</Label>
-                <Select
-                  value={form.watch("role")}
-                  onValueChange={(value) => {
-                    form.setValue("role", value as "user" | "admin");
-                    // Clear salon when switching to admin (optional for admins)
-                    if (value === "admin") {
-                      form.setValue("salonId", "");
-                      form.clearErrors("salonId");
-                    }
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="user">Utilisateur (Staff)</SelectItem>
-                    <SelectItem value="admin">Administrateur (Propriétaire)</SelectItem>
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-muted-foreground">
-                  {form.watch("role") === "admin" 
-                    ? "Un administrateur peut créer et gérer ses propres salons"
-                    : "Un utilisateur est membre du staff d'un salon existant"}
-                </p>
-              </div>
+              {/* Role selector - only show when editing, not when creating */}
+              {!isCreateMode && (
+                <div className="space-y-2">
+                  <Label htmlFor="role">{t("fields.role")}</Label>
+                  <Select
+                    value={form.watch("role")}
+                    onValueChange={(value) => {
+                      form.setValue("role", value as "user" | "admin");
+                      // Clear salon when switching to admin (optional for admins)
+                      if (value === "admin") {
+                        form.setValue("salonId", "");
+                        form.clearErrors("salonId");
+                      }
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="user">Utilisateur (Staff)</SelectItem>
+                      <SelectItem value="admin">Administrateur (Propriétaire)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    {form.watch("role") === "admin" 
+                      ? "Un administrateur peut créer et gérer ses propres salons"
+                      : "Un utilisateur est membre du staff d'un salon existant"}
+                  </p>
+                </div>
+              )}
+              
+              {/* Show role badge when creating (read-only, already selected via button) */}
+              {isCreateMode && (
+                <div className="space-y-2">
+                  <Label>{t("fields.role")}</Label>
+                  <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50">
+                    {form.watch("role") === "admin" ? (
+                      <>
+                        <UserCog className="h-5 w-5 text-accent-pink" />
+                        <div>
+                          <p className="font-medium">Administrateur</p>
+                          <p className="text-xs text-muted-foreground">
+                            Peut créer et gérer des salons
+                          </p>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <UserPlus className="h-5 w-5 text-accent-blue" />
+                        <div>
+                          <p className="font-medium">Utilisateur (Staff)</p>
+                          <p className="text-xs text-muted-foreground">
+                            Membre du staff d'un salon
+                          </p>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
 
-              {/* Salon field - Required for users, optional for admins */}
-              {form.watch("role") === "user" ? (
+              {/* Salon field - Only shown for users (staff) */}
+              {form.watch("role") === "user" && (
                 <div className="space-y-2">
                   <Label htmlFor="salon">{t("fields.salon")} *</Label>
-                  {salons.length === 0 ? (
-                    <div className="p-4 rounded-lg border border-amber-200 bg-amber-50 text-amber-800 space-y-3">
-                      <div>
-                        <p className="font-medium">Aucun salon disponible</p>
-                        <p className="text-sm mt-1">
-                          Pour créer un utilisateur (staff), vous devez d'abord :
-                        </p>
-                        <ol className="text-sm mt-2 space-y-1 list-decimal list-inside">
-                          <li>Créer un <strong>Administrateur</strong> (ci-dessus)</li>
-                          <li>Aller dans <strong>Salons</strong> et créer un salon</li>
-                          <li>Revenir ici pour ajouter du staff</li>
-                        </ol>
-                      </div>
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        className="bg-white"
-                        onClick={() => {
-                          setModalState(null);
-                          window.location.href = "/admin/salons";
-                        }}
-                      >
-                        <Building2 className="h-4 w-4 me-2" />
-                        Aller aux Salons
-                      </Button>
-                    </div>
-                  ) : (
-                    <>
-                      <Select
-                        value={form.watch("salonId")}
-                        onValueChange={(value) => form.setValue("salonId", value)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Sélectionner un salon" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {salons.map((salon) => (
-                            <SelectItem key={salon.id} value={salon.id}>
-                              <div className="flex items-center gap-2">
-                                <Building2 className="h-4 w-4 text-muted-foreground" />
-                                {salon.name}
-                              </div>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      {form.hasError("salonId") && (
-                        <p className="text-sm text-destructive">
-                          {form.getError("salonId")}
-                        </p>
-                      )}
-                      <p className="text-xs text-muted-foreground">
-                        L'utilisateur aura accès uniquement à ce salon
-                      </p>
-                    </>
+                  <Select
+                    value={form.watch("salonId")}
+                    onValueChange={(value) => form.setValue("salonId", value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sélectionner un salon" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {salons.map((salon) => (
+                        <SelectItem key={salon.id} value={salon.id}>
+                          <div className="flex items-center gap-2">
+                            <Building2 className="h-4 w-4 text-muted-foreground" />
+                            {salon.name}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {form.hasError("salonId") && (
+                    <p className="text-sm text-destructive">
+                      {form.getError("salonId")}
+                    </p>
                   )}
+                  <p className="text-xs text-muted-foreground">
+                    L'utilisateur aura accès uniquement à ce salon
+                  </p>
                 </div>
-              ) : (
+              )}
+              
+              {/* Info message for admins */}
+              {form.watch("role") === "admin" && isCreateMode && (
+                <div className="p-4 rounded-lg border border-blue-200 bg-blue-50 text-blue-800">
+                  <div className="flex items-start gap-3">
+                    <Building2 className="h-5 w-5 mt-0.5" />
+                    <div>
+                      <p className="font-medium">Création automatique de salon</p>
+                      <p className="text-sm mt-1">
+                        L'administrateur pourra créer son propre salon après sa première connexion.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {/* Salon selector for editing admins */}
+              {form.watch("role") === "admin" && !isCreateMode && (
                 <div className="space-y-2">
                   <Label htmlFor="salon">{t("fields.salon")} (optionnel)</Label>
                   <Select
@@ -635,7 +678,7 @@ export function AdminUsersPage() {
                     onValueChange={(value) => form.setValue("salonId", value)}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Aucun salon (l'admin créera le sien)" />
+                      <SelectValue placeholder="Aucun salon assigné" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="">
@@ -651,9 +694,6 @@ export function AdminUsersPage() {
                       ))}
                     </SelectContent>
                   </Select>
-                  <p className="text-xs text-muted-foreground">
-                    Les administrateurs peuvent créer leurs propres salons après connexion
-                  </p>
                 </div>
               )}
             </div>
