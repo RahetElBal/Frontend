@@ -16,7 +16,7 @@ import {
   ToggleRight,
 } from "lucide-react";
 import { z } from "zod";
-import { requiredString, emailField, optionalString, validationMsg } from "@/common/validator/zodI18n";
+import { requiredString, emailField, optionalString } from "@/common/validator/zodI18n";
 
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
@@ -100,7 +100,7 @@ const userFormSchema = z.object({
     return true;
   },
   {
-    message: validationMsg("validation.custom.salonRequired", { field: "Salon" }),
+    message: "Un salon est requis pour les utilisateurs (staff)",
     path: ["salonId"],
   }
 );
@@ -124,26 +124,10 @@ export function AdminUsersPage() {
     retry: 1,
   });
   const users = usersResponse?.data || [];
-  const { data: salons = [], refetch: refetchSalons } = useGet<Salon[]>(
+  const { data: salons = [] } = useGet<Salon[]>(
     "salons/my-salons",
     { retry: 1 }
   );
-
-  // Quick create default salon mutation
-  const { mutate: createDefaultSalon, isPending: isCreatingDefaultSalon } = usePost<
-    Salon,
-    { name: string }
-  >("salons", {
-    onSuccess: (newSalon) => {
-      toast.success("Salon par défaut créé avec succès");
-      refetchSalons();
-      // Auto-select the new salon
-      form.setValue("salonId", newSalon.id);
-    },
-    onError: (error) => {
-      toast.error(error.message || "Erreur lors de la création du salon");
-    },
-  });
 
   // Helper functions
   // Check if user is superadmin - this is determined by backend via SUPERADMIN_EMAILS env var
@@ -590,19 +574,26 @@ export function AdminUsersPage() {
                       <div>
                         <p className="font-medium">Aucun salon disponible</p>
                         <p className="text-sm mt-1">
-                          Créez un salon par défaut pour commencer, ou créez un administrateur qui créera son propre salon.
+                          Pour créer un utilisateur (staff), vous devez d'abord :
                         </p>
+                        <ol className="text-sm mt-2 space-y-1 list-decimal list-inside">
+                          <li>Créer un <strong>Administrateur</strong> (ci-dessus)</li>
+                          <li>Aller dans <strong>Salons</strong> et créer un salon</li>
+                          <li>Revenir ici pour ajouter du staff</li>
+                        </ol>
                       </div>
                       <Button
                         type="button"
                         size="sm"
                         variant="outline"
                         className="bg-white"
-                        disabled={isCreatingDefaultSalon}
-                        onClick={() => createDefaultSalon({ name: "Mon Salon" })}
+                        onClick={() => {
+                          setModalState(null);
+                          window.location.href = "/admin/salons";
+                        }}
                       >
                         <Building2 className="h-4 w-4 me-2" />
-                        {isCreatingDefaultSalon ? "Création..." : "Créer un salon par défaut"}
+                        Aller aux Salons
                       </Button>
                     </div>
                   ) : (
