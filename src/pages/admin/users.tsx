@@ -93,6 +93,7 @@ const userFormSchema = z.object({
   email: emailField("Email"),
   role: z.enum(["user", "admin"] as const),
   salonId: optionalString(),
+  managedById: optionalString(),
 }).refine(
   (data) => {
     // If role is 'user', salonId is required
@@ -104,6 +105,18 @@ const userFormSchema = z.object({
   {
     message: "Un salon est requis pour les utilisateurs (staff)",
     path: ["salonId"],
+  }
+).refine(
+  (data) => {
+    // If role is 'user', managedById is required
+    if (data.role === 'user') {
+      return !!data.managedById && data.managedById.length > 0;
+    }
+    return true;
+  },
+  {
+    message: "Un administrateur est requis pour les utilisateurs (staff)",
+    path: ["managedById"],
   }
 );
 
@@ -128,6 +141,11 @@ export function AdminUsersPage() {
   const users = usersResponse?.data || [];
   const { data: salons = [] } = useGet<Salon[]>(
     "salons/my-salons",
+    { retry: 1 }
+  );
+  // Fetch admin users for the "managed by" selector
+  const { data: admins = [] } = useGet<User[]>(
+    "users/admins",
     { retry: 1 }
   );
 
@@ -174,6 +192,7 @@ export function AdminUsersPage() {
       email: "",
       role: "user",
       salonId: "",
+      managedById: "",
     },
   });
 
@@ -187,6 +206,7 @@ export function AdminUsersPage() {
         email: "",
         role: initialRole,
         salonId: "",
+        managedById: "",
       });
     } else if (selectedUser && isEditMode) {
       // Only allow 'user' or 'admin' roles in the form (superadmin is not editable)
@@ -196,6 +216,7 @@ export function AdminUsersPage() {
         email: selectedUser.email,
         role: formRole,
         salonId: selectedUser.workingSalons?.[0]?.id || "",
+        managedById: selectedUser.managedById || "",
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -346,6 +367,24 @@ export function AdminUsersPage() {
       },
     },
     {
+      key: "managedBy",
+      header: "Géré par",
+      render: (user) => (
+        <div className="flex items-center gap-2">
+          {user.managedBy ? (
+            <>
+              <UserCog className="h-4 w-4 text-accent-pink" />
+              <span>{user.managedBy.name || user.managedBy.email}</span>
+            </>
+          ) : user.role === UserRole.ADMIN ? (
+            <span className="text-muted-foreground text-sm">-</span>
+          ) : (
+            <span className="text-muted-foreground text-sm">Non assigné</span>
+          )}
+        </div>
+      ),
+    },
+    {
       key: "salon",
       header: t("fields.salon"),
       render: (user) => (
@@ -464,8 +503,8 @@ export function AdminUsersPage() {
             <Button
               className="gap-2"
               onClick={() => setModalState({ userId: "create", mode: "edit", initialRole: "user" })}
-              disabled={salons.length === 0}
-              title={salons.length === 0 ? "Créez d'abord un admin et un salon" : undefined}
+              disabled={salons.length === 0 || admins.length === 0}
+              title={salons.length === 0 || admins.length === 0 ? "Créez d'abord un admin et un salon" : undefined}
             >
               <UserPlus className="h-4 w-4" />
               Ajouter un utilisateur
@@ -621,6 +660,50 @@ export function AdminUsersPage() {
                 </div>
               )}
 
+              {/* Admin selector - Only shown for users (staff) */}
+              {form.watch("role") === "user" && (
+                <div className="space-y-2">
+                  <Label htmlFor="managedBy">Géré par (Admin) *</Label>
+                  {admins.length === 0 ? (
+                    <div className="p-4 rounded-lg border border-amber-200 bg-amber-50 text-amber-800">
+                      <p className="font-medium">Aucun administrateur disponible</p>
+                      <p className="text-sm mt-1">
+                        Créez d'abord un administrateur avant d'ajouter du staff.
+                      </p>
+                    </div>
+                  ) : (
+                    <>
+                      <Select
+                        value={form.watch("managedById")}
+                        onValueChange={(value) => form.setValue("managedById", value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Sélectionner un administrateur" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {admins.map((admin) => (
+                            <SelectItem key={admin.id} value={admin.id}>
+                              <div className="flex items-center gap-2">
+                                <UserCog className="h-4 w-4 text-accent-pink" />
+                                {admin.name || admin.email}
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {form.hasError("managedById") && (
+                        <p className="text-sm text-destructive">
+                          {form.getError("managedById")}
+                        </p>
+                      )}
+                      <p className="text-xs text-muted-foreground">
+                        L'administrateur qui supervise cet utilisateur
+                      </p>
+                    </>
+                  )}
+                </div>
+              )}
+
               {/* Salon field - Only shown for users (staff) */}
               {form.watch("role") === "user" && (
                 <div className="space-y-2">
@@ -711,7 +794,7 @@ export function AdminUsersPage() {
                   form.isSubmitting ||
                   isCreating ||
                   isUpdating ||
-                  (form.watch("role") === "user" && salons.length === 0)
+                  (form.watch("role") === "user" && (salons.length === 0 || admins.length === 0))
                 }
               >
                 {form.isSubmitting || isCreating || isUpdating
@@ -798,6 +881,21 @@ export function AdminUsersPage() {
                     </Badge>
                   </div>
                 </div>
+
+                {/* Managed by - Only for staff users */}
+                {selectedUser.role !== UserRole.ADMIN && (
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+                    <UserCog className="h-5 w-5 text-accent-pink" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">
+                        Géré par
+                      </p>
+                      <p className="font-medium">
+                        {selectedUser.managedBy?.name || selectedUser.managedBy?.email || "Non assigné"}
+                      </p>
+                    </div>
+                  </div>
+                )}
 
                 <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
                   <Building2 className="h-5 w-5 text-muted-foreground" />

@@ -40,6 +40,9 @@ export interface User extends BaseEntity {
   // Relationships
   ownedSalons?: Salon[];
   workingSalons?: Salon[];
+  // Direct admin relationship (for staff users)
+  managedById?: string;
+  managedBy?: User;
 }
 
 // ============================================
