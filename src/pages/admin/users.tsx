@@ -124,10 +124,26 @@ export function AdminUsersPage() {
     retry: 1,
   });
   const users = usersResponse?.data || [];
-  const { data: salons = [] } = useGet<Salon[]>(
+  const { data: salons = [], refetch: refetchSalons } = useGet<Salon[]>(
     "salons/my-salons",
     { retry: 1 }
   );
+
+  // Quick create default salon mutation
+  const { mutate: createDefaultSalon, isPending: isCreatingDefaultSalon } = usePost<
+    Salon,
+    { name: string }
+  >("salons", {
+    onSuccess: (newSalon) => {
+      toast.success("Salon par défaut créé avec succès");
+      refetchSalons();
+      // Auto-select the new salon
+      form.setValue("salonId", newSalon.id);
+    },
+    onError: (error) => {
+      toast.error(error.message || "Erreur lors de la création du salon");
+    },
+  });
 
   // Helper functions
   // Check if user is superadmin - this is determined by backend via SUPERADMIN_EMAILS env var
@@ -570,12 +586,24 @@ export function AdminUsersPage() {
                 <div className="space-y-2">
                   <Label htmlFor="salon">{t("fields.salon")} *</Label>
                   {salons.length === 0 ? (
-                    <div className="p-4 rounded-lg border border-amber-200 bg-amber-50 text-amber-800">
-                      <p className="font-medium">Aucun salon disponible</p>
-                      <p className="text-sm mt-1">
-                        Vous devez d'abord créer un salon avant d'ajouter un utilisateur (staff).
-                        Les administrateurs peuvent être créés sans salon.
-                      </p>
+                    <div className="p-4 rounded-lg border border-amber-200 bg-amber-50 text-amber-800 space-y-3">
+                      <div>
+                        <p className="font-medium">Aucun salon disponible</p>
+                        <p className="text-sm mt-1">
+                          Créez un salon par défaut pour commencer, ou créez un administrateur qui créera son propre salon.
+                        </p>
+                      </div>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        className="bg-white"
+                        disabled={isCreatingDefaultSalon}
+                        onClick={() => createDefaultSalon({ name: "Mon Salon" })}
+                      >
+                        <Building2 className="h-4 w-4 me-2" />
+                        {isCreatingDefaultSalon ? "Création..." : "Créer un salon par défaut"}
+                      </Button>
                     </div>
                   ) : (
                     <>

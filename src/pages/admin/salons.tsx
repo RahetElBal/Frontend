@@ -304,14 +304,27 @@ export function AdminSalonsPage() {
             {t("admin.salons.noSalons")}
           </h3>
           <p className="text-muted-foreground mb-4">
-            {t("admin.salons.addFirstSalon")}
+            {isSuperadmin && admins.length === 0
+              ? "Créez d'abord un administrateur, puis créez un salon et assignez-le à cet administrateur."
+              : t("admin.salons.addFirstSalon")}
           </p>
-          <Button
-            onClick={() => setModalState({ salonId: "create", mode: "edit" })}
-          >
-            <Plus className="h-4 w-4 me-2" />
-            {t("admin.salons.addSalon")}
-          </Button>
+          {isSuperadmin && admins.length === 0 ? (
+            <Button
+              onClick={() => {
+                window.location.href = "/admin/users";
+              }}
+            >
+              <Users className="h-4 w-4 me-2" />
+              Créer un administrateur
+            </Button>
+          ) : (
+            <Button
+              onClick={() => setModalState({ salonId: "create", mode: "edit" })}
+            >
+              <Plus className="h-4 w-4 me-2" />
+              {t("admin.salons.addSalon")}
+            </Button>
+          )}
         </Card>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -429,28 +442,53 @@ export function AdminSalonsPage() {
                       {t("admin.salons.salonOwner")} *
                     </div>
                   </Label>
-                  <Select
-                    value={selectedOwnerId}
-                    onValueChange={setSelectedOwnerId}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder={t("admin.salons.selectOwner")} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {admins.map((admin) => (
-                        <SelectItem key={admin.id} value={admin.id}>
-                          <div className="flex items-center gap-2">
-                            <UserCog className="h-4 w-4" />
-                            {admin.name || admin.email}
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {isCreateMode && !selectedOwnerId && (
-                    <p className="text-sm text-muted-foreground">
-                      {t("admin.salons.ownerHelp")}
-                    </p>
+                  {admins.length === 0 ? (
+                    <div className="p-4 rounded-lg border border-amber-200 bg-amber-50 text-amber-800 space-y-2">
+                      <p className="font-medium">Aucun administrateur disponible</p>
+                      <p className="text-sm">
+                        Vous devez d'abord créer un administrateur avant de créer un salon.
+                        Allez dans "Utilisateurs" et créez un administrateur.
+                      </p>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        className="bg-white"
+                        onClick={() => {
+                          setModalState(null);
+                          window.location.href = "/admin/users";
+                        }}
+                      >
+                        <Users className="h-4 w-4 me-2" />
+                        Créer un administrateur
+                      </Button>
+                    </div>
+                  ) : (
+                    <>
+                      <Select
+                        value={selectedOwnerId}
+                        onValueChange={setSelectedOwnerId}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder={t("admin.salons.selectOwner")} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {admins.map((admin) => (
+                            <SelectItem key={admin.id} value={admin.id}>
+                              <div className="flex items-center gap-2">
+                                <UserCog className="h-4 w-4" />
+                                {admin.name || admin.email}
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {isCreateMode && !selectedOwnerId && (
+                        <p className="text-sm text-muted-foreground">
+                          {t("admin.salons.ownerHelp")}
+                        </p>
+                      )}
+                    </>
                   )}
                 </div>
               )}
@@ -506,7 +544,7 @@ export function AdminSalonsPage() {
                   form.isSubmitting ||
                   createSalon.isPending ||
                   updateSalon.isPending ||
-                  (isSuperadmin && isCreateMode && !selectedOwnerId)
+                  (isSuperadmin && isCreateMode && (!selectedOwnerId || admins.length === 0))
                 }
               >
                 {form.isSubmitting ||
