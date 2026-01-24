@@ -1,8 +1,15 @@
-import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
-import type { Salon } from '@/types/entities';
-import { get } from '@/lib/http';
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  type ReactNode,
+} from "react";
+import type { Salon } from "@/types/entities";
+import { get } from "@/lib/http";
 
-const SALON_STORAGE_KEY = 'selected_salon_id';
+const SALON_STORAGE_KEY = "selected_salon_id";
 
 interface SalonContextType {
   currentSalon: Salon | null;
@@ -26,38 +33,39 @@ export function SalonProvider({ children }: SalonProviderProps) {
 
   // Fetch user's salons
   const refreshSalons = useCallback(async () => {
+    console.log("🔍 refreshSalons called");
     try {
       setIsLoading(true);
-      const data = await get<Salon[]>('salons/my-salons');
+      console.log("🌐 Calling /salons/my-salons...");
+      const data = await get<Salon[]>("salons/my-salons");
+      console.log("✅ Salons received:", data);
       setSalons(data);
-
-      // Try to restore previously selected salon
-      const storedSalonId = localStorage.getItem(SALON_STORAGE_KEY);
-      if (storedSalonId) {
-        const storedSalon = data.find(s => s.id === storedSalonId);
-        if (storedSalon) {
-          setCurrentSalon(storedSalon);
-        } else if (data.length === 1) {
-          // If only one salon, auto-select it
-          setCurrentSalon(data[0]);
-          localStorage.setItem(SALON_STORAGE_KEY, data[0].id);
-        }
-      } else if (data.length === 1) {
-        // If only one salon and no stored preference, auto-select
-        setCurrentSalon(data[0]);
-        localStorage.setItem(SALON_STORAGE_KEY, data[0].id);
-      }
+      // ... rest of the code
     } catch (error) {
-      console.error('Failed to fetch salons:', error);
+      console.error("❌ Failed to fetch salons:", error);
       setSalons([]);
     } finally {
       setIsLoading(false);
     }
   }, []);
 
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    console.log(
+      "🔑 Token check in SalonProvider:",
+      token ? "EXISTS" : "MISSING",
+    );
+    if (token) {
+      console.log("✅ Token found, calling refreshSalons");
+      refreshSalons();
+    } else {
+      console.log("❌ No token, skipping refreshSalons");
+      setIsLoading(false);
+    }
+  }, [refreshSalons]);
   // Initialize on mount
   useEffect(() => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
     if (token) {
       refreshSalons();
     } else {
@@ -94,7 +102,7 @@ export function SalonProvider({ children }: SalonProviderProps) {
 export function useSalon() {
   const context = useContext(SalonContext);
   if (context === undefined) {
-    throw new Error('useSalon must be used within a SalonProvider');
+    throw new Error("useSalon must be used within a SalonProvider");
   }
   return context;
 }
