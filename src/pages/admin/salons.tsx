@@ -102,9 +102,10 @@ export function AdminSalonsPage() {
   const { data: salons = [], isLoading, refetch } = useGet<Salon[]>("salons");
 
   // Fetch admins list for superadmin to assign ownership
-  const { data: admins = [] } = useGet<User[]>("users", {
-    params: { role: "admin" },
+  // Use the dedicated /users/admins endpoint instead of /users?role=admin
+  const { data: admins = [] } = useGet<User[]>("users/admins", {
     enabled: isSuperadmin, // Only fetch if superadmin
+    retry: 1,
   });
 
   // Helper functions
