@@ -33,7 +33,7 @@ interface SalonProviderProps {
 const MAX_RETRIES = 2;
 
 // Helper to check if user is superadmin from stored user data
-function getStoredUserRole(): { isSuperadmin: boolean; isAdmin: boolean } {
+function getStoredUserRole(): { isSuperadmin: boolean; isAdmin: boolean; hasUser: boolean } {
   try {
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
@@ -41,12 +41,13 @@ function getStoredUserRole(): { isSuperadmin: boolean; isAdmin: boolean } {
       return {
         isSuperadmin: user.isSuperadmin === true || user.role === "superadmin",
         isAdmin: user.role === "admin",
+        hasUser: true,
       };
     }
   } catch {
     // Ignore parse errors
   }
-  return { isSuperadmin: false, isAdmin: false };
+  return { isSuperadmin: false, isAdmin: false, hasUser: false };
 }
 
 export function SalonProvider({ children }: SalonProviderProps) {
@@ -61,10 +62,17 @@ export function SalonProvider({ children }: SalonProviderProps) {
     const token = localStorage.getItem(AUTH_STORAGE_KEY);
     if (!token) {
       setIsLoading(false);
+      setSalons([]);
       return;
     }
 
-    const { isSuperadmin } = getStoredUserRole();
+    const { isSuperadmin, hasUser } = getStoredUserRole();
+
+    // If no user data yet, don't fetch (wait for auth to complete)
+    if (!hasUser) {
+      setIsLoading(false);
+      return;
+    }
 
     // Superadmin doesn't need to fetch salons for basic access
     // They access admin panel which manages all salons
@@ -111,9 +119,19 @@ export function SalonProvider({ children }: SalonProviderProps) {
     }
   }, [retryCount]);
 
-  // Initialize on mount
+  // Initialize on mount and when auth changes
   useEffect(() => {
     refreshSalons();
+    
+    // Listen for storage changes (for when auth completes)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === "user" || e.key === AUTH_STORAGE_KEY) {
+        refreshSalons();
+      }
+    };
+    
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
   }, [refreshSalons]);
 
   const selectSalon = useCallback((salon: Salon) => {
