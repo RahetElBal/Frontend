@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '@/contexts/AuthProvider';
+import { useSalon } from '@/contexts/SalonProvider';
 import { AUTH_STORAGE_KEY, AUTH_ROUTES } from '@/constants/auth';
 import { get } from '@/lib/http';
 import { Spinner } from '@/components/spinner';
@@ -13,6 +14,7 @@ import type { AuthUser } from '@/types/user';
 export default function AuthCallback() {
   const navigate = useNavigate();
   const { login } = useAuthContext();
+  const { refreshSalons } = useSalon();
   const [error, setError] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(true);
   const processedRef = useRef(false);
@@ -102,6 +104,12 @@ export default function AuthCallback() {
         
         // Login with user data
         login(user, token);
+
+        // Refresh salons for non-superadmin users
+        const isSuperadmin = user.isSuperadmin || user.role === 'superadmin';
+        if (!isSuperadmin) {
+          await refreshSalons();
+        }
 
         // Redirect based on role
         navigateByRole(user);
