@@ -12,6 +12,8 @@ import {
   Phone,
   Mail,
   MapPin,
+  UserCog,
+  Shield,
 } from "lucide-react";
 
 import { PageHeader } from "@/components/page-header";
@@ -43,14 +45,27 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useGet } from "@/hooks/useGet";
 import { usePost } from "@/hooks/usePost";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useForm } from "@/hooks/useForm";
+import { useUser } from "@/hooks/useUser";
 import { toast } from "@/lib/toast";
-import type { Salon } from "@/types/entities";
+import type { Salon, User } from "@/types/entities";
+import {
+  requiredString,
+  optionalString,
+  optionalEmailField,
+} from "@/common/validator/zodI18n";
 
 // Modal state type
 type SalonModalState = {
@@ -58,25 +73,49 @@ type SalonModalState = {
   mode: "view" | "edit" | "delete";
 } | null;
 
-// Zod schema for salon form
-const salonFormSchema = z.object({
-  name: z.string().min(1, "validation.required"),
-  address: z.string().optional(),
-  phone: z.string().optional(),
-  email: z.string().email("validation.email").optional().or(z.literal("")),
+// Zod schema for salon form (base fields)
+const baseSalonFormSchema = z.object({
+  name: requiredString("Nom"),
+  address: optionalString(),
+  phone: optionalString(),
+  email: optionalEmailField(),
 });
 
-type SalonFormData = z.infer<typeof salonFormSchema>;
+// Schema with ownerId for superadmin (required when creating)
+const superadminSalonFormSchema = baseSalonFormSchema.extend({
+  ownerId: requiredString("Propriétaire"),
+});
+
+// Schema for admin (ownerId not needed - auto-assigned)
+const adminSalonFormSchema = baseSalonFormSchema;
+
+type BaseSalonFormData = z.infer<typeof baseSalonFormSchema>;
+type SuperadminSalonFormData = z.infer<typeof superadminSalonFormSchema>;
+type SalonFormData = BaseSalonFormData | SuperadminSalonFormData;
 
 export function AdminSalonsPage() {
   const { t } = useTranslation();
   const { formatCurrency } = useLanguage();
+  const { user } = useUser();
+
+  // Check user role
+  const isSuperadmin = user?.isSuperadmin || user?.role === "superadmin";
+  const isAdmin = user?.role === "admin";
+  const currentUserId = user?.id;
 
   // Unified modal state
   const [modalState, setModalState] = useState<SalonModalState>(null);
+  const [selectedOwnerId, setSelectedOwnerId] = useState<string>("");
 
   // Fetch salons from API (returns array directly)
+  // Backend should filter: superadmin sees all, admin sees only their own
   const { data: salons = [], isLoading, refetch } = useGet<Salon[]>("salons");
+
+  // Fetch admins list for superadmin to assign ownership
+  const { data: admins = [] } = useGet<User[]>("users", {
+    params: { role: "admin" },
+    enabled: isSuperadmin, // Only fetch if superadmin
+  });
 
   // Helper functions
   const getSelectedSalon = (): Salon | null => {
@@ -90,9 +129,16 @@ export function AdminSalonsPage() {
   const isViewMode = modalState?.mode === "view";
   const isDeleteMode = modalState?.mode === "delete";
 
-  // Form setup
-  const form = useForm<SalonFormData>({
-    schema: salonFormSchema,
+  // Check if current user can edit/delete a salon
+  const canModifySalon = (salon: Salon): boolean => {
+    if (isSuperadmin) return true;
+    if (isAdmin && salon.ownerId === currentUserId) return true;
+    return false;
+  };
+
+  // Form setup - use appropriate schema based on role
+  const form = useForm<BaseSalonFormData>({
+    schema: baseSalonFormSchema,
     defaultValues: {
       name: "",
       address: "",
@@ -110,6 +156,7 @@ export function AdminSalonsPage() {
         phone: "",
         email: "",
       });
+      setSelectedOwnerId("");
     } else if (selectedSalon && isEditMode) {
       form.reset({
         name: selectedSalon.name,
@@ -117,12 +164,13 @@ export function AdminSalonsPage() {
         phone: selectedSalon.phone || "",
         email: selectedSalon.email || "",
       });
+      setSelectedOwnerId(selectedSalon.ownerId || "");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [modalState, selectedSalon, isCreateMode, isEditMode]);
 
-  // Create salon mutation
-  const createSalon = usePost<Salon, SalonFormData>("salons", {
+  // Create salon mutation - include ownerId for superadmin
+  const createSalon = usePost<Salon, BaseSalonFormData & { ownerId?: string }>("salons", {
     onSuccess: () => {
       toast.success(t("admin.salons.addSalon") + " - " + t("common.success"));
       setModalState(null);
@@ -134,7 +182,7 @@ export function AdminSalonsPage() {
   });
 
   // Update salon mutation
-  const updateSalon = usePost<Salon, SalonFormData>(
+  const updateSalon = usePost<Salon, BaseSalonFormData & { ownerId?: string }>(
     `salons/${selectedSalon?.id}`,
     {
       method: "PATCH",
@@ -173,18 +221,38 @@ export function AdminSalonsPage() {
   };
 
   const handleEdit = (salon: Salon) => {
+    if (!canModifySalon(salon)) {
+      toast.error(t("common.unauthorized"));
+      return;
+    }
     setModalState({ salonId: salon.id, mode: "edit" });
   };
 
   const handleDelete = (salon: Salon) => {
+    if (!canModifySalon(salon)) {
+      toast.error(t("common.unauthorized"));
+      return;
+    }
     setModalState({ salonId: salon.id, mode: "delete" });
   };
 
-  const handleSubmit = (data: SalonFormData) => {
+  const handleSubmit = (data: BaseSalonFormData) => {
+    // Validate ownerId for superadmin when creating
+    if (isSuperadmin && isCreateMode && !selectedOwnerId) {
+      toast.error(t("admin.salons.selectOwnerRequired"));
+      return;
+    }
+
+    const payload = {
+      ...data,
+      // Superadmin must specify owner, admin's ownership is auto-assigned by backend
+      ...(isSuperadmin && { ownerId: selectedOwnerId }),
+    };
+
     if (isEditMode) {
-      updateSalon.mutate(data);
+      updateSalon.mutate(payload);
     } else {
-      createSalon.mutate(data);
+      createSalon.mutate(payload);
     }
   };
 
@@ -257,70 +325,92 @@ export function AdminSalonsPage() {
         </Card>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {salons.map((salon) => (
-            <Card key={salon.id} className="overflow-hidden">
-              <div className="p-6">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="h-12 w-12 rounded-lg bg-accent-pink/10 flex items-center justify-center">
-                      <Building2 className="h-6 w-6 text-accent-pink" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold">{salon.name}</h3>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Badge variant={salon.isActive ? "success" : "warning"}>
-                          {salon.isActive
-                            ? t("common.active")
-                            : t("common.inactive")}
-                        </Badge>
+          {salons.map((salon) => {
+            const canModify = canModifySalon(salon);
+            const isOwnSalon = salon.ownerId === currentUserId;
+            const ownerName = salon.owner?.name || salon.owner?.email || t("common.unknown");
+
+            return (
+              <Card key={salon.id} className="overflow-hidden">
+                <div className="p-6">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="h-12 w-12 rounded-lg bg-accent-pink/10 flex items-center justify-center">
+                        <Building2 className="h-6 w-6 text-accent-pink" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold">{salon.name}</h3>
+                        <div className="flex items-center gap-2 mt-1">
+                          <Badge variant={salon.isActive ? "success" : "warning"}>
+                            {salon.isActive
+                              ? t("common.active")
+                              : t("common.inactive")}
+                          </Badge>
+                          {isOwnSalon && (
+                            <Badge variant="default" className="bg-accent-pink/20 text-accent-pink">
+                              {t("admin.salons.yourSalon")}
+                            </Badge>
+                          )}
+                        </div>
                       </div>
                     </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => handleView(salon)}>
+                          <Eye className="h-4 w-4 me-2" />
+                          {t("common.view")}
+                        </DropdownMenuItem>
+                        {canModify && (
+                          <>
+                            <DropdownMenuItem onClick={() => handleEdit(salon)}>
+                              <Edit className="h-4 w-4 me-2" />
+                              {t("common.edit")}
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              onClick={() => handleDelete(salon)}
+                              className="text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4 me-2" />
+                              {t("common.delete")}
+                            </DropdownMenuItem>
+                          </>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => handleView(salon)}>
-                        <Eye className="h-4 w-4 me-2" />
-                        {t("common.view")}
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleEdit(salon)}>
-                        <Edit className="h-4 w-4 me-2" />
-                        {t("common.edit")}
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        onClick={() => handleDelete(salon)}
-                        className="text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4 me-2" />
-                        {t("common.delete")}
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
 
-                <div className="mt-4 space-y-2 text-sm">
-                  {salon.address && (
-                    <p className="text-muted-foreground">{salon.address}</p>
-                  )}
-                  {salon.email && (
-                    <p className="text-muted-foreground">{salon.email}</p>
-                  )}
-                </div>
+                  <div className="mt-4 space-y-2 text-sm">
+                    {salon.address && (
+                      <p className="text-muted-foreground">{salon.address}</p>
+                    )}
+                    {salon.email && (
+                      <p className="text-muted-foreground">{salon.email}</p>
+                    )}
+                  </div>
 
-                <div className="mt-4 pt-4 border-t flex items-center justify-between">
-                  <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                    <Users className="h-4 w-4" />
-                    {salon.staff?.length || 0} {t("admin.salons.users")}
+                  <div className="mt-4 pt-4 border-t flex items-center justify-between">
+                    <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                      <Users className="h-4 w-4" />
+                      {salon.staff?.length || 0} {t("admin.salons.users")}
+                    </div>
+                    {/* Show owner info for superadmin */}
+                    {isSuperadmin && (
+                      <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                        <UserCog className="h-4 w-4" />
+                        {ownerName}
+                      </div>
+                    )}
                   </div>
                 </div>
-              </div>
-            </Card>
-          ))}
+              </Card>
+            );
+          })}
         </div>
       )}
 
@@ -340,6 +430,49 @@ export function AdminSalonsPage() {
           </DialogHeader>
           <form onSubmit={form.handleSubmit(handleSubmit)}>
             <div className="grid gap-4 py-4">
+              {/* Owner selector - only for superadmin */}
+              {isSuperadmin && (
+                <div className="space-y-2">
+                  <Label htmlFor="ownerId">
+                    <div className="flex items-center gap-2">
+                      <Shield className="h-4 w-4 text-accent-pink" />
+                      {t("admin.salons.salonOwner")} *
+                    </div>
+                  </Label>
+                  <Select
+                    value={selectedOwnerId}
+                    onValueChange={setSelectedOwnerId}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={t("admin.salons.selectOwner")} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {admins.map((admin) => (
+                        <SelectItem key={admin.id} value={admin.id}>
+                          <div className="flex items-center gap-2">
+                            <UserCog className="h-4 w-4" />
+                            {admin.name || admin.email}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {isCreateMode && !selectedOwnerId && (
+                    <p className="text-sm text-muted-foreground">
+                      {t("admin.salons.ownerHelp")}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Admin info - show when admin creates (auto-assigned) */}
+              {isAdmin && isCreateMode && (
+                <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50 text-sm">
+                  <Shield className="h-4 w-4 text-accent-pink" />
+                  <span>{t("admin.salons.ownerAutoAssigned")}</span>
+                </div>
+              )}
+
               <div className="space-y-2">
                 <Label htmlFor="name">{t("fields.name")} *</Label>
                 <Input id="name" {...form.register("name")} />
@@ -382,7 +515,8 @@ export function AdminSalonsPage() {
                 disabled={
                   form.isSubmitting ||
                   createSalon.isPending ||
-                  updateSalon.isPending
+                  updateSalon.isPending ||
+                  (isSuperadmin && isCreateMode && !selectedOwnerId)
                 }
               >
                 {form.isSubmitting ||
@@ -415,17 +549,39 @@ export function AdminSalonsPage() {
                   <h3 className="text-xl font-semibold">
                     {selectedSalon.name}
                   </h3>
-                  <Badge
-                    variant={selectedSalon.isActive ? "success" : "warning"}
-                  >
-                    {selectedSalon.isActive
-                      ? t("common.active")
-                      : t("common.inactive")}
-                  </Badge>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Badge
+                      variant={selectedSalon.isActive ? "success" : "warning"}
+                    >
+                      {selectedSalon.isActive
+                        ? t("common.active")
+                        : t("common.inactive")}
+                    </Badge>
+                    {selectedSalon.ownerId === currentUserId && (
+                      <Badge variant="default" className="bg-accent-pink/20 text-accent-pink">
+                        {t("admin.salons.yourSalon")}
+                      </Badge>
+                    )}
+                  </div>
                 </div>
               </div>
 
               <div className="grid gap-4">
+                {/* Owner info - visible to superadmin */}
+                {isSuperadmin && (
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-accent-pink/5 border border-accent-pink/20">
+                    <Shield className="h-5 w-5 text-accent-pink" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">
+                        {t("admin.salons.salonOwner")}
+                      </p>
+                      <p className="font-medium">
+                        {selectedSalon.owner?.name || selectedSalon.owner?.email || t("common.unknown")}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
                 {selectedSalon.address && (
                   <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
                     <MapPin className="h-5 w-5 text-muted-foreground" />
@@ -481,7 +637,7 @@ export function AdminSalonsPage() {
             <Button variant="outline" onClick={() => setModalState(null)}>
               {t("common.close")}
             </Button>
-            {selectedSalon && (
+            {selectedSalon && canModifySalon(selectedSalon) && (
               <Button
                 onClick={() =>
                   setModalState({ salonId: selectedSalon.id, mode: "edit" })

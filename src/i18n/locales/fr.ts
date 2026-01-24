@@ -56,6 +56,8 @@ export const fr = {
     days: 'jours',
     before: 'avant',
     other: 'Autre',
+    unknown: 'Inconnu',
+    unauthorized: 'Vous n\'êtes pas autorisé à effectuer cette action',
   },
 
   // ============================================
@@ -772,6 +774,15 @@ export const fr = {
     sunday: 'Dimanche',
   },
 
+  viewMode: {
+    title: 'Mode d\'affichage',
+    admin: 'Vue administrateur',
+    user: 'Vue utilisateur',
+    switchedToAdmin: 'Basculé vers la vue administrateur',
+    switchedToUser: 'Basculé vers la vue utilisateur',
+    description: 'Prévisualiser l\'application en tant qu\'un autre rôle',
+  },
+
   admin: {
     dashboard: {
       title: 'Tableau de bord admin',
@@ -813,6 +824,12 @@ export const fr = {
       salonDetails: 'Détails du salon',
       deleteSalon: 'Supprimer le salon',
       deleteSalonConfirm: 'Êtes-vous sûr de vouloir supprimer {{name}} ? Cette action est irréversible.',
+      salonOwner: 'Propriétaire du salon',
+      selectOwner: 'Sélectionner un administrateur comme propriétaire',
+      selectOwnerRequired: 'Veuillez sélectionner un propriétaire',
+      ownerHelp: 'Choisissez quel administrateur sera propriétaire et gérera ce salon',
+      ownerAutoAssigned: 'Vous serez automatiquement désigné comme propriétaire de ce salon',
+      yourSalon: 'Votre salon',
     },
   },
 } as const;

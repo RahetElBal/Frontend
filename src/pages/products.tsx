@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { z } from 'zod';
 import { Plus, AlertTriangle, Package, MoreHorizontal, Edit, Trash2, Eye, DollarSign, BarChart3 } from 'lucide-react';
+import { requiredString, optionalString } from '@/common/validator/zodI18n';
 
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
@@ -52,13 +53,13 @@ type ProductModalState = {
 
 // Zod schema for product form
 const productFormSchema = z.object({
-  name: z.string().min(1, 'validation.required'),
-  description: z.string().optional(),
-  sku: z.string().optional(),
-  price: z.coerce.number().min(0, 'validation.minValue'),
-  cost: z.coerce.number().min(0, 'validation.minValue').optional(),
-  stock: z.coerce.number().min(0, 'validation.minValue'),
-  minStock: z.coerce.number().min(0, 'validation.minValue').optional(),
+  name: requiredString('Nom'),
+  description: optionalString(),
+  sku: optionalString(),
+  price: z.coerce.number().min(0, 'validation.number.positive'),
+  cost: z.coerce.number().min(0, 'validation.number.positive').optional(),
+  stock: z.coerce.number().min(0, 'validation.number.positive'),
+  minStock: z.coerce.number().min(0, 'validation.number.positive').optional(),
 });
 
 type ProductFormData = z.infer<typeof productFormSchema>;

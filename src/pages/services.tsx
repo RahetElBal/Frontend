@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { z } from 'zod';
 import { Plus, Clock, MoreHorizontal, Edit, Trash2, ToggleLeft, ToggleRight, Eye, DollarSign } from 'lucide-react';
+import { requiredString, optionalString } from '@/common/validator/zodI18n';
 
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
@@ -50,11 +51,11 @@ type ServiceModalState = {
 
 // Zod schema for service form
 const serviceFormSchema = z.object({
-  name: z.string().min(1, 'validation.required'),
-  description: z.string().optional(),
-  duration: z.coerce.number().min(5, 'validation.minValue'),
-  price: z.coerce.number().min(0, 'validation.minValue'),
-  categoryId: z.string().optional(),
+  name: requiredString('Nom'),
+  description: optionalString(),
+  duration: z.coerce.number().min(5, 'validation.number.min'),
+  price: z.coerce.number().min(0, 'validation.number.positive'),
+  categoryId: optionalString(),
 });
 
 type ServiceFormData = z.infer<typeof serviceFormSchema>;

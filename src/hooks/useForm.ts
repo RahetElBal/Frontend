@@ -2,6 +2,7 @@ import { useForm as useReactHookForm, type UseFormProps, type FieldValues, type 
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { z } from 'zod';
 import { useTranslation } from 'react-i18next';
+import { parseValidationMsg } from '@/common/validator/zodI18n';
 
 interface UseFormOptions<T extends FieldValues> extends Omit<UseFormProps<T>, 'resolver'> {
   schema: z.ZodSchema<T>;
@@ -24,20 +25,20 @@ interface UseFormReturnExtended<T extends FieldValues> extends UseFormReturn<T> 
  * 
  * @example
  * const schema = z.object({
- *   firstName: requiredString('fields.firstName'),
- *   email: emailField(),
+ *   name: requiredString("Nom"),
+ *   email: emailField("Email"),
  * });
  * 
  * const form = useForm({
  *   schema,
- *   defaultValues: { firstName: '', email: '' },
+ *   defaultValues: { name: '', email: '' },
  *   onSubmit: (data) => console.log(data),
  * });
  * 
  * // In JSX:
  * <form onSubmit={form.handleSubmitForm}>
- *   <FormInput name="firstName" form={form} label={t('fields.firstName')} />
- *   <FormInput name="email" form={form} label={t('fields.email')} type="email" />
+ *   <FormInput name="name" form={form} label="Nom" />
+ *   <FormInput name="email" form={form} label="Email" type="email" />
  * </form>
  */
 export function useForm<T extends FieldValues>(
@@ -53,15 +54,30 @@ export function useForm<T extends FieldValues>(
     ...formOptions,
   });
 
+  /**
+   * Get translated error message for a field.
+   * 
+   * Handles three message formats:
+   * 1. Simple translation key: "validation.string.email"
+   * 2. Key with params: "validation.required:field=Nom"
+   * 3. Already translated message: "Nom est obligatoire"
+   */
   const getError = (name: Path<T>): string | undefined => {
     const error = form.formState.errors[name];
     if (!error?.message) return undefined;
     
     const message = error.message as string;
-    // If the message is a translation key, translate it
+    
+    // Check if it's a translation key (starts with validation. or errors.)
     if (message.startsWith('validation.') || message.startsWith('errors.')) {
-      return t(message);
+      // Parse the message to extract key and params
+      const { key, params } = parseValidationMsg(message);
+      
+      // Translate with params
+      return t(key, params);
     }
+    
+    // Return as-is if not a translation key
     return message;
   };
 

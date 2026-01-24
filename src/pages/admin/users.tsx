@@ -16,6 +16,7 @@ import {
   ToggleRight,
 } from "lucide-react";
 import { z } from "zod";
+import { requiredString, emailField, optionalString, validationMsg } from "@/common/validator/zodI18n";
 
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
@@ -86,10 +87,10 @@ type UserModalState = {
 
 // Zod schema for user form
 const userFormSchema = z.object({
-  name: z.string().min(1, "validation.required"),
-  email: z.string().email("validation.email"),
+  name: requiredString("Nom"),
+  email: emailField("Email"),
   role: z.enum(["user", "admin"] as const),
-  salonId: z.string().optional(),
+  salonId: optionalString(),
 }).refine(
   (data) => {
     // If role is 'user', salonId is required
@@ -99,7 +100,7 @@ const userFormSchema = z.object({
     return true;
   },
   {
-    message: "validation.custom.salonRequired",
+    message: validationMsg("validation.custom.salonRequired", { field: "Salon" }),
     path: ["salonId"],
   }
 );

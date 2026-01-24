@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { LogOut, Settings, User, ChevronUp, Globe } from 'lucide-react';
+import { LogOut, Settings, User, ChevronUp, Globe, Eye, Shield } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 import { cn } from '@/lib/utils';
@@ -25,6 +25,7 @@ import {
 } from '@/components/ui/tooltip';
 import { useAuthentication } from '@/hooks/useAuthentication';
 import { useLanguage } from '@/hooks/useLanguage';
+import { useViewMode } from '@/contexts/ViewModeProvider';
 import { ROUTES } from '@/constants/navigation';
 import type { AuthUser } from '@/types/user';
 
@@ -38,6 +39,7 @@ export function SidebarUserMenu({ user, collapsed }: SidebarUserMenuProps) {
   const navigate = useNavigate();
   const { logout } = useAuthentication();
   const { languages, currentLanguage, changeLanguage } = useLanguage();
+  const { viewMode, canSwitchMode, setViewMode } = useViewMode();
 
   // Build display name from name, firstName, or lastName
   const displayName = user.name || [user.firstName, user.lastName].filter(Boolean).join(' ') || user.email;
@@ -127,6 +129,30 @@ export function SidebarUserMenu({ user, collapsed }: SidebarUserMenuProps) {
             </DropdownMenuRadioGroup>
           </DropdownMenuSubContent>
         </DropdownMenuSub>
+        {/* View Mode Toggle - Only for admins */}
+        {canSwitchMode && (
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger>
+              <Eye className="mr-2 h-4 w-4" />
+              {t('viewMode.title')}
+            </DropdownMenuSubTrigger>
+            <DropdownMenuSubContent>
+              <DropdownMenuRadioGroup
+                value={viewMode}
+                onValueChange={(value) => setViewMode(value as 'admin' | 'user')}
+              >
+                <DropdownMenuRadioItem value="admin">
+                  <Shield className="mr-2 h-4 w-4" />
+                  {t('viewMode.admin')}
+                </DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="user">
+                  <User className="mr-2 h-4 w-4" />
+                  {t('viewMode.user')}
+                </DropdownMenuRadioItem>
+              </DropdownMenuRadioGroup>
+            </DropdownMenuSubContent>
+          </DropdownMenuSub>
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem
           onClick={handleLogout}

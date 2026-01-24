@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { z } from 'zod';
 import { Plus, Mail, Phone, MoreHorizontal, Eye, Edit, Trash2, Calendar, Award, DollarSign } from 'lucide-react';
+import { requiredString, optionalString, optionalEmailField } from '@/common/validator/zodI18n';
 
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
@@ -49,10 +50,10 @@ type ClientModalState = {
 
 // Zod schema for client form
 const clientFormSchema = z.object({
-  firstName: z.string().min(1, 'validation.required'),
-  lastName: z.string().min(1, 'validation.required'),
-  email: z.string().email('validation.email').optional().or(z.literal('')),
-  phone: z.string().optional(),
+  firstName: requiredString('Prénom'),
+  lastName: requiredString('Nom'),
+  email: optionalEmailField(),
+  phone: optionalString(),
 });
 
 type ClientFormData = z.infer<typeof clientFormSchema>;

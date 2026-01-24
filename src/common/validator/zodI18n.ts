@@ -1,119 +1,299 @@
 import { z } from 'zod';
-import i18n from '@/i18n';
-
-// Type for translation params
-type TranslationParams = Record<string, string | number>;
-
-// Helper to get translated message
-function t(key: string, params?: TranslationParams): string {
-  return i18n.t(key, params);
-}
 
 // Export configured zod
 export { z };
 
 // ============================================
-// VALIDATION HELPERS
+// VALIDATION MESSAGE SYSTEM
 // ============================================
 
-// Helper to create required string with i18n message
-export function requiredString(fieldKey: string) {
-  return z
-    .string({ message: t('validation.required', { field: t(fieldKey) }) })
-    .min(1, t('validation.required', { field: t(fieldKey) }));
+/**
+ * Validation messages use a special format: "key:param1=value1,param2=value2"
+ * This allows us to pass both the translation key AND parameters to the 
+ * error display component, which then calls t() with proper interpolation.
+ * 
+ * Example: "validation.required:field=Nom" 
+ * → Will be parsed and translated as t("validation.required", { field: "Nom" })
+ * → Results in "Nom est obligatoire"
+ */
+
+/**
+ * Creates a validation message with embedded parameters.
+ * Format: "key:param1=value1,param2=value2"
+ */
+export function validationMsg(key: string, params?: Record<string, string | number>): string {
+  if (!params || Object.keys(params).length === 0) {
+    return key;
+  }
+  const paramStr = Object.entries(params)
+    .map(([k, v]) => `${k}=${v}`)
+    .join(',');
+  return `${key}:${paramStr}`;
 }
 
-// Helper to create optional string
+/**
+ * Parses a validation message and extracts key and params.
+ * Input: "validation.required:field=Nom"
+ * Output: { key: "validation.required", params: { field: "Nom" } }
+ */
+export function parseValidationMsg(message: string): { key: string; params: Record<string, string> } {
+  const colonIndex = message.indexOf(':');
+  
+  if (colonIndex === -1) {
+    return { key: message, params: {} };
+  }
+  
+  const key = message.substring(0, colonIndex);
+  const paramStr = message.substring(colonIndex + 1);
+  
+  const params: Record<string, string> = {};
+  if (paramStr) {
+    paramStr.split(',').forEach(pair => {
+      const eqIndex = pair.indexOf('=');
+      if (eqIndex !== -1) {
+        const paramKey = pair.substring(0, eqIndex);
+        const paramValue = pair.substring(eqIndex + 1);
+        params[paramKey] = paramValue;
+      }
+    });
+  }
+  
+  return { key, params };
+}
+
+// ============================================
+// FIELD LABEL HELPERS
+// ============================================
+
+/**
+ * Common field labels in French (can be extended per locale if needed).
+ * These are the actual translated names, not translation keys.
+ */
+export const FIELD_LABELS = {
+  // Common fields
+  name: 'Nom',
+  firstName: 'Prénom',
+  lastName: 'Nom de famille',
+  email: 'Email',
+  phone: 'Téléphone',
+  address: 'Adresse',
+  password: 'Mot de passe',
+  confirmPassword: 'Confirmation du mot de passe',
+  
+  // Business fields
+  salonName: 'Nom du salon',
+  description: 'Description',
+  price: 'Prix',
+  duration: 'Durée',
+  category: 'Catégorie',
+  
+  // Date/Time
+  date: 'Date',
+  time: 'Heure',
+  startDate: 'Date de début',
+  endDate: 'Date de fin',
+  
+  // Other
+  notes: 'Notes',
+  status: 'Statut',
+  role: 'Rôle',
+  salon: 'Salon',
+  client: 'Client',
+  service: 'Service',
+  staff: 'Personnel',
+  owner: 'Propriétaire',
+} as const;
+
+type FieldLabelKey = keyof typeof FIELD_LABELS;
+
+/**
+ * Get field label by key, or return the key itself if not found.
+ */
+export function getFieldLabel(key: string): string {
+  return FIELD_LABELS[key as FieldLabelKey] || key;
+}
+
+// ============================================
+// VALIDATION SCHEMA HELPERS
+// ============================================
+
+/**
+ * Creates a required string field with proper error message.
+ * 
+ * @param fieldLabel - The human-readable field name (e.g., "Nom", "Email")
+ * 
+ * @example
+ * const schema = z.object({
+ *   name: requiredString("Nom"),
+ *   email: requiredString("Email").email(emailError()),
+ * });
+ */
+export function requiredString(fieldLabel: string) {
+  const msg = validationMsg('validation.required', { field: fieldLabel });
+  return z.string({ required_error: msg }).min(1, { message: msg });
+}
+
+/**
+ * Creates a required string using a field key from FIELD_LABELS.
+ * 
+ * @example
+ * const schema = z.object({
+ *   name: requiredField("name"), // Uses FIELD_LABELS.name = "Nom"
+ * });
+ */
+export function requiredField(fieldKey: FieldLabelKey | string) {
+  return requiredString(getFieldLabel(fieldKey));
+}
+
+/**
+ * Creates an optional string that accepts empty strings.
+ */
 export function optionalString() {
   return z.string().optional().or(z.literal(''));
 }
 
-// Helper to create email field
-export function emailField(fieldKey = 'fields.email') {
-  return requiredString(fieldKey).email(t('validation.string.email'));
+/**
+ * Email validation error message.
+ */
+export function emailError(): string {
+  return 'validation.string.email';
 }
 
-// Helper to create phone field
-export function phoneField(fieldKey = 'fields.phone') {
-  return requiredString(fieldKey).regex(
+/**
+ * Creates an email field (required).
+ */
+export function emailField(fieldLabel = 'Email') {
+  return requiredString(fieldLabel).email({ message: emailError() });
+}
+
+/**
+ * Creates an optional email field.
+ */
+export function optionalEmailField() {
+  return z.string().email({ message: emailError() }).optional().or(z.literal(''));
+}
+
+/**
+ * Phone validation error message.
+ */
+export function phoneError(): string {
+  return 'validation.custom.phoneInvalid';
+}
+
+/**
+ * Creates a phone field (required).
+ */
+export function phoneField(fieldLabel = 'Téléphone') {
+  return requiredString(fieldLabel).regex(
     /^[+]?[(]?[0-9]{1,4}[)]?[-\s./0-9]*$/,
-    t('validation.custom.phoneInvalid')
+    { message: phoneError() }
   );
 }
 
-// Helper to create password field
-export function passwordField(fieldKey = 'fields.password', minLength = 8) {
-  return requiredString(fieldKey).min(
-    minLength,
-    t('validation.string.min', { field: t(fieldKey), min: minLength })
+/**
+ * Creates a min length error message.
+ */
+export function minLengthError(fieldLabel: string, min: number): string {
+  return validationMsg('validation.string.min', { field: fieldLabel, min: min.toString() });
+}
+
+/**
+ * Creates a password field with minimum length.
+ */
+export function passwordField(fieldLabel = 'Mot de passe', minLength = 8) {
+  return requiredString(fieldLabel).min(minLength, {
+    message: minLengthError(fieldLabel, minLength),
+  });
+}
+
+/**
+ * Creates a strong password field with complexity requirements.
+ */
+export function strongPasswordField(fieldLabel = 'Mot de passe') {
+  return passwordField(fieldLabel, 8).regex(
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/,
+    { message: 'validation.custom.passwordWeak' }
   );
 }
 
-// Helper to create strong password field
-export function strongPasswordField(fieldKey = 'fields.password') {
-  return requiredString(fieldKey)
-    .min(8, t('validation.string.min', { field: t(fieldKey), min: 8 }))
-    .regex(
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/,
-      t('validation.custom.passwordWeak')
-    );
+/**
+ * Password mismatch error message.
+ */
+export function passwordMismatchError(): string {
+  return 'validation.custom.passwordMismatch';
 }
 
-// Helper to create confirm password field
-export function confirmPasswordField(fieldKey = 'fields.confirmPassword') {
-  return requiredString(fieldKey);
-}
-
-// Helper to add password match refinement to schema
+/**
+ * Adds password match validation to a schema.
+ */
 export function withPasswordMatch<T extends z.ZodRawShape>(
   schema: z.ZodObject<T>,
-  passwordField = 'password',
-  confirmField = 'confirmPassword'
+  passwordFieldName = 'password',
+  confirmFieldName = 'confirmPassword'
 ) {
   return schema.refine(
     (data) => {
       const d = data as Record<string, unknown>;
-      return d[passwordField] === d[confirmField];
+      return d[passwordFieldName] === d[confirmFieldName];
     },
     {
-      message: t('validation.custom.passwordMismatch'),
-      path: [confirmField],
+      message: passwordMismatchError(),
+      path: [confirmFieldName],
     }
   );
 }
 
-// Helper to create date field
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function dateField(_fieldKey = 'fields.date') {
-  return z.date({
-    message: t('validation.date.invalid'),
+/**
+ * Creates a required number field.
+ */
+export function requiredNumber(fieldLabel: string) {
+  const msg = validationMsg('validation.required', { field: fieldLabel });
+  return z.number({ required_error: msg, invalid_type_error: msg });
+}
+
+/**
+ * Creates a positive number field.
+ */
+export function positiveNumber(fieldLabel: string) {
+  return requiredNumber(fieldLabel).positive({
+    message: validationMsg('validation.number.positive', { field: fieldLabel }),
   });
 }
 
-// Helper to create number field
-export function numberField(fieldKey: string) {
-  return z.number({
-    message: t('validation.required', { field: t(fieldKey) }),
-  });
+/**
+ * Creates a select field (required, non-empty string).
+ */
+export function requiredSelect(fieldLabel: string) {
+  const msg = validationMsg('validation.required', { field: fieldLabel });
+  return z.string({ required_error: msg }).min(1, { message: msg });
 }
 
-// Helper to create positive number field
-export function positiveNumberField(fieldKey: string) {
-  return numberField(fieldKey).positive(
-    t('validation.number.positive', { field: t(fieldKey) })
-  );
+/**
+ * Invalid selection error message.
+ */
+export function invalidSelectionError(): string {
+  return 'validation.custom.invalidSelection';
 }
 
-// Helper to create select field (non-empty string)
-export function selectField(fieldKey: string) {
-  return z
-    .string({ message: t('validation.required', { field: t(fieldKey) }) })
-    .min(1, t('validation.custom.invalidSelection'));
-}
-
-// Helper to create multi-select field (non-empty array)
+/**
+ * Creates a multi-select field with minimum items.
+ */
 export function multiSelectField(minItems = 1) {
-  return z
-    .array(z.string())
-    .min(minItems, t('validation.array.min', { min: minItems }));
+  return z.array(z.string()).min(minItems, {
+    message: validationMsg('validation.array.min', { min: minItems.toString() }),
+  });
+}
+
+/**
+ * Date validation error message.
+ */
+export function dateError(): string {
+  return 'validation.date.invalid';
+}
+
+/**
+ * Creates a date field.
+ */
+export function dateField() {
+  return z.date({ invalid_type_error: dateError() });
 }

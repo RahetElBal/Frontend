@@ -14,6 +14,7 @@ import {
   Edit,
   Trash2,
 } from 'lucide-react';
+import { requiredString, optionalString } from '@/common/validator/zodI18n';
 
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
@@ -72,11 +73,11 @@ type AppointmentModalState = {
 
 // Zod schema for appointment form
 const appointmentFormSchema = z.object({
-  clientId: z.string().min(1, 'validation.required'),
-  serviceId: z.string().min(1, 'validation.required'),
-  date: z.string().min(1, 'validation.required'),
-  startTime: z.string().min(1, 'validation.required'),
-  notes: z.string().optional(),
+  clientId: requiredString('Client'),
+  serviceId: requiredString('Service'),
+  date: requiredString('Date'),
+  startTime: requiredString('Heure'),
+  notes: optionalString(),
 });
 
 type AppointmentFormData = z.infer<typeof appointmentFormSchema>;

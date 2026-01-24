@@ -6,6 +6,7 @@ import { GlobalProvider } from '@/contexts/GlobalProvider';
 import { ModalsProvider } from '@/contexts/ModalsProvider';
 import { QueryProvider } from '@/contexts/QueryProvider';
 import { SalonProvider } from '@/contexts/SalonProvider';
+import { ViewModeProvider } from '@/contexts/ViewModeProvider';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { Toaster } from '@/components/ui/sonner';
 
@@ -19,14 +20,16 @@ createRoot(document.getElementById('root')!).render(
     <ErrorBoundary>
       <QueryProvider>
         <AuthProvider>
-          <SalonProvider>
-            <GlobalProvider>
-              <ModalsProvider>
-                <App />
-                <Toaster />
-              </ModalsProvider>
-            </GlobalProvider>
-          </SalonProvider>
+          <ViewModeProvider>
+            <SalonProvider>
+              <GlobalProvider>
+                <ModalsProvider>
+                  <App />
+                  <Toaster />
+                </ModalsProvider>
+              </GlobalProvider>
+            </SalonProvider>
+          </ViewModeProvider>
         </AuthProvider>
       </QueryProvider>
     </ErrorBoundary>

@@ -354,6 +354,8 @@ export const en = {
     days: 'days',
     before: 'before',
     other: 'Other',
+    unknown: 'Unknown',
+    unauthorized: 'You are not authorized to perform this action',
   },
 
   // ============================================
@@ -1124,6 +1126,18 @@ export const en = {
   },
 
   // ============================================
+  // VIEW MODE
+  // ============================================
+  viewMode: {
+    title: 'View Mode',
+    admin: 'Admin View',
+    user: 'User View',
+    switchedToAdmin: 'Switched to admin view',
+    switchedToUser: 'Switched to user view',
+    description: 'Preview the app as a different role',
+  },
+
+  // ============================================
   // ADMIN
   // ============================================
   admin: {
@@ -1167,6 +1181,13 @@ export const en = {
       salonDetails: 'Salon Details',
       deleteSalon: 'Delete Salon',
       deleteSalonConfirm: 'Are you sure you want to delete {{name}}? This action cannot be undone.',
+      // Ownership
+      salonOwner: 'Salon Owner',
+      selectOwner: 'Select an admin as owner',
+      selectOwnerRequired: 'Please select a salon owner',
+      ownerHelp: 'Choose which admin will own and manage this salon',
+      ownerAutoAssigned: 'You will be automatically assigned as the owner of this salon',
+      yourSalon: 'Your salon',
     },
   },
 } as const;

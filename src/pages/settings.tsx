@@ -10,6 +10,7 @@ import {
   Monitor,
   Coins,
 } from 'lucide-react';
+import { requiredString } from '@/common/validator/zodI18n';
 
 import { PageHeader } from '@/components/page-header';
 import { Card } from '@/components/ui/card';
@@ -44,8 +45,8 @@ type SettingsModalState = {
 
 // Zod schema for profile form
 const profileFormSchema = z.object({
-  firstName: z.string().min(1, 'validation.required'),
-  lastName: z.string().min(1, 'validation.required'),
+  firstName: requiredString('Prénom'),
+  lastName: requiredString('Nom'),
 });
 
 type ProfileFormData = z.infer<typeof profileFormSchema>;

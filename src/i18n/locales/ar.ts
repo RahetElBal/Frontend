@@ -50,6 +50,8 @@ export const ar = {
     active: 'نشط',
     deactivate: 'تعطيل',
     activate: 'تفعيل',
+    unknown: 'غير معروف',
+    unauthorized: 'غير مصرح لك بتنفيذ هذا الإجراء',
   },
 
   // ============================================
@@ -535,6 +537,15 @@ export const ar = {
     billingDescription: 'إدارة طرق الدفع والاشتراك',
   },
 
+  viewMode: {
+    title: 'وضع العرض',
+    admin: 'عرض المدير',
+    user: 'عرض المستخدم',
+    switchedToAdmin: 'تم التبديل إلى عرض المدير',
+    switchedToUser: 'تم التبديل إلى عرض المستخدم',
+    description: 'معاينة التطبيق كدور مختلف',
+  },
+
   admin: {
     dashboard: {
       title: 'لوحة تحكم المدير',
@@ -571,6 +582,17 @@ export const ar = {
       totalUsers: 'إجمالي المستخدمين',
       monthlyRevenue: 'الإيرادات الشهرية',
       users: 'مستخدمين',
+      noSalons: 'لا توجد صالونات',
+      addFirstSalon: 'أضف أول صالون للبدء',
+      salonDetails: 'تفاصيل الصالون',
+      deleteSalon: 'حذف الصالون',
+      deleteSalonConfirm: 'هل أنت متأكد من حذف {{name}}؟ لا يمكن التراجع عن هذا الإجراء.',
+      salonOwner: 'مالك الصالون',
+      selectOwner: 'اختر مديراً كمالك',
+      selectOwnerRequired: 'الرجاء اختيار مالك الصالون',
+      ownerHelp: 'اختر المدير الذي سيمتلك ويدير هذا الصالون',
+      ownerAutoAssigned: 'سيتم تعيينك تلقائياً كمالك لهذا الصالون',
+      yourSalon: 'صالونك',
     },
   },
 } as const;

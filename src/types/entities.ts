@@ -53,7 +53,7 @@ export interface Salon extends BaseEntity {
   email?: string;
   logo?: string;
   isActive: boolean;
-  ownerId?: string;
+  ownerId: string; // Required - every salon must have an owner admin
   owner?: User;
   settings?: SalonSettings;
   staff?: User[];

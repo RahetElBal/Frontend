@@ -50,6 +50,8 @@ export const es = {
     active: 'Activo',
     deactivate: 'Desactivar',
     activate: 'Activar',
+    unknown: 'Desconocido',
+    unauthorized: 'No está autorizado para realizar esta acción',
   },
 
   // ============================================
@@ -535,6 +537,15 @@ export const es = {
     billingDescription: 'Gestionar métodos de pago y suscripción',
   },
 
+  viewMode: {
+    title: 'Modo de vista',
+    admin: 'Vista de administrador',
+    user: 'Vista de usuario',
+    switchedToAdmin: 'Cambiado a vista de administrador',
+    switchedToUser: 'Cambiado a vista de usuario',
+    description: 'Previsualizar la aplicación como otro rol',
+  },
+
   admin: {
     dashboard: {
       title: 'Panel de administración',
@@ -571,6 +582,17 @@ export const es = {
       totalUsers: 'Total usuarios',
       monthlyRevenue: 'Ingresos mensuales',
       users: 'usuarios',
+      noSalons: 'No hay salones',
+      addFirstSalon: 'Añade tu primer salón para comenzar',
+      salonDetails: 'Detalles del salón',
+      deleteSalon: 'Eliminar salón',
+      deleteSalonConfirm: '¿Estás seguro de que deseas eliminar {{name}}? Esta acción no se puede deshacer.',
+      salonOwner: 'Propietario del salón',
+      selectOwner: 'Seleccionar un administrador como propietario',
+      selectOwnerRequired: 'Por favor selecciona un propietario',
+      ownerHelp: 'Elige qué administrador será propietario y gestionará este salón',
+      ownerAutoAssigned: 'Serás asignado automáticamente como propietario de este salón',
+      yourSalon: 'Tu salón',
     },
   },
 } as const;

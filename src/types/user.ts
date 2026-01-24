@@ -33,7 +33,7 @@ export interface Salon {
   email?: string;
   logo?: string;
   isActive: boolean;
-  ownerId?: string;
+  ownerId: string; // Required - every salon must have an owner admin
   owner?: User;
   staff?: User[];
   createdBySuperadmin?: boolean;
