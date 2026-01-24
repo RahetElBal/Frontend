@@ -134,20 +134,23 @@ export function AdminSalonsPage() {
   });
 
   // Update salon mutation
-  const updateSalon = usePost<Salon, SalonFormData>(`salons/${selectedSalon?.id}`, {
-    method: "PATCH",
-    onSuccess: () => {
-      toast.success(t("common.edit") + " - " + t("common.success"));
-      setModalState(null);
-      refetch();
+  const updateSalon = usePost<Salon, SalonFormData>(
+    `salons/${selectedSalon?.id}`,
+    {
+      method: "PATCH",
+      onSuccess: () => {
+        toast.success(t("common.edit") + " - " + t("common.success"));
+        setModalState(null);
+        refetch();
+      },
+      onError: (error) => {
+        toast.error(error.message || t("common.error"));
+      },
     },
-    onError: (error) => {
-      toast.error(error.message || t("common.error"));
-    },
-  });
+  );
 
-  // Delete salon mutation
-  const deleteSalon = usePost<void, void>(`salons/${selectedSalon?.id}`, {
+  const deleteSalon = usePost<void, string>("salons", {
+    id: (salonId) => salonId,
     method: "DELETE",
     onSuccess: () => {
       toast.success(t("common.delete") + " - " + t("common.success"));
@@ -239,11 +242,15 @@ export function AdminSalonsPage() {
       ) : salons.length === 0 ? (
         <Card className="p-12 text-center">
           <Building2 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-          <h3 className="text-lg font-semibold mb-2">{t("admin.salons.noSalons")}</h3>
+          <h3 className="text-lg font-semibold mb-2">
+            {t("admin.salons.noSalons")}
+          </h3>
           <p className="text-muted-foreground mb-4">
             {t("admin.salons.addFirstSalon")}
           </p>
-          <Button onClick={() => setModalState({ salonId: "create", mode: "edit" })}>
+          <Button
+            onClick={() => setModalState({ salonId: "create", mode: "edit" })}
+          >
             <Plus className="h-4 w-4 me-2" />
             {t("admin.salons.addSalon")}
           </Button>
@@ -262,7 +269,9 @@ export function AdminSalonsPage() {
                       <h3 className="font-semibold">{salon.name}</h3>
                       <div className="flex items-center gap-2 mt-1">
                         <Badge variant={salon.isActive ? "success" : "warning"}>
-                          {salon.isActive ? t("common.active") : t("common.inactive")}
+                          {salon.isActive
+                            ? t("common.active")
+                            : t("common.inactive")}
                         </Badge>
                       </div>
                     </div>
@@ -335,7 +344,9 @@ export function AdminSalonsPage() {
                 <Label htmlFor="name">{t("fields.name")} *</Label>
                 <Input id="name" {...form.register("name")} />
                 {form.hasError("name") && (
-                  <p className="text-sm text-destructive">{form.getError("name")}</p>
+                  <p className="text-sm text-destructive">
+                    {form.getError("name")}
+                  </p>
                 )}
               </div>
               <div className="space-y-2">
@@ -351,7 +362,9 @@ export function AdminSalonsPage() {
                   <Label htmlFor="email">{t("fields.email")}</Label>
                   <Input id="email" type="email" {...form.register("email")} />
                   {form.hasError("email") && (
-                    <p className="text-sm text-destructive">{form.getError("email")}</p>
+                    <p className="text-sm text-destructive">
+                      {form.getError("email")}
+                    </p>
                   )}
                 </div>
               </div>
@@ -366,9 +379,15 @@ export function AdminSalonsPage() {
               </Button>
               <Button
                 type="submit"
-                disabled={form.isSubmitting || createSalon.isPending || updateSalon.isPending}
+                disabled={
+                  form.isSubmitting ||
+                  createSalon.isPending ||
+                  updateSalon.isPending
+                }
               >
-                {form.isSubmitting || createSalon.isPending || updateSalon.isPending
+                {form.isSubmitting ||
+                createSalon.isPending ||
+                updateSalon.isPending
                   ? t("common.loading")
                   : t("common.save")}
               </Button>
@@ -378,7 +397,10 @@ export function AdminSalonsPage() {
       </Dialog>
 
       {/* View Salon Modal */}
-      <Dialog open={isViewMode} onOpenChange={(open) => !open && setModalState(null)}>
+      <Dialog
+        open={isViewMode}
+        onOpenChange={(open) => !open && setModalState(null)}
+      >
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>{t("admin.salons.salonDetails")}</DialogTitle>
@@ -390,9 +412,15 @@ export function AdminSalonsPage() {
                   <Building2 className="h-8 w-8 text-accent-pink" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold">{selectedSalon.name}</h3>
-                  <Badge variant={selectedSalon.isActive ? "success" : "warning"}>
-                    {selectedSalon.isActive ? t("common.active") : t("common.inactive")}
+                  <h3 className="text-xl font-semibold">
+                    {selectedSalon.name}
+                  </h3>
+                  <Badge
+                    variant={selectedSalon.isActive ? "success" : "warning"}
+                  >
+                    {selectedSalon.isActive
+                      ? t("common.active")
+                      : t("common.inactive")}
                   </Badge>
                 </div>
               </div>
@@ -402,7 +430,9 @@ export function AdminSalonsPage() {
                   <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
                     <MapPin className="h-5 w-5 text-muted-foreground" />
                     <div>
-                      <p className="text-sm text-muted-foreground">{t("fields.address")}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {t("fields.address")}
+                      </p>
                       <p className="font-medium">{selectedSalon.address}</p>
                     </div>
                   </div>
@@ -412,7 +442,9 @@ export function AdminSalonsPage() {
                   <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
                     <Phone className="h-5 w-5 text-muted-foreground" />
                     <div>
-                      <p className="text-sm text-muted-foreground">{t("fields.phone")}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {t("fields.phone")}
+                      </p>
                       <p className="font-medium">{selectedSalon.phone}</p>
                     </div>
                   </div>
@@ -422,7 +454,9 @@ export function AdminSalonsPage() {
                   <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
                     <Mail className="h-5 w-5 text-muted-foreground" />
                     <div>
-                      <p className="text-sm text-muted-foreground">{t("fields.email")}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {t("fields.email")}
+                      </p>
                       <p className="font-medium">{selectedSalon.email}</p>
                     </div>
                   </div>
@@ -431,9 +465,12 @@ export function AdminSalonsPage() {
                 <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
                   <Users className="h-5 w-5 text-muted-foreground" />
                   <div>
-                    <p className="text-sm text-muted-foreground">{t("admin.salons.users")}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {t("admin.salons.users")}
+                    </p>
                     <p className="font-medium">
-                      {selectedSalon.staff?.length || 0} {t("admin.salons.users").toLowerCase()}
+                      {selectedSalon.staff?.length || 0}{" "}
+                      {t("admin.salons.users").toLowerCase()}
                     </p>
                   </div>
                 </div>
@@ -446,7 +483,9 @@ export function AdminSalonsPage() {
             </Button>
             {selectedSalon && (
               <Button
-                onClick={() => setModalState({ salonId: selectedSalon.id, mode: "edit" })}
+                onClick={() =>
+                  setModalState({ salonId: selectedSalon.id, mode: "edit" })
+                }
               >
                 <Edit className="h-4 w-4 me-2" />
                 {t("common.edit")}
@@ -473,8 +512,11 @@ export function AdminSalonsPage() {
           <AlertDialogFooter>
             <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => deleteSalon.mutate()}
+              onClick={() =>
+                selectedSalon && deleteSalon.mutate(selectedSalon.id)
+              }
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={!selectedSalon}
             >
               {deleteSalon.isPending ? t("common.loading") : t("common.delete")}
             </AlertDialogAction>
