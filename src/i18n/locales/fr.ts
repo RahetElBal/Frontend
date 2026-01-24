@@ -58,6 +58,7 @@ export const fr = {
     other: 'Autre',
     unknown: 'Inconnu',
     unauthorized: 'Vous n\'êtes pas autorisé à effectuer cette action',
+    success: 'Succès',
   },
 
   // ============================================

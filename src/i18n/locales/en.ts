@@ -43,6 +43,7 @@ export interface TranslationKeys {
     update: string;
     view: string;
     archive: string;
+    success: string;
   };
   auth: {
     login: {
@@ -356,6 +357,7 @@ export const en = {
     other: 'Other',
     unknown: 'Unknown',
     unauthorized: 'You are not authorized to perform this action',
+    success: 'Success',
   },
 
   // ============================================

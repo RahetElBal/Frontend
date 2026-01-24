@@ -52,6 +52,7 @@ export const es = {
     activate: 'Activar',
     unknown: 'Desconocido',
     unauthorized: 'No está autorizado para realizar esta acción',
+    success: 'Éxito',
   },
 
   // ============================================
