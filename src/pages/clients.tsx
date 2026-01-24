@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Plus, Mail, Phone, MoreHorizontal, Eye, Edit, Trash2 } from 'lucide-react';
+import { z } from 'zod';
+import { Plus, Mail, Phone, MoreHorizontal, Eye, Edit, Trash2, Calendar, Award, DollarSign } from 'lucide-react';
 
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
@@ -10,6 +11,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
@@ -18,42 +20,130 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useTable } from '@/hooks/useTable';
 import { useSalonGet, useSalonPost } from '@/hooks/useSalonData';
 import { useLanguage } from '@/hooks/useLanguage';
+import { useForm } from '@/hooks/useForm';
 import { toast } from '@/lib/toast';
 import type { Client } from '@/types/entities';
 
-interface CreateClientDto {
-  firstName: string;
-  lastName: string;
-  email?: string;
-  phone?: string;
-}
+// Modal state type
+type ClientModalState = {
+  clientId: string | 'create';
+  mode: 'view' | 'edit' | 'delete';
+} | null;
+
+// Zod schema for client form
+const clientFormSchema = z.object({
+  firstName: z.string().min(1, 'validation.required'),
+  lastName: z.string().min(1, 'validation.required'),
+  email: z.string().email('validation.email').optional().or(z.literal('')),
+  phone: z.string().optional(),
+});
+
+type ClientFormData = z.infer<typeof clientFormSchema>;
 
 export function ClientsPage() {
   const { t } = useTranslation();
   const { formatCurrency } = useLanguage();
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [formData, setFormData] = useState<CreateClientDto>({
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-  });
+  
+  // Unified modal state
+  const [modalState, setModalState] = useState<ClientModalState>(null);
 
   // Fetch clients from API (scoped to current salon)
-  const { data: clients = [], isLoading } = useSalonGet<Client[]>('clients');
+  const { data: clients = [], isLoading, refetch } = useSalonGet<Client[]>('clients');
 
-  // Create client mutation (includes salonId automatically)
-  const createClient = useSalonPost<Client, CreateClientDto>('clients', {
+  // Helper functions
+  const getSelectedClient = (): Client | null => {
+    if (!modalState || modalState.clientId === 'create') return null;
+    return clients.find((c) => c.id === modalState.clientId) || null;
+  };
+
+  const selectedClient = getSelectedClient();
+  const isCreateMode = modalState?.clientId === 'create';
+  const isEditMode = modalState?.mode === 'edit' && !isCreateMode;
+  const isViewMode = modalState?.mode === 'view';
+  const isDeleteMode = modalState?.mode === 'delete';
+
+  // Form setup
+  const form = useForm<ClientFormData>({
+    schema: clientFormSchema,
+    defaultValues: {
+      firstName: '',
+      lastName: '',
+      email: '',
+      phone: '',
+    },
+  });
+
+  // Reset form when modal state changes
+  useEffect(() => {
+    if (isCreateMode) {
+      form.reset({
+        firstName: '',
+        lastName: '',
+        email: '',
+        phone: '',
+      });
+    } else if (selectedClient && isEditMode) {
+      form.reset({
+        firstName: selectedClient.firstName,
+        lastName: selectedClient.lastName,
+        email: selectedClient.email || '',
+        phone: selectedClient.phone || '',
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [modalState, selectedClient, isCreateMode, isEditMode]);
+
+  // Create client mutation
+  const { mutate: createClient, isPending: isCreating } = useSalonPost<Client, ClientFormData>('clients', {
     onSuccess: () => {
       toast.success(t('clients.addClient') + ' - ' + t('common.success'));
-      setIsAddModalOpen(false);
-      setFormData({ firstName: '', lastName: '', email: '', phone: '' });
+      setModalState(null);
+      refetch();
+    },
+    onError: (error) => {
+      toast.error(error.message || t('common.error'));
+    },
+  });
+
+  // Update client mutation
+  const { mutate: updateClient, isPending: isUpdating } = useSalonPost<Client, ClientFormData>('clients', {
+    id: selectedClient?.id,
+    method: 'PATCH',
+    onSuccess: () => {
+      toast.success(t('common.edit') + ' - ' + t('common.success'));
+      setModalState(null);
+      refetch();
+    },
+    onError: (error) => {
+      toast.error(error.message || t('common.error'));
+    },
+  });
+
+  // Delete client mutation
+  const { mutate: deleteClient, isPending: isDeleting } = useSalonPost<void, void>('clients', {
+    id: selectedClient?.id,
+    method: 'DELETE',
+    onSuccess: () => {
+      toast.success(t('common.delete') + ' - ' + t('common.success'));
+      setModalState(null);
+      refetch();
     },
     onError: (error) => {
       toast.error(error.message || t('common.error'));
@@ -65,9 +155,25 @@ export function ClientsPage() {
     searchKeys: ['firstName', 'lastName', 'email', 'phone'],
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    createClient.mutate(formData);
+  // Handlers
+  const handleView = (client: Client) => {
+    setModalState({ clientId: client.id, mode: 'view' });
+  };
+
+  const handleEdit = (client: Client) => {
+    setModalState({ clientId: client.id, mode: 'edit' });
+  };
+
+  const handleDelete = (client: Client) => {
+    setModalState({ clientId: client.id, mode: 'delete' });
+  };
+
+  const handleSubmit = (data: ClientFormData) => {
+    if (isEditMode) {
+      updateClient(data);
+    } else {
+      createClient(data);
+    }
   };
 
   const columns: Column<Client>[] = [
@@ -143,7 +249,7 @@ export function ClientsPage() {
       key: 'actions',
       header: '',
       className: 'w-12',
-      render: (_client) => (
+      render: (client) => (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -151,15 +257,16 @@ export function ClientsPage() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleView(client)}>
               <Eye className="h-4 w-4 me-2" />
               {t('common.view')}
             </DropdownMenuItem>
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleEdit(client)}>
               <Edit className="h-4 w-4 me-2" />
               {t('common.edit')}
             </DropdownMenuItem>
-            <DropdownMenuItem className="text-destructive">
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => handleDelete(client)} className="text-destructive">
               <Trash2 className="h-4 w-4 me-2" />
               {t('common.delete')}
             </DropdownMenuItem>
@@ -175,7 +282,7 @@ export function ClientsPage() {
         title={t('nav.clients')}
         description={t('clients.description', { count: clients.length })}
         actions={
-          <Button className="gap-2" onClick={() => setIsAddModalOpen(true)}>
+          <Button className="gap-2" onClick={() => setModalState({ clientId: 'create', mode: 'edit' })}>
             <Plus className="h-4 w-4" />
             {t('clients.addClient')}
           </Button>
@@ -190,32 +297,41 @@ export function ClientsPage() {
         emptyMessage={isLoading ? t('common.loading') : t('clients.noClients')}
       />
 
-      {/* Add Client Modal */}
-      <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
+      {/* Create/Edit Client Modal */}
+      <Dialog open={isEditMode || isCreateMode} onOpenChange={(open) => !open && setModalState(null)}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>{t('clients.addClient')}</DialogTitle>
+            <DialogTitle>
+              {isCreateMode ? t('clients.addClient') : t('common.edit')}
+            </DialogTitle>
+            {isEditMode && selectedClient && (
+              <DialogDescription>
+                {selectedClient.firstName} {selectedClient.lastName}
+              </DialogDescription>
+            )}
           </DialogHeader>
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={form.handleSubmit(handleSubmit)}>
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="firstName">{t('fields.firstName')}</Label>
+                  <Label htmlFor="firstName">{t('fields.firstName')} *</Label>
                   <Input
                     id="firstName"
-                    value={formData.firstName}
-                    onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                    required
+                    {...form.register('firstName')}
                   />
+                  {form.hasError('firstName') && (
+                    <p className="text-sm text-destructive">{form.getError('firstName')}</p>
+                  )}
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="lastName">{t('fields.lastName')}</Label>
+                  <Label htmlFor="lastName">{t('fields.lastName')} *</Label>
                   <Input
                     id="lastName"
-                    value={formData.lastName}
-                    onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                    required
+                    {...form.register('lastName')}
                   />
+                  {form.hasError('lastName') && (
+                    <p className="text-sm text-destructive">{form.getError('lastName')}</p>
+                  )}
                 </div>
               </div>
               <div className="space-y-2">
@@ -223,31 +339,139 @@ export function ClientsPage() {
                 <Input
                   id="email"
                   type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  {...form.register('email')}
                 />
+                {form.hasError('email') && (
+                  <p className="text-sm text-destructive">{form.getError('email')}</p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="phone">{t('fields.phone')}</Label>
                 <Input
                   id="phone"
                   type="tel"
-                  value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  {...form.register('phone')}
                 />
               </div>
             </div>
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setIsAddModalOpen(false)}>
+              <Button type="button" variant="outline" onClick={() => setModalState(null)}>
                 {t('common.cancel')}
               </Button>
-              <Button type="submit" disabled={createClient.isPending}>
-                {createClient.isPending ? t('common.loading') : t('common.save')}
+              <Button type="submit" disabled={form.isSubmitting || isCreating || isUpdating}>
+                {form.isSubmitting || isCreating || isUpdating ? t('common.loading') : t('common.save')}
               </Button>
             </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* View Client Modal */}
+      <Dialog open={isViewMode} onOpenChange={(open) => !open && setModalState(null)}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>{t('clients.clientDetails')}</DialogTitle>
+          </DialogHeader>
+          {selectedClient && (
+            <div className="space-y-6 py-4">
+              <div className="flex items-center gap-4">
+                <div className="h-16 w-16 rounded-full bg-accent-pink/10 flex items-center justify-center">
+                  <span className="text-2xl font-bold text-accent-pink">
+                    {selectedClient.firstName[0]}{selectedClient.lastName[0]}
+                  </span>
+                </div>
+                <div>
+                  <h3 className="text-xl font-semibold">
+                    {selectedClient.firstName} {selectedClient.lastName}
+                  </h3>
+                  {selectedClient.email && (
+                    <p className="text-muted-foreground">{selectedClient.email}</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid gap-4">
+                {selectedClient.phone && (
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+                    <Phone className="h-5 w-5 text-muted-foreground" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">{t('fields.phone')}</p>
+                      <p className="font-medium">{selectedClient.phone}</p>
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+                  <Award className="h-5 w-5 text-muted-foreground" />
+                  <div>
+                    <p className="text-sm text-muted-foreground">{t('fields.loyaltyPoints')}</p>
+                    <Badge variant={selectedClient.loyaltyPoints >= 500 ? 'success' : 'default'}>
+                      {selectedClient.loyaltyPoints} pts
+                    </Badge>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+                  <DollarSign className="h-5 w-5 text-muted-foreground" />
+                  <div>
+                    <p className="text-sm text-muted-foreground">{t('fields.totalSpent')}</p>
+                    <p className="font-medium">{formatCurrency(selectedClient.totalSpent)}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+                  <Calendar className="h-5 w-5 text-muted-foreground" />
+                  <div>
+                    <p className="text-sm text-muted-foreground">{t('fields.visits')}</p>
+                    <p className="font-medium">
+                      {selectedClient.visitCount} {t('fields.visits').toLowerCase()}
+                      {selectedClient.lastVisit && (
+                        <span className="text-muted-foreground text-sm ml-2">
+                          ({t('fields.lastVisit')}: {new Date(selectedClient.lastVisit).toLocaleDateString()})
+                        </span>
+                      )}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setModalState(null)}>
+              {t('common.close')}
+            </Button>
+            {selectedClient && (
+              <Button onClick={() => setModalState({ clientId: selectedClient.id, mode: 'edit' })}>
+                <Edit className="h-4 w-4 me-2" />
+                {t('common.edit')}
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={isDeleteMode} onOpenChange={(open) => !open && setModalState(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('clients.deleteClient')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('clients.deleteClientConfirm', { 
+                name: selectedClient ? `${selectedClient.firstName} ${selectedClient.lastName}` : '' 
+              })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteClient()}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? t('common.loading') : t('common.delete')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

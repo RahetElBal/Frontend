@@ -1,15 +1,79 @@
-// Re-export from entities for backwards compatibility
-export { UserRole } from './entities';
-export type { User, Salon, SalonSettings, WorkingHours } from './entities';
+// Role type that includes superadmin (determined by backend)
+export type AppRole = 'superadmin' | 'admin' | 'user';
 
+// Base user type for authentication
+export interface AuthUser {
+  id: string;
+  email: string;
+  name?: string;
+  firstName?: string;
+  lastName?: string;
+  picture?: string;
+  role: AppRole;
+  isSuperadmin: boolean;
+}
+
+// Full user type from database (not superadmin)
+export interface User extends AuthUser {
+  createdAt: string;
+  updatedAt: string;
+  isActive: boolean;
+  googleId?: string;
+  lastLoginAt?: string;
+  ownedSalons?: Salon[];
+  workingSalons?: Salon[];
+}
+
+// Salon type
+export interface Salon {
+  id: string;
+  name: string;
+  address?: string;
+  phone?: string;
+  email?: string;
+  logo?: string;
+  isActive: boolean;
+  ownerId?: string;
+  owner?: User;
+  staff?: User[];
+  createdBySuperadmin?: boolean;
+  settings?: SalonSettings;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SalonSettings {
+  currency?: string;
+  timezone?: string;
+  language?: string;
+  workingHours?: WorkingHours;
+}
+
+export interface WorkingHours {
+  [day: string]: {
+    open: string;
+    close: string;
+    closed?: boolean;
+  };
+}
+
+// Auth state for context
 export interface AuthState {
-  user: import('./entities').User | null;
+  user: AuthUser | null;
   isAuthenticated: boolean;
   isLoading: boolean;
 }
 
 // Auth response from backend
 export interface AuthResponse {
-  access_token: string;
-  user: import('./entities').User;
+  accessToken: string;
+  user: AuthUser;
 }
+
+// Re-export UserRole for backwards compatibility
+export const UserRole = {
+  USER: "user",
+  ADMIN: "admin",
+} as const;
+
+export type UserRole = (typeof UserRole)[keyof typeof UserRole];

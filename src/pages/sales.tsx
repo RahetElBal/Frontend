@@ -285,7 +285,7 @@ export function SalesPage() {
       key: 'actions',
       header: '',
       className: 'w-12',
-      render: (_sale) => (
+      render: () => (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="h-8 w-8">

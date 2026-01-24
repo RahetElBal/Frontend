@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { z } from 'zod';
 import {
   User,
   Globe,
@@ -31,39 +32,71 @@ import {
 } from '@/components/ui/select';
 import { useUser } from '@/hooks/useUser';
 import { useLanguage } from '@/hooks/useLanguage';
+import { useForm } from '@/hooks/useForm';
+import { toast } from '@/lib/toast';
 
 type Theme = 'light' | 'dark' | 'system';
+
+// Modal state type
+type SettingsModalState = {
+  type: 'editProfile';
+} | null;
+
+// Zod schema for profile form
+const profileFormSchema = z.object({
+  firstName: z.string().min(1, 'validation.required'),
+  lastName: z.string().min(1, 'validation.required'),
+});
+
+type ProfileFormData = z.infer<typeof profileFormSchema>;
 
 export function SettingsPage() {
   const { t } = useTranslation();
   const { user } = useUser();
   const { currentLanguage, languages, changeLanguage, currency, availableCurrencies, changeCurrency } = useLanguage();
   
-  const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
+  // Unified modal state
+  const [modalState, setModalState] = useState<SettingsModalState>(null);
   const [theme, setTheme] = useState<Theme>('light');
-  const [profileData, setProfileData] = useState({
-    firstName: user?.firstName || '',
-    lastName: user?.lastName || '',
+
+  const isEditProfileOpen = modalState?.type === 'editProfile';
+
+  // Form setup
+  const form = useForm<ProfileFormData>({
+    schema: profileFormSchema,
+    defaultValues: {
+      firstName: '',
+      lastName: '',
+    },
   });
+
+  // Reset form when modal opens
+  useEffect(() => {
+    if (isEditProfileOpen && user) {
+      form.reset({
+        firstName: user.firstName || '',
+        lastName: user.lastName || '',
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isEditProfileOpen, user]);
 
   const currentLanguageName = languages.find(l => l.code === currentLanguage)?.name || currentLanguage;
 
-  const handleSaveProfile = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSaveProfile = async (data: ProfileFormData) => {
     // TODO: Call API to update profile
-    console.log('Saving profile:', profileData);
-    setIsEditProfileOpen(false);
+    console.log('Saving profile:', data);
+    toast.success(t('settings.profileUpdated'));
+    setModalState(null);
   };
 
   const handleThemeChange = (newTheme: Theme) => {
     setTheme(newTheme);
-    // TODO: Apply theme to document
     if (newTheme === 'dark') {
       document.documentElement.classList.add('dark');
     } else if (newTheme === 'light') {
       document.documentElement.classList.remove('dark');
     } else {
-      // System preference
       if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
         document.documentElement.classList.add('dark');
       } else {
@@ -106,7 +139,7 @@ export function SettingsPage() {
               {user?.role} {t('settings.account')}
             </p>
           </div>
-          <Button variant="outline" onClick={() => setIsEditProfileOpen(true)}>
+          <Button variant="outline" onClick={() => setModalState({ type: 'editProfile' })}>
             {t('common.edit')}
           </Button>
         </div>
@@ -127,7 +160,7 @@ export function SettingsPage() {
                 <p className="text-sm text-muted-foreground">{t('settings.languageDescription')}</p>
               </div>
             </div>
-            <Select value={currentLanguage} onValueChange={(value) => changeLanguage(value as any)}>
+            <Select value={currentLanguage} onValueChange={(value) => changeLanguage(value as 'en' | 'fr' | 'es' | 'ar')}>
               <SelectTrigger className="w-[180px]">
                 <SelectValue>{currentLanguageName}</SelectValue>
               </SelectTrigger>
@@ -214,12 +247,12 @@ export function SettingsPage() {
       </Card>
 
       {/* Edit Profile Modal */}
-      <Dialog open={isEditProfileOpen} onOpenChange={setIsEditProfileOpen}>
+      <Dialog open={isEditProfileOpen} onOpenChange={(open) => !open && setModalState(null)}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>{t('settings.editProfile')}</DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleSaveProfile}>
+          <form onSubmit={form.handleSubmit(handleSaveProfile)}>
             <div className="grid gap-4 py-4">
               <div className="flex justify-center mb-4">
                 <div className="relative">
@@ -238,35 +271,41 @@ export function SettingsPage() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="firstName">{t('fields.firstName')}</Label>
+                  <Label htmlFor="firstName">{t('fields.firstName')} *</Label>
                   <Input
                     id="firstName"
-                    value={profileData.firstName}
-                    onChange={(e) => setProfileData({ ...profileData, firstName: e.target.value })}
+                    {...form.register('firstName')}
                   />
+                  {form.hasError('firstName') && (
+                    <p className="text-sm text-destructive">{form.getError('firstName')}</p>
+                  )}
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="lastName">{t('fields.lastName')}</Label>
+                  <Label htmlFor="lastName">{t('fields.lastName')} *</Label>
                   <Input
                     id="lastName"
-                    value={profileData.lastName}
-                    onChange={(e) => setProfileData({ ...profileData, lastName: e.target.value })}
+                    {...form.register('lastName')}
                   />
+                  {form.hasError('lastName') && (
+                    <p className="text-sm text-destructive">{form.getError('lastName')}</p>
+                  )}
                 </div>
               </div>
               <div className="space-y-2">
                 <Label>{t('fields.email')}</Label>
                 <Input value={user?.email || ''} disabled className="bg-muted" />
                 <p className="text-xs text-muted-foreground">
-                  L'email ne peut pas être modifié car il est lié à votre compte Google
+                  {t('settings.emailCannotChange')}
                 </p>
               </div>
             </div>
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setIsEditProfileOpen(false)}>
+              <Button type="button" variant="outline" onClick={() => setModalState(null)}>
                 {t('common.cancel')}
               </Button>
-              <Button type="submit">{t('common.save')}</Button>
+              <Button type="submit" disabled={form.isSubmitting}>
+                {form.isSubmitting ? t('common.loading') : t('common.save')}
+              </Button>
             </DialogFooter>
           </form>
         </DialogContent>

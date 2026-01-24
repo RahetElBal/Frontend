@@ -2,36 +2,34 @@ import { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthContext } from '@/contexts/AuthProvider';
 import { AUTH_ROUTES } from '@/constants/auth';
-import { UserRole } from '@/types/entities';
-import type { User } from '@/types/entities';
+import type { AuthUser, AppRole } from '@/types/user';
 
 interface UseUserOptions {
   redirectTo?: string;
   redirectIfFound?: boolean;
-  requiredRole?: UserRole;
 }
 
 interface UseUserReturn {
-  user: User | null;
+  user: AuthUser | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  isSuperadmin: boolean;
   isAdmin: boolean;
   isUser: boolean;
+  hasRole: (role: AppRole) => boolean;
 }
 
 export function useUser(options: UseUserOptions = {}): UseUserReturn {
   const {
     redirectTo = AUTH_ROUTES.LOGIN,
     redirectIfFound = false,
-    requiredRole,
   } = options;
 
-  const { user, isAuthenticated, isLoading } = useAuthContext();
+  const { user, isAuthenticated, isLoading, isSuperadmin, isAdmin, hasRole } = useAuthContext();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const isAdmin = user?.role === UserRole.ADMIN;
-  const isUser = user?.role === UserRole.USER;
+  const isUser = user?.role === 'user';
 
   useEffect(() => {
     if (isLoading) return;
@@ -48,22 +46,16 @@ export function useUser(options: UseUserOptions = {}): UseUserReturn {
     // Redirect if authenticated and redirectIfFound is true
     if (isAuthenticated && redirectIfFound) {
       const from = (location.state as { from?: string })?.from;
-      const destination = from || getDefaultRouteForRole(user?.role);
+      const destination = from || getDefaultRouteForRole(user?.role as AppRole, user?.isSuperadmin);
       navigate(destination, { replace: true });
-      return;
-    }
-
-    // Check for required role
-    if (isAuthenticated && requiredRole && user?.role !== requiredRole) {
-      navigate(getDefaultRouteForRole(user?.role), { replace: true });
     }
   }, [
     isLoading,
     isAuthenticated,
     redirectTo,
     redirectIfFound,
-    requiredRole,
     user?.role,
+    user?.isSuperadmin,
     navigate,
     location,
   ]);
@@ -72,17 +64,24 @@ export function useUser(options: UseUserOptions = {}): UseUserReturn {
     user,
     isAuthenticated,
     isLoading,
+    isSuperadmin,
     isAdmin,
     isUser,
+    hasRole,
   };
 }
 
-function getDefaultRouteForRole(role?: UserRole): string {
-  switch (role) {
-    case UserRole.ADMIN:
-      return AUTH_ROUTES.ADMIN_DASHBOARD;
-    case UserRole.USER:
-    default:
-      return AUTH_ROUTES.DASHBOARD;
+function getDefaultRouteForRole(role?: AppRole, isSuperadmin?: boolean): string {
+  // Superadmin goes to admin panel
+  if (isSuperadmin || role === 'superadmin') {
+    return AUTH_ROUTES.ADMIN_DASHBOARD;
   }
+  
+  // Admin can go to admin panel or dashboard
+  if (role === 'admin') {
+    return AUTH_ROUTES.ADMIN_DASHBOARD;
+  }
+  
+  // Regular user goes to dashboard
+  return AUTH_ROUTES.DASHBOARD;
 }

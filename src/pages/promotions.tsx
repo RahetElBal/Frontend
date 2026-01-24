@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Plus,
@@ -275,12 +275,12 @@ export function PromotionsPage() {
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       {promotion.status === 'active' ? (
-                        <DropdownMenuItem onClick={() => updatePromotionStatus.mutate({ status: 'paused' } as any)}>
+                        <DropdownMenuItem onClick={() => updatePromotionStatus.mutate({ status: 'paused' })}>
                           <Pause className="h-4 w-4 me-2" />
                           {t('promotions.pause')}
                         </DropdownMenuItem>
                       ) : promotion.status === 'paused' || promotion.status === 'draft' ? (
-                        <DropdownMenuItem onClick={() => updatePromotionStatus.mutate({ status: 'active' } as any)}>
+                        <DropdownMenuItem onClick={() => updatePromotionStatus.mutate({ status: 'active' })}>
                           <Play className="h-4 w-4 me-2" />
                           {t('promotions.activate')}
                         </DropdownMenuItem>
@@ -383,6 +383,16 @@ interface PromotionModalProps {
 }
 
 function PromotionModal({ isOpen, onClose, onSubmit, isLoading, t }: PromotionModalProps) {
+  // Compute initial dates once
+  const initialDates = useMemo(() => {
+    const today = new Date();
+    const thirtyDaysLater = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000);
+    return {
+      startDate: today.toISOString().split('T')[0],
+      endDate: thirtyDaysLater.toISOString().split('T')[0],
+    };
+  }, []);
+
   const [formData, setFormData] = useState<CreatePromotionDto>({
     name: '',
     description: '',
@@ -394,8 +404,8 @@ function PromotionModal({ isOpen, onClose, onSubmit, isLoading, t }: PromotionMo
     maximumDiscount: undefined,
     usageLimit: undefined,
     usageLimitPerClient: undefined,
-    startDate: new Date().toISOString().split('T')[0],
-    endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    startDate: initialDates.startDate,
+    endDate: initialDates.endDate,
     isFirstTimeOnly: false,
     isBirthdayOnly: false,
   });

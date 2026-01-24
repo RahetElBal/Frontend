@@ -26,10 +26,10 @@ import {
 import { useAuthentication } from '@/hooks/useAuthentication';
 import { useLanguage } from '@/hooks/useLanguage';
 import { ROUTES } from '@/constants/navigation';
-import type { User as UserType } from '@/types/entities';
+import type { AuthUser } from '@/types/user';
 
 interface SidebarUserMenuProps {
-  user: UserType;
+  user: AuthUser;
   collapsed?: boolean;
 }
 
@@ -40,9 +40,9 @@ export function SidebarUserMenu({ user, collapsed }: SidebarUserMenuProps) {
   const { languages, currentLanguage, changeLanguage } = useLanguage();
 
   // Build display name from name, firstName, or lastName
-  const displayName = (user as any).name || [user.firstName, user.lastName].filter(Boolean).join(' ') || user.email;
+  const displayName = user.name || [user.firstName, user.lastName].filter(Boolean).join(' ') || user.email;
 
-  const initials = ((user as any).name || [user.firstName, user.lastName].filter(Boolean).join(' ') || user.email)
+  const initials = (user.name || [user.firstName, user.lastName].filter(Boolean).join(' ') || user.email)
     .split(' ')
     .map((n: string) => n[0] || '')
     .join('')

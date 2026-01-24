@@ -709,6 +709,9 @@ export const en = {
     addClient: 'Add Client',
     searchPlaceholder: 'Search clients by name, email or phone...',
     noClients: 'No clients found',
+    clientDetails: 'Client Details',
+    deleteClient: 'Delete Client',
+    deleteClientConfirm: 'Are you sure you want to delete {{name}}? This action cannot be undone.',
   },
 
   // ============================================
@@ -731,6 +734,10 @@ export const en = {
     notificationsEnabled: 'Notifications enabled',
     notificationsOn: 'Notifications are on',
     enableNotifications: 'Enable notifications',
+    appointmentDetails: 'Appointment Details',
+    deleteAppointment: 'Delete Appointment',
+    deleteAppointmentConfirm: 'Are you sure you want to delete the appointment with {{client}}?',
+    notesPlaceholder: 'Additional notes...',
   },
 
   // ============================================
@@ -740,6 +747,9 @@ export const en = {
     description: '{{count}} services available',
     addService: 'Add Service',
     services: 'services',
+    serviceDetails: 'Service Details',
+    deleteService: 'Delete Service',
+    deleteServiceConfirm: 'Are you sure you want to delete {{name}}? This action cannot be undone.',
   },
 
   // ============================================
@@ -755,6 +765,9 @@ export const en = {
     lowStock: 'Low Stock',
     stockAlerts: 'Stock Alerts',
     minStock: 'Min stock',
+    productDetails: 'Product Details',
+    deleteProduct: 'Delete Product',
+    deleteProductConfirm: 'Are you sure you want to delete {{name}}? This action cannot be undone.',
   },
 
   // ============================================
@@ -898,6 +911,8 @@ export const en = {
     appearanceDescription: 'Customize the app appearance',
     light: 'Light',
     dark: 'Dark',
+    profileUpdated: 'Profile updated successfully',
+    emailCannotChange: 'Email cannot be changed as it is linked to your Google account',
     businessSettings: 'Business Settings',
     salonInfo: 'Salon Information',
     salonInfoDescription: 'Update your salon details and business hours',
@@ -1146,6 +1161,11 @@ export const en = {
       totalUsers: 'Total Users',
       monthlyRevenue: 'Monthly Revenue',
       users: 'users',
+      noSalons: 'No salons',
+      addFirstSalon: 'Add your first salon to get started',
+      salonDetails: 'Salon Details',
+      deleteSalon: 'Delete Salon',
+      deleteSalonConfirm: 'Are you sure you want to delete {{name}}? This action cannot be undone.',
     },
   },
 } as const;

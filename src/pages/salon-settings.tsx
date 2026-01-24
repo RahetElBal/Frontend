@@ -106,9 +106,10 @@ export function SalonSettingsPage() {
     },
   });
 
-  // Update form when settings load
+  // Update form when settings load - this is intentional to sync form with loaded data
   useEffect(() => {
     if (settings) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFormData(settings);
     }
   }, [settings]);
@@ -128,7 +129,7 @@ export function SalonSettingsPage() {
     setHasChanges(true);
   };
 
-  const updateWorkingHours = (day: string, field: string, value: any) => {
+  const updateWorkingHours = (day: string, field: string, value: string | boolean) => {
     setFormData((prev) => {
       const currentDayHours = prev.workingHours?.[day] || { isOpen: false, openTime: '09:00', closeTime: '18:00' };
       return {
@@ -330,7 +331,7 @@ function GeneralSettings({ formData, updateField, t }: SettingsSectionProps) {
 
 interface WorkingHoursSettingsProps {
   formData: Partial<SalonSettingsExtended>;
-  updateWorkingHours: (day: string, field: string, value: any) => void;
+  updateWorkingHours: (day: string, field: string, value: string | boolean) => void;
   t: ReturnType<typeof useTranslation>['t'];
 }
 

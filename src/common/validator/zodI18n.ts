@@ -83,6 +83,7 @@ export function withPasswordMatch<T extends z.ZodRawShape>(
 }
 
 // Helper to create date field
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function dateField(_fieldKey = 'fields.date') {
   return z.date({
     message: t('validation.date.invalid'),

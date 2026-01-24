@@ -206,8 +206,8 @@ export function StaffPage() {
         <TimeOffView
           timeOffRequests={filteredTimeOff}
           staffMembers={staffMembers}
-          onApprove={() => approveTimeOff.mutate({ status: 'approved' } as any)}
-          onReject={() => approveTimeOff.mutate({ status: 'rejected' } as any)}
+          onApprove={() => approveTimeOff.mutate({ status: 'approved' })}
+          onReject={() => approveTimeOff.mutate({ status: 'rejected' })}
           t={t}
         />
       )}

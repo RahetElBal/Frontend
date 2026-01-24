@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useState, type ReactNode } from 'react';
 import type { SupportedLanguage } from '@/i18n';
 import { useTranslation } from 'react-i18next';

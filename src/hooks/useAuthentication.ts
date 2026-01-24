@@ -1,10 +1,10 @@
-import { useState, useCallback } from 'react';
-import { useAuthContext } from '@/contexts/AuthProvider';
-import { AUTH_STORAGE_KEY } from '@/constants/auth';
-import { get } from '@/lib/http';
-import type { User } from '@/types/entities';
+import { useState, useCallback } from "react";
+import { useAuthContext } from "@/contexts/AuthProvider";
+import { AUTH_STORAGE_KEY } from "@/constants/auth";
+import { get } from "@/lib/http";
+import type { User } from "@/types/entities";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 interface UseAuthenticationReturn {
   isLoading: boolean;
@@ -15,37 +15,24 @@ interface UseAuthenticationReturn {
 }
 
 /**
- * Hook for handling authentication with Google OAuth via backend
- * 
- * @example
- * const { loginWithGoogle, logout, isLoading } = useAuthentication();
- * 
- * // Trigger Google OAuth login
- * <Button onClick={loginWithGoogle}>Sign in with Google</Button>
+ * Hook for regular user/admin authentication
  */
 export function useAuthentication(): UseAuthenticationReturn {
   const { logout: contextLogout, updateUser } = useAuthContext();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  /**
-   * Initiates Google OAuth flow by redirecting to backend
-   */
   const loginWithGoogle = useCallback(() => {
     setIsLoading(true);
     setError(null);
-    
-    // Redirect to backend's Google OAuth endpoint
-    // The backend will redirect to Google, then back to our callback URL with the token
+
+    // Regular user OAuth flow
     window.location.href = `${API_BASE_URL}/auth/google`;
   }, []);
 
-  /**
-   * Checks if there's a valid auth token and fetches user data
-   */
   const checkAuth = useCallback(async () => {
     const token = localStorage.getItem(AUTH_STORAGE_KEY);
-    
+
     if (!token) {
       return;
     }
@@ -54,22 +41,18 @@ export function useAuthentication(): UseAuthenticationReturn {
     setError(null);
 
     try {
-      // Fetch current user from backend
-      const user = await get<User>('auth/me');
-      updateUser(user);
+      const user = await get<User>("auth/me");
+      // Ensure isSuperadmin has a boolean value for AuthUser compatibility
+      updateUser({ ...user, isSuperadmin: user.isSuperadmin ?? false });
     } catch (err) {
-      // Token is invalid, clear it
       localStorage.removeItem(AUTH_STORAGE_KEY);
-      localStorage.removeItem('user');
-      console.error('Auth check failed:', err);
+      localStorage.removeItem("user");
+      console.error("Auth check failed:", err);
     } finally {
       setIsLoading(false);
     }
   }, [updateUser]);
 
-  /**
-   * Logs out the user
-   */
   const logout = useCallback(() => {
     contextLogout();
   }, [contextLogout]);

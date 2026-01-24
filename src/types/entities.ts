@@ -9,28 +9,37 @@ export interface BaseEntity {
 }
 
 // ============================================
-// USER ENTITY
+// ROLE TYPES
 // ============================================
 
+// Role type - superadmin is determined by backend via env var, not stored in DB
+export type AppRole = 'superadmin' | 'admin' | 'user';
+
 export const UserRole = {
-  USER: 'user',
-  ADMIN: 'admin',
+  USER: "user",
+  ADMIN: "admin",
 } as const;
 
 export type UserRole = (typeof UserRole)[keyof typeof UserRole];
 
+// ============================================
+// USER ENTITY
+// ============================================
+
 export interface User extends BaseEntity {
   email: string;
-  name?: string;           // Backend uses 'name' field
-  firstName?: string;      // Some contexts use firstName/lastName
+  name?: string;
+  firstName?: string;
   lastName?: string;
   picture?: string;
-  role: UserRole;
+  role: AppRole;
   isActive: boolean;
   googleId?: string;
-  salonId?: string;
-  salon?: Salon;
   lastLoginAt?: string;
+  isSuperadmin?: boolean;
+  // Relationships
+  ownedSalons?: Salon[];
+  workingSalons?: Salon[];
 }
 
 // ============================================
@@ -44,8 +53,11 @@ export interface Salon extends BaseEntity {
   email?: string;
   logo?: string;
   isActive: boolean;
+  ownerId?: string;
+  owner?: User;
   settings?: SalonSettings;
-  users?: User[];
+  staff?: User[];
+  createdBySuperadmin?: boolean;
 }
 
 export interface SalonSettings {
@@ -68,9 +80,9 @@ export interface WorkingHours {
 // ============================================
 
 export const Gender = {
-  MALE: 'male',
-  FEMALE: 'female',
-  OTHER: 'other',
+  MALE: "male",
+  FEMALE: "female",
+  OTHER: "other",
 } as const;
 
 export type Gender = (typeof Gender)[keyof typeof Gender];
@@ -147,15 +159,16 @@ export interface Product extends BaseEntity {
 // ============================================
 
 export const AppointmentStatus = {
-  PENDING: 'pending',
-  CONFIRMED: 'confirmed',
-  IN_PROGRESS: 'in_progress',
-  COMPLETED: 'completed',
-  CANCELLED: 'cancelled',
-  NO_SHOW: 'no_show',
+  PENDING: "pending",
+  CONFIRMED: "confirmed",
+  IN_PROGRESS: "in_progress",
+  COMPLETED: "completed",
+  CANCELLED: "cancelled",
+  NO_SHOW: "no_show",
 } as const;
 
-export type AppointmentStatus = (typeof AppointmentStatus)[keyof typeof AppointmentStatus];
+export type AppointmentStatus =
+  (typeof AppointmentStatus)[keyof typeof AppointmentStatus];
 
 export interface Appointment extends BaseEntity {
   clientId: string;
@@ -180,19 +193,19 @@ export interface Appointment extends BaseEntity {
 // ============================================
 
 export const PaymentMethod = {
-  CASH: 'cash',
-  CARD: 'card',
-  BANK_TRANSFER: 'bank_transfer',
-  OTHER: 'other',
+  CASH: "cash",
+  CARD: "card",
+  BANK_TRANSFER: "bank_transfer",
+  OTHER: "other",
 } as const;
 
 export type PaymentMethod = (typeof PaymentMethod)[keyof typeof PaymentMethod];
 
 export const SaleStatus = {
-  PENDING: 'pending',
-  COMPLETED: 'completed',
-  REFUNDED: 'refunded',
-  CANCELLED: 'cancelled',
+  PENDING: "pending",
+  COMPLETED: "completed",
+  REFUNDED: "refunded",
+  CANCELLED: "cancelled",
 } as const;
 
 export type SaleStatus = (typeof SaleStatus)[keyof typeof SaleStatus];
@@ -218,7 +231,7 @@ export interface Sale extends BaseEntity {
 
 export interface SaleItem {
   id: string;
-  type: 'service' | 'product';
+  type: "service" | "product";
   itemId: string;
   name: string;
   quantity: number;
@@ -232,13 +245,14 @@ export interface SaleItem {
 // ============================================
 
 export const GiftCardStatus = {
-  ACTIVE: 'active',
-  REDEEMED: 'redeemed',
-  EXPIRED: 'expired',
-  CANCELLED: 'cancelled',
+  ACTIVE: "active",
+  REDEEMED: "redeemed",
+  EXPIRED: "expired",
+  CANCELLED: "cancelled",
 } as const;
 
-export type GiftCardStatus = (typeof GiftCardStatus)[keyof typeof GiftCardStatus];
+export type GiftCardStatus =
+  (typeof GiftCardStatus)[keyof typeof GiftCardStatus];
 
 export interface GiftCard extends BaseEntity {
   code: string;
@@ -281,7 +295,7 @@ export interface LoyaltyTransaction extends BaseEntity {
   clientId: string;
   client?: Client;
   salonId: string;
-  type: 'earn' | 'redeem' | 'adjust' | 'expire';
+  type: "earn" | "redeem" | "adjust" | "expire";
   points: number;
   description?: string;
   saleId?: string;
@@ -333,24 +347,50 @@ export interface ClientAnalytics {
 }
 
 // ============================================
+// SUPERADMIN ANALYTICS (Platform-wide)
+// ============================================
+
+export interface PlatformStats {
+  totalSalons: number;
+  activeSalons: number;
+  totalUsers: number;
+  activeUsers: number;
+  totalRevenue: number;
+  totalAppointments: number;
+  salonsChange: number;
+  usersChange: number;
+  revenueChange: number;
+}
+
+export interface SalonPerformance {
+  salonId: string;
+  salonName: string;
+  revenue: number;
+  appointments: number;
+  clients: number;
+  activeUsers: number;
+}
+
+// ============================================
 // NOTIFICATION TYPES
 // ============================================
 
 export const NotificationType = {
-  APPOINTMENT_REMINDER: 'appointment_reminder',
-  APPOINTMENT_CONFIRMATION: 'appointment_confirmation',
-  APPOINTMENT_CANCELLATION: 'appointment_cancellation',
-  MARKETING: 'marketing',
-  LOYALTY: 'loyalty',
+  APPOINTMENT_REMINDER: "appointment_reminder",
+  APPOINTMENT_CONFIRMATION: "appointment_confirmation",
+  APPOINTMENT_CANCELLATION: "appointment_cancellation",
+  MARKETING: "marketing",
+  LOYALTY: "loyalty",
 } as const;
 
-export type NotificationType = (typeof NotificationType)[keyof typeof NotificationType];
+export type NotificationType =
+  (typeof NotificationType)[keyof typeof NotificationType];
 
 export interface Notification extends BaseEntity {
   type: NotificationType;
   recipientPhone: string;
   message: string;
-  status: 'pending' | 'sent' | 'failed';
+  status: "pending" | "sent" | "failed";
   sentAt?: string;
   error?: string;
 }
@@ -360,13 +400,13 @@ export interface Notification extends BaseEntity {
 // ============================================
 
 export const DayOfWeek = {
-  MONDAY: 'monday',
-  TUESDAY: 'tuesday',
-  WEDNESDAY: 'wednesday',
-  THURSDAY: 'thursday',
-  FRIDAY: 'friday',
-  SATURDAY: 'saturday',
-  SUNDAY: 'sunday',
+  MONDAY: "monday",
+  TUESDAY: "tuesday",
+  WEDNESDAY: "wednesday",
+  THURSDAY: "thursday",
+  FRIDAY: "friday",
+  SATURDAY: "saturday",
+  SUNDAY: "sunday",
 } as const;
 
 export type DayOfWeek = (typeof DayOfWeek)[keyof typeof DayOfWeek];
@@ -390,23 +430,23 @@ export interface StaffSchedule extends BaseEntity {
 // ============================================
 
 export const TimeOffType = {
-  VACATION: 'vacation',
-  SICK_LEAVE: 'sick_leave',
-  PERSONAL: 'personal',
-  MATERNITY: 'maternity',
-  PATERNITY: 'paternity',
-  BEREAVEMENT: 'bereavement',
-  UNPAID: 'unpaid',
-  OTHER: 'other',
+  VACATION: "vacation",
+  SICK_LEAVE: "sick_leave",
+  PERSONAL: "personal",
+  MATERNITY: "maternity",
+  PATERNITY: "paternity",
+  BEREAVEMENT: "bereavement",
+  UNPAID: "unpaid",
+  OTHER: "other",
 } as const;
 
 export type TimeOffType = (typeof TimeOffType)[keyof typeof TimeOffType];
 
 export const TimeOffStatus = {
-  PENDING: 'pending',
-  APPROVED: 'approved',
-  REJECTED: 'rejected',
-  CANCELLED: 'cancelled',
+  PENDING: "pending",
+  APPROVED: "approved",
+  REJECTED: "rejected",
+  CANCELLED: "cancelled",
 } as const;
 
 export type TimeOffStatus = (typeof TimeOffStatus)[keyof typeof TimeOffStatus];
@@ -420,7 +460,7 @@ export interface StaffTimeOff extends BaseEntity {
   startDate: string;
   endDate: string;
   isHalfDay: boolean;
-  halfDayPeriod?: 'morning' | 'afternoon';
+  halfDayPeriod?: "morning" | "afternoon";
   reason?: string;
   approvedById?: string;
   approvedBy?: User;
@@ -433,35 +473,37 @@ export interface StaffTimeOff extends BaseEntity {
 // ============================================
 
 export const PromotionType = {
-  PERCENTAGE: 'percentage',
-  FIXED_AMOUNT: 'fixed_amount',
-  BUY_X_GET_Y: 'buy_x_get_y',
-  FREE_SERVICE: 'free_service',
-  FREE_PRODUCT: 'free_product',
-  BUNDLE: 'bundle',
+  PERCENTAGE: "percentage",
+  FIXED_AMOUNT: "fixed_amount",
+  BUY_X_GET_Y: "buy_x_get_y",
+  FREE_SERVICE: "free_service",
+  FREE_PRODUCT: "free_product",
+  BUNDLE: "bundle",
 } as const;
 
 export type PromotionType = (typeof PromotionType)[keyof typeof PromotionType];
 
 export const PromotionStatus = {
-  DRAFT: 'draft',
-  ACTIVE: 'active',
-  PAUSED: 'paused',
-  EXPIRED: 'expired',
-  CANCELLED: 'cancelled',
+  DRAFT: "draft",
+  ACTIVE: "active",
+  PAUSED: "paused",
+  EXPIRED: "expired",
+  CANCELLED: "cancelled",
 } as const;
 
-export type PromotionStatus = (typeof PromotionStatus)[keyof typeof PromotionStatus];
+export type PromotionStatus =
+  (typeof PromotionStatus)[keyof typeof PromotionStatus];
 
 export const PromotionAppliesTo = {
-  ALL: 'all',
-  SERVICES: 'services',
-  PRODUCTS: 'products',
-  SPECIFIC_ITEMS: 'specific_items',
-  CATEGORIES: 'categories',
+  ALL: "all",
+  SERVICES: "services",
+  PRODUCTS: "products",
+  SPECIFIC_ITEMS: "specific_items",
+  CATEGORIES: "categories",
 } as const;
 
-export type PromotionAppliesTo = (typeof PromotionAppliesTo)[keyof typeof PromotionAppliesTo];
+export type PromotionAppliesTo =
+  (typeof PromotionAppliesTo)[keyof typeof PromotionAppliesTo];
 
 export interface Promotion extends BaseEntity {
   salonId: string;
@@ -495,14 +537,14 @@ export interface Promotion extends BaseEntity {
 
 export interface SalonSettingsExtended extends BaseEntity {
   salonId: string;
-  
+
   // Business Settings
   currency: string;
   timezone: string;
   language: string;
   dateFormat: string;
-  timeFormat: '12h' | '24h';
-  
+  timeFormat: "12h" | "24h";
+
   // Booking Settings
   bookingSlotDuration: number;
   bookingLeadTime: number;
@@ -512,7 +554,7 @@ export interface SalonSettingsExtended extends BaseEntity {
   requireDeposit: boolean;
   depositAmount?: number;
   depositPercentage?: number;
-  
+
   // Notification Settings
   sendAppointmentConfirmation: boolean;
   sendAppointmentReminder: boolean;
@@ -520,26 +562,26 @@ export interface SalonSettingsExtended extends BaseEntity {
   sendBirthdayGreeting: boolean;
   sendReviewRequest: boolean;
   reviewRequestHoursAfter: number;
-  
+
   // Tax Settings
   taxEnabled: boolean;
   taxRate: number;
   pricesIncludeTax: boolean;
   taxNumber?: string;
-  
+
   // Loyalty Settings
   loyaltyEnabled: boolean;
   loyaltyPointsPerCurrency: number;
   loyaltyPointValue: number;
   loyaltyMinimumRedemption: number;
-  
+
   // Receipt Settings
   receiptHeader?: string;
   receiptFooter?: string;
   showStaffOnReceipt: boolean;
   invoicePrefix?: string;
   invoiceNextNumber: number;
-  
+
   // Working Hours
   workingHours?: {
     [day: string]: {
@@ -550,4 +592,31 @@ export interface SalonSettingsExtended extends BaseEntity {
       breakEnd?: string;
     };
   };
+}
+
+// ============================================
+// AUDIT LOG (For tracking actions)
+// ============================================
+
+export const AuditAction = {
+  CREATE: "create",
+  UPDATE: "update",
+  DELETE: "delete",
+  LOGIN: "login",
+  LOGOUT: "logout",
+} as const;
+
+export type AuditAction = (typeof AuditAction)[keyof typeof AuditAction];
+
+export interface AuditLog extends BaseEntity {
+  actorEmail: string;
+  actorRole: AppRole;
+  userId?: string;
+  user?: User;
+  action: AuditAction;
+  entity: string;
+  entityId: string;
+  changes?: Record<string, unknown>;
+  ipAddress?: string;
+  userAgent?: string;
 }

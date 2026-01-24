@@ -17,12 +17,13 @@ import { SidebarNavSection } from './sidebar-nav-section';
 import { SidebarUserMenu } from './sidebar-user-menu';
 import { useSalon } from '@/contexts/SalonProvider';
 import type { NavSection } from '@/types/navigation';
-import type { User, UserRole, Salon } from '@/types/entities';
+import type { Salon } from '@/types/entities';
+import type { AuthUser, AppRole } from '@/types/user';
 
 interface AppSidebarProps {
   navigation: NavSection[];
-  user: User;
-  userRole: UserRole;
+  user: AuthUser;
+  userRole: AppRole;
   currentSalon?: Salon | null;
   className?: string;
 }

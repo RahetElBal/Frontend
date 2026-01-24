@@ -405,6 +405,9 @@ export const fr = {
     addClient: 'Ajouter un client',
     searchPlaceholder: 'Rechercher par nom, email ou téléphone...',
     noClients: 'Aucun client trouvé',
+    clientDetails: 'Détails du client',
+    deleteClient: 'Supprimer le client',
+    deleteClientConfirm: 'Êtes-vous sûr de vouloir supprimer {{name}} ? Cette action est irréversible.',
   },
 
   agenda: {
@@ -424,12 +427,19 @@ export const fr = {
     notificationsEnabled: 'Notifications activées',
     notificationsOn: 'Notifications actives',
     enableNotifications: 'Activer les notifications',
+    appointmentDetails: 'Détails du rendez-vous',
+    deleteAppointment: 'Supprimer le rendez-vous',
+    deleteAppointmentConfirm: 'Êtes-vous sûr de vouloir supprimer le rendez-vous avec {{client}} ?',
+    notesPlaceholder: 'Notes supplémentaires...',
   },
 
   services: {
     description: '{{count}} services disponibles',
     addService: 'Ajouter un service',
     services: 'services',
+    serviceDetails: 'Détails du service',
+    deleteService: 'Supprimer le service',
+    deleteServiceConfirm: 'Êtes-vous sûr de vouloir supprimer {{name}} ? Cette action est irréversible.',
   },
 
   products: {
@@ -442,6 +452,9 @@ export const fr = {
     lowStock: 'Stock faible',
     stockAlerts: 'Alertes de stock',
     minStock: 'Stock minimum',
+    productDetails: 'Détails du produit',
+    deleteProduct: 'Supprimer le produit',
+    deleteProductConfirm: 'Êtes-vous sûr de vouloir supprimer {{name}} ? Cette action est irréversible.',
   },
 
   sales: {
@@ -567,6 +580,8 @@ export const fr = {
     appearanceDescription: "Personnaliser l'apparence de l'application",
     light: 'Clair',
     dark: 'Sombre',
+    profileUpdated: 'Profil mis à jour avec succès',
+    emailCannotChange: 'L\'email ne peut pas être modifié car il est lié à votre compte Google',
     businessSettings: 'Paramètres entreprise',
     salonInfo: 'Informations du salon',
     salonInfoDescription: 'Modifier les détails du salon et les horaires',
@@ -792,6 +807,11 @@ export const fr = {
       totalUsers: 'Total utilisateurs',
       monthlyRevenue: 'Revenu mensuel',
       users: 'utilisateurs',
+      noSalons: 'Aucun salon',
+      addFirstSalon: 'Ajoutez votre premier salon pour commencer',
+      salonDetails: 'Détails du salon',
+      deleteSalon: 'Supprimer le salon',
+      deleteSalonConfirm: 'Êtes-vous sûr de vouloir supprimer {{name}} ? Cette action est irréversible.',
     },
   },
 } as const;

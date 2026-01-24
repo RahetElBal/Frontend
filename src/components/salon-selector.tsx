@@ -124,10 +124,10 @@ export function SalonSelector({ onSelect }: SalonSelectorProps) {
                           {salon.phone}
                         </span>
                       )}
-                      {salon.users && (
+                      {salon.staff && (
                         <span className="flex items-center gap-1">
                           <Users className="h-3 w-3" />
-                          {salon.users.length} {t("admin.salons.users")}
+                          {salon.staff.length} {t("admin.salons.users")}
                         </span>
                       )}
                     </div>

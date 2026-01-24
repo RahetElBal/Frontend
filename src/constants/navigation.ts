@@ -14,7 +14,9 @@ import {
   Sliders,
 } from 'lucide-react';
 import type { NavSection } from '@/types/navigation';
-import { UserRole } from '@/types/user';
+
+// Role types for navigation access control
+type NavRole = 'superadmin' | 'admin' | 'user';
 
 // ============================================
 // ROUTE PATHS
@@ -74,7 +76,7 @@ export const ROUTES = {
   SALON_SETTINGS: '/salon-settings',
   PROFILE: '/settings/profile',
   
-  // Admin only
+  // Admin/Superadmin only
   ADMIN: '/admin',
   ADMIN_USERS: '/admin/users',
   ADMIN_SALONS: '/admin/salons',
@@ -82,10 +84,84 @@ export const ROUTES = {
 } as const;
 
 // ============================================
-// USER NAVIGATION (Salon Staff)
+// USER NAVIGATION (Regular Staff - Limited)
+// Only basic operational pages
 // ============================================
 
 export const USER_NAVIGATION: NavSection[] = [
+  {
+    id: 'main',
+    items: [
+      {
+        id: 'dashboard',
+        titleKey: 'nav.dashboard',
+        href: ROUTES.DASHBOARD,
+        icon: LayoutDashboard,
+      },
+    ],
+  },
+  {
+    id: 'operations',
+    titleKey: 'nav.sections.management',
+    items: [
+      {
+        id: 'clients',
+        titleKey: 'nav.clients',
+        href: ROUTES.CLIENTS,
+        icon: Users,
+      },
+      {
+        id: 'agenda',
+        titleKey: 'nav.agenda',
+        href: ROUTES.AGENDA,
+        icon: Calendar,
+      },
+      {
+        id: 'services',
+        titleKey: 'nav.services',
+        href: ROUTES.SERVICES,
+        icon: Scissors,
+      },
+    ],
+  },
+  {
+    id: 'inventory',
+    titleKey: 'nav.sections.inventory',
+    items: [
+      {
+        id: 'products',
+        titleKey: 'nav.products',
+        href: ROUTES.PRODUCTS,
+        icon: Package,
+      },
+      {
+        id: 'sales',
+        titleKey: 'nav.sales',
+        href: ROUTES.SALES,
+        icon: ShoppingCart,
+      },
+    ],
+  },
+  {
+    id: 'account',
+    titleKey: 'nav.sections.account',
+    items: [
+      {
+        id: 'settings',
+        titleKey: 'nav.settings',
+        href: ROUTES.SETTINGS,
+        icon: Settings,
+      },
+    ],
+  },
+];
+
+// ============================================
+// ADMIN NAVIGATION (Salon Owner/Manager - Full Salon Access)
+// All operational pages + salon settings + analytics
+// ============================================
+
+export const ADMIN_SALON_NAVIGATION: NavSection[] = [
   {
     id: 'main',
     items: [
@@ -184,7 +260,8 @@ export const USER_NAVIGATION: NavSection[] = [
 ];
 
 // ============================================
-// ADMIN NAVIGATION
+// SUPERADMIN/ADMIN PANEL NAVIGATION
+// Platform management
 // ============================================
 
 export const ADMIN_NAVIGATION: NavSection[] = [
@@ -202,21 +279,18 @@ export const ADMIN_NAVIGATION: NavSection[] = [
   {
     id: 'administration',
     titleKey: 'nav.sections.administration',
-    roles: [UserRole.ADMIN],
     items: [
       {
         id: 'admin-users',
         titleKey: 'nav.admin.users',
         href: ROUTES.ADMIN_USERS,
         icon: UserCog,
-        roles: [UserRole.ADMIN],
       },
       {
         id: 'admin-salons',
         titleKey: 'nav.admin.salons',
         href: ROUTES.ADMIN_SALONS,
         icon: Building2,
-        roles: [UserRole.ADMIN],
       },
     ],
   },
@@ -233,3 +307,26 @@ export const ADMIN_NAVIGATION: NavSection[] = [
     ],
   },
 ];
+
+/**
+ * Get navigation based on user role
+ */
+export function getNavigationForRole(role: NavRole, isInAdminPanel: boolean = false): NavSection[] {
+  if (isInAdminPanel) {
+    // Admin panel is only for superadmin and admin
+    if (role === 'superadmin' || role === 'admin') {
+      return ADMIN_NAVIGATION;
+    }
+    return [];
+  }
+
+  // Regular salon panel
+  switch (role) {
+    case 'superadmin':
+    case 'admin':
+      return ADMIN_SALON_NAVIGATION;
+    case 'user':
+    default:
+      return USER_NAVIGATION;
+  }
+}

@@ -1,22 +1,20 @@
-import { Outlet } from 'react-router-dom';
+import { Outlet, Navigate } from 'react-router-dom';
 
 import { cn } from '@/lib/utils';
 import { AppSidebar } from '@/components/sidebar/app-sidebar';
 import { Spinner } from '@/components/spinner';
 import { MainLayout } from '@/layouts/main-layout';
 import { useUser } from '@/hooks/useUser';
-import { ADMIN_NAVIGATION } from '@/constants/navigation';
-import { UserRole } from '@/types/user';
+import { getNavigationForRole, ROUTES } from '@/constants/navigation';
+import type { AppRole } from '@/types/user';
 
 /**
- * Layout for admin users
+ * Layout for admin panel (superadmin and admin only)
  * Includes sidebar with admin navigation
- * Requires Admin role
+ * Requires Admin or Superadmin role
  */
 export function AdminLayout() {
-  const { user, isLoading, isAuthenticated } = useUser({
-    requiredRole: UserRole.ADMIN,
-  });
+  const { user, isLoading, isAuthenticated } = useUser();
 
   // Show loading spinner while checking auth
   if (isLoading) {
@@ -27,18 +25,31 @@ export function AdminLayout() {
     );
   }
 
-  // If not authenticated or not admin, useUser will redirect
+  // If not authenticated, redirect to login
   if (!isAuthenticated || !user) {
-    return null;
+    return <Navigate to={ROUTES.LOGIN} replace />;
   }
+
+  // Check if user has admin or superadmin role
+  const userRole = (user.role || 'user') as AppRole;
+  const isSuperadmin = user.isSuperadmin || userRole === 'superadmin';
+  const isAdmin = userRole === 'admin';
+
+  // Only superadmin and admin can access admin panel
+  if (!isSuperadmin && !isAdmin) {
+    return <Navigate to={ROUTES.DASHBOARD} replace />;
+  }
+
+  // Get admin navigation
+  const navigation = getNavigationForRole(userRole, true);
 
   return (
     <MainLayout>
       {/* Sidebar */}
       <AppSidebar
-        navigation={ADMIN_NAVIGATION}
+        navigation={navigation}
         user={user}
-        userRole={user.role}
+        userRole={userRole}
       />
 
       {/* Main Content Area */}

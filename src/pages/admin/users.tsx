@@ -65,7 +65,8 @@ import { toast } from "@/lib/toast";
 import { UserRole } from "@/types/entities";
 import type { User, Salon } from "@/types/entities";
 
-const SUPERADMIN_EMAIL = "sofianelaghouatipro@gmail.com";
+// Superadmin is determined by backend via SUPERADMIN_EMAILS env var
+// We check isSuperadmin flag from the user object instead of hardcoding
 
 interface PaginatedResponse<T> {
   data: T[];
@@ -88,7 +89,7 @@ const userFormSchema = z.object({
   name: z.string().min(1, "validation.required"),
   email: z.string().email("validation.email"),
   role: z.enum(["user", "admin"] as const),
-  salonId: z.string().min(1, "validation.required"),
+  salonId: z.string().optional(), // Optional because superadmin can create users without salon
 });
 
 type UserFormData = z.infer<typeof userFormSchema>;
@@ -113,7 +114,8 @@ export function AdminUsersPage() {
   );
 
   // Helper functions
-  const isSuperAdmin = (user: User) => user.email === SUPERADMIN_EMAIL;
+  // Check if user is superadmin - this is determined by backend via SUPERADMIN_EMAILS env var
+  const isSuperAdmin = (user: User) => user.isSuperadmin === true || user.role === 'superadmin';
 
   const getDisplayName = (user: User): string => {
     const userName = (user as User & { name?: string }).name;
@@ -167,11 +169,13 @@ export function AdminUsersPage() {
         salonId: "",
       });
     } else if (selectedUser && isEditMode) {
+      // Only allow 'user' or 'admin' roles in the form (superadmin is not editable)
+      const formRole = selectedUser.role === 'superadmin' ? 'admin' : selectedUser.role as 'user' | 'admin';
       form.reset({
         name: getDisplayName(selectedUser),
         email: selectedUser.email,
-        role: selectedUser.role,
-        salonId: selectedUser.salonId || "",
+        role: formRole,
+        salonId: selectedUser.workingSalons?.[0]?.id || "",
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -326,10 +330,10 @@ export function AdminUsersPage() {
       header: t("fields.salon"),
       render: (user) => (
         <div className="flex items-center gap-2">
-          {user.salon ? (
+          {user.workingSalons?.[0] ? (
             <>
               <Building2 className="h-4 w-4 text-muted-foreground" />
-              <span>{user.salon.name}</span>
+              <span>{user.workingSalons[0].name}</span>
             </>
           ) : (
             <span className="text-muted-foreground text-sm">-</span>
@@ -681,7 +685,7 @@ export function AdminUsersPage() {
                       {t("fields.salon")}
                     </p>
                     <p className="font-medium">
-                      {selectedUser.salon?.name || "-"}
+                      {selectedUser.workingSalons?.[0]?.name || "-"}
                     </p>
                   </div>
                 </div>

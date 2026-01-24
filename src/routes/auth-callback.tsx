@@ -1,10 +1,10 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '@/contexts/AuthProvider';
 import { AUTH_STORAGE_KEY, AUTH_ROUTES } from '@/constants/auth';
 import { get } from '@/lib/http';
 import { Spinner } from '@/components/spinner';
-import type { User } from '@/types/entities';
+import type { AuthUser } from '@/types/user';
 
 /**
  * OAuth callback page that handles the token from backend
@@ -16,6 +16,16 @@ export default function AuthCallback() {
   const [error, setError] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(true);
   const processedRef = useRef(false);
+
+  const navigateByRole = useCallback((user: AuthUser) => {
+    // Superadmin or admin goes to admin panel
+    if (user.isSuperadmin || user.role === 'superadmin' || user.role === 'admin') {
+      navigate(AUTH_ROUTES.ADMIN_DASHBOARD, { replace: true });
+    } else {
+      // Regular user goes to dashboard
+      navigate(AUTH_ROUTES.DASHBOARD, { replace: true });
+    }
+  }, [navigate]);
 
   useEffect(() => {
     const handleCallback = async () => {
@@ -48,12 +58,8 @@ export default function AuthCallback() {
         
         if (existingToken && existingUser) {
           try {
-            const user = JSON.parse(existingUser) as User;
-            if (user.role === 'admin') {
-              navigate(AUTH_ROUTES.ADMIN_DASHBOARD, { replace: true });
-            } else {
-              navigate(AUTH_ROUTES.DASHBOARD, { replace: true });
-            }
+            const user = JSON.parse(existingUser) as AuthUser;
+            navigateByRole(user);
             return;
           } catch {
             // Invalid stored user, continue to login
@@ -73,12 +79,12 @@ export default function AuthCallback() {
         localStorage.setItem(AUTH_STORAGE_KEY, token);
 
         // Fetch user data with retry
-        let user: User | null = null;
+        let user: AuthUser | null = null;
         let retries = 3;
         
         while (retries > 0 && !user) {
           try {
-            user = await get<User>('auth/me');
+            user = await get<AuthUser>('auth/me');
           } catch (err) {
             retries--;
             if (retries > 0) {
@@ -98,11 +104,7 @@ export default function AuthCallback() {
         login(user, token);
 
         // Redirect based on role
-        if (user.role === 'admin') {
-          navigate(AUTH_ROUTES.ADMIN_DASHBOARD, { replace: true });
-        } else {
-          navigate(AUTH_ROUTES.DASHBOARD, { replace: true });
-        }
+        navigateByRole(user);
       } catch (err) {
         console.error('Auth callback error:', err);
         localStorage.removeItem(AUTH_STORAGE_KEY);
@@ -116,7 +118,7 @@ export default function AuthCallback() {
     };
 
     handleCallback();
-  }, [navigate, login]);
+  }, [navigate, login, navigateByRole]);
 
   if (error) {
     return (

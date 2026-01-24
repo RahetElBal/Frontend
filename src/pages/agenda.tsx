@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import { z } from 'zod';
 import {
   Plus,
   ChevronLeft,
@@ -10,6 +11,8 @@ import {
   Calendar,
   Bell,
   BellRing,
+  Edit,
+  Trash2,
 } from 'lucide-react';
 
 import { PageHeader } from '@/components/page-header';
@@ -22,7 +25,18 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -38,6 +52,7 @@ import { AppointmentStatus } from '@/types/entities';
 import type { Appointment, Client, Service } from '@/types/entities';
 import { useSalonGet, useSalonPost } from '@/hooks/useSalonData';
 import { useLanguage } from '@/hooks/useLanguage';
+import { useForm } from '@/hooks/useForm';
 import { toast } from '@/lib/toast';
 import { 
   showNotification, 
@@ -47,13 +62,24 @@ import {
   type AppointmentReminder 
 } from '@/lib/notifications';
 
-interface CreateAppointmentDto {
-  clientId: string;
-  serviceId: string;
-  date: string;
-  startTime: string;
-  notes?: string;
-}
+// Modal state type
+type AppointmentModalState = {
+  appointmentId: string | 'create';
+  mode: 'view' | 'edit' | 'delete';
+  prefillTime?: string;
+  prefillDate?: string;
+} | null;
+
+// Zod schema for appointment form
+const appointmentFormSchema = z.object({
+  clientId: z.string().min(1, 'validation.required'),
+  serviceId: z.string().min(1, 'validation.required'),
+  date: z.string().min(1, 'validation.required'),
+  startTime: z.string().min(1, 'validation.required'),
+  notes: z.string().optional(),
+});
+
+type AppointmentFormData = z.infer<typeof appointmentFormSchema>;
 
 const statusColors: Record<string, 'default' | 'success' | 'warning' | 'info' | 'error'> = {
   [AppointmentStatus.CONFIRMED]: 'success',
@@ -75,20 +101,61 @@ export function AgendaPage() {
   const { t } = useTranslation();
   const { formatCurrency } = useLanguage();
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
-  const [formData, setFormData] = useState({
-    clientId: '',
-    serviceId: '',
-    date: new Date().toISOString().split('T')[0],
-    startTime: '09:00',
-    notes: '',
-  });
+  
+  // Unified modal state
+  const [modalState, setModalState] = useState<AppointmentModalState>(null);
 
   // Fetch data from API (scoped to current salon)
-  const { data: appointments = [], isLoading } = useSalonGet<Appointment[]>('appointments');
+  const { data: appointments = [], isLoading, refetch } = useSalonGet<Appointment[]>('appointments');
   const { data: clients = [] } = useSalonGet<Client[]>('clients');
   const { data: services = [] } = useSalonGet<Service[]>('services');
+
+  // Helper functions
+  const getSelectedAppointment = (): Appointment | null => {
+    if (!modalState || modalState.appointmentId === 'create') return null;
+    return appointments.find((a) => a.id === modalState.appointmentId) || null;
+  };
+
+  const selectedAppointment = getSelectedAppointment();
+  const isCreateMode = modalState?.appointmentId === 'create';
+  const isEditMode = modalState?.mode === 'edit' && !isCreateMode;
+  const isViewMode = modalState?.mode === 'view';
+  const isDeleteMode = modalState?.mode === 'delete';
+
+  // Form setup
+  const form = useForm<AppointmentFormData>({
+    schema: appointmentFormSchema,
+    defaultValues: {
+      clientId: '',
+      serviceId: '',
+      date: new Date().toISOString().split('T')[0],
+      startTime: '09:00',
+      notes: '',
+    },
+  });
+
+  // Reset form when modal state changes
+  useEffect(() => {
+    if (isCreateMode) {
+      form.reset({
+        clientId: '',
+        serviceId: '',
+        date: modalState?.prefillDate || selectedDate.toISOString().split('T')[0],
+        startTime: modalState?.prefillTime || '09:00',
+        notes: '',
+      });
+    } else if (selectedAppointment && isEditMode) {
+      form.reset({
+        clientId: selectedAppointment.clientId,
+        serviceId: selectedAppointment.serviceId,
+        date: selectedAppointment.date,
+        startTime: selectedAppointment.startTime,
+        notes: selectedAppointment.notes || '',
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [modalState, selectedAppointment, isCreateMode, isEditMode, selectedDate]);
 
   // Request notification permission on mount
   useEffect(() => {
@@ -103,7 +170,6 @@ export function AgendaPage() {
         body: `${reminder.clientName} - ${reminder.serviceName}`,
         playSound: true,
         onClick: () => {
-          // Navigate to the appointment date
           setSelectedDate(new Date(reminder.date));
         },
       }
@@ -120,7 +186,6 @@ export function AgendaPage() {
       apt => apt.date === today && apt.status !== 'cancelled' && apt.status !== 'completed'
     );
 
-    // Schedule reminders (15 minutes before)
     todayAppointments.forEach(apt => {
       const reminder: AppointmentReminder = {
         id: `reminder-${apt.id}`,
@@ -134,15 +199,43 @@ export function AgendaPage() {
       scheduleReminder(reminder, 15, handleReminder);
     });
 
-    // Cleanup on unmount
     return () => cancelAllReminders();
   }, [appointments, notificationsEnabled, handleReminder]);
 
-  // Create appointment mutation (includes salonId automatically)
-  const createAppointment = useSalonPost<Appointment, CreateAppointmentDto>('appointments', {
+  // Create appointment mutation
+  const { mutate: createAppointment, isPending: isCreating } = useSalonPost<Appointment, AppointmentFormData>('appointments', {
     onSuccess: () => {
       toast.success(t('agenda.newAppointment') + ' - ' + t('common.success'));
-      closeModal();
+      setModalState(null);
+      refetch();
+    },
+    onError: (error) => {
+      toast.error(error.message || t('common.error'));
+    },
+  });
+
+  // Update appointment mutation
+  const { mutate: updateAppointment, isPending: isUpdating } = useSalonPost<Appointment, AppointmentFormData>('appointments', {
+    id: selectedAppointment?.id,
+    method: 'PATCH',
+    onSuccess: () => {
+      toast.success(t('common.edit') + ' - ' + t('common.success'));
+      setModalState(null);
+      refetch();
+    },
+    onError: (error) => {
+      toast.error(error.message || t('common.error'));
+    },
+  });
+
+  // Delete appointment mutation
+  const { mutate: deleteAppointment, isPending: isDeleting } = useSalonPost<void, void>('appointments', {
+    id: selectedAppointment?.id,
+    method: 'DELETE',
+    onSuccess: () => {
+      toast.success(t('common.delete') + ' - ' + t('common.success'));
+      setModalState(null);
+      refetch();
     },
     onError: (error) => {
       toast.error(error.message || t('common.error'));
@@ -150,9 +243,10 @@ export function AgendaPage() {
   });
 
   // Get selected service details
+  const selectedServiceId = form.watch('serviceId');
   const selectedService = useMemo(() => 
-    services.find(s => s.id === formData.serviceId),
-    [services, formData.serviceId]
+    services.find(s => s.id === selectedServiceId),
+    [services, selectedServiceId]
   );
 
   const formatDate = (date: Date) =>
@@ -179,39 +273,38 @@ export function AgendaPage() {
     setSelectedDate(new Date());
   };
 
-  const closeModal = () => {
-    setIsAddModalOpen(false);
-    setFormData({
-      clientId: '',
-      serviceId: '',
-      date: new Date().toISOString().split('T')[0],
-      startTime: '09:00',
-      notes: '',
-    });
-  };
-
   const openModalWithTime = (time: string) => {
-    setFormData({
-      ...formData,
-      startTime: time,
-      date: selectedDate.toISOString().split('T')[0],
+    setModalState({
+      appointmentId: 'create',
+      mode: 'edit',
+      prefillTime: time,
+      prefillDate: selectedDate.toISOString().split('T')[0],
     });
-    setIsAddModalOpen(true);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.clientId || !formData.serviceId) {
-      toast.error(t('validation.requiredField'));
-      return;
+  const handleView = (appointment: Appointment) => {
+    setModalState({ appointmentId: appointment.id, mode: 'view' });
+  };
+
+  // These handlers are available for future use
+  const _handleEdit = (appointment: Appointment) => {
+    setModalState({ appointmentId: appointment.id, mode: 'edit' });
+  };
+
+  const _handleDelete = (appointment: Appointment) => {
+    setModalState({ appointmentId: appointment.id, mode: 'delete' });
+  };
+
+  // Expose for potential future use
+  void _handleEdit;
+  void _handleDelete;
+
+  const handleSubmit = (data: AppointmentFormData) => {
+    if (isEditMode) {
+      updateAppointment(data);
+    } else {
+      createAppointment(data);
     }
-    createAppointment.mutate({
-      clientId: formData.clientId,
-      serviceId: formData.serviceId,
-      date: formData.date,
-      startTime: formData.startTime,
-      notes: formData.notes || undefined,
-    });
   };
 
   // Get current hour for highlighting
@@ -254,7 +347,7 @@ export function AgendaPage() {
                 <Bell className="h-4 w-4" />
               )}
             </Button>
-            <Button className="gap-2" onClick={() => setIsAddModalOpen(true)}>
+            <Button className="gap-2" onClick={() => setModalState({ appointmentId: 'create', mode: 'edit' })}>
               <Plus className="h-4 w-4" />
               {t('agenda.newAppointment')}
             </Button>
@@ -321,6 +414,8 @@ export function AgendaPage() {
                         onClick={() => {
                           if (!appointment) {
                             openModalWithTime(time);
+                          } else {
+                            handleView(appointment);
                           }
                         }}
                       >
@@ -393,20 +488,27 @@ export function AgendaPage() {
         )}
       </Card>
 
-      {/* Add Appointment Modal */}
-      <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
+      {/* Create/Edit Appointment Modal */}
+      <Dialog open={isEditMode || isCreateMode} onOpenChange={(open) => !open && setModalState(null)}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>{t('agenda.newAppointment')}</DialogTitle>
+            <DialogTitle>
+              {isCreateMode ? t('agenda.newAppointment') : t('common.edit')}
+            </DialogTitle>
+            {isEditMode && selectedAppointment && (
+              <DialogDescription>
+                {selectedAppointment.client?.firstName} {selectedAppointment.client?.lastName}
+              </DialogDescription>
+            )}
           </DialogHeader>
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={form.handleSubmit(handleSubmit)}>
             <div className="space-y-4 py-4">
               {/* Client Selection */}
               <div className="space-y-2">
                 <Label>{t('fields.client')} *</Label>
                 <Select 
-                  value={formData.clientId} 
-                  onValueChange={(value) => setFormData({ ...formData, clientId: value })}
+                  value={form.watch('clientId')} 
+                  onValueChange={(value) => form.setValue('clientId', value)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder={t('agenda.selectClient')} />
@@ -431,14 +533,17 @@ export function AgendaPage() {
                     )}
                   </SelectContent>
                 </Select>
+                {form.hasError('clientId') && (
+                  <p className="text-sm text-destructive">{form.getError('clientId')}</p>
+                )}
               </div>
 
               {/* Service Selection */}
               <div className="space-y-2">
                 <Label>{t('fields.service')} *</Label>
                 <Select 
-                  value={formData.serviceId} 
-                  onValueChange={(value) => setFormData({ ...formData, serviceId: value })}
+                  value={form.watch('serviceId')} 
+                  onValueChange={(value) => form.setValue('serviceId', value)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder={t('agenda.selectService')} />
@@ -465,6 +570,9 @@ export function AgendaPage() {
                     )}
                   </SelectContent>
                 </Select>
+                {form.hasError('serviceId') && (
+                  <p className="text-sm text-destructive">{form.getError('serviceId')}</p>
+                )}
               </div>
 
               {/* Selected Service Info */}
@@ -491,16 +599,17 @@ export function AgendaPage() {
                   <Input
                     id="date"
                     type="date"
-                    value={formData.date}
-                    onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                    required
+                    {...form.register('date')}
                   />
+                  {form.hasError('date') && (
+                    <p className="text-sm text-destructive">{form.getError('date')}</p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="startTime">{t('fields.time')} *</Label>
                   <Select
-                    value={formData.startTime}
-                    onValueChange={(value) => setFormData({ ...formData, startTime: value })}
+                    value={form.watch('startTime')}
+                    onValueChange={(value) => form.setValue('startTime', value)}
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -519,28 +628,140 @@ export function AgendaPage() {
                 <Label htmlFor="notes">{t('fields.notes')}</Label>
                 <Textarea
                   id="notes"
-                  value={formData.notes}
-                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                  {...form.register('notes')}
                   rows={2}
-                  placeholder="Notes supplémentaires..."
+                  placeholder={t('agenda.notesPlaceholder')}
                 />
               </div>
             </div>
 
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={closeModal}>
+              <Button type="button" variant="outline" onClick={() => setModalState(null)}>
                 {t('common.cancel')}
               </Button>
               <Button 
                 type="submit" 
-                disabled={createAppointment.isPending || !formData.clientId || !formData.serviceId}
+                disabled={form.isSubmitting || isCreating || isUpdating}
               >
-                {createAppointment.isPending ? t('common.loading') : t('common.save')}
+                {form.isSubmitting || isCreating || isUpdating ? t('common.loading') : t('common.save')}
               </Button>
             </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* View Appointment Modal */}
+      <Dialog open={isViewMode} onOpenChange={(open) => !open && setModalState(null)}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>{t('agenda.appointmentDetails')}</DialogTitle>
+          </DialogHeader>
+          {selectedAppointment && (
+            <div className="space-y-6 py-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="h-12 w-12 rounded-full bg-accent-pink/10 flex items-center justify-center">
+                    <User className="h-6 w-6 text-accent-pink" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold">
+                      {selectedAppointment.client?.firstName} {selectedAppointment.client?.lastName}
+                    </h3>
+                    {selectedAppointment.client?.phone && (
+                      <p className="text-sm text-muted-foreground">{selectedAppointment.client.phone}</p>
+                    )}
+                  </div>
+                </div>
+                <Badge variant={statusColors[selectedAppointment.status]}>
+                  {selectedAppointment.status}
+                </Badge>
+              </div>
+
+              <div className="grid gap-4">
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+                  <Scissors className="h-5 w-5 text-muted-foreground" />
+                  <div className="flex-1">
+                    <p className="text-sm text-muted-foreground">{t('fields.service')}</p>
+                    <p className="font-medium">{selectedAppointment.service?.name}</p>
+                  </div>
+                  <p className="font-bold text-accent-pink">
+                    {formatCurrency(selectedAppointment.service?.price || 0)}
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+                  <Calendar className="h-5 w-5 text-muted-foreground" />
+                  <div>
+                    <p className="text-sm text-muted-foreground">{t('fields.date')}</p>
+                    <p className="font-medium">{new Date(selectedAppointment.date).toLocaleDateString()}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+                  <Clock className="h-5 w-5 text-muted-foreground" />
+                  <div>
+                    <p className="text-sm text-muted-foreground">{t('fields.time')}</p>
+                    <p className="font-medium">{selectedAppointment.startTime} - {selectedAppointment.endTime}</p>
+                  </div>
+                </div>
+
+                {selectedAppointment.notes && (
+                  <div className="p-3 rounded-lg bg-muted/50">
+                    <p className="text-sm text-muted-foreground mb-1">{t('fields.notes')}</p>
+                    <p className="text-sm">{selectedAppointment.notes}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+          <DialogFooter className="flex gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setModalState(null)}>
+              {t('common.close')}
+            </Button>
+            {selectedAppointment && (
+              <>
+                <Button
+                  variant="outline"
+                  className="text-destructive"
+                  onClick={() => setModalState({ appointmentId: selectedAppointment.id, mode: 'delete' })}
+                >
+                  <Trash2 className="h-4 w-4 me-2" />
+                  {t('common.delete')}
+                </Button>
+                <Button onClick={() => setModalState({ appointmentId: selectedAppointment.id, mode: 'edit' })}>
+                  <Edit className="h-4 w-4 me-2" />
+                  {t('common.edit')}
+                </Button>
+              </>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={isDeleteMode} onOpenChange={(open) => !open && setModalState(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('agenda.deleteAppointment')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('agenda.deleteAppointmentConfirm', {
+                client: selectedAppointment?.client 
+                  ? `${selectedAppointment.client.firstName} ${selectedAppointment.client.lastName}`
+                  : '',
+              })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteAppointment()}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? t('common.loading') : t('common.delete')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
