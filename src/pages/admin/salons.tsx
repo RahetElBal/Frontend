@@ -161,16 +161,19 @@ export function AdminSalonsPage() {
   }, [modalState, selectedSalon, isCreateMode, isEditMode]);
 
   // Create salon mutation - include ownerId for superadmin
-  const createSalon = usePost<Salon, BaseSalonFormData & { ownerId?: string }>("salons", {
-    onSuccess: () => {
-      toast.success(t("admin.salons.addSalon") + " - " + t("common.success"));
-      setModalState(null);
-      refetch();
+  const createSalon = usePost<Salon, BaseSalonFormData & { ownerId?: string }>(
+    "salons",
+    {
+      onSuccess: () => {
+        toast.success(t("admin.salons.addSalon") + " - " + t("common.success"));
+        setModalState(null);
+        refetch();
+      },
+      onError: (error) => {
+        toast.error(error.message || t("common.error"));
+      },
     },
-    onError: (error) => {
-      toast.error(error.message || t("common.error"));
-    },
-  });
+  );
 
   // Update salon mutation
   const updateSalon = usePost<Salon, BaseSalonFormData & { ownerId?: string }>(
@@ -332,7 +335,8 @@ export function AdminSalonsPage() {
           {salons.map((salon) => {
             const canModify = canModifySalon(salon);
             const isOwnSalon = salon.ownerId === currentUserId;
-            const ownerName = salon.owner?.name || salon.owner?.email || t("common.unknown");
+            const ownerName =
+              salon.owner?.name || salon.owner?.email || t("common.unknown");
 
             return (
               <Card key={salon.id} className="overflow-hidden">
@@ -345,13 +349,18 @@ export function AdminSalonsPage() {
                       <div>
                         <h3 className="font-semibold">{salon.name}</h3>
                         <div className="flex items-center gap-2 mt-1">
-                          <Badge variant={salon.isActive ? "success" : "warning"}>
+                          <Badge
+                            variant={salon.isActive ? "success" : "warning"}
+                          >
                             {salon.isActive
                               ? t("common.active")
                               : t("common.inactive")}
                           </Badge>
                           {isOwnSalon && (
-                            <Badge variant="default" className="bg-accent-pink/20 text-accent-pink">
+                            <Badge
+                              variant="default"
+                              className="bg-accent-pink/20 text-accent-pink"
+                            >
                               {t("admin.salons.yourSalon")}
                             </Badge>
                           )}
@@ -423,7 +432,7 @@ export function AdminSalonsPage() {
         open={isEditMode || isCreateMode}
         onOpenChange={(open) => !open && setModalState(null)}
       >
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-125">
           <DialogHeader>
             <DialogTitle>
               {isCreateMode ? t("admin.salons.addSalon") : t("common.edit")}
@@ -445,10 +454,13 @@ export function AdminSalonsPage() {
                   </Label>
                   {admins.length === 0 ? (
                     <div className="p-4 rounded-lg border border-amber-200 bg-amber-50 text-amber-800 space-y-2">
-                      <p className="font-medium">Aucun administrateur disponible</p>
+                      <p className="font-medium">
+                        Aucun administrateur disponible
+                      </p>
                       <p className="text-sm">
-                        Vous devez d'abord créer un administrateur avant de créer un salon.
-                        Allez dans "Utilisateurs" et créez un administrateur.
+                        Vous devez d'abord créer un administrateur avant de
+                        créer un salon. Allez dans "Utilisateurs" et créez un
+                        administrateur.
                       </p>
                       <Button
                         type="button"
@@ -471,7 +483,9 @@ export function AdminSalonsPage() {
                         onValueChange={setSelectedOwnerId}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder={t("admin.salons.selectOwner")} />
+                          <SelectValue
+                            placeholder={t("admin.salons.selectOwner")}
+                          />
                         </SelectTrigger>
                         <SelectContent>
                           {admins.map((admin) => (
@@ -545,7 +559,9 @@ export function AdminSalonsPage() {
                   form.isSubmitting ||
                   createSalon.isPending ||
                   updateSalon.isPending ||
-                  (isSuperadmin && isCreateMode && (!selectedOwnerId || admins.length === 0))
+                  (isSuperadmin &&
+                    isCreateMode &&
+                    (!selectedOwnerId || admins.length === 0))
                 }
               >
                 {form.isSubmitting ||
@@ -564,7 +580,7 @@ export function AdminSalonsPage() {
         open={isViewMode}
         onOpenChange={(open) => !open && setModalState(null)}
       >
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-125">
           <DialogHeader>
             <DialogTitle>{t("admin.salons.salonDetails")}</DialogTitle>
           </DialogHeader>
@@ -587,7 +603,10 @@ export function AdminSalonsPage() {
                         : t("common.inactive")}
                     </Badge>
                     {selectedSalon.ownerId === currentUserId && (
-                      <Badge variant="default" className="bg-accent-pink/20 text-accent-pink">
+                      <Badge
+                        variant="default"
+                        className="bg-accent-pink/20 text-accent-pink"
+                      >
                         {t("admin.salons.yourSalon")}
                       </Badge>
                     )}
@@ -605,7 +624,9 @@ export function AdminSalonsPage() {
                         {t("admin.salons.salonOwner")}
                       </p>
                       <p className="font-medium">
-                        {selectedSalon.owner?.name || selectedSalon.owner?.email || t("common.unknown")}
+                        {selectedSalon.owner?.name ||
+                          selectedSalon.owner?.email ||
+                          t("common.unknown")}
                       </p>
                     </div>
                   </div>
