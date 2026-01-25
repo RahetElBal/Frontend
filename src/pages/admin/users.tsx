@@ -17,7 +17,11 @@ import {
   UserCog,
 } from "lucide-react";
 import { z } from "zod";
-import { requiredString, emailField, optionalString } from "@/common/validator/zodI18n";
+import {
+  requiredString,
+  emailField,
+  optionalString,
+} from "@/common/validator/zodI18n";
 
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
@@ -88,41 +92,45 @@ type UserModalState = {
 } | null;
 
 // Zod schema for user form
-const userFormSchema = z.object({
-  name: requiredString("Nom"),
-  email: emailField("Email"),
-  role: z.enum(["user", "admin"] as const),
-  salonId: optionalString(),
-  managedById: optionalString(),
-}).refine(
-  (data) => {
-    // If role is 'user', salonId is required
-    if (data.role === 'user') {
-      return !!data.salonId && data.salonId.length > 0;
-    }
-    return true;
-  },
-  {
-    message: "Un salon est requis pour les utilisateurs (staff)",
-    path: ["salonId"],
-  }
-).refine(
-  (data) => {
-    // If role is 'user', managedById is required
-    if (data.role === 'user') {
-      return !!data.managedById && data.managedById.length > 0;
-    }
-    return true;
-  },
-  {
-    message: "Un administrateur est requis pour les utilisateurs (staff)",
-    path: ["managedById"],
-  }
-);
+const userFormSchema = z
+  .object({
+    name: requiredString("Nom"),
+    email: emailField("Email"),
+    role: z.enum(["user", "admin"] as const),
+    salonId: optionalString(),
+    managedById: optionalString(),
+  })
+  .refine(
+    (data) => {
+      // If role is 'user', salonId is required
+      if (data.role === "user") {
+        return !!data.salonId && data.salonId.length > 0;
+      }
+      return true;
+    },
+    {
+      message: "Un salon est requis pour les utilisateurs (staff)",
+      path: ["salonId"],
+    },
+  )
+  .refine(
+    (data) => {
+      // If role is 'user', managedById is required
+      if (data.role === "user") {
+        return !!data.managedById && data.managedById.length > 0;
+      }
+      return true;
+    },
+    {
+      message: "Un administrateur est requis pour les utilisateurs (staff)",
+      path: ["managedById"],
+    },
+  );
 
 type UserFormData = z.infer<typeof userFormSchema>;
 
 export function AdminUsersPage() {
+  const { user: currentUser } = useAuthContext(); // Get current user
   const { t } = useTranslation();
   useAuthContext(); // Used for auth state
 
@@ -139,19 +147,16 @@ export function AdminUsersPage() {
     retry: 1,
   });
   const users = usersResponse?.data || [];
-  const { data: salons = [] } = useGet<Salon[]>(
-    "salons/my-salons",
-    { retry: 1 }
-  );
+  const { data: salons = [] } = useGet<Salon[]>("salons/my-salons", {
+    retry: 1,
+  });
   // Fetch admin users for the "managed by" selector
-  const { data: admins = [] } = useGet<User[]>(
-    "users/admins",
-    { retry: 1 }
-  );
+  const { data: admins = [] } = useGet<User[]>("users/admins", { retry: 1 });
 
   // Helper functions
   // Check if user is superadmin - this is determined by backend via SUPERADMIN_EMAILS env var
-  const isSuperAdmin = (user: User) => user.isSuperadmin === true || user.role === 'superadmin';
+  const isSuperAdmin = (user: User) =>
+    user.isSuperadmin === true || user.role === "superadmin";
 
   const getDisplayName = (user: User): string => {
     const userName = (user as User & { name?: string }).name;
@@ -210,7 +215,10 @@ export function AdminUsersPage() {
       });
     } else if (selectedUser && isEditMode) {
       // Only allow 'user' or 'admin' roles in the form (superadmin is not editable)
-      const formRole = selectedUser.role === 'superadmin' ? 'admin' : selectedUser.role as 'user' | 'admin';
+      const formRole =
+        selectedUser.role === "superadmin"
+          ? "admin"
+          : (selectedUser.role as "user" | "admin");
       form.reset({
         name: getDisplayName(selectedUser),
         email: selectedUser.email,
@@ -509,25 +517,44 @@ export function AdminUsersPage() {
         title={t("nav.admin.users")}
         description={t("admin.users.description", { count: users.length })}
         actions={
-          <div className="flex gap-2">
+          currentUser?.isSuperadmin ? (
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                className="gap-2"
+                onClick={() =>
+                  setModalState({
+                    userId: "create",
+                    mode: "edit",
+                    initialRole: "admin",
+                  })
+                }
+              >
+                <UserCog className="h-4 w-4" />
+                Ajouter un admin
+              </Button>
+            </div>
+          ) : (
             <Button
-              variant="outline"
               className="gap-2"
-              onClick={() => setModalState({ userId: "create", mode: "edit", initialRole: "admin" })}
-            >
-              <UserCog className="h-4 w-4" />
-              Ajouter un admin
-            </Button>
-            <Button
-              className="gap-2"
-              onClick={() => setModalState({ userId: "create", mode: "edit", initialRole: "user" })}
+              onClick={() =>
+                setModalState({
+                  userId: "create",
+                  mode: "edit",
+                  initialRole: "user",
+                })
+              }
               disabled={salons.length === 0 || admins.length === 0}
-              title={salons.length === 0 || admins.length === 0 ? "Créez d'abord un admin et un salon" : undefined}
+              title={
+                salons.length === 0 || admins.length === 0
+                  ? "Créez d'abord un admin et un salon"
+                  : undefined
+              }
             >
               <UserPlus className="h-4 w-4" />
               Ajouter un utilisateur
             </Button>
-          </div>
+          )
         }
       />
 
@@ -546,14 +573,21 @@ export function AdminUsersPage() {
           </p>
           <div className="flex justify-center gap-3">
             <Button
-              onClick={() => setModalState({ userId: "create", mode: "edit", initialRole: "admin" })}
+              onClick={() =>
+                setModalState({
+                  userId: "create",
+                  mode: "edit",
+                  initialRole: "admin",
+                })
+              }
             >
               <UserCog className="h-4 w-4 me-2" />
               Ajouter un administrateur
             </Button>
           </div>
           <p className="text-sm text-muted-foreground mt-4">
-            Un administrateur pourra ensuite créer des salons et y ajouter du staff
+            Un administrateur pourra ensuite créer des salons et y ajouter du
+            staff
           </p>
         </Card>
       ) : (
@@ -575,14 +609,16 @@ export function AdminUsersPage() {
           <DialogHeader>
             <DialogTitle>
               {isCreateMode
-                ? (form.watch("role") === "admin" ? "Ajouter un administrateur" : "Ajouter un utilisateur (staff)")
+                ? form.watch("role") === "admin"
+                  ? "Ajouter un administrateur"
+                  : "Ajouter un utilisateur (staff)"
                 : "Modifier l'utilisateur"}
             </DialogTitle>
             <DialogDescription>
               {isCreateMode
-                ? (form.watch("role") === "admin" 
-                    ? "Les administrateurs peuvent créer et gérer leurs propres salons" 
-                    : "Les utilisateurs sont membres du staff d'un salon")
+                ? form.watch("role") === "admin"
+                  ? "Les administrateurs peuvent créer et gérer leurs propres salons"
+                  : "Les utilisateurs sont membres du staff d'un salon"
                 : `Modifier les informations de ${selectedUser ? getDisplayName(selectedUser) : ""}`}
             </DialogDescription>
           </DialogHeader>
@@ -637,17 +673,19 @@ export function AdminUsersPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="user">Utilisateur (Staff)</SelectItem>
-                      <SelectItem value="admin">Administrateur (Propriétaire)</SelectItem>
+                      <SelectItem value="admin">
+                        Administrateur (Propriétaire)
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                   <p className="text-xs text-muted-foreground">
-                    {form.watch("role") === "admin" 
+                    {form.watch("role") === "admin"
                       ? "Un administrateur peut créer et gérer ses propres salons"
                       : "Un utilisateur est membre du staff d'un salon existant"}
                   </p>
                 </div>
               )}
-              
+
               {/* Show role badge when creating (read-only, already selected via button) */}
               {isCreateMode && (
                 <div className="space-y-2">
@@ -684,16 +722,21 @@ export function AdminUsersPage() {
                   <Label htmlFor="managedBy">Géré par (Admin) *</Label>
                   {admins.length === 0 ? (
                     <div className="p-4 rounded-lg border border-amber-200 bg-amber-50 text-amber-800">
-                      <p className="font-medium">Aucun administrateur disponible</p>
+                      <p className="font-medium">
+                        Aucun administrateur disponible
+                      </p>
                       <p className="text-sm mt-1">
-                        Créez d'abord un administrateur avant d'ajouter du staff.
+                        Créez d'abord un administrateur avant d'ajouter du
+                        staff.
                       </p>
                     </div>
                   ) : (
                     <>
                       <Select
                         value={form.watch("managedById")}
-                        onValueChange={(value) => form.setValue("managedById", value)}
+                        onValueChange={(value) =>
+                          form.setValue("managedById", value)
+                        }
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Sélectionner un administrateur" />
@@ -754,22 +797,25 @@ export function AdminUsersPage() {
                   </p>
                 </div>
               )}
-              
+
               {/* Info message for admins */}
               {form.watch("role") === "admin" && isCreateMode && (
                 <div className="p-4 rounded-lg border border-blue-200 bg-blue-50 text-blue-800">
                   <div className="flex items-start gap-3">
                     <Building2 className="h-5 w-5 mt-0.5" />
                     <div>
-                      <p className="font-medium">Création automatique de salon</p>
+                      <p className="font-medium">
+                        Création automatique de salon
+                      </p>
                       <p className="text-sm mt-1">
-                        L'administrateur pourra créer son propre salon après sa première connexion.
+                        L'administrateur pourra créer son propre salon après sa
+                        première connexion.
                       </p>
                     </div>
                   </div>
                 </div>
               )}
-              
+
               {/* Salon selector for editing admins */}
               {form.watch("role") === "admin" && !isCreateMode && (
                 <div className="space-y-2">
@@ -783,7 +829,9 @@ export function AdminUsersPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="">
-                        <span className="text-muted-foreground">Aucun salon</span>
+                        <span className="text-muted-foreground">
+                          Aucun salon
+                        </span>
                       </SelectItem>
                       {salons.map((salon) => (
                         <SelectItem key={salon.id} value={salon.id}>
@@ -812,7 +860,8 @@ export function AdminUsersPage() {
                   form.isSubmitting ||
                   isCreating ||
                   isUpdating ||
-                  (form.watch("role") === "user" && (salons.length === 0 || admins.length === 0))
+                  (form.watch("role") === "user" &&
+                    (salons.length === 0 || admins.length === 0))
                 }
               >
                 {form.isSubmitting || isCreating || isUpdating
@@ -905,11 +954,11 @@ export function AdminUsersPage() {
                   <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
                     <UserCog className="h-5 w-5 text-accent-pink" />
                     <div>
-                      <p className="text-sm text-muted-foreground">
-                        Géré par
-                      </p>
+                      <p className="text-sm text-muted-foreground">Géré par</p>
                       <p className="font-medium">
-                        {selectedUser.managedBy?.name || selectedUser.managedBy?.email || "Non assigné"}
+                        {selectedUser.managedBy?.name ||
+                          selectedUser.managedBy?.email ||
+                          "Non assigné"}
                       </p>
                     </div>
                   </div>
