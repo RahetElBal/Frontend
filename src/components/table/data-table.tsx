@@ -1,6 +1,13 @@
-import * as React from 'react';
-import { useTranslation } from 'react-i18next';
-import { ArrowUpDown, ArrowUp, ArrowDown, Search, X } from 'lucide-react';
+import * as React from "react";
+import { useTranslation } from "react-i18next";
+import {
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
+  Search,
+  X,
+  Database,
+} from "lucide-react";
 import {
   Table,
   TableBody,
@@ -8,12 +15,13 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Checkbox } from '@/components/ui/checkbox';
-import { cn } from '@/lib/utils';
-import type { UseTableReturn, SortDirection } from '@/hooks/useTable';
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Card } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
+import type { UseTableReturn, SortDirection } from "@/hooks/useTable";
 
 // ============================================
 // TYPES
@@ -45,10 +53,34 @@ function SortIcon({ direction }: { direction: SortDirection | null }) {
   if (!direction) {
     return <ArrowUpDown className="ms-2 h-4 w-4 text-muted-foreground/50" />;
   }
-  if (direction === 'asc') {
+  if (direction === "asc") {
     return <ArrowUp className="ms-2 h-4 w-4" />;
   }
   return <ArrowDown className="ms-2 h-4 w-4" />;
+}
+
+// ============================================
+// DEFAULT EMPTY STATE
+// ============================================
+
+function DefaultEmptyState() {
+  const { t } = useTranslation();
+
+  return (
+    <Card className="p-12 text-center">
+      <div className="flex justify-center mb-4">
+        <Database className="h-12 w-12 text-muted-foreground" />
+      </div>
+      <h3 className="text-lg font-semibold mb-2">
+        {t("common.noData", { defaultValue: "No data found" })}
+      </h3>
+      <p className="text-muted-foreground">
+        {t("common.noDataDescription", {
+          defaultValue: "There are no items to display",
+        })}
+      </p>
+    </Card>
+  );
 }
 
 // ============================================
@@ -56,22 +88,10 @@ function SortIcon({ direction }: { direction: SortDirection | null }) {
 // ============================================
 
 /**
- * Data table component with sorting, filtering, and selection
- * 
+ * Data table component with sorting, filtering, selection, and automatic empty state
+ *
  * @example
- * const table = useTable({ data: clients, searchKeys: ['firstName', 'lastName'] });
- * 
- * const columns: Column<Client>[] = [
- *   { key: 'firstName', header: t('fields.firstName'), sortable: true },
- *   { key: 'email', header: t('fields.email'), sortable: true },
- *   { 
- *     key: 'actions', 
- *     header: '', 
- *     render: (item) => <Button onClick={() => edit(item)}>Edit</Button> 
- *   },
- * ];
- * 
- * <DataTable table={table} columns={columns} selectable />
+ * <DataTable table={table} columns={columns} />
  */
 export function DataTable<T extends { id: string }>({
   table,
@@ -84,6 +104,13 @@ export function DataTable<T extends { id: string }>({
 }: DataTableProps<T>) {
   const { t } = useTranslation();
 
+  // Show empty state if no data and no search
+  const showEmptyState = !loading && table.totalItems === 0 && !table.search;
+
+  if (showEmptyState) {
+    return <DefaultEmptyState />;
+  }
+
   return (
     <div className="space-y-4">
       {/* Search */}
@@ -91,14 +118,14 @@ export function DataTable<T extends { id: string }>({
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder={searchPlaceholder || t('common.search')}
+            placeholder={searchPlaceholder || t("common.search")}
             value={table.search}
             onChange={(e) => table.setSearch(e.target.value)}
             className="ps-9"
           />
           {table.search && (
             <button
-              onClick={() => table.setSearch('')}
+              onClick={() => table.setSearch("")}
               className="absolute end-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
             >
               <X className="h-4 w-4" />
@@ -123,7 +150,7 @@ export function DataTable<T extends { id: string }>({
                         table.deselectAll();
                       }
                     }}
-                    aria-label={t('common.selectAll')}
+                    aria-label={t("common.selectAll")}
                   />
                 </TableHead>
               )}
@@ -135,7 +162,9 @@ export function DataTable<T extends { id: string }>({
                       onClick={() => table.setSort(column.key)}
                     >
                       {column.header}
-                      <SortIcon direction={table.getSortDirection(column.key)} />
+                      <SortIcon
+                        direction={table.getSortDirection(column.key)}
+                      />
                     </button>
                   ) : (
                     column.header
@@ -162,15 +191,17 @@ export function DataTable<T extends { id: string }>({
                   colSpan={columns.length + (selectable ? 1 : 0)}
                   className="h-24 text-center"
                 >
-                  {emptyMessage || t('common.noResults')}
+                  {emptyMessage || t("common.noResults")}
                 </TableCell>
               </TableRow>
             ) : (
               table.items.map((item) => (
                 <TableRow
                   key={item.id}
-                  data-state={table.isSelected(item.id) ? 'selected' : undefined}
-                  className={cn(onRowClick && 'cursor-pointer')}
+                  data-state={
+                    table.isSelected(item.id) ? "selected" : undefined
+                  }
+                  className={cn(onRowClick && "cursor-pointer")}
                   onClick={() => onRowClick?.(item)}
                 >
                   {selectable && (
@@ -178,7 +209,7 @@ export function DataTable<T extends { id: string }>({
                       <Checkbox
                         checked={table.isSelected(item.id)}
                         onCheckedChange={() => table.toggleItem(item.id)}
-                        aria-label={t('common.selectRow')}
+                        aria-label={t("common.selectRow")}
                       />
                     </TableCell>
                   )}
@@ -186,7 +217,9 @@ export function DataTable<T extends { id: string }>({
                     <TableCell key={column.key} className={column.className}>
                       {column.render
                         ? column.render(item)
-                        : (item as Record<string, unknown>)[column.key] as React.ReactNode}
+                        : ((item as Record<string, unknown>)[
+                            column.key
+                          ] as React.ReactNode)}
                     </TableCell>
                   ))}
                 </TableRow>
@@ -219,8 +252,8 @@ export function TablePagination<T extends { id: string }>({
     <div className="flex items-center justify-between">
       <p className="text-sm text-muted-foreground">
         {table.selectedCount > 0
-          ? t('common.selectedCount', { count: table.selectedCount })
-          : t('common.showingCount', {
+          ? t("common.selectedCount", { count: table.selectedCount })
+          : t("common.showingCount", {
               from: (table.page - 1) * table.perPage + 1,
               to: Math.min(table.page * table.perPage, table.totalItems),
               total: table.totalItems,
@@ -233,10 +266,10 @@ export function TablePagination<T extends { id: string }>({
           onClick={table.prevPage}
           disabled={!table.canPrevPage}
         >
-          {t('common.previous')}
+          {t("common.previous")}
         </Button>
         <span className="text-sm text-muted-foreground">
-          {t('common.pageOf', { page: table.page, total: table.totalPages })}
+          {t("common.pageOf", { page: table.page, total: table.totalPages })}
         </span>
         <Button
           variant="outline"
@@ -244,7 +277,7 @@ export function TablePagination<T extends { id: string }>({
           onClick={table.nextPage}
           disabled={!table.canNextPage}
         >
-          {t('common.next')}
+          {t("common.next")}
         </Button>
       </div>
     </div>

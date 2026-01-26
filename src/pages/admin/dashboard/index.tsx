@@ -35,10 +35,6 @@ export default function AdminDashboardPage() {
     ? [user.firstName, user.lastName].filter(Boolean).join(" ") || user.email
     : "";
 
-  const totalSalons = salonsData?.length || 0;
-  const totalUsers = usersData?.meta.total || 0;
-  const activeSubscriptions = salonsData?.filter((s) => s.isActive).length || 0;
-
   const recentSalons = salonsData
     ? [...salonsData]
         .sort(
@@ -65,12 +61,7 @@ export default function AdminDashboardPage() {
         description={t("admin.dashboard.welcome", { name: displayName })}
       />
 
-      {/* Stats Cards */}
-      <StatsGrid
-        totalSalons={totalSalons}
-        totalUsers={totalUsers}
-        activeSubscriptions={activeSubscriptions}
-      />
+      <StatsGrid salonsData={salonsData} usersData={usersData} />
       <div className="grid gap-6 lg:grid-cols-2">
         <RecentSalonsCard salons={recentSalons} />
         <RecentUsersCard users={recentUsers} />

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { Plus } from "lucide-react";
@@ -6,9 +6,9 @@ import { Plus } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { useGet } from "@/hooks/useGet";
-import { usePost } from "@/hooks/usePost";
 import { useForm } from "@/hooks/useForm";
 import { useUser } from "@/hooks/useUser";
+import { useTable } from "@/hooks/useTable";
 import { toast } from "@/lib/toast";
 import type { Salon, User } from "@/types/entities";
 import {
@@ -17,12 +17,10 @@ import {
   optionalEmailField,
 } from "@/common/validator/zodI18n";
 import { canModifySalon, type SalonModalState } from "./utils";
-import { EmptyState } from "./components/empty-state";
-import { SalonCard } from "./components/salon-card";
-import { SalonFormModal } from "./components/dialog/cu-salon";
-import { SalonViewModal } from "./components/dialog/view-salon";
-import { DeleteSalonDialog } from "./components/dialog/delete-salon";
 import { StatsGrid } from "./components/stats-grid";
+import { useSalonsColumns } from "./list/columns";
+import { DataTable } from "@/components/table";
+import { SalonModals } from "./components/dialog/salon-modal";
 
 // Zod schema for salon form
 const baseSalonFormSchema = z.object({
@@ -36,38 +34,25 @@ type BaseSalonFormData = z.infer<typeof baseSalonFormSchema>;
 
 export default function SalonsPage() {
   const { t } = useTranslation();
-  const {
-    user,
-    isSuperadmin: userIsSuperadmin,
-    isAdmin: userIsAdmin,
-  } = useUser();
+  const { user, isSuperadmin: userIsSuperadmin } = useUser();
 
-  const currentUserId = user?.id;
-
-  // Unified modal state
+  // State
   const [modalState, setModalState] = useState<SalonModalState>(null);
   const [selectedOwnerId, setSelectedOwnerId] = useState<string>("");
 
-  // Fetch salons
+  // Fetch data
   const { data: salons = [], isLoading, refetch } = useGet<Salon[]>("salons");
-
-  // Fetch admins list for superadmin
   const { data: admins = [] } = useGet<User[]>("users/admins", {
     enabled: userIsSuperadmin,
     retry: 1,
   });
 
-  // Helper functions
-  const getSelectedSalon = (): Salon | null => {
-    if (!modalState || modalState.salonId === "create") return null;
-    return salons.find((s) => s.id === modalState.salonId) || null;
-  };
-
-  const selectedSalon = getSelectedSalon();
-  const isCreateMode = modalState?.salonId === "create";
-  const isEditMode = modalState?.mode === "edit" && !isCreateMode;
-  const isViewMode = modalState?.mode === "view";
-  const isDeleteMode = modalState?.mode === "delete";
+  // Table setup
+  const table = useTable({
+    data: salons,
+    initialPerPage: 10,
+    searchKeys: ["name", "address", "phone", "email"],
+  });
 
   // Form setup
   const form = useForm<BaseSalonFormData>({
@@ -77,71 +62,6 @@ export default function SalonsPage() {
       address: "",
       phone: "",
       email: "",
-    },
-  });
-
-  // Reset form when modal state changes
-  useEffect(() => {
-    if (isCreateMode) {
-      form.reset({
-        name: "",
-        address: "",
-        phone: "",
-        email: "",
-      });
-      setSelectedOwnerId("");
-    } else if (selectedSalon && isEditMode) {
-      form.reset({
-        name: selectedSalon.name,
-        address: selectedSalon.address || "",
-        phone: selectedSalon.phone || "",
-        email: selectedSalon.email || "",
-      });
-      setSelectedOwnerId(selectedSalon.ownerId || "");
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [modalState, selectedSalon, isCreateMode, isEditMode]);
-
-  // Mutations
-  const createSalon = usePost<Salon, BaseSalonFormData & { ownerId?: string }>(
-    "salons",
-    {
-      onSuccess: () => {
-        toast.success(t("admin.salons.addSalon") + " - " + t("common.success"));
-        setModalState(null);
-        refetch();
-      },
-      onError: (error) => {
-        toast.error(error.message || t("common.error"));
-      },
-    },
-  );
-
-  const updateSalon = usePost<Salon, BaseSalonFormData & { ownerId?: string }>(
-    `salons/${selectedSalon?.id}`,
-    {
-      method: "PATCH",
-      onSuccess: () => {
-        toast.success(t("common.edit") + " - " + t("common.success"));
-        setModalState(null);
-        refetch();
-      },
-      onError: (error) => {
-        toast.error(error.message || t("common.error"));
-      },
-    },
-  );
-
-  const deleteSalon = usePost<void, string>("salons", {
-    id: (salonId) => salonId,
-    method: "DELETE",
-    onSuccess: () => {
-      toast.success(t("common.delete") + " - " + t("common.success"));
-      setModalState(null);
-      refetch();
-    },
-    onError: (error) => {
-      toast.error(error.message || t("common.error"));
     },
   });
 
@@ -171,23 +91,14 @@ export default function SalonsPage() {
     setModalState({ salonId: salon.id, mode: "delete" });
   };
 
-  const handleSubmit = (data: BaseSalonFormData) => {
-    if (userIsSuperadmin && isCreateMode && !selectedOwnerId) {
-      toast.error(t("admin.salons.selectOwnerRequired"));
-      return;
-    }
-
-    const payload = {
-      ...data,
-      ...(userIsSuperadmin && { ownerId: selectedOwnerId }),
-    };
-
-    if (isEditMode) {
-      updateSalon.mutate(payload);
-    } else {
-      createSalon.mutate(payload);
-    }
-  };
+  // Columns
+  const columns = useSalonsColumns({
+    currentUser: user as User | null,
+    isSuperadmin: userIsSuperadmin,
+    onView: handleView,
+    onEdit: handleEdit,
+    onDelete: handleDelete,
+  });
 
   return (
     <div className="space-y-6">
@@ -205,88 +116,32 @@ export default function SalonsPage() {
         }
       />
 
-      {/* Stats */}
       <StatsGrid
         totalSalons={totalSalons}
         activeSalons={activeSalons}
         totalUsers={totalUsers}
+        isSuperadmin={userIsSuperadmin}
       />
 
-      {/* Salons Grid */}
-      {isLoading ? (
-        <div className="text-center py-8 text-muted-foreground">
-          {t("common.loading")}
-        </div>
-      ) : salons.length === 0 ? (
-        <EmptyState
-          isSuperadmin={userIsSuperadmin}
-          hasAdmins={admins.length > 0}
-          onCreateSalon={() =>
-            setModalState({ salonId: "create", mode: "edit" })
-          }
-        />
-      ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {salons.map((salon) => (
-            <SalonCard
-              key={salon.id}
-              salon={salon}
-              canModify={canModifySalon(salon, user as User | null)}
-              isOwnSalon={salon.ownerId === currentUserId}
-              isSuperadmin={userIsSuperadmin}
-              onView={() => handleView(salon)}
-              onEdit={() => handleEdit(salon)}
-              onDelete={() => handleDelete(salon)}
-            />
-          ))}
-        </div>
-      )}
+      <DataTable
+        table={table}
+        columns={columns}
+        onRowClick={handleView}
+        searchPlaceholder={t("admin.salons.searchSalons")}
+        emptyMessage={t("admin.salons.noSalons")}
+        loading={isLoading}
+      />
 
-      {/* Modals */}
-      <SalonFormModal
-        isOpen={isEditMode || isCreateMode}
-        isCreateMode={isCreateMode}
-        selectedSalon={selectedSalon}
-        isSuperadmin={userIsSuperadmin}
-        isAdmin={userIsAdmin}
+      <SalonModals
+        modalState={modalState}
+        setModalState={setModalState}
+        salons={salons}
+        user={user as User | null}
         admins={admins}
-        selectedOwnerId={selectedOwnerId}
         form={form}
-        isSubmitting={
-          form.isSubmitting || createSalon.isPending || updateSalon.isPending
-        }
-        onClose={() => setModalState(null)}
-        onSubmit={handleSubmit}
-        onOwnerChange={setSelectedOwnerId}
-        onCreateAdmin={() => {
-          setModalState(null);
-          window.location.href = "/admin/users";
-        }}
-      />
-
-      <SalonViewModal
-        isOpen={isViewMode}
-        salon={selectedSalon}
-        canModify={
-          selectedSalon
-            ? canModifySalon(selectedSalon, user as User | null)
-            : false
-        }
-        isOwnSalon={selectedSalon?.ownerId === currentUserId}
-        isSuperadmin={userIsSuperadmin}
-        onClose={() => setModalState(null)}
-        onEdit={() =>
-          selectedSalon &&
-          setModalState({ salonId: selectedSalon.id, mode: "edit" })
-        }
-      />
-
-      <DeleteSalonDialog
-        isOpen={isDeleteMode}
-        salon={selectedSalon}
-        isDeleting={deleteSalon.isPending}
-        onClose={() => setModalState(null)}
-        onConfirm={() => selectedSalon && deleteSalon.mutate(selectedSalon.id)}
+        selectedOwnerId={selectedOwnerId}
+        setSelectedOwnerId={setSelectedOwnerId}
+        onSuccess={refetch}
       />
     </div>
   );
