@@ -18,7 +18,7 @@ interface UseUserReturn {
   isAdmin: boolean;
   isUser: boolean;
   hasRole: (role: AppRole) => boolean;
-  salon: Salon | null; // Add salon
+  salon: Salon | null;
 }
 
 export function useUser(options: UseUserOptions = {}): UseUserReturn {

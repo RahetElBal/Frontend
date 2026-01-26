@@ -30,22 +30,19 @@ export function AdminUsersPage() {
 
   const { isSuperadmin, user: currentUser, salon: adminSalon } = useUser();
 
-  // Build API endpoint based on role
-  const usersEndpoint = isSuperadmin
-    ? "users" // Superadmin: fetch all users
-    : adminSalon
-      ? `users?salonId=${adminSalon.id}` // Admin: fetch only users in their salon
-      : "users"; // Fallback
-
-  // Fetch users based on role
+  // Fetch all users
   const { data: usersResponse, refetch } = useGet<PaginatedResponse<User>>(
-    usersEndpoint,
+    "users",
     {
       retry: 1,
-      enabled: isSuperadmin || !!adminSalon, // Only fetch if superadmin or admin has salon
     },
   );
-  const users = usersResponse?.data || [];
+
+  // Filter users based on role
+  const allUsers = usersResponse?.data || [];
+  const users = isSuperadmin
+    ? allUsers
+    : allUsers.filter((user) => user.managedById === currentUser?.id);
 
   // Salons - superadmin fetches all, admin uses their own from useUser
   const { data: allSalons = [] } = useGet<Salon[]>("salons", {
