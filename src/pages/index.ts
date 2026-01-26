@@ -10,6 +10,3 @@ export { SettingsPage } from "./settings";
 export { StaffPage } from "./staff";
 export { PromotionsPage } from "./promotions";
 export { SalonSettingsPage } from "./salon-settings";
-
-// Admin Pages
-export { AdminSalonsPage } from "./admin/salons";

@@ -63,6 +63,7 @@ import {
 } from "@/lib/notifications";
 import { useGet } from "@/hooks/useGet";
 import { usePost } from "@/hooks/usePost";
+import { formatDate } from "@/common/utils";
 
 // Modal state type
 type AppointmentModalState = {
@@ -291,14 +292,6 @@ export function AgendaPage() {
     () => services.find((s) => s.id === selectedServiceId),
     [services, selectedServiceId],
   );
-
-  const formatDate = (date: Date) =>
-    date.toLocaleDateString("fr-FR", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
 
   const goToPrevDay = () => {
     const newDate = new Date(selectedDate);

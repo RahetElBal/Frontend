@@ -1,11 +1,19 @@
-import { useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { Heart, Star, Trophy, Crown, Gift, TrendingUp, Settings } from 'lucide-react';
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import {
+  Heart,
+  Star,
+  Trophy,
+  Crown,
+  Gift,
+  TrendingUp,
+  Settings,
+} from "lucide-react";
 
-import { PageHeader } from '@/components/page-header';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/badge';
+import { PageHeader } from "@/components/page-header";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/badge";
 import {
   Dialog,
   DialogContent,
@@ -13,32 +21,41 @@ import {
   DialogTitle,
   DialogFooter,
   DialogDescription,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { cn } from '@/lib/utils';
-import type { LoyaltyProgram, LoyaltyTransaction, Client } from '@/types/entities';
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { cn } from "@/lib/utils";
+import type {
+  LoyaltyProgram,
+  LoyaltyTransaction,
+  Client,
+} from "@/types/entities";
 
 // TODO: Replace with real API data
 const loyaltyProgram: LoyaltyProgram = {
-  id: '',
-  name: 'Programme Fidélité',
+  id: "",
+  name: "Programme Fidélité",
   pointsPerCurrency: 1,
   redemptionRate: 0.05,
   minimumPoints: 100,
   isActive: true,
-  salonId: '',
+  salonId: "",
   tiers: [],
-  createdAt: '',
-  updatedAt: '',
+  createdAt: "",
+  updatedAt: "",
 };
 
 const loyaltyTransactions: LoyaltyTransaction[] = [];
 const clients: Client[] = [];
 
 const tierIcons = [Star, Trophy, Crown, Gift];
-const tierColors = ['text-orange-500', 'text-gray-400', 'text-yellow-500', 'text-purple-500'];
+const tierColors = [
+  "text-orange-500",
+  "text-gray-400",
+  "text-yellow-500",
+  "text-purple-500",
+];
 
 export function LoyaltyPage() {
   const { t } = useTranslation();
@@ -52,15 +69,18 @@ export function LoyaltyPage() {
   });
 
   const formatCurrency = (value: number) =>
-    new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(value);
+    new Intl.NumberFormat("fr-FR", {
+      style: "currency",
+      currency: "EUR",
+    }).format(value);
 
   const totalPointsIssued = loyaltyTransactions
-    .filter((tx) => tx.type === 'earn')
+    .filter((tx) => tx.type === "earn")
     .reduce((sum, tx) => sum + tx.points, 0);
   const totalPointsRedeemed = Math.abs(
     loyaltyTransactions
-      .filter((tx) => tx.type === 'redeem')
-      .reduce((sum, tx) => sum + tx.points, 0)
+      .filter((tx) => tx.type === "redeem")
+      .reduce((sum, tx) => sum + tx.points, 0),
   );
 
   const topClients = [...clients]
@@ -77,19 +97,23 @@ export function LoyaltyPage() {
   const handleSaveSettings = async (e: React.FormEvent) => {
     e.preventDefault();
     // TODO: Call API to update loyalty program settings
-    console.log('Saving loyalty settings:', settings);
+    console.log("Saving loyalty settings:", settings);
     setIsSettingsModalOpen(false);
   };
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title={t('nav.loyalty')}
+        title={t("nav.loyalty")}
         description={loyaltyProgram.name}
         actions={
-          <Button variant="outline" className="gap-2" onClick={() => setIsSettingsModalOpen(true)}>
+          <Button
+            variant="outline"
+            className="gap-2"
+            onClick={() => setIsSettingsModalOpen(true)}
+          >
             <Settings className="h-4 w-4" />
-            {t('loyalty.programSettings')}
+            {t("loyalty.programSettings")}
           </Button>
         }
       />
@@ -102,7 +126,9 @@ export function LoyaltyPage() {
               <Heart className="h-5 w-5 text-accent-pink" />
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">{t('loyalty.activeMembers')}</p>
+              <p className="text-sm text-muted-foreground">
+                {t("loyalty.activeMembers")}
+              </p>
               <p className="text-xl font-bold">{clients.length}</p>
             </div>
           </div>
@@ -113,8 +139,12 @@ export function LoyaltyPage() {
               <TrendingUp className="h-5 w-5 text-green-600" />
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">{t('loyalty.pointsIssued')}</p>
-              <p className="text-xl font-bold">{totalPointsIssued.toLocaleString()}</p>
+              <p className="text-sm text-muted-foreground">
+                {t("loyalty.pointsIssued")}
+              </p>
+              <p className="text-xl font-bold">
+                {totalPointsIssued.toLocaleString()}
+              </p>
             </div>
           </div>
         </Card>
@@ -124,8 +154,12 @@ export function LoyaltyPage() {
               <Gift className="h-5 w-5 text-blue-600" />
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">{t('loyalty.pointsRedeemed')}</p>
-              <p className="text-xl font-bold">{totalPointsRedeemed.toLocaleString()}</p>
+              <p className="text-sm text-muted-foreground">
+                {t("loyalty.pointsRedeemed")}
+              </p>
+              <p className="text-xl font-bold">
+                {totalPointsRedeemed.toLocaleString()}
+              </p>
             </div>
           </div>
         </Card>
@@ -135,9 +169,13 @@ export function LoyaltyPage() {
               <Star className="h-5 w-5 text-purple-600" />
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">{t('loyalty.redemptionValue')}</p>
+              <p className="text-sm text-muted-foreground">
+                {t("loyalty.redemptionValue")}
+              </p>
               <p className="text-xl font-bold">
-                {formatCurrency(totalPointsRedeemed * loyaltyProgram.redemptionRate)}
+                {formatCurrency(
+                  totalPointsRedeemed * loyaltyProgram.redemptionRate,
+                )}
               </p>
             </div>
           </div>
@@ -147,12 +185,12 @@ export function LoyaltyPage() {
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Loyalty Tiers */}
         <Card className="p-6">
-          <h2 className="text-lg font-semibold mb-4">{t('loyalty.tiers')}</h2>
+          <h2 className="text-lg font-semibold mb-4">{t("loyalty.tiers")}</h2>
           {loyaltyProgram.tiers && loyaltyProgram.tiers.length > 0 ? (
             <div className="space-y-4">
               {loyaltyProgram.tiers.map((tier, index) => {
                 const Icon = tierIcons[index] || Star;
-                const colorClass = tierColors[index] || 'text-muted-foreground';
+                const colorClass = tierColors[index] || "text-muted-foreground";
 
                 return (
                   <div
@@ -161,27 +199,27 @@ export function LoyaltyPage() {
                   >
                     <div
                       className={cn(
-                        'h-12 w-12 rounded-full flex items-center justify-center',
+                        "h-12 w-12 rounded-full flex items-center justify-center",
                         index === 0
-                          ? 'bg-orange-100'
+                          ? "bg-orange-100"
                           : index === 1
-                          ? 'bg-gray-200'
-                          : index === 2
-                          ? 'bg-yellow-100'
-                          : 'bg-purple-100'
+                            ? "bg-gray-200"
+                            : index === 2
+                              ? "bg-yellow-100"
+                              : "bg-purple-100",
                       )}
                     >
-                      <Icon className={cn('h-6 w-6', colorClass)} />
+                      <Icon className={cn("h-6 w-6", colorClass)} />
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center justify-between">
                         <h3 className="font-semibold">{tier.name}</h3>
                         <Badge variant="default">
-                          {tier.multiplier}x {t('loyalty.multiplier')}
+                          {tier.multiplier}x {t("loyalty.multiplier")}
                         </Badge>
                       </div>
                       <p className="text-sm text-muted-foreground mt-1">
-                        {tier.minPoints.toLocaleString()}+ {t('loyalty.points')}
+                        {tier.minPoints.toLocaleString()}+ {t("loyalty.points")}
                       </p>
                     </div>
                   </div>
@@ -192,7 +230,12 @@ export function LoyaltyPage() {
             <div className="text-center py-8 text-muted-foreground">
               <Star className="h-8 w-8 mx-auto mb-2 opacity-50" />
               <p>Aucun palier configuré</p>
-              <Button variant="outline" size="sm" className="mt-2" onClick={() => setIsSettingsModalOpen(true)}>
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-2"
+                onClick={() => setIsSettingsModalOpen(true)}
+              >
                 Configurer les paliers
               </Button>
             </div>
@@ -201,12 +244,15 @@ export function LoyaltyPage() {
 
         {/* Top Loyalty Members */}
         <Card className="p-6">
-          <h2 className="text-lg font-semibold mb-4">{t('loyalty.topMembers')}</h2>
+          <h2 className="text-lg font-semibold mb-4">
+            {t("loyalty.topMembers")}
+          </h2>
           {topClients.length > 0 ? (
             <div className="space-y-3">
               {topClients.map((client, index) => {
                 const tier = getTier(client.loyaltyPoints);
-                const Icon = tierIcons[loyaltyProgram.tiers?.indexOf(tier!) ?? 0] || Star;
+                const Icon =
+                  tierIcons[loyaltyProgram.tiers?.indexOf(tier!) ?? 0] || Star;
 
                 return (
                   <div
@@ -216,14 +262,14 @@ export function LoyaltyPage() {
                     <div className="flex items-center gap-3">
                       <span
                         className={cn(
-                          'flex items-center justify-center h-8 w-8 rounded-full text-sm font-bold',
+                          "flex items-center justify-center h-8 w-8 rounded-full text-sm font-bold",
                           index === 0
-                            ? 'bg-yellow-100 text-yellow-700'
+                            ? "bg-yellow-100 text-yellow-700"
                             : index === 1
-                            ? 'bg-gray-200 text-gray-700'
-                            : index === 2
-                            ? 'bg-orange-100 text-orange-700'
-                            : 'bg-muted text-muted-foreground'
+                              ? "bg-gray-200 text-gray-700"
+                              : index === 2
+                                ? "bg-orange-100 text-orange-700"
+                                : "bg-muted text-muted-foreground",
                         )}
                       >
                         {index + 1}
@@ -234,7 +280,7 @@ export function LoyaltyPage() {
                         </p>
                         <div className="flex items-center gap-1 text-xs text-muted-foreground">
                           <Icon className="h-3 w-3" />
-                          {tier?.name || 'Member'}
+                          {tier?.name || "Member"}
                         </div>
                       </div>
                     </div>
@@ -243,7 +289,7 @@ export function LoyaltyPage() {
                         {client.loyaltyPoints.toLocaleString()} pts
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {formatCurrency(client.totalSpent)} {t('loyalty.spent')}
+                        {formatCurrency(client.totalSpent)} {t("loyalty.spent")}
                       </p>
                     </div>
                   </div>
@@ -261,9 +307,9 @@ export function LoyaltyPage() {
 
       {/* Program Settings Modal */}
       <Dialog open={isSettingsModalOpen} onOpenChange={setIsSettingsModalOpen}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-125">
           <DialogHeader>
-            <DialogTitle>{t('loyalty.programSettings')}</DialogTitle>
+            <DialogTitle>{t("loyalty.programSettings")}</DialogTitle>
             <DialogDescription>
               Configurez les paramètres de votre programme de fidélité
             </DialogDescription>
@@ -279,7 +325,9 @@ export function LoyaltyPage() {
                 </div>
                 <Switch
                   checked={settings.isActive}
-                  onCheckedChange={(checked) => setSettings({ ...settings, isActive: checked })}
+                  onCheckedChange={(checked) =>
+                    setSettings({ ...settings, isActive: checked })
+                  }
                 />
               </div>
               <div className="space-y-2">
@@ -287,19 +335,28 @@ export function LoyaltyPage() {
                 <Input
                   id="programName"
                   value={settings.name}
-                  onChange={(e) => setSettings({ ...settings, name: e.target.value })}
+                  onChange={(e) =>
+                    setSettings({ ...settings, name: e.target.value })
+                  }
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="pointsPerCurrency">Points par € dépensé</Label>
+                  <Label htmlFor="pointsPerCurrency">
+                    Points par € dépensé
+                  </Label>
                   <Input
                     id="pointsPerCurrency"
                     type="number"
                     min="0.1"
                     step="0.1"
                     value={settings.pointsPerCurrency}
-                    onChange={(e) => setSettings({ ...settings, pointsPerCurrency: parseFloat(e.target.value) })}
+                    onChange={(e) =>
+                      setSettings({
+                        ...settings,
+                        pointsPerCurrency: parseFloat(e.target.value),
+                      })
+                    }
                   />
                 </div>
                 <div className="space-y-2">
@@ -310,26 +367,42 @@ export function LoyaltyPage() {
                     min="0.01"
                     step="0.01"
                     value={settings.redemptionRate}
-                    onChange={(e) => setSettings({ ...settings, redemptionRate: parseFloat(e.target.value) })}
+                    onChange={(e) =>
+                      setSettings({
+                        ...settings,
+                        redemptionRate: parseFloat(e.target.value),
+                      })
+                    }
                   />
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="minimumPoints">Points minimum pour utilisation</Label>
+                <Label htmlFor="minimumPoints">
+                  Points minimum pour utilisation
+                </Label>
                 <Input
                   id="minimumPoints"
                   type="number"
                   min="0"
                   value={settings.minimumPoints}
-                  onChange={(e) => setSettings({ ...settings, minimumPoints: parseInt(e.target.value) })}
+                  onChange={(e) =>
+                    setSettings({
+                      ...settings,
+                      minimumPoints: parseInt(e.target.value),
+                    })
+                  }
                 />
               </div>
             </div>
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setIsSettingsModalOpen(false)}>
-                {t('common.cancel')}
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsSettingsModalOpen(false)}
+              >
+                {t("common.cancel")}
               </Button>
-              <Button type="submit">{t('common.save')}</Button>
+              <Button type="submit">{t("common.save")}</Button>
             </DialogFooter>
           </form>
         </DialogContent>

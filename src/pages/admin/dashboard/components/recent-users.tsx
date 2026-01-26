@@ -2,7 +2,7 @@ import { useTranslation } from "react-i18next";
 import { Users } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import type { User } from "@/types";
-import { formatDate } from "../utils";
+import { formatDate } from "@/common/utils";
 
 interface RecentUsersCardProps {
   users: User[];

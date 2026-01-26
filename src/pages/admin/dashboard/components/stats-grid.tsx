@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { Building2, Users, DollarSign, Activity } from "lucide-react";
 import { StatsCard } from "@/components/stats-card";
-import { formatCurrency } from "../utils";
+import { useLanguage } from "@/hooks/useLanguage";
 
 interface StatsGridProps {
   totalSalons: number;
@@ -15,6 +15,7 @@ export function StatsGrid({
   activeSubscriptions,
 }: StatsGridProps) {
   const { t } = useTranslation();
+  const { formatCurrency } = useLanguage();
 
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
