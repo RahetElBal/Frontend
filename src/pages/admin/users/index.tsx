@@ -8,7 +8,6 @@ import { DataTable } from "@/components/table/data-table";
 import { useTable } from "@/hooks/useTable";
 import { useGet } from "@/hooks/useGet";
 import { usePost } from "@/hooks/usePost";
-import { useAuthContext } from "@/contexts/AuthProvider";
 import { toast } from "@/lib/toast";
 import type { User, Salon } from "@/types/entities";
 import { StatsGrid } from "./components/stats-grid";
@@ -24,7 +23,6 @@ type UserModalState = {
 } | null;
 
 export function AdminUsersPage() {
-  const { user: currentUser } = useAuthContext();
   const { t } = useTranslation();
 
   const [modalState, setModalState] = useState<UserModalState>(null);
@@ -40,14 +38,14 @@ export function AdminUsersPage() {
     },
   );
   const users = usersResponse?.data || [];
-  
+
   // Salons for the current user (admin sees their salons, superadmin sees all)
   const { data: salons = [] } = useGet<Salon[]>("salons", {
     retry: 1,
   });
-  
+
   // Only superadmin can fetch list of admins (for assigning salon ownership)
-  const { data: admins = [] } = useGet<User[]>("users/admins", { 
+  const { data: admins = [] } = useGet<User[]>("users/admins", {
     retry: 1,
     enabled: isSuperadmin,
   });
@@ -148,11 +146,7 @@ export function AdminUsersPage() {
               className="gap-2"
               onClick={handleCreateUser}
               disabled={salons.length === 0}
-              title={
-                salons.length === 0
-                  ? "Créez d'abord un salon"
-                  : undefined
-              }
+              title={salons.length === 0 ? "Créez d'abord un salon" : undefined}
             >
               <UserPlus className="h-4 w-4" />
               Ajouter un utilisateur
