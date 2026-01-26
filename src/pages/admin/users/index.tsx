@@ -30,6 +30,8 @@ export function AdminUsersPage() {
   const [modalState, setModalState] = useState<UserModalState>(null);
   const [toggleUserId, setToggleUserId] = useState<string>("");
 
+  const { isSuperadmin } = useUser();
+
   // Fetch data
   const { data: usersResponse, refetch } = useGet<PaginatedResponse<User>>(
     "users",
@@ -38,17 +40,22 @@ export function AdminUsersPage() {
     },
   );
   const users = usersResponse?.data || [];
-  const { data: salons = [] } = useGet<Salon[]>("salons/my-salons", {
+  
+  // Salons for the current user (admin sees their salons, superadmin sees all)
+  const { data: salons = [] } = useGet<Salon[]>("salons", {
     retry: 1,
   });
-  const { data: admins = [] } = useGet<User[]>("users/admins", { retry: 1 });
+  
+  // Only superadmin can fetch list of admins (for assigning salon ownership)
+  const { data: admins = [] } = useGet<User[]>("users/admins", { 
+    retry: 1,
+    enabled: isSuperadmin,
+  });
 
   const getSelectedUser = (): User | null => {
     if (!modalState || modalState.userId === "create") return null;
     return users.find((u) => u.id === modalState.userId) || null;
   };
-
-  const { isSuperadmin } = useUser();
 
   const selectedUser = getSelectedUser();
 
@@ -77,26 +84,14 @@ export function AdminUsersPage() {
   };
 
   const handleEdit = (user: User) => {
-    if (isSuperadmin) {
-      toast.error("Le super-administrateur ne peut pas être modifié");
-      return;
-    }
     setModalState({ userId: user.id, mode: "edit" });
   };
 
   const handleDelete = (user: User) => {
-    if (isSuperadmin) {
-      toast.error("Le super-administrateur ne peut pas être supprimé");
-      return;
-    }
     setModalState({ userId: user.id, mode: "delete" });
   };
 
   const handleToggleStatus = (user: User) => {
-    if (isSuperadmin) {
-      toast.error("Le statut du super-administrateur ne peut pas être modifié");
-      return;
-    }
     setToggleUserId(user.id);
     toggleStatus();
   };
@@ -137,7 +132,7 @@ export function AdminUsersPage() {
         title={t("nav.admin.users")}
         description={t("admin.users.description", { count: users.length })}
         actions={
-          currentUser?.isSuperadmin ? (
+          isSuperadmin ? (
             <div className="flex gap-2">
               <Button
                 variant="outline"
@@ -152,10 +147,10 @@ export function AdminUsersPage() {
             <Button
               className="gap-2"
               onClick={handleCreateUser}
-              disabled={salons.length === 0 || admins.length === 0}
+              disabled={salons.length === 0}
               title={
-                salons.length === 0 || admins.length === 0
-                  ? "Créez d'abord un admin et un salon"
+                salons.length === 0
+                  ? "Créez d'abord un salon"
                   : undefined
               }
             >

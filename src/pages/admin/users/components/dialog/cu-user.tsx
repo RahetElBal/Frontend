@@ -356,12 +356,10 @@ export function UserDialog({
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               Fermer
             </Button>
-            {!isSuperadmin && (
-              <Button onClick={handleEdit}>
-                <Edit className="h-4 w-4 me-2" />
-                {t("common.edit")}
-              </Button>
-            )}
+            <Button onClick={handleEdit}>
+              <Edit className="h-4 w-4 me-2" />
+              {t("common.edit")}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -395,6 +393,7 @@ export function UserDialog({
             isSubmitting={form.isSubmitting || isCreating || isUpdating}
             salons={salons}
             admins={admins}
+            isSuperadmin={isSuperadmin}
             onSubmit={handleSubmit}
             onCancel={() => onOpenChange(false)}
           />

@@ -21,6 +21,7 @@ interface UserFormProps {
   isSubmitting: boolean;
   salons: Salon[];
   admins: User[];
+  isSuperadmin: boolean;
   onSubmit: (data: UserFormData) => void;
   onCancel: () => void;
 }
@@ -31,6 +32,7 @@ export function UserForm({
   isSubmitting,
   salons,
   admins,
+  isSuperadmin,
   onSubmit,
   onCancel,
 }: UserFormProps) {
@@ -128,7 +130,7 @@ export function UserForm({
           </div>
         )}
 
-        {form.watch("role") === "user" && (
+        {form.watch("role") === "user" && isSuperadmin && (
           <div className="space-y-2">
             <Label htmlFor="managedBy">Géré par (Admin) *</Label>
             {admins.length === 0 ? (
@@ -253,8 +255,8 @@ export function UserForm({
           type="submit"
           disabled={
             isSubmitting ||
-            (form.watch("role") === "user" &&
-              (salons.length === 0 || admins.length === 0))
+            (form.watch("role") === "user" && salons.length === 0) ||
+            (form.watch("role") === "user" && isSuperadmin && admins.length === 0)
           }
         >
           {isSubmitting ? t("common.loading") : t("common.save")}
