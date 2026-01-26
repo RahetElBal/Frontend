@@ -11,8 +11,6 @@ import { usePost } from "@/hooks/usePost";
 import { useAuthContext } from "@/contexts/AuthProvider";
 import { toast } from "@/lib/toast";
 import type { User, Salon } from "@/types/entities";
-
-import { EmptyState } from "./components/empty-state";
 import { StatsGrid } from "./components/stats-grid";
 import { useUser } from "@/hooks/useUser";
 import type { PaginatedResponse } from "@/types";
@@ -33,13 +31,12 @@ export function AdminUsersPage() {
   const [toggleUserId, setToggleUserId] = useState<string>("");
 
   // Fetch data
-  const {
-    data: usersResponse,
-    isLoading,
-    refetch,
-  } = useGet<PaginatedResponse<User>>("users", {
-    retry: 1,
-  });
+  const { data: usersResponse, refetch } = useGet<PaginatedResponse<User>>(
+    "users",
+    {
+      retry: 1,
+    },
+  );
   const users = usersResponse?.data || [];
   const { data: salons = [] } = useGet<Salon[]>("salons/my-salons", {
     retry: 1,
@@ -171,21 +168,13 @@ export function AdminUsersPage() {
 
       {users.length > 0 && <StatsGrid users={users} />}
 
-      {isLoading ? (
-        <div className="text-center py-8 text-muted-foreground">
-          {t("common.loading")}
-        </div>
-      ) : users.length === 0 ? (
-        <EmptyState onCreateAdmin={handleCreateAdmin} />
-      ) : (
-        <DataTable
-          table={table}
-          columns={columns}
-          selectable
-          searchPlaceholder={t("admin.users.searchPlaceholder")}
-          emptyMessage={t("admin.users.noUsers")}
-        />
-      )}
+      <DataTable
+        table={table}
+        columns={columns}
+        selectable
+        searchPlaceholder={t("admin.users.searchPlaceholder")}
+        emptyMessage={t("admin.users.noUsers")}
+      />
 
       <UserDialog
         open={!!modalState}
