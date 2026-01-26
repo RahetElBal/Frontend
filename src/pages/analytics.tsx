@@ -1,5 +1,5 @@
-import { useMemo } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import {
   TrendingUp,
   TrendingDown,
@@ -8,25 +8,33 @@ import {
   DollarSign,
   ShoppingCart,
   BarChart3,
-} from 'lucide-react';
+} from "lucide-react";
 
-import { PageHeader } from '@/components/page-header';
-import { Card } from '@/components/ui/card';
-import { StatsCard } from '@/components/stats-card';
-import { useSalonGet } from '@/hooks/useSalonData';
-import { useLanguage } from '@/hooks/useLanguage';
-import type { Sale, Appointment, Client, Service, Product } from '@/types/entities';
+import { PageHeader } from "@/components/page-header";
+import { Card } from "@/components/ui/card";
+import { StatsCard } from "@/components/stats-card";
+import { useLanguage } from "@/hooks/useLanguage";
+import type {
+  Sale,
+  Appointment,
+  Client,
+  Service,
+  Product,
+} from "@/types/entities";
+import { useGet } from "@/hooks/useGet";
 
 export function AnalyticsPage() {
   const { t } = useTranslation();
   const { formatCurrency } = useLanguage();
 
   // Fetch all data (scoped to current salon)
-  const { data: sales = [], isLoading: loadingSales } = useSalonGet<Sale[]>('sales');
-  const { data: appointments = [], isLoading: loadingAppointments } = useSalonGet<Appointment[]>('appointments');
-  const { data: clients = [], isLoading: loadingClients } = useSalonGet<Client[]>('clients');
-  const { data: services = [] } = useSalonGet<Service[]>('services');
-  const { data: products = [] } = useSalonGet<Product[]>('products');
+  const { data: sales = [], isLoading: loadingSales } = useGet<Sale[]>("sales");
+  const { data: appointments = [], isLoading: loadingAppointments } =
+    useGet<Appointment[]>("appointments");
+  const { data: clients = [], isLoading: loadingClients } =
+    useGet<Client[]>("clients");
+  const { data: services = [] } = useGet<Service[]>("services");
+  const { data: products = [] } = useGet<Product[]>("products");
 
   const isLoading = loadingSales || loadingAppointments || loadingClients;
 
@@ -40,18 +48,28 @@ export function AnalyticsPage() {
     // Count new clients this month
     const thisMonth = new Date().getMonth();
     const thisYear = new Date().getFullYear();
-    const newClientsThisMonth = clients.filter(c => {
+    const newClientsThisMonth = clients.filter((c) => {
       const createdAt = new Date(c.createdAt);
-      return createdAt.getMonth() === thisMonth && createdAt.getFullYear() === thisYear;
+      return (
+        createdAt.getMonth() === thisMonth &&
+        createdAt.getFullYear() === thisYear
+      );
     }).length;
 
     // Calculate service popularity from appointments
-    const serviceBookings: Record<string, { name: string; count: number; revenue: number }> = {};
-    appointments.forEach(apt => {
+    const serviceBookings: Record<
+      string,
+      { name: string; count: number; revenue: number }
+    > = {};
+    appointments.forEach((apt) => {
       if (apt.service) {
         const id = apt.service.id;
         if (!serviceBookings[id]) {
-          serviceBookings[id] = { name: apt.service.name, count: 0, revenue: 0 };
+          serviceBookings[id] = {
+            name: apt.service.name,
+            count: 0,
+            revenue: 0,
+          };
         }
         serviceBookings[id].count += 1;
         serviceBookings[id].revenue += apt.service.price;
@@ -59,14 +77,21 @@ export function AnalyticsPage() {
     });
 
     // Calculate product sales from sales items
-    const productSales: Record<string, { name: string; count: number; revenue: number }> = {};
-    sales.forEach(sale => {
-      sale.items.forEach(item => {
-        if (item.type === 'product') {
-          const product = products.find(p => p.id === item.itemId);
+    const productSales: Record<
+      string,
+      { name: string; count: number; revenue: number }
+    > = {};
+    sales.forEach((sale) => {
+      sale.items.forEach((item) => {
+        if (item.type === "product") {
+          const product = products.find((p) => p.id === item.itemId);
           if (product) {
             if (!productSales[item.itemId]) {
-              productSales[item.itemId] = { name: product.name, count: 0, revenue: 0 };
+              productSales[item.itemId] = {
+                name: product.name,
+                count: 0,
+                revenue: 0,
+              };
             }
             productSales[item.itemId].count += item.quantity;
             productSales[item.itemId].revenue += item.price * item.quantity;
@@ -94,41 +119,42 @@ export function AnalyticsPage() {
     };
   }, [sales, appointments, clients, products]);
 
-  const hasData = sales.length > 0 || appointments.length > 0 || clients.length > 0;
+  const hasData =
+    sales.length > 0 || appointments.length > 0 || clients.length > 0;
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title={t('nav.analytics')}
-        description={t('analytics.description')}
+        title={t("nav.analytics")}
+        description={t("analytics.description")}
       />
 
       {/* Stats Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatsCard
-          title={t('analytics.totalRevenue')}
+          title={t("analytics.totalRevenue")}
           value={formatCurrency(metrics.totalRevenue)}
           icon={DollarSign}
           iconColor="text-green-600"
           iconBgColor="bg-green-100"
         />
         <StatsCard
-          title={t('analytics.totalAppointments')}
+          title={t("analytics.totalAppointments")}
           value={metrics.totalAppointments.toString()}
           icon={Calendar}
           iconColor="text-blue-600"
           iconBgColor="bg-blue-100"
         />
         <StatsCard
-          title={t('analytics.newClients')}
+          title={t("analytics.newClients")}
           value={metrics.newClientsThisMonth.toString()}
-          changeLabel={t('analytics.thisMonth')}
+          changeLabel={t("analytics.thisMonth")}
           icon={Users}
           iconColor="text-purple-600"
           iconBgColor="bg-purple-100"
         />
         <StatsCard
-          title={t('analytics.averageTicket')}
+          title={t("analytics.averageTicket")}
           value={formatCurrency(metrics.averageTicket)}
           icon={ShoppingCart}
         />
@@ -137,25 +163,36 @@ export function AnalyticsPage() {
       {/* Main Content */}
       {isLoading ? (
         <Card className="p-12 text-center">
-          <p className="text-muted-foreground">{t('common.loading')}</p>
+          <p className="text-muted-foreground">{t("common.loading")}</p>
         </Card>
       ) : !hasData ? (
         <Card className="p-12 text-center">
           <BarChart3 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-          <h3 className="text-lg font-semibold mb-2">{t('analytics.noData')}</h3>
-          <p className="text-muted-foreground">{t('analytics.noDataDescription')}</p>
+          <h3 className="text-lg font-semibold mb-2">
+            {t("analytics.noData")}
+          </h3>
+          <p className="text-muted-foreground">
+            {t("analytics.noDataDescription")}
+          </p>
         </Card>
       ) : (
         <div className="grid gap-6 lg:grid-cols-2">
           {/* Top Services */}
           <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-4">{t('analytics.topServices')}</h3>
+            <h3 className="text-lg font-semibold mb-4">
+              {t("analytics.topServices")}
+            </h3>
             {metrics.topServices.length === 0 ? (
-              <p className="text-muted-foreground text-center py-8">{t('common.noResults')}</p>
+              <p className="text-muted-foreground text-center py-8">
+                {t("common.noResults")}
+              </p>
             ) : (
               <div className="space-y-4">
                 {metrics.topServices.map((service, index) => (
-                  <div key={index} className="flex items-center justify-between">
+                  <div
+                    key={index}
+                    className="flex items-center justify-between"
+                  >
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full bg-accent-pink/10 flex items-center justify-center text-accent-pink font-bold text-sm">
                         {index + 1}
@@ -163,7 +200,7 @@ export function AnalyticsPage() {
                       <div>
                         <p className="font-medium">{service.name}</p>
                         <p className="text-sm text-muted-foreground">
-                          {service.count} {t('analytics.bookings')}
+                          {service.count} {t("analytics.bookings")}
                         </p>
                       </div>
                     </div>
@@ -178,13 +215,20 @@ export function AnalyticsPage() {
 
           {/* Top Products */}
           <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-4">{t('analytics.topProducts')}</h3>
+            <h3 className="text-lg font-semibold mb-4">
+              {t("analytics.topProducts")}
+            </h3>
             {metrics.topProducts.length === 0 ? (
-              <p className="text-muted-foreground text-center py-8">{t('common.noResults')}</p>
+              <p className="text-muted-foreground text-center py-8">
+                {t("common.noResults")}
+              </p>
             ) : (
               <div className="space-y-4">
                 {metrics.topProducts.map((product, index) => (
-                  <div key={index} className="flex items-center justify-between">
+                  <div
+                    key={index}
+                    className="flex items-center justify-between"
+                  >
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500 font-bold text-sm">
                         {index + 1}
@@ -192,7 +236,7 @@ export function AnalyticsPage() {
                       <div>
                         <p className="font-medium">{product.name}</p>
                         <p className="text-sm text-muted-foreground">
-                          {product.count} {t('analytics.sold')}
+                          {product.count} {t("analytics.sold")}
                         </p>
                       </div>
                     </div>
@@ -207,44 +251,69 @@ export function AnalyticsPage() {
 
           {/* KPIs */}
           <Card className="p-6 lg:col-span-2">
-            <h3 className="text-lg font-semibold mb-4">{t('analytics.kpis')}</h3>
+            <h3 className="text-lg font-semibold mb-4">
+              {t("analytics.kpis")}
+            </h3>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <div className="p-4 bg-muted/50 rounded-lg">
-                <p className="text-sm text-muted-foreground">{t('analytics.clientRetention')}</p>
+                <p className="text-sm text-muted-foreground">
+                  {t("analytics.clientRetention")}
+                </p>
                 <div className="flex items-center gap-2 mt-1">
                   <p className="text-2xl font-bold">
-                    {clients.length > 0 
-                      ? Math.round((clients.filter(c => c.visitCount > 1).length / clients.length) * 100) 
-                      : 0}%
+                    {clients.length > 0
+                      ? Math.round(
+                          (clients.filter((c) => c.visitCount > 1).length /
+                            clients.length) *
+                            100,
+                        )
+                      : 0}
+                    %
                   </p>
-                  {clients.filter(c => c.visitCount > 1).length > 0 && (
+                  {clients.filter((c) => c.visitCount > 1).length > 0 && (
                     <TrendingUp className="h-4 w-4 text-green-600" />
                   )}
                 </div>
               </div>
               <div className="p-4 bg-muted/50 rounded-lg">
-                <p className="text-sm text-muted-foreground">{t('analytics.noShowRate')}</p>
+                <p className="text-sm text-muted-foreground">
+                  {t("analytics.noShowRate")}
+                </p>
                 <div className="flex items-center gap-2 mt-1">
                   <p className="text-2xl font-bold">
-                    {appointments.length > 0 
-                      ? Math.round((appointments.filter(a => a.status === 'no_show').length / appointments.length) * 100)
-                      : 0}%
+                    {appointments.length > 0
+                      ? Math.round(
+                          (appointments.filter((a) => a.status === "no_show")
+                            .length /
+                            appointments.length) *
+                            100,
+                        )
+                      : 0}
+                    %
                   </p>
-                  {appointments.filter(a => a.status === 'no_show').length === 0 && appointments.length > 0 && (
-                    <TrendingDown className="h-4 w-4 text-green-600" />
-                  )}
+                  {appointments.filter((a) => a.status === "no_show").length ===
+                    0 &&
+                    appointments.length > 0 && (
+                      <TrendingDown className="h-4 w-4 text-green-600" />
+                    )}
                 </div>
               </div>
               <div className="p-4 bg-muted/50 rounded-lg">
-                <p className="text-sm text-muted-foreground">{t('fields.totalSpent')}</p>
+                <p className="text-sm text-muted-foreground">
+                  {t("fields.totalSpent")}
+                </p>
                 <div className="flex items-center gap-2 mt-1">
                   <p className="text-2xl font-bold">
-                    {formatCurrency(clients.reduce((sum, c) => sum + c.totalSpent, 0))}
+                    {formatCurrency(
+                      clients.reduce((sum, c) => sum + c.totalSpent, 0),
+                    )}
                   </p>
                 </div>
               </div>
               <div className="p-4 bg-muted/50 rounded-lg">
-                <p className="text-sm text-muted-foreground">{t('fields.loyaltyPoints')}</p>
+                <p className="text-sm text-muted-foreground">
+                  {t("fields.loyaltyPoints")}
+                </p>
                 <div className="flex items-center gap-2 mt-1">
                   <p className="text-2xl font-bold">
                     {clients.reduce((sum, c) => sum + c.loyaltyPoints, 0)}
@@ -256,19 +325,33 @@ export function AnalyticsPage() {
 
           {/* Summary Stats */}
           <Card className="p-6 lg:col-span-2">
-            <h3 className="text-lg font-semibold mb-4">{t('common.viewAll')}</h3>
+            <h3 className="text-lg font-semibold mb-4">
+              {t("common.viewAll")}
+            </h3>
             <div className="grid gap-4 sm:grid-cols-3">
               <div className="text-center p-4 bg-muted/50 rounded-lg">
-                <p className="text-3xl font-bold text-accent-pink">{clients.length}</p>
-                <p className="text-sm text-muted-foreground">{t('nav.clients')}</p>
+                <p className="text-3xl font-bold text-accent-pink">
+                  {clients.length}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {t("nav.clients")}
+                </p>
               </div>
               <div className="text-center p-4 bg-muted/50 rounded-lg">
-                <p className="text-3xl font-bold text-blue-500">{services.length}</p>
-                <p className="text-sm text-muted-foreground">{t('nav.services')}</p>
+                <p className="text-3xl font-bold text-blue-500">
+                  {services.length}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {t("nav.services")}
+                </p>
               </div>
               <div className="text-center p-4 bg-muted/50 rounded-lg">
-                <p className="text-3xl font-bold text-green-600">{products.length}</p>
-                <p className="text-sm text-muted-foreground">{t('nav.products')}</p>
+                <p className="text-3xl font-bold text-green-600">
+                  {products.length}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {t("nav.products")}
+                </p>
               </div>
             </div>
           </Card>

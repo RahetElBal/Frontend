@@ -1,20 +1,35 @@
-import { useState, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
-import { z } from 'zod';
-import { Plus, Mail, Phone, MoreHorizontal, Eye, Edit, Trash2, Calendar, Award, DollarSign } from 'lucide-react';
-import { requiredString, optionalString, optionalEmailField } from '@/common/validator/zodI18n';
+import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
+import { z } from "zod";
+import {
+  Plus,
+  Mail,
+  Phone,
+  MoreHorizontal,
+  Eye,
+  Edit,
+  Trash2,
+  Calendar,
+  Award,
+  DollarSign,
+} from "lucide-react";
+import {
+  requiredString,
+  optionalString,
+  optionalEmailField,
+} from "@/common/validator/zodI18n";
 
-import { PageHeader } from '@/components/page-header';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/badge';
-import { DataTable, type Column } from '@/components/table/data-table';
+import { PageHeader } from "@/components/page-header";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/badge";
+import { DataTable, type Column } from "@/components/table/data-table";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from "@/components/ui/dropdown-menu";
 import {
   Dialog,
   DialogContent,
@@ -22,7 +37,7 @@ import {
   DialogTitle,
   DialogFooter,
   DialogDescription,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,26 +47,27 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { useTable } from '@/hooks/useTable';
-import { useSalonGet, useSalonPost } from '@/hooks/useSalonData';
-import { useLanguage } from '@/hooks/useLanguage';
-import { useForm } from '@/hooks/useForm';
-import { toast } from '@/lib/toast';
-import type { Client } from '@/types/entities';
+} from "@/components/ui/alert-dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useTable } from "@/hooks/useTable";
+import { useLanguage } from "@/hooks/useLanguage";
+import { useForm } from "@/hooks/useForm";
+import { toast } from "@/lib/toast";
+import type { Client } from "@/types/entities";
+import { useGet } from "@/hooks/useGet";
+import { usePost } from "@/hooks/usePost";
 
 // Modal state type
 type ClientModalState = {
-  clientId: string | 'create';
-  mode: 'view' | 'edit' | 'delete';
+  clientId: string | "create";
+  mode: "view" | "edit" | "delete";
 } | null;
 
 // Zod schema for client form
 const clientFormSchema = z.object({
-  firstName: requiredString('Prénom'),
-  lastName: requiredString('Nom'),
+  firstName: requiredString("Prénom"),
+  lastName: requiredString("Nom"),
   email: optionalEmailField(),
   phone: optionalString(),
 });
@@ -61,33 +77,37 @@ type ClientFormData = z.infer<typeof clientFormSchema>;
 export function ClientsPage() {
   const { t } = useTranslation();
   const { formatCurrency } = useLanguage();
-  
+
   // Unified modal state
   const [modalState, setModalState] = useState<ClientModalState>(null);
 
   // Fetch clients from API (scoped to current salon)
-  const { data: clients = [], isLoading, refetch } = useSalonGet<Client[]>('clients');
+  const {
+    data: clients = [],
+    isLoading,
+    refetch,
+  } = useGet<Client[]>("clients");
 
   // Helper functions
   const getSelectedClient = (): Client | null => {
-    if (!modalState || modalState.clientId === 'create') return null;
+    if (!modalState || modalState.clientId === "create") return null;
     return clients.find((c) => c.id === modalState.clientId) || null;
   };
 
   const selectedClient = getSelectedClient();
-  const isCreateMode = modalState?.clientId === 'create';
-  const isEditMode = modalState?.mode === 'edit' && !isCreateMode;
-  const isViewMode = modalState?.mode === 'view';
-  const isDeleteMode = modalState?.mode === 'delete';
+  const isCreateMode = modalState?.clientId === "create";
+  const isEditMode = modalState?.mode === "edit" && !isCreateMode;
+  const isViewMode = modalState?.mode === "view";
+  const isDeleteMode = modalState?.mode === "delete";
 
   // Form setup
   const form = useForm<ClientFormData>({
     schema: clientFormSchema,
     defaultValues: {
-      firstName: '',
-      lastName: '',
-      email: '',
-      phone: '',
+      firstName: "",
+      lastName: "",
+      email: "",
+      phone: "",
     },
   });
 
@@ -95,78 +115,87 @@ export function ClientsPage() {
   useEffect(() => {
     if (isCreateMode) {
       form.reset({
-        firstName: '',
-        lastName: '',
-        email: '',
-        phone: '',
+        firstName: "",
+        lastName: "",
+        email: "",
+        phone: "",
       });
     } else if (selectedClient && isEditMode) {
       form.reset({
         firstName: selectedClient.firstName,
         lastName: selectedClient.lastName,
-        email: selectedClient.email || '',
-        phone: selectedClient.phone || '',
+        email: selectedClient.email || "",
+        phone: selectedClient.phone || "",
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [modalState, selectedClient, isCreateMode, isEditMode]);
 
   // Create client mutation
-  const { mutate: createClient, isPending: isCreating } = useSalonPost<Client, ClientFormData>('clients', {
+  const { mutate: createClient, isPending: isCreating } = usePost<
+    Client,
+    ClientFormData
+  >("clients", {
     onSuccess: () => {
-      toast.success(t('clients.addClient') + ' - ' + t('common.success'));
+      toast.success(t("clients.addClient") + " - " + t("common.success"));
       setModalState(null);
       refetch();
     },
     onError: (error) => {
-      toast.error(error.message || t('common.error'));
+      toast.error(error.message || t("common.error"));
     },
   });
 
   // Update client mutation
-  const { mutate: updateClient, isPending: isUpdating } = useSalonPost<Client, ClientFormData>('clients', {
+  const { mutate: updateClient, isPending: isUpdating } = usePost<
+    Client,
+    ClientFormData
+  >("clients", {
     id: selectedClient?.id,
-    method: 'PATCH',
+    method: "PATCH",
     onSuccess: () => {
-      toast.success(t('common.edit') + ' - ' + t('common.success'));
+      toast.success(t("common.edit") + " - " + t("common.success"));
       setModalState(null);
       refetch();
     },
     onError: (error) => {
-      toast.error(error.message || t('common.error'));
+      toast.error(error.message || t("common.error"));
     },
   });
 
   // Delete client mutation
-  const { mutate: deleteClient, isPending: isDeleting } = useSalonPost<void, void>('clients', {
-    id: selectedClient?.id,
-    method: 'DELETE',
-    onSuccess: () => {
-      toast.success(t('common.delete') + ' - ' + t('common.success'));
-      setModalState(null);
-      refetch();
+  const { mutate: deleteClient, isPending: isDeleting } = usePost<void, void>(
+    "clients",
+    {
+      id: selectedClient?.id,
+      method: "DELETE",
+      onSuccess: () => {
+        toast.success(t("common.delete") + " - " + t("common.success"));
+        setModalState(null);
+        refetch();
+      },
+      onError: (error) => {
+        toast.error(error.message || t("common.error"));
+      },
     },
-    onError: (error) => {
-      toast.error(error.message || t('common.error'));
-    },
-  });
+  );
 
   const table = useTable<Client>({
     data: clients,
-    searchKeys: ['firstName', 'lastName', 'email', 'phone'],
+    searchKeys: ["firstName", "lastName", "email", "phone"],
   });
 
   // Handlers
   const handleView = (client: Client) => {
-    setModalState({ clientId: client.id, mode: 'view' });
+    setModalState({ clientId: client.id, mode: "view" });
   };
 
   const handleEdit = (client: Client) => {
-    setModalState({ clientId: client.id, mode: 'edit' });
+    setModalState({ clientId: client.id, mode: "edit" });
   };
 
   const handleDelete = (client: Client) => {
-    setModalState({ clientId: client.id, mode: 'delete' });
+    setModalState({ clientId: client.id, mode: "delete" });
   };
 
   const handleSubmit = (data: ClientFormData) => {
@@ -179,8 +208,8 @@ export function ClientsPage() {
 
   const columns: Column<Client>[] = [
     {
-      key: 'name',
-      header: t('fields.name'),
+      key: "name",
+      header: t("fields.name"),
       sortable: true,
       render: (client) => (
         <div>
@@ -197,8 +226,8 @@ export function ClientsPage() {
       ),
     },
     {
-      key: 'phone',
-      header: t('fields.phone'),
+      key: "phone",
+      header: t("fields.phone"),
       render: (client) =>
         client.phone ? (
           <span className="flex items-center gap-1 text-sm">
@@ -210,34 +239,34 @@ export function ClientsPage() {
         ),
     },
     {
-      key: 'loyaltyPoints',
-      header: t('fields.loyaltyPoints'),
+      key: "loyaltyPoints",
+      header: t("fields.loyaltyPoints"),
       sortable: true,
       render: (client) => (
-        <Badge variant={client.loyaltyPoints >= 500 ? 'success' : 'default'}>
+        <Badge variant={client.loyaltyPoints >= 500 ? "success" : "default"}>
           {client.loyaltyPoints} pts
         </Badge>
       ),
     },
     {
-      key: 'totalSpent',
-      header: t('fields.totalSpent'),
+      key: "totalSpent",
+      header: t("fields.totalSpent"),
       sortable: true,
       render: (client) => (
         <span className="font-medium">{formatCurrency(client.totalSpent)}</span>
       ),
     },
     {
-      key: 'visitCount',
-      header: t('fields.visits'),
+      key: "visitCount",
+      header: t("fields.visits"),
       sortable: true,
       render: (client) => (
         <span className="text-muted-foreground">{client.visitCount}</span>
       ),
     },
     {
-      key: 'lastVisit',
-      header: t('fields.lastVisit'),
+      key: "lastVisit",
+      header: t("fields.lastVisit"),
       sortable: true,
       render: (client) =>
         client.lastVisit ? (
@@ -247,9 +276,9 @@ export function ClientsPage() {
         ),
     },
     {
-      key: 'actions',
-      header: '',
-      className: 'w-12',
+      key: "actions",
+      header: "",
+      className: "w-12",
       render: (client) => (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -260,16 +289,19 @@ export function ClientsPage() {
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={() => handleView(client)}>
               <Eye className="h-4 w-4 me-2" />
-              {t('common.view')}
+              {t("common.view")}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => handleEdit(client)}>
               <Edit className="h-4 w-4 me-2" />
-              {t('common.edit')}
+              {t("common.edit")}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => handleDelete(client)} className="text-destructive">
+            <DropdownMenuItem
+              onClick={() => handleDelete(client)}
+              className="text-destructive"
+            >
               <Trash2 className="h-4 w-4 me-2" />
-              {t('common.delete')}
+              {t("common.delete")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -280,12 +312,15 @@ export function ClientsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title={t('nav.clients')}
-        description={t('clients.description', { count: clients.length })}
+        title={t("nav.clients")}
+        description={t("clients.description", { count: clients.length })}
         actions={
-          <Button className="gap-2" onClick={() => setModalState({ clientId: 'create', mode: 'edit' })}>
+          <Button
+            className="gap-2"
+            onClick={() => setModalState({ clientId: "create", mode: "edit" })}
+          >
             <Plus className="h-4 w-4" />
-            {t('clients.addClient')}
+            {t("clients.addClient")}
           </Button>
         }
       />
@@ -294,16 +329,19 @@ export function ClientsPage() {
         table={table}
         columns={columns}
         selectable
-        searchPlaceholder={t('clients.searchPlaceholder')}
-        emptyMessage={isLoading ? t('common.loading') : t('clients.noClients')}
+        searchPlaceholder={t("clients.searchPlaceholder")}
+        emptyMessage={isLoading ? t("common.loading") : t("clients.noClients")}
       />
 
       {/* Create/Edit Client Modal */}
-      <Dialog open={isEditMode || isCreateMode} onOpenChange={(open) => !open && setModalState(null)}>
-        <DialogContent className="sm:max-w-[425px]">
+      <Dialog
+        open={isEditMode || isCreateMode}
+        onOpenChange={(open) => !open && setModalState(null)}
+      >
+        <DialogContent className="sm:max-w-106.25">
           <DialogHeader>
             <DialogTitle>
-              {isCreateMode ? t('clients.addClient') : t('common.edit')}
+              {isCreateMode ? t("clients.addClient") : t("common.edit")}
             </DialogTitle>
             {isEditMode && selectedClient && (
               <DialogDescription>
@@ -315,52 +353,53 @@ export function ClientsPage() {
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="firstName">{t('fields.firstName')} *</Label>
-                  <Input
-                    id="firstName"
-                    {...form.register('firstName')}
-                  />
-                  {form.hasError('firstName') && (
-                    <p className="text-sm text-destructive">{form.getError('firstName')}</p>
+                  <Label htmlFor="firstName">{t("fields.firstName")} *</Label>
+                  <Input id="firstName" {...form.register("firstName")} />
+                  {form.hasError("firstName") && (
+                    <p className="text-sm text-destructive">
+                      {form.getError("firstName")}
+                    </p>
                   )}
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="lastName">{t('fields.lastName')} *</Label>
-                  <Input
-                    id="lastName"
-                    {...form.register('lastName')}
-                  />
-                  {form.hasError('lastName') && (
-                    <p className="text-sm text-destructive">{form.getError('lastName')}</p>
+                  <Label htmlFor="lastName">{t("fields.lastName")} *</Label>
+                  <Input id="lastName" {...form.register("lastName")} />
+                  {form.hasError("lastName") && (
+                    <p className="text-sm text-destructive">
+                      {form.getError("lastName")}
+                    </p>
                   )}
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="email">{t('fields.email')}</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  {...form.register('email')}
-                />
-                {form.hasError('email') && (
-                  <p className="text-sm text-destructive">{form.getError('email')}</p>
+                <Label htmlFor="email">{t("fields.email")}</Label>
+                <Input id="email" type="email" {...form.register("email")} />
+                {form.hasError("email") && (
+                  <p className="text-sm text-destructive">
+                    {form.getError("email")}
+                  </p>
                 )}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="phone">{t('fields.phone')}</Label>
-                <Input
-                  id="phone"
-                  type="tel"
-                  {...form.register('phone')}
-                />
+                <Label htmlFor="phone">{t("fields.phone")}</Label>
+                <Input id="phone" type="tel" {...form.register("phone")} />
               </div>
             </div>
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setModalState(null)}>
-                {t('common.cancel')}
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setModalState(null)}
+              >
+                {t("common.cancel")}
               </Button>
-              <Button type="submit" disabled={form.isSubmitting || isCreating || isUpdating}>
-                {form.isSubmitting || isCreating || isUpdating ? t('common.loading') : t('common.save')}
+              <Button
+                type="submit"
+                disabled={form.isSubmitting || isCreating || isUpdating}
+              >
+                {form.isSubmitting || isCreating || isUpdating
+                  ? t("common.loading")
+                  : t("common.save")}
               </Button>
             </DialogFooter>
           </form>
@@ -368,17 +407,21 @@ export function ClientsPage() {
       </Dialog>
 
       {/* View Client Modal */}
-      <Dialog open={isViewMode} onOpenChange={(open) => !open && setModalState(null)}>
-        <DialogContent className="sm:max-w-[500px]">
+      <Dialog
+        open={isViewMode}
+        onOpenChange={(open) => !open && setModalState(null)}
+      >
+        <DialogContent className="sm:max-w-125">
           <DialogHeader>
-            <DialogTitle>{t('clients.clientDetails')}</DialogTitle>
+            <DialogTitle>{t("clients.clientDetails")}</DialogTitle>
           </DialogHeader>
           {selectedClient && (
             <div className="space-y-6 py-4">
               <div className="flex items-center gap-4">
                 <div className="h-16 w-16 rounded-full bg-accent-pink/10 flex items-center justify-center">
                   <span className="text-2xl font-bold text-accent-pink">
-                    {selectedClient.firstName[0]}{selectedClient.lastName[0]}
+                    {selectedClient.firstName[0]}
+                    {selectedClient.lastName[0]}
                   </span>
                 </div>
                 <div>
@@ -386,7 +429,9 @@ export function ClientsPage() {
                     {selectedClient.firstName} {selectedClient.lastName}
                   </h3>
                   {selectedClient.email && (
-                    <p className="text-muted-foreground">{selectedClient.email}</p>
+                    <p className="text-muted-foreground">
+                      {selectedClient.email}
+                    </p>
                   )}
                 </div>
               </div>
@@ -396,7 +441,9 @@ export function ClientsPage() {
                   <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
                     <Phone className="h-5 w-5 text-muted-foreground" />
                     <div>
-                      <p className="text-sm text-muted-foreground">{t('fields.phone')}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {t("fields.phone")}
+                      </p>
                       <p className="font-medium">{selectedClient.phone}</p>
                     </div>
                   </div>
@@ -405,8 +452,16 @@ export function ClientsPage() {
                 <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
                   <Award className="h-5 w-5 text-muted-foreground" />
                   <div>
-                    <p className="text-sm text-muted-foreground">{t('fields.loyaltyPoints')}</p>
-                    <Badge variant={selectedClient.loyaltyPoints >= 500 ? 'success' : 'default'}>
+                    <p className="text-sm text-muted-foreground">
+                      {t("fields.loyaltyPoints")}
+                    </p>
+                    <Badge
+                      variant={
+                        selectedClient.loyaltyPoints >= 500
+                          ? "success"
+                          : "default"
+                      }
+                    >
                       {selectedClient.loyaltyPoints} pts
                     </Badge>
                   </div>
@@ -415,20 +470,31 @@ export function ClientsPage() {
                 <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
                   <DollarSign className="h-5 w-5 text-muted-foreground" />
                   <div>
-                    <p className="text-sm text-muted-foreground">{t('fields.totalSpent')}</p>
-                    <p className="font-medium">{formatCurrency(selectedClient.totalSpent)}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {t("fields.totalSpent")}
+                    </p>
+                    <p className="font-medium">
+                      {formatCurrency(selectedClient.totalSpent)}
+                    </p>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
                   <Calendar className="h-5 w-5 text-muted-foreground" />
                   <div>
-                    <p className="text-sm text-muted-foreground">{t('fields.visits')}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {t("fields.visits")}
+                    </p>
                     <p className="font-medium">
-                      {selectedClient.visitCount} {t('fields.visits').toLowerCase()}
+                      {selectedClient.visitCount}{" "}
+                      {t("fields.visits").toLowerCase()}
                       {selectedClient.lastVisit && (
                         <span className="text-muted-foreground text-sm ml-2">
-                          ({t('fields.lastVisit')}: {new Date(selectedClient.lastVisit).toLocaleDateString()})
+                          ({t("fields.lastVisit")}:{" "}
+                          {new Date(
+                            selectedClient.lastVisit,
+                          ).toLocaleDateString()}
+                          )
                         </span>
                       )}
                     </p>
@@ -439,12 +505,16 @@ export function ClientsPage() {
           )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setModalState(null)}>
-              {t('common.close')}
+              {t("common.close")}
             </Button>
             {selectedClient && (
-              <Button onClick={() => setModalState({ clientId: selectedClient.id, mode: 'edit' })}>
+              <Button
+                onClick={() =>
+                  setModalState({ clientId: selectedClient.id, mode: "edit" })
+                }
+              >
                 <Edit className="h-4 w-4 me-2" />
-                {t('common.edit')}
+                {t("common.edit")}
               </Button>
             )}
           </DialogFooter>
@@ -452,23 +522,28 @@ export function ClientsPage() {
       </Dialog>
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog open={isDeleteMode} onOpenChange={(open) => !open && setModalState(null)}>
+      <AlertDialog
+        open={isDeleteMode}
+        onOpenChange={(open) => !open && setModalState(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{t('clients.deleteClient')}</AlertDialogTitle>
+            <AlertDialogTitle>{t("clients.deleteClient")}</AlertDialogTitle>
             <AlertDialogDescription>
-              {t('clients.deleteClientConfirm', { 
-                name: selectedClient ? `${selectedClient.firstName} ${selectedClient.lastName}` : '' 
+              {t("clients.deleteClientConfirm", {
+                name: selectedClient
+                  ? `${selectedClient.firstName} ${selectedClient.lastName}`
+                  : "",
               })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => deleteClient()}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {isDeleting ? t('common.loading') : t('common.delete')}
+              {isDeleting ? t("common.loading") : t("common.delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

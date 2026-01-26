@@ -1,10 +1,10 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
-import { LoginPage } from '@/routes/login';
-import AuthCallback from '@/routes/auth-callback';
-import { UserLayout } from '@/layouts/user-layout';
-import { AdminLayout } from '@/layouts/admin-layout';
-import { ROUTES } from '@/constants/navigation';
+import { LoginPage } from "@/routes/login";
+import AuthCallback from "@/routes/auth-callback";
+import { UserLayout } from "@/layouts/user-layout";
+import { AdminLayout } from "@/layouts/admin-layout";
+import { ROUTES } from "@/constants/navigation";
 
 // Pages
 import {
@@ -19,10 +19,10 @@ import {
   StaffPage,
   PromotionsPage,
   SalonSettingsPage,
-  AdminDashboardPage,
-  AdminUsersPage,
   AdminSalonsPage,
-} from '@/pages';
+} from "@/pages";
+import AdminDashboardPage from "./pages/admin/dashboard";
+import { AdminUsersPage } from "./pages/admin/users";
 
 function App() {
   return (

@@ -1,4 +1,4 @@
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from "react-i18next";
 import {
   DollarSign,
   Calendar,
@@ -6,18 +6,18 @@ import {
   TrendingUp,
   Clock,
   ArrowRight,
-} from 'lucide-react';
+} from "lucide-react";
 
-import { useUser } from '@/hooks/useUser';
-import { Spinner } from '@/components/spinner';
-import { PageHeader } from '@/components/page-header';
-import { StatsCard } from '@/components/stats-card';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/badge';
-import { cn } from '@/lib/utils';
-import { AppointmentStatus } from '@/types/entities';
-import type { Appointment, TopService, DashboardStats } from '@/types/entities';
+import { useUser } from "@/hooks/useUser";
+import { Spinner } from "@/components/spinner";
+import { PageHeader } from "@/components/page-header";
+import { StatsCard } from "@/components/stats-card";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/badge";
+import { cn } from "@/lib/utils";
+import { AppointmentStatus } from "@/types/entities";
+import type { Appointment, TopService, DashboardStats } from "@/types/entities";
 
 // TODO: Replace with real API data
 const dashboardStats: DashboardStats = {
@@ -34,12 +34,13 @@ const dashboardStats: DashboardStats = {
 const appointments: Appointment[] = [];
 const topServices: TopService[] = [];
 
-const statusColors: Record<string, 'default' | 'success' | 'warning' | 'info'> = {
-  [AppointmentStatus.CONFIRMED]: 'success',
-  [AppointmentStatus.PENDING]: 'warning',
-  [AppointmentStatus.IN_PROGRESS]: 'info',
-  [AppointmentStatus.COMPLETED]: 'default',
-};
+const statusColors: Record<string, "default" | "success" | "warning" | "info"> =
+  {
+    [AppointmentStatus.CONFIRMED]: "success",
+    [AppointmentStatus.PENDING]: "warning",
+    [AppointmentStatus.IN_PROGRESS]: "info",
+    [AppointmentStatus.COMPLETED]: "default",
+  };
 
 export function DashboardPage() {
   const { t } = useTranslation();
@@ -47,61 +48,64 @@ export function DashboardPage() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-[400px] items-center justify-center">
+      <div className="flex min-h-100ms-center justify-center">
         <Spinner size="lg" />
       </div>
     );
   }
 
   const displayName = user
-    ? [user.firstName, user.lastName].filter(Boolean).join(' ') || user.email
-    : '';
+    ? [user.firstName, user.lastName].filter(Boolean).join(" ") || user.email
+    : "";
 
   const formatCurrency = (value: number) =>
-    new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(value);
+    new Intl.NumberFormat("fr-FR", {
+      style: "currency",
+      currency: "EUR",
+    }).format(value);
 
   return (
     <div className="space-y-8">
       {/* Header */}
       <PageHeader
-        title={t('common.welcome', { name: displayName })}
-        description={t('nav.dashboard')}
+        title={t("common.welcome", { name: displayName })}
+        description={t("nav.dashboard")}
       />
 
       {/* Stats Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatsCard
-          title={t('dashboard.todayRevenue')}
+          title={t("dashboard.todayRevenue")}
           value={formatCurrency(dashboardStats.todayRevenue)}
           change={dashboardStats.revenueChange}
-          changeLabel={t('dashboard.vsLastWeek')}
+          changeLabel={t("dashboard.vsLastWeek")}
           icon={DollarSign}
           iconColor="text-green-600"
           iconBgColor="bg-green-100"
         />
         <StatsCard
-          title={t('dashboard.todayAppointments')}
+          title={t("dashboard.todayAppointments")}
           value={dashboardStats.todayAppointments}
           change={dashboardStats.appointmentsChange}
-          changeLabel={t('dashboard.vsLastWeek')}
+          changeLabel={t("dashboard.vsLastWeek")}
           icon={Calendar}
           iconColor="text-accent-blue"
           iconBgColor="bg-accent-blue/10"
         />
         <StatsCard
-          title={t('dashboard.newClients')}
+          title={t("dashboard.newClients")}
           value={dashboardStats.newClients}
           change={dashboardStats.clientsChange}
-          changeLabel={t('dashboard.vsLastWeek')}
+          changeLabel={t("dashboard.vsLastWeek")}
           icon={Users}
           iconColor="text-accent-pink"
           iconBgColor="bg-accent-pink/10"
         />
         <StatsCard
-          title={t('dashboard.averageTicket')}
+          title={t("dashboard.averageTicket")}
           value={formatCurrency(dashboardStats.averageTicket)}
           change={dashboardStats.ticketChange}
-          changeLabel={t('dashboard.vsLastWeek')}
+          changeLabel={t("dashboard.vsLastWeek")}
           icon={TrendingUp}
           iconColor="text-purple-600"
           iconBgColor="bg-purple-100"
@@ -113,15 +117,19 @@ export function DashboardPage() {
         {/* Today's Appointments */}
         <Card className="p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold">{t('dashboard.todaysAppointments')}</h2>
+            <h2 className="text-lg font-semibold">
+              {t("dashboard.todaysAppointments")}
+            </h2>
             <Button variant="ghost" size="sm" className="gap-1">
-              {t('common.viewAll')}
+              {t("common.viewAll")}
               <ArrowRight className="h-4 w-4" />
             </Button>
           </div>
           <div className="space-y-3">
             {appointments.length === 0 ? (
-              <p className="text-center text-muted-foreground py-8">{t('dashboard.noAppointments')}</p>
+              <p className="text-center text-muted-foreground py-8">
+                {t("dashboard.noAppointments")}
+              </p>
             ) : (
               appointments.slice(0, 5).map((apt) => (
                 <div
@@ -156,15 +164,19 @@ export function DashboardPage() {
         {/* Top Services */}
         <Card className="p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold">{t('dashboard.topServices')}</h2>
+            <h2 className="text-lg font-semibold">
+              {t("dashboard.topServices")}
+            </h2>
             <Button variant="ghost" size="sm" className="gap-1">
-              {t('common.viewAll')}
+              {t("common.viewAll")}
               <ArrowRight className="h-4 w-4" />
             </Button>
           </div>
           <div className="space-y-3">
             {topServices.length === 0 ? (
-              <p className="text-center text-muted-foreground py-8">{t('dashboard.noServices')}</p>
+              <p className="text-center text-muted-foreground py-8">
+                {t("dashboard.noServices")}
+              </p>
             ) : (
               topServices.map((service, index) => (
                 <div
@@ -174,14 +186,14 @@ export function DashboardPage() {
                   <div className="flex items-center gap-3">
                     <span
                       className={cn(
-                        'flex items-center justify-center h-8 w-8 rounded-full text-sm font-bold',
+                        "flex items-center justify-center h-8 w-8 rounded-full text-sm font-bold",
                         index === 0
-                          ? 'bg-yellow-100 text-yellow-700'
+                          ? "bg-yellow-100 text-yellow-700"
                           : index === 1
-                          ? 'bg-gray-200 text-gray-700'
-                          : index === 2
-                          ? 'bg-orange-100 text-orange-700'
-                          : 'bg-muted text-muted-foreground'
+                            ? "bg-gray-200 text-gray-700"
+                            : index === 2
+                              ? "bg-orange-100 text-orange-700"
+                              : "bg-muted text-muted-foreground",
                       )}
                     >
                       {index + 1}
@@ -189,7 +201,7 @@ export function DashboardPage() {
                     <div>
                       <p className="font-medium">{service.name}</p>
                       <p className="text-sm text-muted-foreground">
-                        {service.count} {t('dashboard.bookings')}
+                        {service.count} {t("dashboard.bookings")}
                       </p>
                     </div>
                   </div>
