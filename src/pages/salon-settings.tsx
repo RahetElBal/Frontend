@@ -25,12 +25,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useSalon } from "@/contexts/SalonProvider";
 import { toast } from "@/lib/toast";
 import { cn } from "@/lib/utils";
-import type { SalonSettingsExtended, DayOfWeek } from "@/types/entities";
+import type { SalonSettingsExtended, DayOfWeek, Salon } from "@/types/entities";
 import { useGet } from "@/hooks/useGet";
 import { usePost } from "@/hooks/usePost";
+import { useUser } from "@/hooks/useUser";
 
 const DAYS: DayOfWeek[] = [
   "monday",
@@ -70,9 +70,15 @@ type SettingsTab =
 
 export function SalonSettingsPage() {
   const { t } = useTranslation();
-  const { currentSalon } = useSalon();
+  const { user } = useUser();
   const [activeTab, setActiveTab] = useState<SettingsTab>("general");
   const [hasChanges, setHasChanges] = useState(false);
+
+  // Fetch salons
+  const { data: salonsData } = useGet<Salon[]>("salons");
+
+  // Get current user's salon
+  const currentSalon = salonsData?.find((salon) => salon.ownerId === user?.id);
 
   // Fetch settings
   const { data: settings, isLoading } =
@@ -203,9 +209,11 @@ export function SalonSettingsPage() {
     <div className="space-y-6">
       <PageHeader
         title={t("nav.salonSettings")}
-        description={t("salonSettings.description", {
-          salon: currentSalon?.name,
-        })}
+        description={
+          currentSalon
+            ? t("salonSettings.description", { salon: currentSalon.name })
+            : t("salonSettings.description")
+        }
         actions={
           <Button
             onClick={handleSave}

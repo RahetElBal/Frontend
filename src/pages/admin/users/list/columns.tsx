@@ -4,7 +4,6 @@ import {
   Edit,
   Trash2,
   Shield,
-  Building2,
   Crown,
   UserCog,
 } from "lucide-react";
@@ -26,7 +25,8 @@ import type { TFunction } from "i18next";
 
 interface UserColumnsParams {
   t: TFunction;
-  isSuperadmin: boolean;
+  currentUserIsSuperadmin: boolean;
+  currentUserId: string;
   handleView: (user: User) => void;
   handleEdit: (user: User) => void;
   handleDelete: (user: User) => void;
@@ -35,11 +35,11 @@ interface UserColumnsParams {
 
 export const useColumns = ({
   t,
-  isSuperadmin,
+  currentUserIsSuperadmin,
+  currentUserId,
   handleView,
   handleEdit,
   handleDelete,
-  handleToggleStatus,
 }: UserColumnsParams): Column<User>[] => [
   {
     key: "name",
@@ -48,11 +48,12 @@ export const useColumns = ({
     render: (user) => {
       const displayName = getDisplayName(user);
       const initials = getInitials(user);
+      const userIsSuperadmin = user.isSuperadmin === true;
 
       return (
         <div className="flex items-center gap-3">
           <div
-            className={`h-10 w-10 rounded-full flex items-center justify-center ${isSuperadmin ? "bg-yellow-100" : "bg-accent-pink/10"}`}
+            className={`h-10 w-10 rounded-full flex items-center justify-center ${userIsSuperadmin ? "bg-yellow-100" : "bg-accent-pink/10"}`}
           >
             {user.picture ? (
               <img
@@ -62,7 +63,7 @@ export const useColumns = ({
               />
             ) : (
               <span
-                className={`font-medium ${isSuperadmin ? "text-yellow-600" : "text-accent-pink"}`}
+                className={`font-medium ${userIsSuperadmin ? "text-yellow-600" : "text-accent-pink"}`}
               >
                 {initials}
               </span>
@@ -71,7 +72,9 @@ export const useColumns = ({
           <div>
             <div className="flex items-center gap-2">
               <p className="font-medium">{displayName}</p>
-              {isSuperadmin && <Crown className="h-4 w-4 text-yellow-500" />}
+              {userIsSuperadmin && (
+                <Crown className="h-4 w-4 text-yellow-500" />
+              )}
             </div>
             <p className="text-sm text-muted-foreground">{user.email}</p>
           </div>
@@ -89,7 +92,7 @@ export const useColumns = ({
             <UserCog className="h-4 w-4 text-accent-pink" />
             <span>{user.managedBy.name || user.managedBy.email}</span>
           </>
-        ) : user.role === UserRole.ADMIN ? (
+        ) : user.role === UserRole.ADMIN || user.isSuperadmin ? (
           <span className="text-muted-foreground text-sm">-</span>
         ) : (
           <span className="text-muted-foreground text-sm">Non assigné</span>
@@ -100,28 +103,52 @@ export const useColumns = ({
   {
     key: "salon",
     header: t("fields.salon"),
-    render: (user) => (
-      <div className="flex items-center gap-2">
-        {user.workingSalons?.[0] ? (
-          <>
-            <Building2 className="h-4 w-4 text-muted-foreground" />
-            <span>{user.workingSalons[0].name}</span>
-          </>
-        ) : (
-          <span className="text-muted-foreground text-sm">-</span>
-        )}
-      </div>
-    ),
+    render: (user) => {
+      // Admins and superadmins don't have salon assignments
+      if (user.role === UserRole.ADMIN || user.isSuperadmin) {
+        return <span className="text-muted-foreground text-sm">-</span>;
+      }
+
+      // Regular users should have a salon
+      if (user.salon) {
+        return (
+          <div className="flex items-center gap-2">
+            <div className="h-6 w-6 rounded bg-accent-blue/10 flex items-center justify-center">
+              <span className="text-xs font-medium text-accent-blue">
+                {user.salon.name.substring(0, 1).toUpperCase()}
+              </span>
+            </div>
+            <span>{user.salon.name}</span>
+          </div>
+        );
+      }
+
+      // User without salon assignment
+      return <span className="text-muted-foreground text-sm">Non assigné</span>;
+    },
   },
   {
     key: "role",
     header: t("fields.role"),
-    render: (user) => (
-      <Badge variant={user.role === UserRole.ADMIN ? "info" : "default"}>
-        <Shield className="h-3 w-3 me-1" />
-        {user.role === UserRole.ADMIN ? "Admin" : "Utilisateur"}
-      </Badge>
-    ),
+    render: (user) => {
+      const userIsSuperadmin = user.isSuperadmin === true;
+      return (
+        <Badge
+          variant={
+            user.role === UserRole.ADMIN || userIsSuperadmin
+              ? "info"
+              : "default"
+          }
+        >
+          <Shield className="h-3 w-3 me-1" />
+          {userIsSuperadmin
+            ? "Super Admin"
+            : user.role === UserRole.ADMIN
+              ? "Admin"
+              : "Utilisateur"}
+        </Badge>
+      );
+    },
   },
   {
     key: "status",
@@ -143,6 +170,11 @@ export const useColumns = ({
     header: "",
     className: "w-12",
     render: (user) => {
+      const userIsSuperadmin = user.isSuperadmin === true;
+      const isSelf = user.id === currentUserId;
+      const canEdit = currentUserIsSuperadmin || !userIsSuperadmin;
+      const canDelete = currentUserIsSuperadmin && !isSelf;
+
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -157,22 +189,17 @@ export const useColumns = ({
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => handleEdit(user)}
-              disabled={isSuperadmin}
-              className={isSuperadmin ? "opacity-50" : ""}
+              disabled={!canEdit}
+              className={!canEdit ? "opacity-50" : ""}
             >
               <Edit className="h-4 w-4 me-2" />
               {t("common.edit")}
             </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => handleToggleStatus(user)}
-              disabled={isSuperadmin}
-              className={isSuperadmin ? "opacity-50" : ""}
-            ></DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
               onClick={() => handleDelete(user)}
-              disabled={isSuperadmin}
-              className={`text-destructive ${isSuperadmin ? "opacity-50" : ""}`}
+              disabled={!canDelete}
+              className={`text-destructive ${!canDelete ? "opacity-50" : ""}`}
             >
               <Trash2 className="h-4 w-4 me-2" />
               {t("common.delete")}

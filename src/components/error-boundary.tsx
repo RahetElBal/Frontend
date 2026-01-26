@@ -1,8 +1,15 @@
-import { Component, type ErrorInfo, type ReactNode } from 'react';
-import { useTranslation } from 'react-i18next';
-import { AlertTriangle, RefreshCw } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Component, type ErrorInfo, type ReactNode } from "react";
+import { useTranslation } from "react-i18next";
+import { AlertTriangle, RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -17,19 +24,22 @@ interface ErrorBoundaryState {
 
 /**
  * Error Boundary component to catch and display errors gracefully
- * 
+ *
  * @example
  * <ErrorBoundary>
  *   <App />
  * </ErrorBoundary>
- * 
+ *
  * @example
  * // With custom fallback
  * <ErrorBoundary fallback={<CustomErrorPage />}>
  *   <DashboardPage />
  * </ErrorBoundary>
  */
-export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+export class ErrorBoundary extends Component<
+  ErrorBoundaryProps,
+  ErrorBoundaryState
+> {
   constructor(props: ErrorBoundaryProps) {
     super(props);
     this.state = { hasError: false, error: null };
@@ -40,7 +50,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
-    console.error('Error caught by boundary:', error, errorInfo);
+    console.error("Error caught by boundary:", error, errorInfo);
     this.props.onError?.(error, errorInfo);
   }
 
@@ -54,7 +64,9 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
         return this.props.fallback;
       }
 
-      return <ErrorFallback error={this.state.error} onRetry={this.handleRetry} />;
+      return (
+        <ErrorFallback error={this.state.error} onRetry={this.handleRetry} />
+      );
     }
 
     return this.props.children;
@@ -74,16 +86,14 @@ function ErrorFallback({ error, onRetry }: ErrorFallbackProps) {
   const { t } = useTranslation();
 
   return (
-    <div className="flex min-h-[400px] items-center justify-center p-4">
+    <div className="flex min-h-100 items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
             <AlertTriangle className="h-6 w-6 text-destructive" />
           </div>
-          <CardTitle>{t('errors.somethingWentWrong')}</CardTitle>
-          <CardDescription>
-            {t('errors.unexpectedError')}
-          </CardDescription>
+          <CardTitle>{t("errors.somethingWentWrong")}</CardTitle>
+          <CardDescription>{t("errors.unexpectedError")}</CardDescription>
         </CardHeader>
         {error && import.meta.env.DEV && (
           <CardContent>
@@ -95,7 +105,7 @@ function ErrorFallback({ error, onRetry }: ErrorFallbackProps) {
         <CardFooter className="justify-center">
           <Button onClick={onRetry} variant="outline">
             <RefreshCw className="me-2 h-4 w-4" />
-            {t('common.retry')}
+            {t("common.retry")}
           </Button>
         </CardFooter>
       </Card>
@@ -123,16 +133,16 @@ export function PageError({ title, description, onRetry }: PageErrorProps) {
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10">
             <AlertTriangle className="h-8 w-8 text-destructive" />
           </div>
-          <CardTitle>{title || t('errors.pageError')}</CardTitle>
+          <CardTitle>{title || t("errors.pageError")}</CardTitle>
           <CardDescription>
-            {description || t('errors.pageErrorDescription')}
+            {description || t("errors.pageErrorDescription")}
           </CardDescription>
         </CardHeader>
         {onRetry && (
           <CardFooter className="justify-center">
             <Button onClick={onRetry}>
               <RefreshCw className="me-2 h-4 w-4" />
-              {t('common.retry')}
+              {t("common.retry")}
             </Button>
           </CardFooter>
         )}

@@ -1,5 +1,5 @@
 // Role type that includes superadmin (determined by backend)
-export type AppRole = 'superadmin' | 'admin' | 'user';
+export type AppRole = "superadmin" | "admin" | "user";
 
 // Base user type for authentication
 export interface AuthUser {
@@ -11,6 +11,7 @@ export interface AuthUser {
   picture?: string;
   role: AppRole;
   isSuperadmin: boolean;
+  salon?: Salon;
 }
 
 // Full user type from database (not superadmin)
@@ -20,8 +21,7 @@ export interface User extends AuthUser {
   isActive: boolean;
   googleId?: string;
   lastLoginAt?: string;
-  ownedSalons?: Salon[];
-  workingSalons?: Salon[];
+  salon: Salon;
 }
 
 // Salon type

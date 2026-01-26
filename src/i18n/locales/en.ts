@@ -681,7 +681,7 @@ export const en = {
     admin: {
       dashboard: "Admin Dashboard",
       users: "Users",
-      salons: "Salons",
+      salon: "Salon",
       tags: "Tags",
       templates: "Templates",
       permissions: "Permissions",
@@ -1197,15 +1197,20 @@ export const en = {
       deleteSalon: "Delete Salon",
       deleteSalonConfirm:
         "Are you sure you want to delete {{name}}? This action cannot be undone.",
-      // Ownership
       salonOwner: "Salon Owner",
       selectOwner: "Select an admin as owner",
       selectOwnerRequired: "Please select a salon owner",
+      searchSalons: "Look for salons...",
       ownerHelp: "Choose which admin will own and manage this salon",
       ownerAutoAssigned:
         "You will be automatically assigned as the owner of this salon",
       yourSalon: "Your salon",
-      searchSalons: "Look for salons...",
+      staffCount: "Staff",
+      name: "Salon Name",
+      addSalonDescription: "Add your salon",
+      address: "Address",
+      phone: "Phone Number",
+      email: "Email",
     },
   },
 } as const;

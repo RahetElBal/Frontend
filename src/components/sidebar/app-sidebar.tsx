@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { PanelLeftClose, PanelLeft, ChevronDown, Check } from "lucide-react";
+import { PanelLeftClose, PanelLeft } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -10,17 +10,9 @@ import {
   TooltipTrigger,
   TooltipContent,
 } from "@/components/ui/tooltip";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
 import { SidebarLogo } from "./sidebar-logo";
 import { SidebarNavSection } from "./sidebar-nav-section";
 import { SidebarUserMenu } from "./sidebar-user-menu";
-import { useSalon } from "@/contexts/SalonProvider";
 import type { NavSection } from "@/types/navigation";
 import type { Salon } from "@/types/entities";
 import type { AuthUser, AppRole } from "@/types/user";
@@ -42,9 +34,6 @@ export function AppSidebar({
 }: AppSidebarProps) {
   const { t } = useTranslation();
   const [collapsed, setCollapsed] = useState(false);
-  const { salons, selectSalon } = useSalon();
-
-  const showSalonSwitcher = currentSalon && salons.length > 1;
 
   return (
     <TooltipProvider>
@@ -100,53 +89,6 @@ export function AppSidebar({
                   <p>{currentSalon.name}</p>
                 </TooltipContent>
               </Tooltip>
-            ) : showSalonSwitcher ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="w-full justify-between h-auto py-2 px-3"
-                  >
-                    <div className="flex items-center gap-2 min-w-0">
-                      <div className="h-8 w-8 rounded-md bg-linear-to-br from-accent-pink to-accent-blue flex items-center justify-center text-white text-xs font-bold shrink-0">
-                        {currentSalon.name.substring(0, 2).toUpperCase()}
-                      </div>
-                      <div className="text-left min-w-0">
-                        <p className="text-sm font-medium truncate">
-                          {currentSalon.name}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {t("salon.currentSalon")}
-                        </p>
-                      </div>
-                    </div>
-                    <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-56">
-                  <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
-                    {t("salon.switchSalon")}
-                  </div>
-                  <DropdownMenuSeparator />
-                  {salons.map((salon) => (
-                    <DropdownMenuItem
-                      key={salon.id}
-                      onClick={() => selectSalon(salon)}
-                      className="flex items-center justify-between"
-                    >
-                      <div className="flex items-center gap-2">
-                        <div className="h-6 w-6 rounded bg-linear-to-br from-accent-pink to-accent-blue flex items-center justify-center text-white text-xs font-bold">
-                          {salon.name.substring(0, 2).toUpperCase()}
-                        </div>
-                        <span>{salon.name}</span>
-                      </div>
-                      {salon.id === currentSalon.id && (
-                        <Check className="h-4 w-4 text-accent-pink" />
-                      )}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
             ) : (
               <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/50">
                 <div className="h-8 w-8 rounded-md bg-linear-to-br from-accent-pink to-accent-blue flex items-center justify-center text-white text-xs font-bold shrink-0">

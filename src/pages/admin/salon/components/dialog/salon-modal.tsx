@@ -71,37 +71,41 @@ export function SalonModals({
   }, [modalState, salons]);
 
   // Mutations - defined inside the modal component
-  const createSalon = usePost<Salon, SalonFormData & { ownerId?: string }>(
-    "salons",
-    {
-      onSuccess: () => {
-        toast.success(t("admin.salons.addSalon") + " - " + t("common.success"));
-        setModalState(null);
-        onSuccess();
-      },
-      onError: (error) => {
-        toast.error(error.message || t("common.error"));
-      },
+  const { mutate: createSalonMutate, isPending: isCreating } = usePost<
+    Salon,
+    SalonFormData & { ownerId?: string }
+  >("salons", {
+    onSuccess: () => {
+      toast.success(t("admin.salons.addSalon") + " - " + t("common.success"));
+      setModalState(null);
+      onSuccess();
     },
-  );
-
-  const updateSalon = usePost<Salon, SalonFormData & { ownerId?: string }>(
-    `salons/${selectedSalon?.id || ""}`,
-    {
-      method: "PATCH",
-      onSuccess: () => {
-        toast.success(t("common.edit") + " - " + t("common.success"));
-        setModalState(null);
-        onSuccess();
-      },
-      onError: (error) => {
-        toast.error(error.message || t("common.error"));
-      },
+    onError: (error) => {
+      toast.error(error.message || t("common.error"));
     },
-  );
+  });
 
-  const deleteSalon = usePost<void, string>("salons", {
-    id: (salonId) => salonId,
+  const { mutate: updateSalonMutate, isPending: isUpdating } = usePost<
+    Salon,
+    SalonFormData & { ownerId?: string }
+  >("salons", {
+    id: selectedSalon?.id,
+    method: "PATCH",
+    onSuccess: () => {
+      toast.success(t("common.edit") + " - " + t("common.success"));
+      setModalState(null);
+      onSuccess();
+    },
+    onError: (error) => {
+      toast.error(error.message || t("common.error"));
+    },
+  });
+
+  const { mutate: deleteSalonMutate, isPending: isDeleting } = usePost<
+    void,
+    void
+  >("salons", {
+    id: selectedSalon?.id,
     method: "DELETE",
     onSuccess: () => {
       toast.success(t("common.delete") + " - " + t("common.success"));
@@ -119,7 +123,7 @@ export function SalonModals({
 
     const salonId = modalState.salonId;
     const isCreateMode = salonId === "create";
-    const isSuperadmin = user?.isSuperadmin || user?.role === "superadmin";
+    const isSuperadmin = user?.isSuperadmin === true;
     const isAdmin = user?.role === "admin";
 
     return {
@@ -130,26 +134,21 @@ export function SalonModals({
       isAdmin,
       canModify: selectedSalon ? canModifySalon(selectedSalon, user) : false,
       isOwnSalon: selectedSalon?.ownerId === user?.id,
-      isPending:
-        createSalon.isPending || updateSalon.isPending || deleteSalon.isPending,
+      isPending: isCreating || isUpdating || isDeleting,
     };
-  }, [
-    modalState,
-    selectedSalon,
-    user,
-    createSalon.isPending,
-    updateSalon.isPending,
-    deleteSalon.isPending,
-  ]);
+  }, [modalState, selectedSalon, user, isCreating, isUpdating, isDeleting]);
 
-  // Reset form when entering edit/create mode
+  // Reset form when entering edit/create mode - FIXED: only depend on primitive values
   useEffect(() => {
-    if (!derived) return;
+    if (!modalState) return;
 
-    if (derived.isCreateMode) {
+    const isCreateMode = modalState.salonId === "create";
+    const mode = modalState.mode;
+
+    if (isCreateMode && mode === "edit") {
       form.reset({ name: "", address: "", phone: "", email: "" });
       setSelectedOwnerId("");
-    } else if (selectedSalon && derived.mode === "edit") {
+    } else if (selectedSalon && mode === "edit") {
       form.reset({
         name: selectedSalon.name,
         address: selectedSalon.address || "",
@@ -158,7 +157,8 @@ export function SalonModals({
       });
       setSelectedOwnerId(selectedSalon.ownerId || "");
     }
-  }, [modalState, derived, selectedSalon, form, setSelectedOwnerId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [modalState?.salonId, modalState?.mode, selectedSalon?.id]);
 
   if (!derived) return null;
 
@@ -177,22 +177,20 @@ export function SalonModals({
 
     // CRUD logic based on salonId
     if (derived.isCreateMode) {
-      createSalon.mutate(payload);
+      createSalonMutate(payload);
     } else {
-      updateSalon.mutate(payload);
+      updateSalonMutate(payload);
     }
   };
 
   const handleDelete = () => {
-    if (!derived.isCreateMode && derived.salonId) {
-      deleteSalon.mutate(derived.salonId);
-    }
+    deleteSalonMutate();
   };
 
   // DELETE MODE
   if (derived.mode === "delete") {
     return (
-      <AlertDialog open onOpenChange={handleClose}>
+      <AlertDialog open={!!modalState} onOpenChange={handleClose}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>{t("common.delete")}</AlertDialogTitle>
@@ -222,7 +220,7 @@ export function SalonModals({
   // VIEW MODE
   if (derived.mode === "view") {
     return (
-      <Dialog open onOpenChange={handleClose}>
+      <Dialog open={!!modalState} onOpenChange={handleClose}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{selectedSalon?.name}</DialogTitle>
@@ -280,7 +278,7 @@ export function SalonModals({
   // EDIT/CREATE MODE
   if (derived.mode === "edit") {
     return (
-      <Dialog open onOpenChange={handleClose}>
+      <Dialog open={!!modalState} onOpenChange={handleClose}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>

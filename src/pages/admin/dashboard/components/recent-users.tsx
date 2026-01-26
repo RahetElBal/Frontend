@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { Users } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { useUser } from "@/hooks/useUser";
 import type { User } from "@/types";
 import { formatDate } from "@/common/utils";
 
@@ -10,16 +11,23 @@ interface RecentUsersCardProps {
 
 export function RecentUsersCard({ users }: RecentUsersCardProps) {
   const { t } = useTranslation();
+  const { isSuperadmin } = useUser();
 
   return (
     <Card className="p-6">
       <h2 className="text-lg font-semibold mb-4">
-        {t("admin.dashboard.recentUsers")}
+        {isSuperadmin
+          ? t("admin.dashboard.recentUsers")
+          : "Utilisateurs assignés"}
       </h2>
       {users.length === 0 ? (
         <div className="text-center py-8 text-muted-foreground">
           <Users className="h-8 w-8 mx-auto mb-2 opacity-50" />
-          <p>Aucun utilisateur récent</p>
+          <p>
+            {isSuperadmin
+              ? "Aucun utilisateur récent"
+              : "Aucun utilisateur assigné"}
+          </p>
         </div>
       ) : (
         <div className="space-y-3">

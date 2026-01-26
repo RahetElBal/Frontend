@@ -8,28 +8,39 @@ import type { PaginatedResponse, Salon, User } from "@/types";
 interface StatsGridProps {
   salonsData?: Salon[];
   usersData?: PaginatedResponse<User>;
+  revenueData?: {
+    total: number;
+    bySalon?: Record<string, number>;
+  };
 }
 
-export function StatsGrid({ salonsData, usersData }: StatsGridProps) {
+export function StatsGrid({
+  salonsData,
+  usersData,
+  revenueData,
+}: StatsGridProps) {
   const { t } = useTranslation();
   const { formatCurrency } = useLanguage();
   const { isSuperadmin } = useUser();
   const totalSalons = salonsData?.length || 0;
   const totalUsers = usersData?.meta.total || 0;
   const activeSubscriptions = salonsData?.filter((s) => s.isActive).length || 0;
+  const totalRevenue = isSuperadmin ? revenueData?.total || 0 : 0;
 
   return (
     <div
-      className={`grid gap-4 sm:grid-cols-2 ${isSuperadmin ? "lg:grid-cols-4" : "lg:grid-cols-3"}`}
+      className={`grid gap-4 sm:grid-cols-2 ${isSuperadmin ? "lg:grid-cols-4" : "lg:grid-cols-2"}`}
     >
-      <StatsCard
-        title={t("admin.stats.totalSalons")}
-        value={totalSalons}
-        change={0}
-        icon={Building2}
-        iconColor="text-accent-pink"
-        iconBgColor="bg-accent-pink/10"
-      />
+      {isSuperadmin && (
+        <StatsCard
+          title={t("admin.stats.totalSalons")}
+          value={totalSalons}
+          change={0}
+          icon={Building2}
+          iconColor="text-accent-pink"
+          iconBgColor="bg-accent-pink/10"
+        />
+      )}
       <StatsCard
         title={t("admin.stats.totalUsers")}
         value={totalUsers}
@@ -40,7 +51,7 @@ export function StatsGrid({ salonsData, usersData }: StatsGridProps) {
       />
       <StatsCard
         title={t("admin.stats.totalRevenue")}
-        value={formatCurrency(0)}
+        value={formatCurrency(totalRevenue)}
         change={0}
         icon={DollarSign}
         iconColor="text-green-600"

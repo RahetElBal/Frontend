@@ -6,15 +6,16 @@ import { UserRole } from "@/types/entities";
 
 interface StatsGridProps {
   users: User[];
+  isSuperadmin: boolean;
 }
 
-export function StatsGrid({ users }: StatsGridProps) {
+export function StatsGrid({ users, isSuperadmin }: StatsGridProps) {
   const totalUsers = users.length;
   const activeUsers = users.filter((u) => u.isActive).length;
   const inactiveUsers = users.filter((u) => !u.isActive).length;
   const admins = users.filter((u) => u.role === UserRole.ADMIN).length;
 
-  const stats = [
+  const allStats = [
     {
       title: "Total utilisateurs",
       value: totalUsers,
@@ -35,6 +36,7 @@ export function StatsGrid({ users }: StatsGridProps) {
       icon: UserCog,
       color: "text-accent-blue",
       bgColor: "bg-accent-blue/10",
+      showOnlyForSuperadmin: true,
     },
     {
       title: "Utilisateurs inactifs",
@@ -45,8 +47,14 @@ export function StatsGrid({ users }: StatsGridProps) {
     },
   ];
 
+  const stats = allStats.filter(
+    (stat) => !stat.showOnlyForSuperadmin || isSuperadmin,
+  );
+
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+    <div
+      className={`grid gap-4 md:grid-cols-2 ${isSuperadmin ? "lg:grid-cols-4" : "lg:grid-cols-3"}`}
+    >
       {stats.map((stat) => {
         const Icon = stat.icon;
         return (

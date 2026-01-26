@@ -13,7 +13,7 @@ export interface BaseEntity {
 // ============================================
 
 // Role type - superadmin is determined by backend via env var, not stored in DB
-export type AppRole = 'superadmin' | 'admin' | 'user';
+export type AppRole = "superadmin" | "admin" | "user";
 
 export const UserRole = {
   USER: "user",
@@ -37,10 +37,7 @@ export interface User extends BaseEntity {
   googleId?: string;
   lastLoginAt?: string;
   isSuperadmin?: boolean;
-  // Relationships
-  ownedSalons?: Salon[];
-  workingSalons?: Salon[];
-  // Direct admin relationship (for staff users)
+  salon: Salon;
   managedById?: string;
   managedBy?: User;
 }
@@ -56,7 +53,7 @@ export interface Salon extends BaseEntity {
   email?: string;
   logo?: string;
   isActive: boolean;
-  ownerId: string; // Required - every salon must have an owner admin
+  ownerId: string;
   owner?: User;
   settings?: SalonSettings;
   staff?: User[];

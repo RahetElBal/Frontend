@@ -10,7 +10,7 @@ import { RecentUsersCard } from "./components/recent-users";
 
 export default function AdminDashboardPage() {
   const { t } = useTranslation();
-  const { user, isLoading: userLoading } = useUser();
+  const { user, isLoading: userLoading, isSuperadmin } = useUser();
 
   const { data: usersData, isLoading: usersLoading } = useGet<
     PaginatedResponse<User>
@@ -44,8 +44,17 @@ export default function AdminDashboardPage() {
         .slice(0, 5)
     : [];
 
-  const recentUsers = usersData?.data
-    ? [...usersData.data]
+  // Filter users based on role
+  const filteredUsers = usersData?.data
+    ? isSuperadmin
+      ? // Superadmin: show all admins and users
+        usersData.data.filter((u) => u.role === "admin" || u.role === "user")
+      : // Admin: show only users managed by this admin
+        usersData.data.filter((u) => u.managedById === user?.id)
+    : [];
+
+  const recentUsers = filteredUsers
+    ? [...filteredUsers]
         .sort(
           (a, b) =>
             new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
@@ -62,7 +71,10 @@ export default function AdminDashboardPage() {
       />
 
       <StatsGrid salonsData={salonsData} usersData={usersData} />
-      <div className="grid gap-6 lg:grid-cols-2">
+
+      <div
+        className={`grid gap-6 ${isSuperadmin ? "lg:grid-cols-2" : "lg:grid-cols-1"}`}
+      >
         <RecentSalonsCard salons={recentSalons} />
         <RecentUsersCard users={recentUsers} />
       </div>

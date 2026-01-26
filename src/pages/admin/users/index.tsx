@@ -28,7 +28,7 @@ export function AdminUsersPage() {
   const [modalState, setModalState] = useState<UserModalState>(null);
   const [toggleUserId, setToggleUserId] = useState<string>("");
 
-  const { isSuperadmin } = useUser();
+  const { isSuperadmin, user: currentUser } = useUser();
 
   // Fetch data
   const { data: usersResponse, refetch } = useGet<PaginatedResponse<User>>(
@@ -37,7 +37,16 @@ export function AdminUsersPage() {
       retry: 1,
     },
   );
-  const users = usersResponse?.data || [];
+  const allUsers = usersResponse?.data || [];
+
+  // Filter users based on role
+  const users = isSuperadmin
+    ? allUsers // Superadmin sees everyone
+    : allUsers.filter(
+        (user) =>
+          user.id === currentUser?.id || // Admin sees themselves
+          user.managedById === currentUser?.id, // Admin sees their staff
+      );
 
   // Salons for the current user (admin sees their salons, superadmin sees all)
   const { data: salons = [] } = useGet<Salon[]>("salons", {
@@ -117,7 +126,8 @@ export function AdminUsersPage() {
   // Generate columns with handlers
   const columns = useColumns({
     t,
-    isSuperadmin,
+    currentUserIsSuperadmin: isSuperadmin,
+    currentUserId: currentUser?.id || "",
     handleView,
     handleEdit,
     handleDelete,
@@ -168,7 +178,11 @@ export function AdminUsersPage() {
       <UserDialog
         open={!!modalState}
         onOpenChange={(open) => !open && setModalState(null)}
-        mode={modalState?.mode || "view"}
+        mode={
+          modalState?.userId === "create"
+            ? "create"
+            : modalState?.mode || "view"
+        }
         user={selectedUser}
         initialRole={modalState?.initialRole}
         salons={salons}

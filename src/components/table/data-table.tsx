@@ -1,13 +1,6 @@
 import * as React from "react";
 import { useTranslation } from "react-i18next";
-import {
-  ArrowUpDown,
-  ArrowUp,
-  ArrowDown,
-  Search,
-  X,
-  Database,
-} from "lucide-react";
+import { ArrowUpDown, ArrowUp, ArrowDown, Search, X } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -19,7 +12,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import type { UseTableReturn, SortDirection } from "@/hooks/useTable";
 
@@ -60,30 +52,6 @@ function SortIcon({ direction }: { direction: SortDirection | null }) {
 }
 
 // ============================================
-// DEFAULT EMPTY STATE
-// ============================================
-
-function DefaultEmptyState() {
-  const { t } = useTranslation();
-
-  return (
-    <Card className="p-12 text-center">
-      <div className="flex justify-center mb-4">
-        <Database className="h-12 w-12 text-muted-foreground" />
-      </div>
-      <h3 className="text-lg font-semibold mb-2">
-        {t("common.noData", { defaultValue: "No data found" })}
-      </h3>
-      <p className="text-muted-foreground">
-        {t("common.noDataDescription", {
-          defaultValue: "There are no items to display",
-        })}
-      </p>
-    </Card>
-  );
-}
-
-// ============================================
 // DATA TABLE
 // ============================================
 
@@ -103,13 +71,6 @@ export function DataTable<T extends { id: string }>({
   loading = false,
 }: DataTableProps<T>) {
   const { t } = useTranslation();
-
-  // Show empty state if no data and no search
-  const showEmptyState = !loading && table.totalItems === 0 && !table.search;
-
-  if (showEmptyState) {
-    return <DefaultEmptyState />;
-  }
 
   return (
     <div className="space-y-4">

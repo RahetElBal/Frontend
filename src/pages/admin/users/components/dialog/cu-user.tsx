@@ -65,7 +65,8 @@ export function UserDialog({
   onSuccess,
 }: UserDialogProps) {
   const { t } = useTranslation();
-  const { isSuperadmin } = useUser();
+  const { isSuperadmin: currentUserIsSuperadmin, user: currentUser } =
+    useUser();
 
   // Derived state
   const isCreateMode = mode === "create";
@@ -76,6 +77,14 @@ export function UserDialog({
 
   const displayName = user ? getDisplayName(user) : "";
   const initials = user ? getInitials(user) : "";
+
+  const userIsSuperadmin = user?.isSuperadmin === true;
+
+  // Check if current user is trying to delete themselves
+  const isDeletingSelf = currentUser?.id === user?.id;
+
+  // Check delete permissions
+  const canDelete = currentUserIsSuperadmin && !isDeletingSelf;
 
   const form = useForm<UserFormData>({
     schema: userFormSchema,
@@ -88,10 +97,13 @@ export function UserDialog({
     },
   });
 
-  // Reset form when dialog state changes
+  // Reset form when dialog state changes - FIXED: only depend on primitive values
   useEffect(() => {
-    if (isCreateMode) {
-      const role = initialRole || "admin";
+    if (!open) return; // Don't reset if dialog is closed
+
+    if (mode === "create") {
+      // In create mode: role is determined by initialRole prop
+      const role = initialRole || (currentUserIsSuperadmin ? "admin" : "user");
       form.reset({
         name: "",
         email: "",
@@ -99,27 +111,19 @@ export function UserDialog({
         salonId: "",
         managedById: "",
       });
-    } else if (user && isEditMode) {
+    } else if (user && mode === "edit") {
       const formRole =
         user.role === "superadmin" ? "admin" : (user.role as "user" | "admin");
       form.reset({
         name: displayName,
         email: user.email,
         role: formRole,
-        salonId: user.workingSalons?.[0]?.id || "",
+        salonId: "",
         managedById: user.managedById || "",
       });
     }
-  }, [
-    open,
-    user,
-    mode,
-    initialRole,
-    form,
-    isCreateMode,
-    isEditMode,
-    displayName,
-  ]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, mode, user?.id, initialRole, currentUserIsSuperadmin]);
 
   const { mutate: createUser, isPending: isCreating } = usePost<
     User,
@@ -168,18 +172,42 @@ export function UserDialog({
   );
 
   const handleSubmit = (data: UserFormData) => {
+    const role = isCreateMode
+      ? currentUserIsSuperadmin
+        ? "admin"
+        : "user"
+      : data.role;
+
     const cleanedData: Record<string, unknown> = {
       name: data.name,
       email: data.email,
-      role: data.role,
+      role,
     };
 
-    if (data.salonId && data.salonId.trim() !== "") {
-      cleanedData.salonId = data.salonId;
-    }
-
-    if (data.managedById && data.managedById.trim() !== "") {
-      cleanedData.managedById = data.managedById;
+    // Handle salon assignment
+    if (isCreateMode) {
+      if (currentUserIsSuperadmin) {
+        // Superadmin: must select a salon for the new admin
+        if (data.salonId && data.salonId.trim() !== "") {
+          cleanedData.salonId = data.salonId;
+        }
+      } else {
+        // Admin: auto-assign to their own salon
+        const adminSalon = salons.find((s) => s.ownerId === currentUser?.id);
+        if (adminSalon) {
+          cleanedData.salonId = adminSalon.id;
+        }
+        // Auto-assign managedById to current admin
+        cleanedData.managedById = currentUser?.id;
+      }
+    } else {
+      // Edit mode: keep existing assignments
+      if (data.salonId && data.salonId.trim() !== "") {
+        cleanedData.salonId = data.salonId;
+      }
+      if (data.managedById && data.managedById.trim() !== "") {
+        cleanedData.managedById = data.managedById;
+      }
     }
 
     if (isCreateMode) {
@@ -190,6 +218,19 @@ export function UserDialog({
   };
 
   const handleDelete = () => {
+    // Validate permissions before deleting
+    if (!canDelete) {
+      if (isDeletingSelf) {
+        toast.error("Vous ne pouvez pas supprimer votre propre compte");
+      } else {
+        toast.error(
+          "Vous n'avez pas la permission de supprimer cet utilisateur",
+        );
+      }
+      onOpenChange(false);
+      return;
+    }
+
     deleteUser();
   };
 
@@ -201,6 +242,29 @@ export function UserDialog({
   };
 
   if (isDeleteMode) {
+    // Don't show delete dialog if user doesn't have permission
+    if (!canDelete) {
+      return (
+        <AlertDialog open={open} onOpenChange={onOpenChange}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Action non autorisée</AlertDialogTitle>
+              <AlertDialogDescription>
+                {isDeletingSelf
+                  ? "Vous ne pouvez pas supprimer votre propre compte."
+                  : "Vous n'avez pas la permission de supprimer cet utilisateur."}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogAction onClick={() => onOpenChange(false)}>
+                Fermer
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      );
+    }
+
     return (
       <AlertDialog open={open} onOpenChange={onOpenChange}>
         <AlertDialogContent>
@@ -236,7 +300,7 @@ export function UserDialog({
           <div className="space-y-6 py-4">
             <div className="flex items-center gap-4">
               <div
-                className={`h-16 w-16 rounded-full flex items-center justify-center ${isSuperadmin ? "bg-yellow-100" : "bg-accent-pink/10"}`}
+                className={`h-16 w-16 rounded-full flex items-center justify-center ${userIsSuperadmin ? "bg-yellow-100" : "bg-accent-pink/10"}`}
               >
                 {user.picture ? (
                   <img
@@ -246,7 +310,7 @@ export function UserDialog({
                   />
                 ) : (
                   <span
-                    className={`text-2xl font-bold ${isSuperadmin ? "text-yellow-600" : "text-accent-pink"}`}
+                    className={`text-2xl font-bold ${userIsSuperadmin ? "text-yellow-600" : "text-accent-pink"}`}
                   >
                     {initials}
                   </span>
@@ -255,7 +319,7 @@ export function UserDialog({
               <div>
                 <div className="flex items-center gap-2">
                   <h3 className="text-xl font-semibold">{displayName}</h3>
-                  {isSuperadmin && (
+                  {userIsSuperadmin && (
                     <Badge variant="warning" className="gap-1">
                       <Crown className="h-3 w-3" />
                       Super Admin
@@ -284,16 +348,22 @@ export function UserDialog({
                     {t("fields.role")}
                   </p>
                   <Badge
-                    variant={user.role === UserRole.ADMIN ? "info" : "default"}
+                    variant={
+                      user.role === UserRole.ADMIN || userIsSuperadmin
+                        ? "info"
+                        : "default"
+                    }
                   >
-                    {user.role === UserRole.ADMIN
-                      ? "Administrateur"
-                      : "Utilisateur"}
+                    {userIsSuperadmin
+                      ? "Super Admin"
+                      : user.role === UserRole.ADMIN
+                        ? "Administrateur"
+                        : "Utilisateur"}
                   </Badge>
                 </div>
               </div>
 
-              {user.role !== UserRole.ADMIN && (
+              {user.role !== UserRole.ADMIN && !userIsSuperadmin && (
                 <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
                   <UserCog className="h-5 w-5 text-accent-pink" />
                   <div>
@@ -314,8 +384,11 @@ export function UserDialog({
                     {t("fields.salon")}
                   </p>
                   <p className="font-medium">
-                    {user.workingSalons?.[0]?.name || "-"}
-                  </p>
+                    {user.salon?.name ||
+                      (user.role === UserRole.ADMIN || userIsSuperadmin
+                        ? "-"
+                        : "Non assigné")}
+                  </p>{" "}
                 </div>
               </div>
 
@@ -374,16 +447,16 @@ export function UserDialog({
           <DialogHeader>
             <DialogTitle>
               {isCreateMode
-                ? form.watch("role") === "admin"
+                ? currentUserIsSuperadmin
                   ? "Ajouter un administrateur"
-                  : "Ajouter un utilisateur (staff)"
+                  : "Ajouter un utilisateur"
                 : "Modifier l'utilisateur"}
             </DialogTitle>
             <DialogDescription>
               {isCreateMode
-                ? form.watch("role") === "admin"
+                ? currentUserIsSuperadmin
                   ? "Les administrateurs peuvent créer et gérer leurs propres salons"
-                  : "Les utilisateurs sont membres du staff d'un salon"
+                  : "Les utilisateurs sont membres du staff de votre salon"
                 : `Modifier les informations de ${displayName}`}
             </DialogDescription>
           </DialogHeader>
@@ -393,7 +466,7 @@ export function UserDialog({
             isSubmitting={form.isSubmitting || isCreating || isUpdating}
             salons={salons}
             admins={admins}
-            isSuperadmin={isSuperadmin}
+            isSuperadmin={currentUserIsSuperadmin}
             onSubmit={handleSubmit}
             onCancel={() => onOpenChange(false)}
           />

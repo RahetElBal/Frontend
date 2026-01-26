@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { Building2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { useUser } from "@/hooks/useUser";
 import type { Salon } from "@/types";
 import { formatDate } from "@/common/utils";
 
@@ -10,6 +11,10 @@ interface RecentSalonsCardProps {
 
 export function RecentSalonsCard({ salons }: RecentSalonsCardProps) {
   const { t } = useTranslation();
+  const { isSuperadmin } = useUser();
+  if (!isSuperadmin) {
+    return null;
+  }
 
   return (
     <Card className="p-6">

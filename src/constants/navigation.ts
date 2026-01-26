@@ -12,11 +12,11 @@ import {
   Clock,
   Tag,
   Sliders,
-} from 'lucide-react';
-import type { NavSection } from '@/types/navigation';
+} from "lucide-react";
+import type { NavSection } from "@/types/navigation";
 
 // Role types for navigation access control
-type NavRole = 'superadmin' | 'admin' | 'user';
+type NavRole = "superadmin" | "admin" | "user";
 
 // ============================================
 // ROUTE PATHS
@@ -24,63 +24,63 @@ type NavRole = 'superadmin' | 'admin' | 'user';
 
 export const ROUTES = {
   // Auth
-  LOGIN: '/login',
-  AUTH_CALLBACK: '/auth/callback',
-  
+  LOGIN: "/login",
+  AUTH_CALLBACK: "/auth/callback",
+
   // Dashboard
-  DASHBOARD: '/dashboard',
-  
+  DASHBOARD: "/dashboard",
+
   // CRM
-  CLIENTS: '/clients',
-  CLIENT_DETAIL: '/clients/:id',
-  
+  CLIENTS: "/clients",
+  CLIENT_DETAIL: "/clients/:id",
+
   // Agenda
-  AGENDA: '/agenda',
-  
+  AGENDA: "/agenda",
+
   // Services
-  SERVICES: '/services',
-  SERVICE_DETAIL: '/services/:id',
-  
+  SERVICES: "/services",
+  SERVICE_DETAIL: "/services/:id",
+
   // Products & Stock
-  PRODUCTS: '/products',
-  PRODUCT_DETAIL: '/products/:id',
-  STOCK: '/stock',
-  
+  PRODUCTS: "/products",
+  PRODUCT_DETAIL: "/products/:id",
+  STOCK: "/stock",
+
   // Sales & POS
-  SALES: '/sales',
-  SALE_DETAIL: '/sales/:id',
-  POS: '/pos',
-  
+  SALES: "/sales",
+  SALE_DETAIL: "/sales/:id",
+  POS: "/pos",
+
   // Loyalty
-  LOYALTY: '/loyalty',
-  
+  LOYALTY: "/loyalty",
+
   // Gift Cards
-  GIFT_CARDS: '/gift-cards',
-  
+  GIFT_CARDS: "/gift-cards",
+
   // Marketing
-  MARKETING: '/marketing',
-  CAMPAIGNS: '/marketing/campaigns',
-  
+  MARKETING: "/marketing",
+  CAMPAIGNS: "/marketing/campaigns",
+
   // Analytics
-  ANALYTICS: '/analytics',
-  REPORTS: '/analytics/reports',
-  
+  ANALYTICS: "/analytics",
+  REPORTS: "/analytics/reports",
+
   // Staff
-  STAFF: '/staff',
-  
+  STAFF: "/staff",
+
   // Promotions
-  PROMOTIONS: '/promotions',
-  
+  PROMOTIONS: "/promotions",
+
   // Settings
-  SETTINGS: '/settings',
-  SALON_SETTINGS: '/salon-settings',
-  PROFILE: '/settings/profile',
-  
+  SETTINGS: "/settings",
+  SALON_SETTINGS: "/salon-settings",
+  PROFILE: "/settings/profile",
+
   // Admin/Superadmin only
-  ADMIN: '/admin',
-  ADMIN_USERS: '/admin/users',
-  ADMIN_SALONS: '/admin/salons',
-  ADMIN_SETTINGS: '/admin/settings',
+  ADMIN: "/admin",
+  ADMIN_USERS: "/admin/users",
+  ADMIN_SALON: "/admin/salon",
+  ADMIN_SETTINGS: "/admin/settings",
 } as const;
 
 // ============================================
@@ -90,65 +90,65 @@ export const ROUTES = {
 
 export const USER_NAVIGATION: NavSection[] = [
   {
-    id: 'main',
+    id: "main",
     items: [
       {
-        id: 'dashboard',
-        titleKey: 'nav.dashboard',
+        id: "dashboard",
+        titleKey: "nav.dashboard",
         href: ROUTES.DASHBOARD,
         icon: LayoutDashboard,
       },
     ],
   },
   {
-    id: 'operations',
-    titleKey: 'nav.sections.management',
+    id: "operations",
+    titleKey: "nav.sections.management",
     items: [
       {
-        id: 'clients',
-        titleKey: 'nav.clients',
+        id: "clients",
+        titleKey: "nav.clients",
         href: ROUTES.CLIENTS,
         icon: Users,
       },
       {
-        id: 'agenda',
-        titleKey: 'nav.agenda',
+        id: "agenda",
+        titleKey: "nav.agenda",
         href: ROUTES.AGENDA,
         icon: Calendar,
       },
       {
-        id: 'services',
-        titleKey: 'nav.services',
+        id: "services",
+        titleKey: "nav.services",
         href: ROUTES.SERVICES,
         icon: Scissors,
       },
     ],
   },
   {
-    id: 'inventory',
-    titleKey: 'nav.sections.inventory',
+    id: "inventory",
+    titleKey: "nav.sections.inventory",
     items: [
       {
-        id: 'products',
-        titleKey: 'nav.products',
+        id: "products",
+        titleKey: "nav.products",
         href: ROUTES.PRODUCTS,
         icon: Package,
       },
       {
-        id: 'sales',
-        titleKey: 'nav.sales',
+        id: "sales",
+        titleKey: "nav.sales",
         href: ROUTES.SALES,
         icon: ShoppingCart,
       },
     ],
   },
   {
-    id: 'account',
-    titleKey: 'nav.sections.account',
+    id: "account",
+    titleKey: "nav.sections.account",
     items: [
       {
-        id: 'settings',
-        titleKey: 'nav.settings',
+        id: "settings",
+        titleKey: "nav.settings",
         href: ROUTES.SETTINGS,
         icon: Settings,
       },
@@ -163,95 +163,95 @@ export const USER_NAVIGATION: NavSection[] = [
 
 export const ADMIN_SALON_NAVIGATION: NavSection[] = [
   {
-    id: 'main',
+    id: "main",
     items: [
       {
-        id: 'dashboard',
-        titleKey: 'nav.dashboard',
+        id: "dashboard",
+        titleKey: "nav.dashboard",
         href: ROUTES.DASHBOARD,
         icon: LayoutDashboard,
       },
     ],
   },
   {
-    id: 'management',
-    titleKey: 'nav.sections.management',
+    id: "management",
+    titleKey: "nav.sections.management",
     items: [
       {
-        id: 'clients',
-        titleKey: 'nav.clients',
+        id: "clients",
+        titleKey: "nav.clients",
         href: ROUTES.CLIENTS,
         icon: Users,
       },
       {
-        id: 'agenda',
-        titleKey: 'nav.agenda',
+        id: "agenda",
+        titleKey: "nav.agenda",
         href: ROUTES.AGENDA,
         icon: Calendar,
       },
       {
-        id: 'services',
-        titleKey: 'nav.services',
+        id: "services",
+        titleKey: "nav.services",
         href: ROUTES.SERVICES,
         icon: Scissors,
       },
       {
-        id: 'staff',
-        titleKey: 'nav.staff',
+        id: "staff",
+        titleKey: "nav.staff",
         href: ROUTES.STAFF,
         icon: Clock,
       },
     ],
   },
   {
-    id: 'inventory',
-    titleKey: 'nav.sections.inventory',
+    id: "inventory",
+    titleKey: "nav.sections.inventory",
     items: [
       {
-        id: 'products',
-        titleKey: 'nav.products',
+        id: "products",
+        titleKey: "nav.products",
         href: ROUTES.PRODUCTS,
         icon: Package,
       },
       {
-        id: 'sales',
-        titleKey: 'nav.sales',
+        id: "sales",
+        titleKey: "nav.sales",
         href: ROUTES.SALES,
         icon: ShoppingCart,
       },
       {
-        id: 'promotions',
-        titleKey: 'nav.promotions',
+        id: "promotions",
+        titleKey: "nav.promotions",
         href: ROUTES.PROMOTIONS,
         icon: Tag,
       },
     ],
   },
   {
-    id: 'insights',
-    titleKey: 'nav.sections.insights',
+    id: "insights",
+    titleKey: "nav.sections.insights",
     items: [
       {
-        id: 'analytics',
-        titleKey: 'nav.analytics',
+        id: "analytics",
+        titleKey: "nav.analytics",
         href: ROUTES.ANALYTICS,
         icon: BarChart3,
       },
     ],
   },
   {
-    id: 'account',
-    titleKey: 'nav.sections.account',
+    id: "account",
+    titleKey: "nav.sections.account",
     items: [
       {
-        id: 'salon-settings',
-        titleKey: 'nav.salonSettings',
+        id: "salon-settings",
+        titleKey: "nav.salonSettings",
         href: ROUTES.SALON_SETTINGS,
         icon: Sliders,
       },
       {
-        id: 'settings',
-        titleKey: 'nav.settings',
+        id: "settings",
+        titleKey: "nav.settings",
         href: ROUTES.SETTINGS,
         icon: Settings,
       },
@@ -266,41 +266,41 @@ export const ADMIN_SALON_NAVIGATION: NavSection[] = [
 
 export const ADMIN_NAVIGATION: NavSection[] = [
   {
-    id: 'main',
+    id: "main",
     items: [
       {
-        id: 'admin-dashboard',
-        titleKey: 'nav.admin.dashboard',
+        id: "admin-dashboard",
+        titleKey: "nav.admin.dashboard",
         href: ROUTES.ADMIN,
         icon: LayoutDashboard,
       },
     ],
   },
   {
-    id: 'administration',
-    titleKey: 'nav.sections.administration',
+    id: "administration",
+    titleKey: "nav.sections.administration",
     items: [
       {
-        id: 'admin-users',
-        titleKey: 'nav.admin.users',
+        id: "admin-users",
+        titleKey: "nav.admin.users",
         href: ROUTES.ADMIN_USERS,
         icon: UserCog,
       },
       {
-        id: 'admin-salons',
-        titleKey: 'nav.admin.salons',
-        href: ROUTES.ADMIN_SALONS,
+        id: "admin-salons",
+        titleKey: "nav.admin.salon",
+        href: ROUTES.ADMIN_SALON,
         icon: Building2,
       },
     ],
   },
   {
-    id: 'admin-settings',
-    titleKey: 'nav.sections.account',
+    id: "admin-settings",
+    titleKey: "nav.sections.account",
     items: [
       {
-        id: 'admin-settings-page',
-        titleKey: 'nav.admin.settings',
+        id: "admin-settings-page",
+        titleKey: "nav.admin.settings",
         href: ROUTES.ADMIN_SETTINGS,
         icon: Settings,
       },
@@ -311,10 +311,13 @@ export const ADMIN_NAVIGATION: NavSection[] = [
 /**
  * Get navigation based on user role
  */
-export function getNavigationForRole(role: NavRole, isInAdminPanel: boolean = false): NavSection[] {
+export function getNavigationForRole(
+  role: NavRole,
+  isInAdminPanel: boolean = false,
+): NavSection[] {
   if (isInAdminPanel) {
     // Admin panel is only for superadmin and admin
-    if (role === 'superadmin' || role === 'admin') {
+    if (role === "superadmin" || role === "admin") {
       return ADMIN_NAVIGATION;
     }
     return [];
@@ -322,10 +325,10 @@ export function getNavigationForRole(role: NavRole, isInAdminPanel: boolean = fa
 
   // Regular salon panel
   switch (role) {
-    case 'superadmin':
-    case 'admin':
+    case "superadmin":
+    case "admin":
       return ADMIN_SALON_NAVIGATION;
-    case 'user':
+    case "user":
     default:
       return USER_NAVIGATION;
   }

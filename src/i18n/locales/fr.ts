@@ -386,7 +386,7 @@ export const fr = {
     admin: {
       dashboard: "Tableau de bord admin",
       users: "Utilisateurs",
-      salons: "Salons",
+      salon: "Salon",
       tags: "Tags",
       templates: "Modèles",
       permissions: "Permissions",
@@ -833,7 +833,7 @@ export const fr = {
       searchPlaceholder: "Rechercher des utilisateurs...",
       noUsers: "Aucun utilisateur trouvé",
     },
-    salons: {
+    salon: {
       description: "Gérer tous les salons du système",
       addSalon: "Ajouter un salon",
       totalSalons: "Total salons",
@@ -857,6 +857,11 @@ export const fr = {
         "Vous serez automatiquement désigné comme propriétaire de ce salon",
       yourSalon: "Votre salon",
       staffCount: "Staff",
+      name: "Nom du salon",
+      addSalonDescription: "Ajouter votre salon",
+      address: "Adresse",
+      phone: "Numéro de téléphone",
+      email: "Email",
     },
   },
 } as const;

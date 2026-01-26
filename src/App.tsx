@@ -22,7 +22,7 @@ import {
 } from "@/pages";
 import AdminDashboardPage from "./pages/admin/dashboard";
 import { AdminUsersPage } from "./pages/admin/users";
-import SalonsPage from "./pages/admin/salons";
+import SalonsPage from "./pages/admin/salon";
 
 function App() {
   return (
@@ -52,7 +52,7 @@ function App() {
         <Route element={<AdminLayout />}>
           <Route path={ROUTES.ADMIN} element={<AdminDashboardPage />} />
           <Route path={ROUTES.ADMIN_USERS} element={<AdminUsersPage />} />
-          <Route path={ROUTES.ADMIN_SALONS} element={<SalonsPage />} />
+          <Route path={ROUTES.ADMIN_SALON} element={<SalonsPage />} />
           <Route path={ROUTES.ADMIN_SETTINGS} element={<SettingsPage />} />
         </Route>
 
