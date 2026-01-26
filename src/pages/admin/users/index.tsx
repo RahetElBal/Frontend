@@ -28,30 +28,32 @@ export function AdminUsersPage() {
   const [modalState, setModalState] = useState<UserModalState>(null);
   const [toggleUserId, setToggleUserId] = useState<string>("");
 
-  const { isSuperadmin, user: currentUser } = useUser();
+  const { isSuperadmin, user: currentUser, salon: adminSalon } = useUser();
 
-  // Fetch data
+  // Build API endpoint based on role
+  const usersEndpoint = isSuperadmin
+    ? "users" // Superadmin: fetch all users
+    : adminSalon
+      ? `users?salonId=${adminSalon.id}` // Admin: fetch only users in their salon
+      : "users"; // Fallback
+
+  // Fetch users based on role
   const { data: usersResponse, refetch } = useGet<PaginatedResponse<User>>(
-    "users",
+    usersEndpoint,
     {
       retry: 1,
+      enabled: isSuperadmin || !!adminSalon, // Only fetch if superadmin or admin has salon
     },
   );
-  const allUsers = usersResponse?.data || [];
+  const users = usersResponse?.data || [];
 
-  // Filter users based on role
-  const users = isSuperadmin
-    ? allUsers // Superadmin sees everyone
-    : allUsers.filter(
-        (user) =>
-          user.id === currentUser?.id || // Admin sees themselves
-          user.managedById === currentUser?.id, // Admin sees their staff
-      );
-
-  // Salons for the current user (admin sees their salons, superadmin sees all)
-  const { data: salons = [] } = useGet<Salon[]>("salons", {
+  // Salons - superadmin fetches all, admin uses their own from useUser
+  const { data: allSalons = [] } = useGet<Salon[]>("salons", {
     retry: 1,
+    enabled: isSuperadmin,
   });
+
+  const salons = isSuperadmin ? allSalons : adminSalon ? [adminSalon] : [];
 
   // Only superadmin can fetch list of admins (for assigning salon ownership)
   const { data: admins = [] } = useGet<User[]>("users/admins", {
@@ -138,7 +140,13 @@ export function AdminUsersPage() {
     <div className="space-y-6">
       <PageHeader
         title={t("nav.admin.users")}
-        description={t("admin.users.description", { count: users.length })}
+        description={
+          isSuperadmin
+            ? t("admin.users.description", { count: users.length })
+            : adminSalon
+              ? `Utilisateurs de ${adminSalon.name} (${users.length})`
+              : t("admin.users.description", { count: users.length })
+        }
         actions={
           isSuperadmin ? (
             <div className="flex gap-2">
@@ -152,12 +160,7 @@ export function AdminUsersPage() {
               </Button>
             </div>
           ) : (
-            <Button
-              className="gap-2"
-              onClick={handleCreateUser}
-              disabled={salons.length === 0}
-              title={salons.length === 0 ? "Créez d'abord un salon" : undefined}
-            >
+            <Button className="gap-2" onClick={handleCreateUser}>
               <UserPlus className="h-4 w-4" />
               Ajouter un utilisateur
             </Button>
@@ -165,7 +168,9 @@ export function AdminUsersPage() {
         }
       />
 
-      {users.length > 0 && <StatsGrid users={users} />}
+      {users.length > 0 && (
+        <StatsGrid users={users} isSuperadmin={isSuperadmin} />
+      )}
 
       <DataTable
         table={table}

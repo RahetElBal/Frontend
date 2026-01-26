@@ -10,7 +10,12 @@ import { RecentUsersCard } from "./components/recent-users";
 
 export default function AdminDashboardPage() {
   const { t } = useTranslation();
-  const { user, isLoading: userLoading, isSuperadmin } = useUser();
+  const {
+    user,
+    isLoading: userLoading,
+    isSuperadmin,
+    salon: adminSalon,
+  } = useUser();
 
   const { data: usersData, isLoading: usersLoading } = useGet<
     PaginatedResponse<User>
@@ -18,10 +23,15 @@ export default function AdminDashboardPage() {
     retry: 1,
   });
 
-  const { data: salonsData, isLoading: salonsLoading } =
-    useGet<Salon[]>("salons");
+  const { data: salonsData, isLoading: salonsLoading } = useGet<Salon[]>(
+    "salons",
+    {
+      enabled: isSuperadmin,
+    },
+  );
 
-  const isLoading = userLoading || usersLoading || salonsLoading;
+  const isLoading =
+    userLoading || usersLoading || (isSuperadmin && salonsLoading);
 
   if (isLoading) {
     return (
@@ -35,8 +45,15 @@ export default function AdminDashboardPage() {
     ? [user.firstName, user.lastName].filter(Boolean).join(" ") || user.email
     : "";
 
-  const recentSalons = salonsData
-    ? [...salonsData]
+  // For admin: use their salon from useUser, for superadmin: use all salons
+  const salonsToDisplay = isSuperadmin
+    ? salonsData
+    : adminSalon
+      ? [adminSalon]
+      : undefined;
+
+  const recentSalons = salonsToDisplay
+    ? [...salonsToDisplay]
         .sort(
           (a, b) =>
             new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
@@ -49,8 +66,8 @@ export default function AdminDashboardPage() {
     ? isSuperadmin
       ? // Superadmin: show all admins and users
         usersData.data.filter((u) => u.role === "admin" || u.role === "user")
-      : // Admin: show only users managed by this admin
-        usersData.data.filter((u) => u.managedById === user?.id)
+      : // Admin: show only users in their salon
+        usersData.data.filter((u) => u.salon?.id === adminSalon?.id)
     : [];
 
   const recentUsers = filteredUsers
@@ -67,15 +84,21 @@ export default function AdminDashboardPage() {
       {/* Header */}
       <PageHeader
         title={t("admin.dashboard.title")}
-        description={t("admin.dashboard.welcome", { name: displayName })}
+        description={
+          isSuperadmin
+            ? t("admin.dashboard.welcome", { name: displayName })
+            : adminSalon
+              ? `Tableau de bord - ${adminSalon.name}`
+              : t("admin.dashboard.welcome", { name: displayName })
+        }
       />
 
-      <StatsGrid salonsData={salonsData} usersData={usersData} />
+      <StatsGrid salonsData={salonsToDisplay} usersData={usersData} />
 
       <div
         className={`grid gap-6 ${isSuperadmin ? "lg:grid-cols-2" : "lg:grid-cols-1"}`}
       >
-        <RecentSalonsCard salons={recentSalons} />
+        {isSuperadmin && <RecentSalonsCard salons={recentSalons} />}
         <RecentUsersCard users={recentUsers} />
       </div>
     </div>

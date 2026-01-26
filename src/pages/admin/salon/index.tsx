@@ -41,18 +41,21 @@ type BaseSalonFormData = z.infer<typeof baseSalonFormSchema>;
 
 export default function SalonsPage() {
   const { t } = useTranslation();
-  const { user, isSuperadmin: userIsSuperadmin } = useUser();
+  const { user, isSuperadmin: userIsSuperadmin, salon: adminSalon } = useUser();
 
   // State
   const [modalState, setModalState] = useState<SalonModalState>(null);
   const [selectedOwnerId, setSelectedOwnerId] = useState<string>("");
 
-  // Fetch data
+  // Fetch data - only superadmin needs to fetch all salons
   const {
     data: allSalons = [],
     isLoading,
     refetch,
-  } = useGet<Salon[]>("salons");
+  } = useGet<Salon[]>("salons", {
+    enabled: userIsSuperadmin,
+  });
+
   const { data: admins = [] } = useGet<User[]>("users/admins", {
     enabled: userIsSuperadmin,
     retry: 1,
@@ -74,9 +77,8 @@ export default function SalonsPage() {
   const { data: salesResponse } = useGet<{ data: Sale[] }>("sales");
   const salesData = salesResponse?.data || [];
 
-  const salons = userIsSuperadmin
-    ? allSalons // Superadmin sees all salons
-    : allSalons.filter((salon) => salon.ownerId === user?.id); // Admin sees only their salon
+  // Salons - superadmin sees all, admin sees only their own from useUser
+  const salons = userIsSuperadmin ? allSalons : adminSalon ? [adminSalon] : [];
 
   // Table setup (only for superadmin)
   const table = useTable({
@@ -96,9 +98,8 @@ export default function SalonsPage() {
     },
   });
 
-  // Get current admin's salon
-  const currentSalon =
-    !userIsSuperadmin && salons.length > 0 ? salons[0] : null;
+  // Get current admin's salon - use from useUser hook
+  const currentSalon = userIsSuperadmin ? null : adminSalon;
 
   // Stats - calculated based on role
   const totalSalons = salons.length;
