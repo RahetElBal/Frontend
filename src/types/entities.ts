@@ -40,6 +40,7 @@ export interface User extends BaseEntity {
   salon: Salon;
   managedById?: string;
   managedBy?: User;
+  phone: string;
 }
 
 // ============================================

@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Building2, UserCog, UserPlus } from "lucide-react";
+import { Building2, UserCog, UserPlus, Phone } from "lucide-react";
 import type { UseFormReturn } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -68,6 +68,26 @@ export function UserForm({
           {form.formState.errors.email && (
             <p className="text-sm text-destructive">
               {form.formState.errors.email.message}
+            </p>
+          )}
+        </div>
+
+        {/* Phone Field */}
+        <div className="space-y-2">
+          <Label htmlFor="phone">{t("fields.phone")} *</Label>
+          <div className="relative">
+            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              id="phone"
+              type="tel"
+              {...form.register("phone")}
+              placeholder="+213 XXX XXX XXX"
+              className="pl-10"
+            />
+          </div>
+          {form.formState.errors.phone && (
+            <p className="text-sm text-destructive">
+              {form.formState.errors.phone.message}
             </p>
           )}
         </div>

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
-import { User, Globe, Palette, Moon, Sun, Monitor, Coins } from "lucide-react";
+import { User, Globe } from "lucide-react";
 import { requiredString } from "@/common/validator/zodI18n";
 
 import { PageHeader } from "@/components/page-header";
@@ -27,8 +27,6 @@ import { useUser } from "@/hooks/useUser";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useForm } from "@/hooks/useForm";
 import { toast } from "@/lib/toast";
-
-type Theme = "light" | "dark" | "system";
 
 // Modal state type
 type SettingsModalState = {
@@ -57,7 +55,6 @@ export function SettingsPage() {
 
   // Unified modal state
   const [modalState, setModalState] = useState<SettingsModalState>(null);
-  const [theme, setTheme] = useState<Theme>("light");
 
   const isEditProfileOpen = modalState?.type === "editProfile";
 
@@ -89,21 +86,6 @@ export function SettingsPage() {
     console.log("Saving profile:", data);
     toast.success(t("settings.profileUpdated"));
     setModalState(null);
-  };
-
-  const handleThemeChange = (newTheme: Theme) => {
-    setTheme(newTheme);
-    if (newTheme === "dark") {
-      document.documentElement.classList.add("dark");
-    } else if (newTheme === "light") {
-      document.documentElement.classList.remove("dark");
-    } else {
-      if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
-        document.documentElement.classList.add("dark");
-      } else {
-        document.documentElement.classList.remove("dark");
-      }
-    }
   };
 
   return (
@@ -140,12 +122,6 @@ export function SettingsPage() {
               {user?.role} {t("settings.account")}
             </p>
           </div>
-          <Button
-            variant="outline"
-            onClick={() => setModalState({ type: "editProfile" })}
-          >
-            {t("common.edit")}
-          </Button>
         </div>
       </Card>
 
@@ -190,15 +166,10 @@ export function SettingsPage() {
           {/* Currency Selection */}
           <div className="flex items-center justify-between p-4 rounded-lg border">
             <div className="flex items-center gap-4">
-              <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center">
-                <Coins className="h-5 w-5 text-muted-foreground" />
-              </div>
-              <div>
-                <h3 className="font-medium">{t("settings.currency")}</h3>
-                <p className="text-sm text-muted-foreground">
-                  {t("settings.currencyDescription")}
-                </p>
-              </div>
+              <h3 className="font-medium">{t("settings.currency")}</h3>
+              <p className="text-sm text-muted-foreground">
+                {t("settings.currencyDescription")}
+              </p>
             </div>
             <Select
               value={currency.code}
@@ -223,47 +194,6 @@ export function SettingsPage() {
                 ))}
               </SelectContent>
             </Select>
-          </div>
-
-          {/* Theme */}
-          <div className="flex items-center justify-between p-4 rounded-lg border">
-            <div className="flex items-center gap-4">
-              <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center">
-                <Palette className="h-5 w-5 text-muted-foreground" />
-              </div>
-              <div>
-                <h3 className="font-medium">{t("settings.appearance")}</h3>
-                <p className="text-sm text-muted-foreground">
-                  {t("settings.appearanceDescription")}
-                </p>
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <Button
-                variant={theme === "light" ? "default" : "outline"}
-                size="sm"
-                onClick={() => handleThemeChange("light")}
-              >
-                <Sun className="h-4 w-4 me-1" />
-                {t("settings.light")}
-              </Button>
-              <Button
-                variant={theme === "dark" ? "default" : "outline"}
-                size="sm"
-                onClick={() => handleThemeChange("dark")}
-              >
-                <Moon className="h-4 w-4 me-1" />
-                {t("settings.dark")}
-              </Button>
-              <Button
-                variant={theme === "system" ? "default" : "outline"}
-                size="sm"
-                onClick={() => handleThemeChange("system")}
-              >
-                <Monitor className="h-4 w-4 me-1" />
-                Auto
-              </Button>
-            </div>
           </div>
         </div>
       </Card>

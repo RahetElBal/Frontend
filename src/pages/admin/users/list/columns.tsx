@@ -6,6 +6,7 @@ import {
   Shield,
   Crown,
   UserCog,
+  Phone,
 } from "lucide-react";
 
 import { Badge } from "@/components/badge";
@@ -40,173 +41,210 @@ export const useColumns = ({
   handleView,
   handleEdit,
   handleDelete,
-}: UserColumnsParams): Column<User>[] => [
-  {
-    key: "name",
-    header: t("fields.name"),
-    sortable: true,
-    render: (user) => {
-      const displayName = getDisplayName(user);
-      const initials = getInitials(user);
-      const userIsSuperadmin = user.isSuperadmin === true;
+}: UserColumnsParams): Column<User>[] => {
+  const baseColumns: Column<User>[] = [
+    {
+      key: "name",
+      header: t("fields.name"),
+      sortable: true,
+      render: (user) => {
+        const displayName = getDisplayName(user);
+        const initials = getInitials(user);
+        const userIsSuperadmin = user.isSuperadmin === true;
 
-      return (
-        <div className="flex items-center gap-3">
-          <div
-            className={`h-10 w-10 rounded-full flex items-center justify-center ${userIsSuperadmin ? "bg-yellow-100" : "bg-accent-pink/10"}`}
-          >
-            {user.picture ? (
-              <img
-                src={user.picture}
-                alt={displayName}
-                className="h-10 w-10 rounded-full"
-              />
-            ) : (
-              <span
-                className={`font-medium ${userIsSuperadmin ? "text-yellow-600" : "text-accent-pink"}`}
-              >
-                {initials}
-              </span>
-            )}
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <p className="font-medium">{displayName}</p>
-              {userIsSuperadmin && (
-                <Crown className="h-4 w-4 text-yellow-500" />
+        return (
+          <div className="flex items-center gap-3">
+            <div
+              className={`h-10 w-10 rounded-full flex items-center justify-center ${userIsSuperadmin ? "bg-yellow-100" : "bg-accent-pink/10"}`}
+            >
+              {user.picture ? (
+                <img
+                  src={user.picture}
+                  alt={displayName}
+                  className="h-10 w-10 rounded-full"
+                />
+              ) : (
+                <span
+                  className={`font-medium ${userIsSuperadmin ? "text-yellow-600" : "text-accent-pink"}`}
+                >
+                  {initials}
+                </span>
               )}
             </div>
-            <p className="text-sm text-muted-foreground">{user.email}</p>
-          </div>
-        </div>
-      );
-    },
-  },
-  {
-    key: "managedBy",
-    header: "Géré par",
-    render: (user) => (
-      <div className="flex items-center gap-2">
-        {user.managedBy ? (
-          <>
-            <UserCog className="h-4 w-4 text-accent-pink" />
-            <span>{user.managedBy.name || user.managedBy.email}</span>
-          </>
-        ) : user.role === UserRole.ADMIN || user.isSuperadmin ? (
-          <span className="text-muted-foreground text-sm">-</span>
-        ) : (
-          <span className="text-muted-foreground text-sm">Non assigné</span>
-        )}
-      </div>
-    ),
-  },
-  {
-    key: "salon",
-    header: t("fields.salon"),
-    render: (user) => {
-      // Admins and superadmins don't have salon assignments
-      if (user.role === UserRole.ADMIN || user.isSuperadmin) {
-        return <span className="text-muted-foreground text-sm">-</span>;
-      }
-
-      // Regular users should have a salon
-      if (user.salon) {
-        return (
-          <div className="flex items-center gap-2">
-            <div className="h-6 w-6 rounded bg-accent-blue/10 flex items-center justify-center">
-              <span className="text-xs font-medium text-accent-blue">
-                {user.salon.name.substring(0, 1).toUpperCase()}
-              </span>
+            <div>
+              <div className="flex items-center gap-2">
+                <p className="font-medium">{displayName}</p>
+                {userIsSuperadmin && (
+                  <Crown className="h-4 w-4 text-yellow-500" />
+                )}
+              </div>
+              <p className="text-sm text-muted-foreground">{user.email}</p>
             </div>
-            <span>{user.salon.name}</span>
           </div>
         );
-      }
-
-      // User without salon assignment
-      return <span className="text-muted-foreground text-sm">Non assigné</span>;
+      },
     },
-  },
-  {
-    key: "role",
-    header: t("fields.role"),
-    render: (user) => {
-      const userIsSuperadmin = user.isSuperadmin === true;
-      return (
-        <Badge
-          variant={
-            user.role === UserRole.ADMIN || userIsSuperadmin
-              ? "info"
-              : "default"
-          }
-        >
-          <Shield className="h-3 w-3 me-1" />
-          {userIsSuperadmin
-            ? "Super Admin"
-            : user.role === UserRole.ADMIN
-              ? "Admin"
-              : "Utilisateur"}
+  ];
+
+  // Conditional columns based on user role
+  if (currentUserIsSuperadmin) {
+    // Superadmin sees managedBy column
+    baseColumns.push({
+      key: "managedBy",
+      header: "Géré par",
+      render: (user) => (
+        <div className="flex items-center gap-2">
+          {user.managedBy ? (
+            <>
+              <UserCog className="h-4 w-4 text-accent-pink" />
+              <span>{user.managedBy.name || user.managedBy.email}</span>
+            </>
+          ) : user.role === UserRole.ADMIN || user.isSuperadmin ? (
+            <span className="text-muted-foreground text-sm">-</span>
+          ) : (
+            <span className="text-muted-foreground text-sm">Non assigné</span>
+          )}
+        </div>
+      ),
+    });
+
+    // Superadmin sees salon column
+    baseColumns.push({
+      key: "salon",
+      header: t("fields.salon"),
+      render: (user) => {
+        // Admins and superadmins don't have salon assignments
+        if (user.role === UserRole.ADMIN || user.isSuperadmin) {
+          return <span className="text-muted-foreground text-sm">-</span>;
+        }
+
+        // Regular users should have a salon
+        if (user.salon) {
+          return (
+            <div className="flex items-center gap-2">
+              <div className="h-6 w-6 rounded bg-accent-blue/10 flex items-center justify-center">
+                <span className="text-xs font-medium text-accent-blue">
+                  {user.salon.name.substring(0, 1).toUpperCase()}
+                </span>
+              </div>
+              <span>{user.salon.name}</span>
+            </div>
+          );
+        }
+
+        // User without salon assignment
+        return (
+          <span className="text-muted-foreground text-sm">Non assigné</span>
+        );
+      },
+    });
+
+    // Superadmin sees role column
+    baseColumns.push({
+      key: "role",
+      header: t("fields.role"),
+      render: (user) => {
+        const userIsSuperadmin = user.isSuperadmin === true;
+        return (
+          <Badge
+            variant={
+              user.role === UserRole.ADMIN || userIsSuperadmin
+                ? "info"
+                : "default"
+            }
+          >
+            <Shield className="h-3 w-3 me-1" />
+            {userIsSuperadmin
+              ? "Super Admin"
+              : user.role === UserRole.ADMIN
+                ? "Admin"
+                : "Utilisateur"}
+          </Badge>
+        );
+      },
+    });
+  } else {
+    // Admin sees phone column instead
+    baseColumns.push({
+      key: "phone",
+      header: t("fields.phone"),
+      render: (user) => (
+        <div className="flex items-center gap-2">
+          {user.phone ? (
+            <>
+              <Phone className="h-4 w-4 text-muted-foreground" />
+              <span>{user.phone}</span>
+            </>
+          ) : (
+            <span className="text-muted-foreground text-sm">-</span>
+          )}
+        </div>
+      ),
+    });
+  }
+
+  // Common columns for both
+  baseColumns.push(
+    {
+      key: "status",
+      header: t("fields.status"),
+      render: (user) => (
+        <Badge variant={user.isActive ? "success" : "error"}>
+          {user.isActive ? t("common.active") : t("common.inactive")}
         </Badge>
-      );
+      ),
     },
-  },
-  {
-    key: "status",
-    header: t("fields.status"),
-    render: (user) => (
-      <Badge variant={user.isActive ? "success" : "error"}>
-        {user.isActive ? t("common.active") : t("common.inactive")}
-      </Badge>
-    ),
-  },
-  {
-    key: "createdAt",
-    header: t("fields.createdAt"),
-    sortable: true,
-    render: (user) => new Date(user.createdAt).toLocaleDateString(),
-  },
-  {
-    key: "actions",
-    header: "",
-    className: "w-12",
-    render: (user) => {
-      const userIsSuperadmin = user.isSuperadmin === true;
-      const isSelf = user.id === currentUserId;
-      const canEdit = currentUserIsSuperadmin || !userIsSuperadmin;
-      const canDelete = currentUserIsSuperadmin && !isSelf;
+    {
+      key: "createdAt",
+      header: t("fields.createdAt"),
+      sortable: true,
+      render: (user) => new Date(user.createdAt).toLocaleDateString(),
+    },
+    {
+      key: "actions",
+      header: "",
+      className: "w-12",
+      render: (user) => {
+        const userIsSuperadmin = user.isSuperadmin === true;
+        const isSelf = user.id === currentUserId;
+        const canEdit = currentUserIsSuperadmin || !userIsSuperadmin;
+        const canDelete = currentUserIsSuperadmin && !isSelf;
 
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-8 w-8">
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => handleView(user)}>
-              <Eye className="h-4 w-4 me-2" />
-              {t("common.view")}
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => handleEdit(user)}
-              disabled={!canEdit}
-              className={!canEdit ? "opacity-50" : ""}
-            >
-              <Edit className="h-4 w-4 me-2" />
-              {t("common.edit")}
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onClick={() => handleDelete(user)}
-              disabled={!canDelete}
-              className={`text-destructive ${!canDelete ? "opacity-50" : ""}`}
-            >
-              <Trash2 className="h-4 w-4 me-2" />
-              {t("common.delete")}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      );
+        return (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8">
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => handleView(user)}>
+                <Eye className="h-4 w-4 me-2" />
+                {t("common.view")}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => handleEdit(user)}
+                disabled={!canEdit}
+                className={!canEdit ? "opacity-50" : ""}
+              >
+                <Edit className="h-4 w-4 me-2" />
+                {t("common.edit")}
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => handleDelete(user)}
+                disabled={!canDelete}
+                className={`text-destructive ${!canDelete ? "opacity-50" : ""}`}
+              >
+                <Trash2 className="h-4 w-4 me-2" />
+                {t("common.delete")}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        );
+      },
     },
-  },
-];
+  );
+
+  return baseColumns;
+};

@@ -28,7 +28,7 @@ export function AdminUsersPage() {
   const [modalState, setModalState] = useState<UserModalState>(null);
   const [toggleUserId, setToggleUserId] = useState<string>("");
 
-  const { isSuperadmin, user: currentUser, salon: adminSalon } = useUser();
+  const { isSuperadmin, user: currentUser } = useUser();
 
   // Fetch all users
   const { data: usersResponse, refetch } = useGet<PaginatedResponse<User>>(
@@ -50,7 +50,9 @@ export function AdminUsersPage() {
     enabled: isSuperadmin,
   });
 
-  const salons = isSuperadmin ? allSalons : adminSalon ? [adminSalon] : [];
+  const salons = isSuperadmin
+    ? allSalons
+    : (currentUser?.salon as unknown as Salon[]) || [];
 
   // Only superadmin can fetch list of admins (for assigning salon ownership)
   const { data: admins = [] } = useGet<User[]>("users/admins", {
@@ -138,11 +140,9 @@ export function AdminUsersPage() {
       <PageHeader
         title={t("nav.admin.users")}
         description={
-          isSuperadmin
-            ? t("admin.users.description", { count: users.length })
-            : adminSalon
-              ? `Utilisateurs de ${adminSalon.name} (${users.length})`
-              : t("admin.users.description", { count: users.length })
+          !isSuperadmin && (currentUser?.salon as unknown as Salon[])?.[0]
+            ? `Utilisateurs de ${(currentUser?.salon as unknown as Salon[])[0].name} (${users.length})`
+            : undefined
         }
         actions={
           isSuperadmin ? (

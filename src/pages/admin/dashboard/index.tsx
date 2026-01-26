@@ -10,12 +10,7 @@ import { RecentUsersCard } from "./components/recent-users";
 
 export default function AdminDashboardPage() {
   const { t } = useTranslation();
-  const {
-    user,
-    isLoading: userLoading,
-    isSuperadmin,
-    salon: adminSalon,
-  } = useUser();
+  const { user, isLoading: userLoading, isSuperadmin } = useUser();
 
   const { data: usersData, isLoading: usersLoading } = useGet<
     PaginatedResponse<User>
@@ -45,11 +40,15 @@ export default function AdminDashboardPage() {
     ? [user.firstName, user.lastName].filter(Boolean).join(" ") || user.email
     : "";
 
+  // Get admin's salons (typed as Salon | null but actually Salon[] at runtime)
+  const adminSalons = (user?.salon as unknown as Salon[]) || [];
+  const adminSalon = adminSalons[0];
+
   // For admin: use their salon from useUser, for superadmin: use all salons
   const salonsToDisplay = isSuperadmin
     ? salonsData
-    : adminSalon
-      ? [adminSalon]
+    : adminSalons.length > 0
+      ? adminSalons
       : undefined;
 
   const recentSalons = salonsToDisplay
@@ -66,8 +65,8 @@ export default function AdminDashboardPage() {
     ? isSuperadmin
       ? // Superadmin: show all admins and users
         usersData.data.filter((u) => u.role === "admin" || u.role === "user")
-      : // Admin: show only users in their salon
-        usersData.data.filter((u) => u.salon?.id === adminSalon?.id)
+      : // Admin: show only users managed by them
+        usersData.data.filter((u) => u.managedById === user?.id)
     : [];
 
   const recentUsers = filteredUsers

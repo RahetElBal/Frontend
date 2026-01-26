@@ -91,22 +91,23 @@ export function UserDialog({
     defaultValues: {
       name: "",
       email: "",
+      phone: "",
       role: "user",
       salonId: "",
       managedById: "",
     },
   });
 
-  // Reset form when dialog state changes - FIXED: only depend on primitive values
+  // Reset form when dialog state changes
   useEffect(() => {
-    if (!open) return; // Don't reset if dialog is closed
+    if (!open) return;
 
     if (mode === "create") {
-      // In create mode: role is determined by initialRole prop
       const role = initialRole || (currentUserIsSuperadmin ? "admin" : "user");
       form.reset({
         name: "",
         email: "",
+        phone: "",
         role,
         salonId: "",
         managedById: "",
@@ -117,6 +118,7 @@ export function UserDialog({
       form.reset({
         name: displayName,
         email: user.email,
+        phone: user.phone || "",
         role: formRole,
         salonId: "",
         managedById: user.managedById || "",
@@ -181,6 +183,7 @@ export function UserDialog({
     const cleanedData: Record<string, unknown> = {
       name: data.name,
       email: data.email,
+      phone: data.phone,
       role,
     };
 
@@ -227,6 +230,13 @@ export function UserDialog({
           "Vous n'avez pas la permission de supprimer cet utilisateur",
         );
       }
+      onOpenChange(false);
+      return;
+    }
+
+    // Ensure we have a user id
+    if (!user?.id) {
+      toast.error("Erreur: ID utilisateur manquant");
       onOpenChange(false);
       return;
     }
@@ -388,7 +398,7 @@ export function UserDialog({
                       (user.role === UserRole.ADMIN || userIsSuperadmin
                         ? "-"
                         : "Non assigné")}
-                  </p>{" "}
+                  </p>
                 </div>
               </div>
 
