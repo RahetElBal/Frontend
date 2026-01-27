@@ -6,9 +6,7 @@ import { UserLayout } from "@/layouts/user-layout";
 import { AdminLayout } from "@/layouts/admin-layout";
 import { ROUTES } from "@/constants/navigation";
 
-// Pages
 import {
-  AgendaPage,
   ServicesPage,
   ProductsPage,
   SalesPage,
@@ -23,6 +21,7 @@ import { AdminUsersPage } from "./pages/admin/users";
 import SalonsPage from "./pages/admin/salon";
 import { ClientsPage } from "./pages/user/clients";
 import { DashboardPage } from "./pages/user/dashboard";
+import { AgendaPage } from "./pages/user/agenda";
 
 function App() {
   return (

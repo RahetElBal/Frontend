@@ -1,5 +1,3 @@
-// User Pages
-export { AgendaPage } from "./agenda";
 export { ServicesPage } from "./services";
 export { ProductsPage } from "./products";
 export { SalesPage } from "./sales";

@@ -27,8 +27,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/badge";
-import type { ClientModalState } from "@/pages/user/types";
-import type { ClientFormData } from "@/pages/user/validation";
+import type { ClientModalState } from "@/pages/user/clients/types";
+import type { ClientFormData } from "@/pages/user/clients/validation";
 
 interface ClientModalsProps {
   modalState: ClientModalState;
