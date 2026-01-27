@@ -1,7 +1,6 @@
 import { useTranslation } from "react-i18next";
-import { Clock, ArrowRight } from "lucide-react";
+import { Clock } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/badge";
 import { type Appointment } from "@/types/entities";
 import type { PaginatedResponse } from "@/types";
@@ -22,10 +21,6 @@ export function TodaysAppointments({ appointments }: TodaysAppointmentsProps) {
         <h2 className="text-lg font-semibold">
           {t("dashboard.todaysAppointments")}
         </h2>
-        <Button variant="ghost" size="sm" className="gap-1">
-          {t("common.viewAll")}
-          <ArrowRight className="h-4 w-4" />
-        </Button>
       </div>
       <div className="space-y-3">
         {todaysAppointments.length === 0 ? (

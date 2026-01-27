@@ -27,3 +27,17 @@ export const getInitials = (user: User): string => {
     .substring(0, 2)
     .toUpperCase();
 };
+
+export const formatCurrency = (value: number) =>
+  new Intl.NumberFormat("fr-FR", {
+    style: "currency",
+    currency: "EUR",
+  }).format(value);
+
+export function calculatePercentageChange(
+  current: number,
+  previous: number,
+): number {
+  if (previous === 0) return 0;
+  return ((current - previous) / previous) * 100;
+}

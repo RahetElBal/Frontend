@@ -5,7 +5,12 @@ import { PageHeader } from "@/components/page-header";
 import { TodaysAppointments } from "./components/todays-appointments";
 import { TopServices } from "./components/top-services";
 import { StatsGrid } from "./components/stats-grid";
-import type { Appointment, PaginatedResponse, RevenueData } from "@/types";
+import type {
+  Appointment,
+  Client,
+  PaginatedResponse,
+  RevenueData,
+} from "@/types";
 import { useGet } from "@/hooks/useGet";
 
 export function DashboardPage() {
@@ -13,17 +18,19 @@ export function DashboardPage() {
   const { user, isLoading } = useUser();
 
   const salonId = user?.salon?.id;
-  const { data: weeklyRevenue } = useGet<RevenueData>(
+
+  const { data: todaysRevenue } = useGet<RevenueData>("sales/today/revenue", {
+    params: { salonId },
+    enabled: !!salonId,
+  });
+
+  const { data: lastWeekRevenue } = useGet<RevenueData>(
     "sales/last-week/revenue",
     {
       params: { salonId },
       enabled: !!salonId,
     },
   );
-  const { data: todaysRevenu } = useGet<RevenueData>("sales/today/revenue", {
-    params: { salonId },
-    enabled: !!salonId,
-  });
 
   const { data: appointmentsData } = useGet<PaginatedResponse<Appointment>>(
     "appointments",
@@ -33,7 +40,11 @@ export function DashboardPage() {
     },
   );
 
-  console.log("salonId: " + salonId);
+  const { data: clientsData } = useGet<PaginatedResponse<Client>>("clients", {
+    params: { salonId, perPage: 100 },
+    enabled: !!salonId,
+  });
+
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -43,6 +54,7 @@ export function DashboardPage() {
   }
 
   const displayName = user?.name ?? user?.email;
+  const clients = clientsData?.data || [];
 
   return (
     <div className="space-y-8">
@@ -50,13 +62,14 @@ export function DashboardPage() {
         title={t("common.welcome", { name: displayName })}
         description={t("nav.dashboard")}
       />
+      <StatsGrid
+        todaysRevenue={todaysRevenue}
+        lastWeekRevenue={lastWeekRevenue}
+        clients={clients}
+      />
 
-      <StatsGrid weeklyRevenue={weeklyRevenue} todaysRevenu={todaysRevenu} />
-
-      <div className="grid gap-6 lg:grid-cols-2">
-        <TodaysAppointments appointments={appointmentsData} />
-        <TopServices />
-      </div>
+      <TodaysAppointments appointments={appointmentsData} />
+      <TopServices />
     </div>
   );
 }

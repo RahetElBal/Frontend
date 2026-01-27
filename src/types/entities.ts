@@ -115,7 +115,7 @@ export interface Client extends BaseEntity {
 export interface Service extends BaseEntity {
   name: string;
   description?: string;
-  duration: number; // in minutes
+  duration: number;
   price: number;
   categoryId?: string;
   category?: Category;

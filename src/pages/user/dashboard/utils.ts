@@ -1,4 +1,8 @@
-import { AppointmentStatus, type Appointment } from "@/types/entities";
+import {
+  AppointmentStatus,
+  type Appointment,
+  type Client,
+} from "@/types/entities";
 
 export function getTodayRange() {
   const today = new Date();
@@ -29,6 +33,17 @@ export function filterAppointmentsByDateRange(
   });
 }
 
+export function filterClientsByDateRange(
+  clients: Client[],
+  start: Date,
+  end: Date,
+): Client[] {
+  return clients.filter((client) => {
+    const createdDate = new Date(client.createdAt);
+    return createdDate >= start && createdDate < end;
+  });
+}
+
 export function getTodaysAppointments(
   appointments: Appointment[],
 ): Appointment[] {
@@ -41,6 +56,16 @@ export function getLastWeekAppointments(
 ): Appointment[] {
   const { start, end } = getLastWeekRange();
   return filterAppointmentsByDateRange(appointments, start, end);
+}
+
+export function getTodaysNewClients(clients: Client[]): Client[] {
+  const { start, end } = getTodayRange();
+  return filterClientsByDateRange(clients, start, end);
+}
+
+export function getLastWeekNewClients(clients: Client[]): Client[] {
+  const { start, end } = getLastWeekRange();
+  return filterClientsByDateRange(clients, start, end);
 }
 
 export const statusColors: Record<

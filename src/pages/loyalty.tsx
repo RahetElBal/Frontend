@@ -31,6 +31,7 @@ import type {
   LoyaltyTransaction,
   Client,
 } from "@/types/entities";
+import { formatCurrency } from "@/common/utils";
 
 // TODO: Replace with real API data
 const loyaltyProgram: LoyaltyProgram = {
@@ -67,13 +68,6 @@ export function LoyaltyPage() {
     minimumPoints: loyaltyProgram.minimumPoints,
     isActive: loyaltyProgram.isActive,
   });
-
-  const formatCurrency = (value: number) =>
-    new Intl.NumberFormat("fr-FR", {
-      style: "currency",
-      currency: "EUR",
-    }).format(value);
-
   const totalPointsIssued = loyaltyTransactions
     .filter((tx) => tx.type === "earn")
     .reduce((sum, tx) => sum + tx.points, 0);

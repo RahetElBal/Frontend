@@ -1,30 +1,18 @@
 import { useTranslation } from "react-i18next";
-import { ArrowRight } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { TopService } from "@/types/entities";
+import { formatCurrency } from "@/common/utils";
 
-// TODO: Replace with real API data
 const topServices: TopService[] = [];
 
 export function TopServices() {
   const { t } = useTranslation();
 
-  const formatCurrency = (value: number) =>
-    new Intl.NumberFormat("fr-FR", {
-      style: "currency",
-      currency: "EUR",
-    }).format(value);
-
   return (
     <Card className="p-6">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-semibold">{t("dashboard.topServices")}</h2>
-        <Button variant="ghost" size="sm" className="gap-1">
-          {t("common.viewAll")}
-          <ArrowRight className="h-4 w-4" />
-        </Button>
       </div>
       <div className="space-y-3">
         {topServices.length === 0 ? (
