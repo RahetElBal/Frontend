@@ -1,3 +1,4 @@
+// app-sidebar.tsx (minor updates)
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { PanelLeftClose, PanelLeft } from "lucide-react";
@@ -13,27 +14,28 @@ import {
 import { SidebarLogo } from "./sidebar-logo";
 import { SidebarNavSection } from "./sidebar-nav-section";
 import { SidebarUserMenu } from "./sidebar-user-menu";
-import type { NavSection } from "@/types/navigation";
 import type { Salon } from "@/types/entities";
 import type { AuthUser, AppRole } from "@/types/user";
+import { getNavigationForRole } from "@/constants/navigation";
 
 interface AppSidebarProps {
-  navigation: NavSection[];
   user: AuthUser;
   userRole: AppRole;
   currentSalon?: Salon | null;
+  isInAdminPanel?: boolean; // Add this
   className?: string;
 }
 
 export function AppSidebar({
-  navigation,
   user,
   userRole,
   currentSalon,
+  isInAdminPanel = false,
   className,
 }: AppSidebarProps) {
   const { t } = useTranslation();
   const [collapsed, setCollapsed] = useState(false);
+  const navigation = getNavigationForRole(userRole, isInAdminPanel);
 
   return (
     <TooltipProvider>
@@ -73,15 +75,15 @@ export function AppSidebar({
           </div>
         )}
 
-        {/* Salon Switcher */}
-        {currentSalon && (
+        {/* Salon Switcher - Only show in salon panel, not admin panel */}
+        {currentSalon && !isInAdminPanel && (
           <div className={cn("px-3 py-2", collapsed && "px-2")}>
             {collapsed ? (
               <Tooltip>
                 <TooltipTrigger asChild>
                   <div className="flex justify-center">
                     <div className="h-10 w-10 rounded-lg bg-linear-to-br from-accent-pink to-accent-blue flex items-center justify-center text-white text-sm font-bold">
-                      {currentSalon.name.substring(0, 2).toUpperCase()}
+                      {currentSalon.name}
                     </div>
                   </div>
                 </TooltipTrigger>
@@ -92,7 +94,7 @@ export function AppSidebar({
             ) : (
               <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/50">
                 <div className="h-8 w-8 rounded-md bg-linear-to-br from-accent-pink to-accent-blue flex items-center justify-center text-white text-xs font-bold shrink-0">
-                  {currentSalon.name.substring(0, 2).toUpperCase()}
+                  {currentSalon.name}
                 </div>
                 <div className="text-left min-w-0">
                   <p className="text-sm font-medium truncate">
@@ -107,7 +109,7 @@ export function AppSidebar({
           </div>
         )}
 
-        {/* Navigation */}
+        {/* Navigation - Automatically filtered by role! */}
         <div className="flex-1 overflow-y-auto px-3 py-4">
           <div className="space-y-6">
             {navigation.map((section) => (
@@ -130,6 +132,5 @@ export function AppSidebar({
   );
 }
 
-// Export collapsed width constant for layout calculations
-export const SIDEBAR_WIDTH = 256; // 16rem = 256px
-export const SIDEBAR_WIDTH_COLLAPSED = 72; // 4.5rem = 72px
+export const SIDEBAR_WIDTH = 256;
+export const SIDEBAR_WIDTH_COLLAPSED = 72;

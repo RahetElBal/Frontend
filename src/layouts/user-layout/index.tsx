@@ -5,8 +5,9 @@ import { AppSidebar } from "@/components/sidebar/app-sidebar";
 import { Spinner } from "@/components/spinner";
 import { MainLayout } from "@/layouts/main-layout";
 import { useUser } from "@/hooks/useUser";
-import { getNavigationForRole, ROUTES } from "@/constants/navigation";
+import { ROUTES } from "@/constants/navigation";
 import type { AppRole } from "@/types/user";
+import type { Salon } from "@/types/entities";
 
 /**
  * Layout for regular users and admins (salon view)
@@ -42,22 +43,20 @@ export function UserLayout() {
     return <Navigate to={ROUTES.ADMIN} replace />;
   }
 
-  // Get navigation based on user role
+  // Get user role
   const userRole = (user.role || "user") as AppRole;
-  const navigation = getNavigationForRole(userRole, false);
 
   return (
     <MainLayout>
-      {/* Sidebar */}
-      <AppSidebar navigation={navigation} user={user} userRole={userRole} />
+      <AppSidebar
+        user={user}
+        userRole={userRole}
+        currentSalon={user?.salon as Salon}
+        isInAdminPanel={false}
+      />
 
       {/* Main Content Area */}
-      <main
-        className={cn(
-          "min-h-screen transition-all duration-300",
-          "ps-64", // Padding start for sidebar (RTL-aware)
-        )}
-      >
+      <main className={cn("min-h-screen transition-all duration-300", "ps-64")}>
         <div className="p-6">
           <Outlet />
         </div>

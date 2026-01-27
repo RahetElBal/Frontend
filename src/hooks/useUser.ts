@@ -43,7 +43,6 @@ export function useUser(options: UseUserOptions = {}): UseUserReturn {
       return;
     }
 
-    // Redirect if authenticated and redirectIfFound is true
     if (isAuthenticated && redirectIfFound) {
       const from = (location.state as { from?: string })?.from;
       const destination =

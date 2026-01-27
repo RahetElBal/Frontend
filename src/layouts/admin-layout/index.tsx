@@ -1,12 +1,12 @@
-import { Outlet, Navigate } from 'react-router-dom';
+import { Outlet, Navigate } from "react-router-dom";
 
-import { cn } from '@/lib/utils';
-import { AppSidebar } from '@/components/sidebar/app-sidebar';
-import { Spinner } from '@/components/spinner';
-import { MainLayout } from '@/layouts/main-layout';
-import { useUser } from '@/hooks/useUser';
-import { getNavigationForRole, ROUTES } from '@/constants/navigation';
-import type { AppRole } from '@/types/user';
+import { cn } from "@/lib/utils";
+import { AppSidebar } from "@/components/sidebar/app-sidebar";
+import { Spinner } from "@/components/spinner";
+import { MainLayout } from "@/layouts/main-layout";
+import { useUser } from "@/hooks/useUser";
+import { ROUTES } from "@/constants/navigation";
+import type { AppRole } from "@/types/user";
 
 /**
  * Layout for admin panel (superadmin and admin only)
@@ -31,32 +31,29 @@ export function AdminLayout() {
   }
 
   // Check if user has admin or superadmin role
-  const userRole = (user.role || 'user') as AppRole;
-  const isSuperadmin = user.isSuperadmin || userRole === 'superadmin';
-  const isAdmin = userRole === 'admin';
+  const userRole = (user.role || "user") as AppRole;
+  const isSuperadmin = user.isSuperadmin || userRole === "superadmin";
+  const isAdmin = userRole === "admin";
 
   // Only superadmin and admin can access admin panel
   if (!isSuperadmin && !isAdmin) {
     return <Navigate to={ROUTES.DASHBOARD} replace />;
   }
 
-  // Get admin navigation
-  const navigation = getNavigationForRole(userRole, true);
-
   return (
     <MainLayout>
-      {/* Sidebar */}
+      {/* Sidebar - Navigation filtered automatically by role */}
       <AppSidebar
-        navigation={navigation}
         user={user}
         userRole={userRole}
+        isInAdminPanel={true} // This is admin panel - shows admin navigation
       />
 
       {/* Main Content Area */}
       <main
         className={cn(
-          'min-h-screen transition-all duration-300',
-          'ps-64' // Padding start for sidebar (RTL-aware)
+          "min-h-screen transition-all duration-300",
+          "ps-64", // Padding start for sidebar (RTL-aware)
         )}
       >
         <div className="p-6">

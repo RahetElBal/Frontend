@@ -8,8 +8,6 @@ import { ROUTES } from "@/constants/navigation";
 
 // Pages
 import {
-  DashboardPage,
-  ClientsPage,
   AgendaPage,
   ServicesPage,
   ProductsPage,
@@ -23,6 +21,8 @@ import {
 import AdminDashboardPage from "./pages/admin/dashboard";
 import { AdminUsersPage } from "./pages/admin/users";
 import SalonsPage from "./pages/admin/salon";
+import { ClientsPage } from "./pages/user/clients";
+import { DashboardPage } from "./pages/user/dashboard";
 
 function App() {
   return (
