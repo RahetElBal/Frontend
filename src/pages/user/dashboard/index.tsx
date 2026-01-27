@@ -5,7 +5,7 @@ import { PageHeader } from "@/components/page-header";
 import { TodaysAppointments } from "./components/todays-appointments";
 import { TopServices } from "./components/top-services";
 import { StatsGrid } from "./components/stats-grid";
-import type { RevenueData } from "@/types";
+import type { Appointment, PaginatedResponse, RevenueData } from "@/types";
 import { useGet } from "@/hooks/useGet";
 
 export function DashboardPage() {
@@ -25,6 +25,15 @@ export function DashboardPage() {
     enabled: !!salonId,
   });
 
+  const { data: appointmentsData } = useGet<PaginatedResponse<Appointment>>(
+    "appointments",
+    {
+      params: { salonId, perPage: 100 },
+      enabled: !!salonId,
+    },
+  );
+
+  console.log("salonId: " + salonId);
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -45,7 +54,7 @@ export function DashboardPage() {
       <StatsGrid weeklyRevenue={weeklyRevenue} todaysRevenu={todaysRevenu} />
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <TodaysAppointments />
+        <TodaysAppointments appointments={appointmentsData} />
         <TopServices />
       </div>
     </div>

@@ -3,22 +3,18 @@ import { Clock, ArrowRight } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/badge";
-import { AppointmentStatus } from "@/types/entities";
-import type { Appointment } from "@/types/entities";
+import { type Appointment } from "@/types/entities";
+import type { PaginatedResponse } from "@/types";
+import { getTodaysAppointments, statusColors } from "../utils";
 
-// TODO: Replace with real API data
-const appointments: Appointment[] = [];
-
-const statusColors: Record<string, "default" | "success" | "warning" | "info"> =
-  {
-    [AppointmentStatus.CONFIRMED]: "success",
-    [AppointmentStatus.PENDING]: "warning",
-    [AppointmentStatus.IN_PROGRESS]: "info",
-    [AppointmentStatus.COMPLETED]: "default",
-  };
-
-export function TodaysAppointments() {
+interface TodaysAppointmentsProps {
+  appointments?: PaginatedResponse<Appointment>;
+}
+export function TodaysAppointments({ appointments }: TodaysAppointmentsProps) {
   const { t } = useTranslation();
+
+  const allAppointments = appointments?.data || [];
+  const todaysAppointments = getTodaysAppointments(allAppointments);
 
   return (
     <Card className="p-6">
@@ -32,12 +28,12 @@ export function TodaysAppointments() {
         </Button>
       </div>
       <div className="space-y-3">
-        {appointments.length === 0 ? (
+        {todaysAppointments.length === 0 ? (
           <p className="text-center text-muted-foreground py-8">
             {t("dashboard.noAppointments")}
           </p>
         ) : (
-          appointments.slice(0, 5).map((apt) => (
+          todaysAppointments.slice(0, 5).map((apt) => (
             <div
               key={apt.id}
               className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
