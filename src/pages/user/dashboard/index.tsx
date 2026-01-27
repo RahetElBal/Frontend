@@ -12,9 +12,7 @@ export function DashboardPage() {
   const { t } = useTranslation();
   const { user, isLoading } = useUser();
 
-  const salonId = user?.salon?.[0]?.id;
-  console.log("salonId:", salonId);
-  console.log("user:", user);
+  const salonId = user?.salon?.id;
   const { data: weeklyRevenue } = useGet<RevenueData>(
     "sales/last-week/revenue",
     {
