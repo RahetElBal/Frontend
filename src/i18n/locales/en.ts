@@ -706,6 +706,8 @@ export const en = {
     todaysAppointments: "Today's Appointments",
     topServices: "Top Services",
     bookings: "bookings",
+    noAppointments: "No appointments for today",
+    noServices: "No services for today",
   },
 
   // ============================================

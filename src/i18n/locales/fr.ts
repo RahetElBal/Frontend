@@ -408,6 +408,8 @@ export const fr = {
     todaysAppointments: "Rendez-vous d'aujourd'hui",
     topServices: "Services populaires",
     bookings: "réservations",
+    noAppointments: "Aucun rendez-vous aujourd'hui",
+    noServices: "Aucun service pour aujourd'hui",
   },
 
   clients: {
