@@ -9,32 +9,34 @@ import { useTable } from "@/hooks/useTable";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useForm } from "@/hooks/useForm";
 import type { Client } from "@/types/entities";
-import { useGet } from "@/hooks/useGet";
-
 import { ClientModals } from "./components/dialog/client-modals";
 import type { ClientModalState } from "../types";
-import type { PaginatedResponse } from "@/types";
 import { clientFormSchema, type ClientFormData } from "../validation";
 import { getClientColumns } from "./components/list/columns";
+import { useUser } from "@/hooks/useUser";
+import type { PaginatedResponse } from "@/types";
+import { useGet } from "@/hooks/useGet";
 
 export function ClientsPage() {
   const { t } = useTranslation();
   const { formatCurrency } = useLanguage();
 
-  // Unified modal state
+  const { isUser, user } = useUser();
   const [modalState, setModalState] = useState<ClientModalState>(null);
 
-  // Fetch clients from API (scoped to current salon) - returns paginated response
+  const salonId = user?.salon?.id;
+
   const {
     data: clientsResponse,
     isLoading,
     refetch,
-  } = useGet<PaginatedResponse<Client>>("clients");
+  } = useGet<PaginatedResponse<Client>>("clients", {
+    params: { salonId, perPage: 100 },
+    enabled: !!salonId,
+  });
 
-  // Extract the data array from paginated response
   const clients = clientsResponse?.data || [];
 
-  // Form setup
   const form = useForm<ClientFormData>({
     schema: clientFormSchema,
     defaultValues: {
@@ -50,7 +52,6 @@ export function ClientsPage() {
     searchKeys: ["firstName", "lastName", "email", "phone"],
   });
 
-  // Handlers
   const handleView = (client: Client) => {
     setModalState({ clientId: client.id, mode: "view" });
   };
@@ -77,13 +78,17 @@ export function ClientsPage() {
         title={t("nav.clients")}
         description={t("clients.description", { count: clients.length })}
         actions={
-          <Button
-            className="gap-2"
-            onClick={() => setModalState({ clientId: "create", mode: "edit" })}
-          >
-            <Plus className="h-4 w-4" />
-            {t("clients.addClient")}
-          </Button>
+          !isUser && (
+            <Button
+              className="gap-2"
+              onClick={() =>
+                setModalState({ clientId: "create", mode: "edit" })
+              }
+            >
+              <Plus className="h-4 w-4" />
+              {t("clients.addClient")}
+            </Button>
+          )
         }
       />
 
@@ -95,7 +100,6 @@ export function ClientsPage() {
         emptyMessage={isLoading ? t("common.loading") : t("clients.noClients")}
       />
 
-      {/* Unified Modal Handler */}
       <ClientModals
         modalState={modalState}
         setModalState={setModalState}

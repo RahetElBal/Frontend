@@ -10,6 +10,7 @@ export const clientFormSchema = z.object({
   lastName: requiredString("Nom"),
   email: optionalEmailField(),
   phone: optionalString(),
+  salonId: z.string().uuid().optional(),
 });
 
 export type ClientFormData = z.infer<typeof clientFormSchema>;

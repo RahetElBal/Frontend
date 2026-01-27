@@ -6,6 +6,7 @@ import type { Client } from "@/types/entities";
 import { toast } from "@/lib/toast";
 import { usePost } from "@/hooks/usePost";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useUser } from "@/hooks/useUser";
 import {
   Dialog,
   DialogContent,
@@ -46,14 +47,13 @@ export function ClientModals({
 }: ClientModalsProps) {
   const { t } = useTranslation();
   const { formatCurrency } = useLanguage();
+  const { user } = useUser();
 
-  // Derive selected client from modalState
   const selectedClient = useMemo(() => {
     if (!modalState || modalState.clientId === "create") return null;
     return clients.find((c) => c.id === modalState.clientId) || null;
   }, [modalState, clients]);
 
-  // Mutations - defined inside the modal component
   const { mutate: createClientMutate, isPending: isCreating } = usePost<
     Client,
     ClientFormData
@@ -100,7 +100,6 @@ export function ClientModals({
     },
   });
 
-  // Derive all state from modalState
   const derived = useMemo(() => {
     if (!modalState) return null;
 
@@ -115,7 +114,6 @@ export function ClientModals({
     };
   }, [modalState, isCreating, isUpdating, isDeleting]);
 
-  // Reset form when entering edit/create mode
   useEffect(() => {
     if (!modalState) return;
 
@@ -137,7 +135,6 @@ export function ClientModals({
         phone: selectedClient.phone || "",
       });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [modalState?.clientId, modalState?.mode, selectedClient?.id]);
 
   if (!derived) return null;
@@ -146,7 +143,12 @@ export function ClientModals({
 
   const handleSubmit = (data: ClientFormData) => {
     if (derived.isCreateMode) {
-      createClientMutate(data);
+      const salonId = user?.salon?.id;
+      if (!salonId) {
+        toast.error("No salon assigned to user");
+        return;
+      }
+      createClientMutate({ ...data, salonId });
     } else {
       updateClientMutate(data);
     }
@@ -156,7 +158,6 @@ export function ClientModals({
     deleteClientMutate();
   };
 
-  // DELETE MODE
   if (derived.mode === "delete") {
     return (
       <AlertDialog open={!!modalState} onOpenChange={handleClose}>
@@ -188,7 +189,6 @@ export function ClientModals({
     );
   }
 
-  // VIEW MODE
   if (derived.mode === "view") {
     return (
       <Dialog open={!!modalState} onOpenChange={handleClose}>
@@ -304,7 +304,6 @@ export function ClientModals({
     );
   }
 
-  // EDIT/CREATE MODE
   if (derived.mode === "edit") {
     return (
       <Dialog open={!!modalState} onOpenChange={handleClose}>
