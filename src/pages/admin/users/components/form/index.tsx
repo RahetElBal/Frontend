@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { Building2, UserCog, UserPlus, Phone } from "lucide-react";
 import type { UseFormReturn } from "react-hook-form";
+import { Controller } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -123,42 +124,47 @@ export function UserForm({
         {/* Salon Selection - Only for Superadmin creating Admin */}
         {isSuperadmin && currentRole === "admin" && isCreateMode && (
           <div className="space-y-2">
-            <Label htmlFor="salon">{t("fields.salon")} *</Label>
+            <Label htmlFor="salon">{t("fields.salon")}</Label>
             {salons.length === 0 ? (
               <div className="p-4 rounded-lg border border-amber-200 bg-amber-50 text-amber-800">
                 <p className="font-medium">Aucun salon disponible</p>
                 <p className="text-sm mt-1">
-                  Créez d'abord un salon pour pouvoir l'assigner à cet
+                  Vous pouvez créer un salon plus tard et l'assigner à cet
                   administrateur.
                 </p>
               </div>
             ) : (
               <>
-                <Select
-                  value={form.watch("salonId")}
-                  onValueChange={(value) => form.setValue("salonId", value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner un salon" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {salons.map((salon) => (
-                      <SelectItem key={salon.id} value={salon.id}>
-                        <div className="flex items-center gap-2">
-                          <Building2 className="h-4 w-4 text-muted-foreground" />
-                          {salon.name}
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {form.formState.errors.salonId && (
-                  <p className="text-sm text-destructive">
-                    {form.formState.errors.salonId.message}
-                  </p>
-                )}
+                <Controller
+                  name="salonId"
+                  control={form.control}
+                  render={({ field }) => (
+                    <Select
+                      value={field.value}
+                      onValueChange={(value) => {
+                        field.onChange(value);
+                        // Trigger validation when value changes
+                        form.trigger("salonId");
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionner un salon (optionnel)" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {salons.map((salon) => (
+                          <SelectItem key={salon.id} value={salon.id}>
+                            <div className="flex items-center gap-2">
+                              <Building2 className="h-4 w-4 text-muted-foreground" />
+                              {salon.name}
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
                 <p className="text-xs text-muted-foreground">
-                  Le salon que cet administrateur gérera
+                  Le salon que cet administrateur gérera (optionnel)
                 </p>
               </>
             )}
@@ -188,8 +194,8 @@ export function UserForm({
               <div>
                 <p className="font-medium">Gestion du salon</p>
                 <p className="text-sm mt-1">
-                  Cet administrateur pourra gérer le salon sélectionné
-                  ci-dessus.
+                  Vous pourrez assigner un salon à cet administrateur plus tard
+                  si nécessaire.
                 </p>
               </div>
             </div>
@@ -201,13 +207,7 @@ export function UserForm({
         <Button type="button" variant="outline" onClick={onCancel}>
           {t("common.cancel")}
         </Button>
-        <Button
-          type="submit"
-          disabled={
-            isSubmitting ||
-            (isSuperadmin && currentRole === "admin" && salons.length === 0)
-          }
-        >
+        <Button type="submit" disabled={isSubmitting}>
           {isSubmitting ? t("common.loading") : t("common.save")}
         </Button>
       </DialogFooter>

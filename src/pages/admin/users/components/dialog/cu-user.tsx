@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Mail,
   Shield,
@@ -7,7 +8,6 @@ import {
   Crown,
   ToggleLeft,
   ToggleRight,
-  Edit,
   Building2,
   UserCog,
 } from "lucide-react";
@@ -32,14 +32,14 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { usePost } from "@/hooks/usePost";
-import { useForm } from "@/hooks/useForm";
+import { useForm } from "react-hook-form";
 import { toast } from "@/lib/toast";
 import { UserRole } from "@/types/entities";
 import type { User, Salon } from "@/types/entities";
 import { getDisplayName, getInitials } from "@/common/utils";
 import { useUser } from "@/hooks/useUser";
 import { UserForm } from "../form";
-import { userFormSchema, type UserFormData } from "../form/validation";
+import { createUserFormSchema, type UserFormData } from "../form/validation";
 
 type UserDialogMode = "view" | "edit" | "create" | "delete";
 
@@ -87,7 +87,7 @@ export function UserDialog({
   const canDelete = currentUserIsSuperadmin && !isDeletingSelf;
 
   const form = useForm<UserFormData>({
-    schema: userFormSchema,
+    resolver: zodResolver(createUserFormSchema(t)),
     defaultValues: {
       name: "",
       email: "",
@@ -98,31 +98,53 @@ export function UserDialog({
     },
   });
 
-  // Reset form when dialog state changes
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      form.clearErrors();
+      return;
+    }
 
     if (mode === "create") {
       const role = initialRole || (currentUserIsSuperadmin ? "admin" : "user");
-      form.reset({
-        name: "",
-        email: "",
-        phone: "",
-        role,
-        salonId: "",
-        managedById: "",
-      });
+      setTimeout(() => {
+        form.reset(
+          {
+            name: "",
+            email: "",
+            phone: "",
+            role,
+            salonId: "",
+            managedById: "",
+          },
+          {
+            keepErrors: false,
+            keepDirty: false,
+            keepTouched: false,
+            keepIsSubmitted: false,
+          },
+        );
+      }, 0);
     } else if (user && mode === "edit") {
       const formRole =
         user.role === "superadmin" ? "admin" : (user.role as "user" | "admin");
-      form.reset({
-        name: displayName,
-        email: user.email,
-        phone: user.phone || "",
-        role: formRole,
-        salonId: "",
-        managedById: user.managedById || "",
-      });
+      setTimeout(() => {
+        form.reset(
+          {
+            name: displayName,
+            email: user.email,
+            phone: user.phone || "",
+            role: formRole,
+            salonId: user.salon?.id || "",
+            managedById: user.managedById || "",
+          },
+          {
+            keepErrors: false,
+            keepDirty: false,
+            keepTouched: false,
+            keepIsSubmitted: false,
+          },
+        );
+      }, 0);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, mode, user?.id, initialRole, currentUserIsSuperadmin]);
@@ -157,21 +179,21 @@ export function UserDialog({
     },
   });
 
-  const { mutate: deleteUser, isPending: isDeleting } = usePost<void, void>(
-    "users",
-    {
-      id: user?.id,
-      method: "DELETE",
-      onSuccess: () => {
-        toast.success(t("common.delete") + " - " + t("common.success"));
-        onOpenChange(false);
-        onSuccess();
-      },
-      onError: (error) => {
-        toast.error(error.message || t("common.error"));
-      },
+  const { mutate: deleteUser, isPending: isDeleting } = usePost<
+    void,
+    { userId: string }
+  >("users", {
+    id: (variables) => variables.userId,
+    method: "DELETE",
+    onSuccess: () => {
+      toast.success(t("common.delete") + " - " + t("common.success"));
+      onOpenChange(false);
+      onSuccess();
     },
-  );
+    onError: (error) => {
+      toast.error(error.message || t("common.error"));
+    },
+  });
 
   const handleSubmit = (data: UserFormData) => {
     const role = isCreateMode
@@ -190,12 +212,12 @@ export function UserDialog({
     // Handle salon assignment
     if (isCreateMode) {
       if (currentUserIsSuperadmin) {
-        // Superadmin: must select a salon for the new admin
+        // Superadmin creating admin: salonId is required (validated by schema)
         if (data.salonId && data.salonId.trim() !== "") {
           cleanedData.salonId = data.salonId;
         }
       } else {
-        // Admin: auto-assign to their own salon
+        // Admin creating user: auto-assign to their own salon
         const adminSalon = salons.find((s) => s.ownerId === currentUser?.id);
         if (adminSalon) {
           cleanedData.salonId = adminSalon.id;
@@ -204,7 +226,7 @@ export function UserDialog({
         cleanedData.managedById = currentUser?.id;
       }
     } else {
-      // Edit mode: keep existing assignments
+      // Edit mode: handle optional fields
       if (data.salonId && data.salonId.trim() !== "") {
         cleanedData.salonId = data.salonId;
       }
@@ -221,7 +243,6 @@ export function UserDialog({
   };
 
   const handleDelete = () => {
-    // Validate permissions before deleting
     if (!canDelete) {
       if (isDeletingSelf) {
         toast.error("Vous ne pouvez pas supprimer votre propre compte");
@@ -233,26 +254,16 @@ export function UserDialog({
       onOpenChange(false);
       return;
     }
-
-    // Ensure we have a user id
     if (!user?.id) {
       toast.error("Erreur: ID utilisateur manquant");
       onOpenChange(false);
       return;
     }
 
-    deleteUser();
-  };
-
-  const handleEdit = () => {
-    onOpenChange(false);
-    setTimeout(() => {
-      onOpenChange(true);
-    }, 100);
+    deleteUser({ userId: user.id });
   };
 
   if (isDeleteMode) {
-    // Don't show delete dialog if user doesn't have permission
     if (!canDelete) {
       return (
         <AlertDialog open={open} onOpenChange={onOpenChange}>
@@ -439,10 +450,6 @@ export function UserDialog({
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               Fermer
             </Button>
-            <Button onClick={handleEdit}>
-              <Edit className="h-4 w-4 me-2" />
-              {t("common.edit")}
-            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -473,7 +480,9 @@ export function UserDialog({
           <UserForm
             form={form}
             isCreateMode={isCreateMode}
-            isSubmitting={form.isSubmitting || isCreating || isUpdating}
+            isSubmitting={
+              form.formState.isSubmitting || isCreating || isUpdating
+            }
             salons={salons}
             admins={admins}
             isSuperadmin={currentUserIsSuperadmin}

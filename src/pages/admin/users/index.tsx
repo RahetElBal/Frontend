@@ -7,26 +7,24 @@ import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/table/data-table";
 import { useTable } from "@/hooks/useTable";
 import { useGet } from "@/hooks/useGet";
-import { usePost } from "@/hooks/usePost";
-import { toast } from "@/lib/toast";
 import type { User, Salon } from "@/types/entities";
 import { StatsGrid } from "./components/stats-grid";
 import { useUser } from "@/hooks/useUser";
 import type { PaginatedResponse } from "@/types";
-import { useColumns } from "./list/columns";
+import { useUsersColumns } from "./list/columns";
 import { UserDialog } from "./components/dialog/cu-user";
 
 type UserModalState = {
   userId: string | "create";
   mode: "view" | "edit" | "delete";
   initialRole?: "user" | "admin";
+  user?: User;
 } | null;
 
 export function AdminUsersPage() {
   const { t } = useTranslation();
 
   const [modalState, setModalState] = useState<UserModalState>(null);
-  const [toggleUserId, setToggleUserId] = useState<string>("");
 
   const { isSuperadmin, user: currentUser } = useUser();
 
@@ -62,24 +60,11 @@ export function AdminUsersPage() {
 
   const getSelectedUser = (): User | null => {
     if (!modalState || modalState.userId === "create") return null;
+    if (modalState.user) return modalState.user;
     return users.find((u) => u.id === modalState.userId) || null;
   };
 
   const selectedUser = getSelectedUser();
-
-  const { mutate: toggleStatus } = usePost<User, void>("users", {
-    id: toggleUserId ? `${toggleUserId}/toggle-status` : "",
-    method: "PATCH",
-    onSuccess: () => {
-      toast.success(t("common.success"));
-      setToggleUserId("");
-      refetch();
-    },
-    onError: (error) => {
-      toast.error(error.message || t("common.error"));
-      setToggleUserId("");
-    },
-  });
 
   const table = useTable<User>({
     data: users,
@@ -88,20 +73,15 @@ export function AdminUsersPage() {
 
   // Handlers
   const handleView = (user: User) => {
-    setModalState({ userId: user.id, mode: "view" });
+    setModalState({ userId: user.id, mode: "view", user });
   };
 
   const handleEdit = (user: User) => {
-    setModalState({ userId: user.id, mode: "edit" });
+    setModalState({ userId: user.id, mode: "edit", user });
   };
 
   const handleDelete = (user: User) => {
-    setModalState({ userId: user.id, mode: "delete" });
-  };
-
-  const handleToggleStatus = (user: User) => {
-    setToggleUserId(user.id);
-    toggleStatus();
+    setModalState({ userId: user.id, mode: "delete", user });
   };
 
   const handleCreateAdmin = () => {
@@ -124,15 +104,13 @@ export function AdminUsersPage() {
     refetch();
   };
 
-  // Generate columns with handlers
-  const columns = useColumns({
-    t,
-    currentUserIsSuperadmin: isSuperadmin,
-    currentUserId: currentUser?.id || "",
-    handleView,
-    handleEdit,
-    handleDelete,
-    handleToggleStatus,
+  // Generate columns with handlers using the hook
+  const columns = useUsersColumns({
+    currentUser: currentUser as User | null,
+    isSuperadmin,
+    onView: handleView,
+    onEdit: handleEdit,
+    onDelete: handleDelete,
   });
 
   return (

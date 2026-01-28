@@ -1,7 +1,7 @@
+import { useTranslation } from "react-i18next";
 import {
-  MoreHorizontal,
   Eye,
-  Edit,
+  Pencil,
   Trash2,
   Shield,
   Crown,
@@ -12,37 +12,28 @@ import {
 import { Badge } from "@/components/badge";
 import { Button } from "@/components/ui/button";
 import type { Column } from "@/components/table/data-table";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { UserRole } from "@/types/entities";
 import type { User } from "@/types/entities";
 import { getDisplayName, getInitials } from "@/common/utils";
-import type { TFunction } from "i18next";
 
-interface UserColumnsParams {
-  t: TFunction;
-  currentUserIsSuperadmin: boolean;
-  currentUserId: string;
-  handleView: (user: User) => void;
-  handleEdit: (user: User) => void;
-  handleDelete: (user: User) => void;
-  handleToggleStatus: (user: User) => void;
+interface UseUsersColumnsProps {
+  currentUser: User | null;
+  isSuperadmin: boolean;
+  onView: (user: User) => void;
+  onEdit: (user: User) => void;
+  onDelete: (user: User) => void;
 }
 
-export const useColumns = ({
-  t,
-  currentUserIsSuperadmin,
-  currentUserId,
-  handleView,
-  handleEdit,
-  handleDelete,
-}: UserColumnsParams): Column<User>[] => {
-  const baseColumns: Column<User>[] = [
+export function useUsersColumns({
+  currentUser,
+  isSuperadmin,
+  onView,
+  onEdit,
+  onDelete,
+}: UseUsersColumnsProps): Column<User>[] {
+  const { t } = useTranslation();
+
+  const columns: Column<User>[] = [
     {
       key: "name",
       header: t("fields.name"),
@@ -87,9 +78,9 @@ export const useColumns = ({
   ];
 
   // Conditional columns based on user role
-  if (currentUserIsSuperadmin) {
+  if (isSuperadmin) {
     // Superadmin sees managedBy column
-    baseColumns.push({
+    columns.push({
       key: "managedBy",
       header: "Géré par",
       render: (user) => (
@@ -109,7 +100,7 @@ export const useColumns = ({
     });
 
     // Superadmin sees salon column
-    baseColumns.push({
+    columns.push({
       key: "salon",
       header: t("fields.salon"),
       render: (user) => {
@@ -140,7 +131,7 @@ export const useColumns = ({
     });
 
     // Superadmin sees role column
-    baseColumns.push({
+    columns.push({
       key: "role",
       header: t("fields.role"),
       render: (user) => {
@@ -165,7 +156,7 @@ export const useColumns = ({
     });
   } else {
     // Admin sees phone column instead
-    baseColumns.push({
+    columns.push({
       key: "phone",
       header: t("fields.phone"),
       render: (user) => (
@@ -184,7 +175,7 @@ export const useColumns = ({
   }
 
   // Common columns for both
-  baseColumns.push(
+  columns.push(
     {
       key: "status",
       header: t("fields.status"),
@@ -203,48 +194,57 @@ export const useColumns = ({
     {
       key: "actions",
       header: "",
-      className: "w-12",
-      render: (user) => {
+      className: "w-32",
+      render: (user: User) => {
         const userIsSuperadmin = user.isSuperadmin === true;
-        const isSelf = user.id === currentUserId;
-        const canEdit = currentUserIsSuperadmin || !userIsSuperadmin;
-        const canDelete = currentUserIsSuperadmin && !isSelf;
+        const isSelf = user.id === currentUser?.id;
+
+        // Permission checks
+        const canEdit = isSuperadmin || !userIsSuperadmin;
+        const canDelete = isSuperadmin && !isSelf && !userIsSuperadmin;
 
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <MoreHorizontal className="h-4 w-4" />
+          <div className="flex items-center justify-end gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                onView(user);
+              }}
+            >
+              <Eye className="h-4 w-4" />
+            </Button>
+            {canEdit && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit(user);
+                }}
+              >
+                <Pencil className="h-4 w-4" />
               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => handleView(user)}>
-                <Eye className="h-4 w-4 me-2" />
-                {t("common.view")}
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => handleEdit(user)}
-                disabled={!canEdit}
-                className={!canEdit ? "opacity-50" : ""}
+            )}
+            {canDelete && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete(user);
+                }}
+                className="text-destructive hover:text-destructive"
               >
-                <Edit className="h-4 w-4 me-2" />
-                {t("common.edit")}
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => handleDelete(user)}
-                disabled={!canDelete}
-                className={`text-destructive ${!canDelete ? "opacity-50" : ""}`}
-              >
-                <Trash2 className="h-4 w-4 me-2" />
-                {t("common.delete")}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
         );
       },
     },
   );
 
-  return baseColumns;
-};
+  return columns;
+}
