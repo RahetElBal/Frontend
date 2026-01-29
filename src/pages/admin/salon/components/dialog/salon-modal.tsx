@@ -1,6 +1,8 @@
+// src/pages/admin/salons/components/dialog/salon-modal.tsx
 import { useMemo, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import type { UseFormReturn } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
 import type { Salon, User } from "@/types/entities";
 import { toast } from "@/lib/toast";
 import { usePost } from "@/hooks/usePost";
@@ -31,13 +33,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { canModifySalon, type SalonModalState } from "../../utils";
-
-interface SalonFormData {
-  name: string;
-  address?: string;
-  phone?: string;
-  email?: string;
-}
+import { createSalonFormSchema, type SalonFormData } from "../../validation";
+import React from "react";
 
 interface SalonModalProps {
   modalState: SalonModalState;
@@ -45,9 +42,6 @@ interface SalonModalProps {
   salons: Salon[];
   user: User | null;
   admins: User[];
-  form: UseFormReturn<SalonFormData>;
-  selectedOwnerId: string;
-  setSelectedOwnerId: (id: string) => void;
   onSuccess: () => void;
 }
 
@@ -57,9 +51,6 @@ export function SalonModals({
   salons,
   user,
   admins,
-  form,
-  selectedOwnerId,
-  setSelectedOwnerId,
   onSuccess,
 }: SalonModalProps) {
   const { t } = useTranslation();
@@ -69,6 +60,20 @@ export function SalonModals({
     if (!modalState || modalState.salonId === "create") return null;
     return salons.find((s) => s.id === modalState.salonId) || null;
   }, [modalState, salons]);
+
+  // Form setup with zodResolver
+  const form = useForm<SalonFormData>({
+    resolver: zodResolver(createSalonFormSchema(t)),
+    defaultValues: {
+      name: "",
+      address: "",
+      phone: "",
+      email: "",
+    },
+  });
+
+  // Owner selection state (for superadmin only)
+  const [selectedOwnerId, setSelectedOwnerId] = React.useState<string>("");
 
   // Mutations - defined inside the modal component
   const { mutate: createSalonMutate, isPending: isCreating } = usePost<
@@ -103,9 +108,9 @@ export function SalonModals({
 
   const { mutate: deleteSalonMutate, isPending: isDeleting } = usePost<
     void,
-    void
+    { salonId: string }
   >("salons", {
-    id: selectedSalon?.id,
+    id: (variables) => variables.salonId,
     method: "DELETE",
     onSuccess: () => {
       toast.success(t("common.delete") + " - " + t("common.success"));
@@ -138,24 +143,47 @@ export function SalonModals({
     };
   }, [modalState, selectedSalon, user, isCreating, isUpdating, isDeleting]);
 
-  // Reset form when entering edit/create mode - FIXED: only depend on primitive values
+  // Reset form when modal opens or changes
   useEffect(() => {
-    if (!modalState) return;
+    if (!modalState) {
+      form.clearErrors();
+      return;
+    }
 
     const isCreateMode = modalState.salonId === "create";
     const mode = modalState.mode;
 
     if (isCreateMode && mode === "edit") {
-      form.reset({ name: "", address: "", phone: "", email: "" });
-      setSelectedOwnerId("");
+      setTimeout(() => {
+        form.reset(
+          { name: "", address: "", phone: "", email: "" },
+          {
+            keepErrors: false,
+            keepDirty: false,
+            keepTouched: false,
+            keepIsSubmitted: false,
+          },
+        );
+        setSelectedOwnerId("");
+      }, 0);
     } else if (selectedSalon && mode === "edit") {
-      form.reset({
-        name: selectedSalon.name,
-        address: selectedSalon.address || "",
-        phone: selectedSalon.phone || "",
-        email: selectedSalon.email || "",
-      });
-      setSelectedOwnerId(selectedSalon.ownerId || "");
+      setTimeout(() => {
+        form.reset(
+          {
+            name: selectedSalon.name,
+            address: selectedSalon.address || "",
+            phone: selectedSalon.phone || "",
+            email: selectedSalon.email || "",
+          },
+          {
+            keepErrors: false,
+            keepDirty: false,
+            keepTouched: false,
+            keepIsSubmitted: false,
+          },
+        );
+        setSelectedOwnerId(selectedSalon.ownerId || "");
+      }, 0);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [modalState?.salonId, modalState?.mode, selectedSalon?.id]);
@@ -184,7 +212,11 @@ export function SalonModals({
   };
 
   const handleDelete = () => {
-    deleteSalonMutate();
+    if (!selectedSalon?.id) {
+      toast.error("Erreur: ID salon manquant");
+      return;
+    }
+    deleteSalonMutate({ salonId: selectedSalon.id });
   };
 
   // DELETE MODE

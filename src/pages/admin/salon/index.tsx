@@ -1,12 +1,11 @@
+// src/pages/admin/salons/index.tsx
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { z } from "zod";
 import { Plus } from "lucide-react";
 
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { useGet } from "@/hooks/useGet";
-import { useForm } from "@/hooks/useForm";
 import { useUser } from "@/hooks/useUser";
 import { useTable } from "@/hooks/useTable";
 import { toast } from "@/lib/toast";
@@ -18,26 +17,11 @@ import type {
   Client,
   Sale,
 } from "@/types/entities";
-import {
-  requiredString,
-  optionalString,
-  optionalEmailField,
-} from "@/common/validator/zodI18n";
 import { canModifySalon, type SalonModalState } from "./utils";
 import { StatsGrid } from "./components/stats-grid";
 import { useSalonsColumns } from "./list/columns";
 import { DataTable } from "@/components/table";
 import { SalonModals } from "./components/dialog/salon-modal";
-
-// Zod schema for salon form
-const baseSalonFormSchema = z.object({
-  name: requiredString("Nom"),
-  address: optionalString(),
-  phone: optionalString(),
-  email: optionalEmailField(),
-});
-
-type BaseSalonFormData = z.infer<typeof baseSalonFormSchema>;
 
 export default function SalonsPage() {
   const { t } = useTranslation();
@@ -45,7 +29,6 @@ export default function SalonsPage() {
 
   // State
   const [modalState, setModalState] = useState<SalonModalState>(null);
-  const [selectedOwnerId, setSelectedOwnerId] = useState<string>("");
 
   // Fetch data - only superadmin needs to fetch all salons
   const {
@@ -85,17 +68,6 @@ export default function SalonsPage() {
     data: salons,
     initialPerPage: 10,
     searchKeys: ["name", "address", "phone", "email"],
-  });
-
-  // Form setup
-  const form = useForm<BaseSalonFormData>({
-    schema: baseSalonFormSchema,
-    defaultValues: {
-      name: "",
-      address: "",
-      phone: "",
-      email: "",
-    },
   });
 
   // Get current admin's salon - use from useUser hook
@@ -212,9 +184,6 @@ export default function SalonsPage() {
           salons={salons}
           user={user as User | null}
           admins={admins}
-          form={form}
-          selectedOwnerId={selectedOwnerId}
-          setSelectedOwnerId={setSelectedOwnerId}
           onSuccess={refetch}
         />
       )}
