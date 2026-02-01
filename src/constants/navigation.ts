@@ -326,8 +326,16 @@ export function getNavigationForRole(
   // Regular salon panel
   switch (role) {
     case "superadmin":
-    case "admin":
       return ADMIN_SALON_NAVIGATION;
+    case "admin":
+      return ADMIN_SALON_NAVIGATION.map((section) =>
+        section.id === "management"
+          ? {
+              ...section,
+              items: section.items.filter((item) => item.id !== "services"),
+            }
+          : section,
+      );
     case "user":
     default:
       return USER_NAVIGATION;

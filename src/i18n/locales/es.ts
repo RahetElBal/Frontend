@@ -421,6 +421,39 @@ export const es = {
     addService: "Añadir servicio",
     services: "servicios",
     selectCategory: "Selecciona o escribe una categoría",
+    serviceDetails: "Detalles del servicio",
+    deleteService: "Eliminar servicio",
+    deleteServiceConfirm:
+      "¿Seguro que deseas eliminar {{name}}? Esta acción no se puede deshacer.",
+    categories: {
+      nails: "Uñas",
+      makeup: "Maquillaje",
+      hair: "Cabello",
+      skincare: "Cuidado de la piel",
+    },
+    defaults: {
+      nails: {
+        manicure: "Manicura",
+        pedicure: "Pedicura",
+        nailArt: "Arte de uñas",
+      },
+      makeup: {
+        casual: "Maquillaje natural",
+        wedding: "Maquillaje de boda",
+      },
+      hair: {
+        casual: "Peinado casual",
+        wedding: "Peinado de boda",
+        haircut: "Corte de pelo",
+        hairDye: "Tinte",
+        hairstyle: "Peinado",
+      },
+      skincare: {
+        laser: "Láser",
+        hydrafacial: "Hydrafacial",
+        microneedling: "Microneedling",
+      },
+    },
   },
 
   products: {

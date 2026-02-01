@@ -40,6 +40,7 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { timeSlots, statusColors } from "../../utils";
 import { getValidationErrorMessage } from "@/pages/user/utils";
 import { FormErrorMessage } from "@/pages/user/components/form-error-message";
+import { translateServiceName } from "@/common/service-translations";
 
 interface AppointmentModalsProps {
   modalState: AppointmentModalState;
@@ -415,7 +416,7 @@ export function AppointmentModals({
                           <div className="flex items-center justify-between w-full gap-4">
                             <div className="flex items-center gap-2">
                               <Scissors className="h-4 w-4 text-accent-pink" />
-                              {service.name}
+                              {translateServiceName(t, service)}
                             </div>
                             <span className="text-muted-foreground text-sm">
                               {service.duration}min -{" "}
@@ -434,7 +435,9 @@ export function AppointmentModals({
                 <Card className="p-3 bg-muted/50">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-medium">{selectedService.name}</p>
+                      <p className="font-medium">
+                        {translateServiceName(t, selectedService)}
+                      </p>
                       <p className="text-sm text-muted-foreground">
                         {t("fields.duration")}: {selectedService.duration} min
                       </p>

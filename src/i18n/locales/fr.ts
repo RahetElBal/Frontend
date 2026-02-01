@@ -459,6 +459,35 @@ export const fr = {
     deleteService: "Supprimer le service",
     deleteServiceConfirm:
       "Êtes-vous sûr de vouloir supprimer {{name}} ? Cette action est irréversible.",
+    categories: {
+      nails: "Ongles",
+      makeup: "Maquillage",
+      hair: "Cheveux",
+      skincare: "Soins de la peau",
+    },
+    defaults: {
+      nails: {
+        manicure: "Manucure",
+        pedicure: "Pédicure",
+        nailArt: "Nail art",
+      },
+      makeup: {
+        casual: "Maquillage naturel",
+        wedding: "Maquillage de mariage",
+      },
+      hair: {
+        casual: "Coiffure simple",
+        wedding: "Coiffure de mariage",
+        haircut: "Coupe",
+        hairDye: "Coloration",
+        hairstyle: "Coiffure",
+      },
+      skincare: {
+        laser: "Laser",
+        hydrafacial: "Hydrafacial",
+        microneedling: "Microneedling",
+      },
+    },
   },
 
   products: {

@@ -39,6 +39,10 @@ import { usePost } from "@/hooks/usePost";
 import { usePostAction } from "@/hooks/usePostAction";
 import { ServiceCard } from "./components/service-card";
 import { getServiceCategoryName } from "./utils";
+import {
+  translateServiceCategory,
+  translateServiceName,
+} from "@/common/service-translations";
 
 // Category type from API
 interface ServiceCategory {
@@ -101,6 +105,7 @@ export function ServicesPage() {
     return {
       id: name,
       name,
+      label: translateServiceCategory(t, name),
       color: "#ec4899", // Default color, could be dynamic
     };
   });
@@ -306,7 +311,8 @@ export function ServicesPage() {
               className="h-2 w-2 rounded-full"
               style={{ backgroundColor: cat.color }}
             />
-            {cat.name} ({services.filter((s) => getServiceCategoryName(s) === cat.id).length}
+            {cat.label} (
+            {services.filter((s) => getServiceCategoryName(s) === cat.id).length}
             )
           </Button>
         ))}
@@ -326,7 +332,9 @@ export function ServicesPage() {
                   className="h-3 w-3 rounded-full"
                   style={{ backgroundColor: category.color }}
                 />
-                <h2 className="text-lg font-semibold">{category.name}</h2>
+                <h2 className="text-lg font-semibold">
+                  {translateServiceCategory(t, category.name)}
+                </h2>
                 <span className="text-sm text-muted-foreground">
                   ({category.services.length} {t("services.services")})
                 </span>
@@ -395,7 +403,9 @@ export function ServicesPage() {
               {isCreateMode ? t("services.addService") : t("common.edit")}
             </DialogTitle>
             {isEditMode && selectedService && (
-              <DialogDescription>{selectedService.name}</DialogDescription>
+              <DialogDescription>
+                {translateServiceName(t, selectedService)}
+              </DialogDescription>
             )}
           </DialogHeader>
           <form onSubmit={form.handleSubmit(handleSubmit)}>
@@ -430,7 +440,9 @@ export function ServicesPage() {
                 />
                 <datalist id="service-category-options">
                   {categories.map((cat) => (
-                    <option key={cat.id} value={cat.name} />
+                    <option key={cat.id} value={cat.name}>
+                      {cat.label}
+                    </option>
                   ))}
                 </datalist>
                 {form.hasError("category") && (
@@ -509,7 +521,7 @@ export function ServicesPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-xl font-semibold">
-                    {selectedService.name}
+                    {translateServiceName(t, selectedService)}
                   </h3>
                   {selectedService.description && (
                     <p className="text-muted-foreground mt-1">

@@ -766,6 +766,35 @@ export const en = {
     deleteService: "Delete Service",
     deleteServiceConfirm:
       "Are you sure you want to delete {{name}}? This action cannot be undone.",
+    categories: {
+      nails: "Nails",
+      makeup: "Makeup",
+      hair: "Hair",
+      skincare: "Skincare",
+    },
+    defaults: {
+      nails: {
+        manicure: "Manicure",
+        pedicure: "Pedicure",
+        nailArt: "Nail Art",
+      },
+      makeup: {
+        casual: "Casual Makeup",
+        wedding: "Wedding Makeup",
+      },
+      hair: {
+        casual: "Casual Hairstyle",
+        wedding: "Wedding Hairstyle",
+        haircut: "Haircut",
+        hairDye: "Hair Dye",
+        hairstyle: "Hairstyle",
+      },
+      skincare: {
+        laser: "Laser",
+        hydrafacial: "Hydrafacial",
+        microneedling: "Microneedling",
+      },
+    },
   },
 
   // ============================================

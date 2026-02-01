@@ -22,6 +22,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/hooks/useLanguage";
 import type { Service } from "@/types/entities";
+import { translateServiceName } from "@/common/service-translations";
 
 interface ServiceCardProps {
   service: Service;
@@ -43,6 +44,8 @@ export function ServiceCard({
   const { t } = useTranslation();
   const { formatCurrency } = useLanguage();
 
+  const displayName = translateServiceName(t, service);
+
   return (
     <Card
       className={cn(
@@ -54,7 +57,7 @@ export function ServiceCard({
         <div className="mb-3 overflow-hidden rounded-lg">
           <img
             src={service.image}
-            alt={service.name}
+            alt={displayName}
             className="h-32 w-full object-cover"
             loading="lazy"
           />
@@ -63,7 +66,7 @@ export function ServiceCard({
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <div className="flex items-center gap-2">
-            <h3 className="font-semibold">{service.name}</h3>
+            <h3 className="font-semibold">{displayName}</h3>
             {!service.isActive && (
               <Badge variant="warning">{t("common.inactive")}</Badge>
             )}

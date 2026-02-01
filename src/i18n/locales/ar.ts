@@ -420,6 +420,39 @@ export const ar = {
     addService: "إضافة خدمة",
     services: "خدمات",
     selectCategory: "اختر أو اكتب فئة",
+    serviceDetails: "تفاصيل الخدمة",
+    deleteService: "حذف الخدمة",
+    deleteServiceConfirm:
+      "هل أنت متأكد من حذف {{name}}؟ لا يمكن التراجع عن هذا الإجراء.",
+    categories: {
+      nails: "الأظافر",
+      makeup: "المكياج",
+      hair: "الشعر",
+      skincare: "العناية بالبشرة",
+    },
+    defaults: {
+      nails: {
+        manicure: "مانيكير",
+        pedicure: "باديكير",
+        nailArt: "فن الأظافر",
+      },
+      makeup: {
+        casual: "مكياج يومي",
+        wedding: "مكياج زفاف",
+      },
+      hair: {
+        casual: "تسريحة يومية",
+        wedding: "تسريحة زفاف",
+        haircut: "قص شعر",
+        hairDye: "صبغة شعر",
+        hairstyle: "تصفيف شعر",
+      },
+      skincare: {
+        laser: "ليزر",
+        hydrafacial: "هايدرافيشل",
+        microneedling: "الميكرونيدلينغ",
+      },
+    },
   },
 
   products: {
