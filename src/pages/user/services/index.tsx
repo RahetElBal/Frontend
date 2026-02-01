@@ -37,12 +37,12 @@ import {
 } from "@/components/ui/select";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useForm } from "@/hooks/useForm";
+import { useUser } from "@/hooks/useUser";
 import { toast } from "@/lib/toast";
 import type { Service } from "@/types/entities";
 import { useGet } from "@/hooks/useGet";
 import { usePost } from "@/hooks/usePost";
 import { usePostAction } from "@/hooks/usePostAction";
-import { useSalon } from "@/contexts/SalonProvider";
 import { ServiceCard } from "./components/service-card";
 
 // Category type from API
@@ -72,13 +72,13 @@ type ServiceFormData = z.infer<typeof serviceFormSchema>;
 export function ServicesPage() {
   const { t } = useTranslation();
   const { formatCurrency } = useLanguage();
-  const { currentSalon } = useSalon();
+  const { user } = useUser();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   // Unified modal state
   const [modalState, setModalState] = useState<ServiceModalState>(null);
 
-  const salonId = currentSalon?.id;
+  const salonId = user?.salon?.id;
 
   // Fetch services and categories from API (scoped to current salon)
   const {

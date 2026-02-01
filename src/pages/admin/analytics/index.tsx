@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useLanguage } from "@/hooks/useLanguage";
-import { useSalon } from "@/contexts/SalonProvider";
+import { useUser } from "@/hooks/useUser";
 import type {
   Sale,
   Appointment,
@@ -65,10 +65,10 @@ interface RevenueAnalyticsResponse {
 export function AnalyticsPage() {
   const { t } = useTranslation();
   const { formatCurrency } = useLanguage();
-  const { currentSalon } = useSalon();
+  const { user } = useUser();
   const [revenuePeriod, setRevenuePeriod] = useState<string>("weekly");
 
-  const salonId = currentSalon?.id;
+  const salonId = user?.salon?.id;
 
   // Fetch dashboard stats from dedicated analytics endpoint
   const { data: dashboardStats, isLoading: loadingDashboard } =

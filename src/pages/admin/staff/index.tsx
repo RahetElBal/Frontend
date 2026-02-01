@@ -15,7 +15,7 @@ import type {
 } from "@/types/entities";
 import { useGet } from "@/hooks/useGet";
 import { usePost } from "@/hooks/usePost";
-import { useSalon } from "@/contexts/SalonProvider";
+import { useUser } from "@/hooks/useUser";
 import { SchedulesView } from "./components/schedules-view";
 import { TimeOffView } from "./components/timeoff-view";
 import { ScheduleModal } from "./components/dialog/schedule-modal";
@@ -33,7 +33,7 @@ import type { CreateScheduleDto, CreateTimeOffDto } from "./types";
 
 export function StaffPage() {
   const { t } = useTranslation();
-  const { currentSalon } = useSalon();
+  const { user } = useUser();
   const [activeTab, setActiveTab] = useState<"schedules" | "timeoff">(
     "schedules",
   );
@@ -44,7 +44,7 @@ export function StaffPage() {
     null,
   );
 
-  const salonId = currentSalon?.id;
+  const salonId = user?.salon?.id;
 
   // Fetch staff members (users) for the current salon
   const { data: staffMembers = [] } = useGet<UserType[]>("users", {

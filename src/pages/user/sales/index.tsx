@@ -34,13 +34,13 @@ import {
 } from "@/components/ui/select";
 import { useTable } from "@/hooks/useTable";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useUser } from "@/hooks/useUser";
 import { toast } from "@/lib/toast";
 import type { Sale, Client, Service, Product } from "@/types/entities";
 import { PaymentMethod } from "@/types/entities";
 import { useGet } from "@/hooks/useGet";
 import { usePost } from "@/hooks/usePost";
 import { usePostAction } from "@/hooks/usePostAction";
-import { useSalon } from "@/contexts/SalonProvider";
 import { getSalesColumns } from "./list/columns";
 import type { SaleItem, CreateSaleDto } from "./types";
 
@@ -60,7 +60,7 @@ interface ProductsResponse {
 export function SalesPage() {
   const { t } = useTranslation();
   const { formatCurrency } = useLanguage();
-  const { currentSalon } = useSalon();
+  const { user } = useUser();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedClientId, setSelectedClientId] = useState<string>("");
   const [saleItems, setSaleItems] = useState<SaleItem[]>([]);
@@ -70,7 +70,7 @@ export function SalesPage() {
   const [discount, setDiscount] = useState(0);
   const [searchItem, setSearchItem] = useState("");
 
-  const salonId = currentSalon?.id;
+  const salonId = user?.salon?.id;
 
   // Fetch data from API (scoped to current salon)
   const { data: salesResponse, isLoading } = useGet<SalesResponse>("sales", {

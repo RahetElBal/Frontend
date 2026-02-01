@@ -5,6 +5,7 @@ import {
   useState,
   useEffect,
   useCallback,
+  useRef,
   type ReactNode,
 } from "react";
 import type { Salon } from "@/types/entities";
@@ -55,7 +56,7 @@ export function SalonProvider({ children }: SalonProviderProps) {
   const [salons, setSalons] = useState<Salon[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
-  const [retryCount, setRetryCount] = useState(0);
+  const retryCountRef = useRef(0);
 
   // Fetch user's salons
   const refreshSalons = useCallback(async () => {
@@ -88,7 +89,7 @@ export function SalonProvider({ children }: SalonProviderProps) {
       setHasError(false);
       const data = await get<Salon[]>("salons/my-salons");
       setSalons(data);
-      setRetryCount(0); // Reset retry count on success
+      retryCountRef.current = 0; // Reset retry count on success
 
       // Try to restore previously selected salon
       const storedSalonId = localStorage.getItem(SALON_STORAGE_KEY);
@@ -110,14 +111,14 @@ export function SalonProvider({ children }: SalonProviderProps) {
       console.error("Failed to fetch salons:", error);
       setSalons([]);
       setHasError(true);
-      // Don't retry infinitely
-      if (retryCount < MAX_RETRIES) {
-        setRetryCount((prev) => prev + 1);
+      // Track retries without triggering re-renders
+      if (retryCountRef.current < MAX_RETRIES) {
+        retryCountRef.current += 1;
       }
     } finally {
       setIsLoading(false);
     }
-  }, [retryCount]);
+  }, []);
 
   // Initialize on mount and when auth changes
   useEffect(() => {

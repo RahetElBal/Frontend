@@ -40,13 +40,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { useTable } from "@/hooks/useTable";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useForm } from "@/hooks/useForm";
+import { useUser } from "@/hooks/useUser";
 import { toast } from "@/lib/toast";
 import type { Product } from "@/types/entities";
 import { cn } from "@/lib/utils";
 import { usePost } from "@/hooks/usePost";
 import { usePostAction } from "@/hooks/usePostAction";
 import { useGet } from "@/hooks/useGet";
-import { useSalon } from "@/contexts/SalonProvider";
 import { getProductColumns } from "./list/columns";
 
 // Modal state type
@@ -81,12 +81,12 @@ interface ProductsResponse {
 export function ProductsPage() {
   const { t } = useTranslation();
   const { formatCurrency } = useLanguage();
-  const { currentSalon } = useSalon();
+  const { user } = useUser();
 
   // Unified modal state
   const [modalState, setModalState] = useState<ProductModalState>(null);
 
-  const salonId = currentSalon?.id;
+  const salonId = user?.salon?.id;
 
   // Fetch products from API (scoped to current salon)
   const {

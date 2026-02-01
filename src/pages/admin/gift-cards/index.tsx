@@ -28,7 +28,7 @@ import { useGet } from "@/hooks/useGet";
 import { usePost } from "@/hooks/usePost";
 import { usePostAction } from "@/hooks/usePostAction";
 import { useLanguage } from "@/hooks/useLanguage";
-import { useSalon } from "@/contexts/SalonProvider";
+import { useUser } from "@/hooks/useUser";
 import { toast } from "@/lib/toast";
 
 interface CreateGiftCardDto {
@@ -52,7 +52,7 @@ const statusColors: Record<
 export function GiftCardsPage() {
   const { t } = useTranslation();
   const { formatCurrency } = useLanguage();
-  const { currentSalon } = useSalon();
+  const { user } = useUser();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isLookupModalOpen, setIsLookupModalOpen] = useState(false);
   const [lookupCode, setLookupCode] = useState("");
@@ -65,7 +65,7 @@ export function GiftCardsPage() {
     message: "",
   });
 
-  const salonId = currentSalon?.id;
+  const salonId = user?.salon?.id;
 
   // Fetch gift cards from API
   const { data: giftCards = [], isLoading } = useGet<GiftCard[]>(

@@ -28,12 +28,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useUser } from "@/hooks/useUser";
 import { toast } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import type { Promotion, PromotionType, PromotionStatus } from "@/types/entities";
 import { usePost } from "@/hooks/usePost";
 import { useGet } from "@/hooks/useGet";
-import { useSalon } from "@/contexts/SalonProvider";
 import { PromotionModal } from "./components/dialog/promotion-modal";
 import type { CreatePromotionDto } from "./types";
 
@@ -47,13 +47,13 @@ import type { CreatePromotionDto } from "./types";
 export function PromotionsPage() {
   const { t } = useTranslation();
   const { formatCurrency } = useLanguage();
-  const { currentSalon } = useSalon();
+  const { user } = useUser();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<PromotionStatus | "all">(
     "all",
   );
 
-  const salonId = currentSalon?.id;
+  const salonId = user?.salon?.id;
 
   // Fetch promotions - NOTE: This endpoint needs to be implemented in backend
   const { data: promotions = [], isLoading } = useGet<Promotion[]>(
