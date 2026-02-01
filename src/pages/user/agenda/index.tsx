@@ -339,6 +339,9 @@ export function AgendaPage() {
       },
     });
 
+  const { mutateAsync: createWalkInClient, isPending: isCreatingWalkIn } =
+    usePost<Client, Partial<Client>>("clients");
+
   const handleSelectSlot = useCallback(
     ({ start }: { start: Date; end: Date }) => {
       const date = start.toISOString().split("T")[0];
@@ -360,7 +363,7 @@ export function AgendaPage() {
     setModalState({ appointmentId: event.id, mode: "view" });
   }, []);
 
-  const handleSubmit = (data: AppointmentFormData) => {
+  const handleSubmit = async (data: AppointmentFormData) => {
     if (!salonId) {
       toast.error("No salon assigned to user");
       return;
@@ -369,7 +372,35 @@ export function AgendaPage() {
     if (modalState?.mode === "edit" && !isCreateMode) {
       updateAppointment(data);
     } else {
-      createAppointment({ ...data, salonId });
+      if (data.walkInEnabled) {
+        try {
+          const firstName = data.walkInFirstName?.trim() || "";
+          const lastName = data.walkInLastName?.trim() || "";
+          if (!firstName || !lastName) {
+            toast.error(t("agenda.walkInNameRequired"));
+            return;
+          }
+          const email = `walkin+${salonId}+${Date.now()}@salon.local`;
+          const phone = data.walkInPhone?.trim() || "0000000000";
+          const walkInClient = await createWalkInClient({
+            salonId,
+            firstName,
+            lastName,
+            email,
+            phone,
+            notes: t("agenda.walkInNote"),
+          });
+          createAppointment({
+            ...data,
+            salonId,
+            clientId: walkInClient.id,
+          });
+        } catch (error) {
+          toast.error(t("common.error"));
+        }
+      } else {
+        createAppointment({ ...data, salonId });
+      }
     }
   };
 
@@ -459,7 +490,8 @@ export function AgendaPage() {
           isDeleting ||
           isCancelling ||
           isCompleting ||
-          isCreatingSale
+          isCreatingSale ||
+          isCreatingWalkIn
         }
       />
     </div>

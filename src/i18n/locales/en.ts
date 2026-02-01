@@ -44,6 +44,7 @@ export interface TranslationKeys {
     view: string;
     archive: string;
     success: string;
+    total: string;
   };
   auth: {
     login: {
@@ -360,6 +361,7 @@ export const en = {
     unknown: "Unknown",
     unauthorized: "You are not authorized to perform this action",
     success: "Success",
+    total: "Total",
   },
 
   // ============================================
@@ -768,6 +770,15 @@ export const en = {
     notesPlaceholder: "Additional notes...",
     recordPayment: "Record Payment",
     paymentRecorded: "Payment recorded",
+    walkIn: "Walk-in client",
+    walkInDescription: "Create a one-time client for this appointment",
+    walkInFirstName: "Walk-in first name",
+    walkInLastName: "Walk-in last name",
+    walkInPhone: "Walk-in phone (optional)",
+    walkInFirstNameRequired: "Walk-in first name is required",
+    walkInLastNameRequired: "Walk-in last name is required",
+    walkInNameRequired: "Walk-in name is required",
+    walkInNote: "Walk-in client",
     statuses: {
       confirmed: "Confirmed",
       pending: "Pending",

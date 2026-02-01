@@ -11,7 +11,7 @@ export function AuthLayout({ children, className }: AuthLayoutProps) {
   return (
     <div
       className={cn(
-        "min-h-screen w-full bg-linear-to-br from-white via-accent-pink/5 to-accent-blue/5",
+        "min-h-screen w-full bg-linear-to-br from-pink-50 to-blue-50",
         "flex items-center justify-center p-4 relative overflow-hidden",
         className,
       )}

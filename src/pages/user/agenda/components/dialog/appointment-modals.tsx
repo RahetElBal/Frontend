@@ -1,7 +1,7 @@
 import { useMemo, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import type { UseFormReturn } from "react-hook-form";
-import { User, Scissors, Clock, Calendar, Edit, Trash2, XCircle, CheckCircle, DollarSign } from "lucide-react";
+import { User, Scissors, Clock, Calendar, Edit, Trash2, XCircle, CheckCircle, DollarSign, UserPlus } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -24,6 +24,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -128,6 +129,8 @@ export function AppointmentModals({
     [safeServices, selectedServiceId],
   );
 
+  const walkInEnabled = watch("walkInEnabled");
+
   // Reset form when modal state changes
   useEffect(() => {
     if (!modalState) return;
@@ -139,6 +142,10 @@ export function AppointmentModals({
         date: modalState?.prefillDate || new Date().toISOString().split("T")[0],
         startTime: modalState?.prefillTime || "09:00",
         notes: "",
+        walkInEnabled: false,
+        walkInFirstName: "",
+        walkInLastName: "",
+        walkInPhone: "",
       });
     } else if (selectedAppointment && derived?.isEditMode) {
       reset({
@@ -147,6 +154,10 @@ export function AppointmentModals({
         date: selectedAppointment.date,
         startTime: selectedAppointment.startTime,
         notes: selectedAppointment.notes || "",
+        walkInEnabled: false,
+        walkInFirstName: "",
+        walkInLastName: "",
+        walkInPhone: "",
       });
     }
   }, [
@@ -404,9 +415,32 @@ export function AppointmentModals({
             <div className="space-y-4 py-4">
               <div className="space-y-2">
                 <Label>{t("fields.client")} *</Label>
+                <div className="flex items-center justify-between rounded-lg border p-3">
+                  <div className="flex items-center gap-2">
+                    <UserPlus className="h-4 w-4 text-muted-foreground" />
+                    <div>
+                      <p className="text-sm font-medium">
+                        {t("agenda.walkIn")}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {t("agenda.walkInDescription")}
+                      </p>
+                    </div>
+                  </div>
+                  <Switch
+                    checked={!!walkInEnabled}
+                    onCheckedChange={(value) => {
+                      form.setValue("walkInEnabled", value);
+                      if (value) {
+                        form.setValue("clientId", "");
+                      }
+                    }}
+                  />
+                </div>
                 <Select
                   value={form.watch("clientId")}
                   onValueChange={(value) => form.setValue("clientId", value)}
+                  disabled={!!walkInEnabled}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder={t("agenda.selectClient")} />
@@ -435,6 +469,29 @@ export function AppointmentModals({
                 </Select>
                 <FormErrorMessage message={getErrorMessage("clientId")} />
               </div>
+
+              {walkInEnabled && (
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label>{t("agenda.walkInFirstName")}</Label>
+                    <Input {...form.register("walkInFirstName")} />
+                    <FormErrorMessage
+                      message={getErrorMessage("walkInFirstName")}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>{t("agenda.walkInLastName")}</Label>
+                    <Input {...form.register("walkInLastName")} />
+                    <FormErrorMessage
+                      message={getErrorMessage("walkInLastName")}
+                    />
+                  </div>
+                  <div className="space-y-2 sm:col-span-2">
+                    <Label>{t("agenda.walkInPhone")}</Label>
+                    <Input {...form.register("walkInPhone")} />
+                  </div>
+                </div>
+              )}
 
               <div className="space-y-2">
                 <Label>{t("fields.service")} *</Label>

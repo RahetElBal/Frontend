@@ -59,6 +59,7 @@ export const fr = {
     unknown: "Inconnu",
     unauthorized: "Vous n'êtes pas autorisé à effectuer cette action",
     success: "Succès",
+    total: "Total",
   },
 
   // ============================================
@@ -462,6 +463,15 @@ export const fr = {
     notesPlaceholder: "Notes supplémentaires...",
     recordPayment: "Enregistrer le paiement",
     paymentRecorded: "Paiement enregistré",
+    walkIn: "Client de passage",
+    walkInDescription: "Créer un client ponctuel pour ce rendez-vous",
+    walkInFirstName: "Prénom (passage)",
+    walkInLastName: "Nom (passage)",
+    walkInPhone: "Téléphone (optionnel)",
+    walkInFirstNameRequired: "Le prénom est requis",
+    walkInLastNameRequired: "Le nom est requis",
+    walkInNameRequired: "Le nom complet est requis",
+    walkInNote: "Client de passage",
     statuses: {
       confirmed: "Confirmé",
       pending: "En attente",

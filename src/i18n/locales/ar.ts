@@ -53,6 +53,7 @@ export const ar = {
     unknown: "غير معروف",
     unauthorized: "غير مصرح لك بتنفيذ هذا الإجراء",
     success: "نجاح",
+    total: "الإجمالي",
   },
 
   // ============================================
@@ -428,6 +429,15 @@ export const ar = {
     appointments: "مواعيد",
     recordPayment: "تسجيل الدفع",
     paymentRecorded: "تم تسجيل الدفع",
+    walkIn: "عميل عابر",
+    walkInDescription: "إنشاء عميل مؤقت لهذا الموعد",
+    walkInFirstName: "الاسم الأول (عابر)",
+    walkInLastName: "اسم العائلة (عابر)",
+    walkInPhone: "الهاتف (اختياري)",
+    walkInFirstNameRequired: "الاسم الأول مطلوب",
+    walkInLastNameRequired: "اسم العائلة مطلوب",
+    walkInNameRequired: "الاسم الكامل مطلوب",
+    walkInNote: "عميل عابر",
     statuses: {
       confirmed: "مؤكد",
       pending: "قيد الانتظار",

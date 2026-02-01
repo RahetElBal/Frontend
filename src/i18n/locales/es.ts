@@ -53,6 +53,7 @@ export const es = {
     unknown: "Desconocido",
     unauthorized: "No está autorizado para realizar esta acción",
     success: "Éxito",
+    total: "Total",
   },
 
   // ============================================
@@ -429,6 +430,15 @@ export const es = {
     appointments: "citas",
     recordPayment: "Registrar pago",
     paymentRecorded: "Pago registrado",
+    walkIn: "Cliente de paso",
+    walkInDescription: "Crear un cliente temporal para esta cita",
+    walkInFirstName: "Nombre (paso)",
+    walkInLastName: "Apellido (paso)",
+    walkInPhone: "Teléfono (opcional)",
+    walkInFirstNameRequired: "El nombre es obligatorio",
+    walkInLastNameRequired: "El apellido es obligatorio",
+    walkInNameRequired: "El nombre completo es obligatorio",
+    walkInNote: "Cliente de paso",
     statuses: {
       confirmed: "Confirmada",
       pending: "Pendiente",

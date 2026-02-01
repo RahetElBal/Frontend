@@ -3,12 +3,8 @@ import { useTranslation } from "react-i18next";
 import {
   Building2,
   Clock,
-  Bell,
-  Receipt,
-  Heart,
   Save,
   Calendar,
-  Percent,
 } from "lucide-react";
 
 import { PageHeader } from "@/components/page-header";
@@ -22,18 +18,10 @@ import { useUser } from "@/hooks/useUser";
 import { GeneralSettings } from "./components/general-settings";
 import { WorkingHoursSettings } from "./components/working-hours-settings";
 import { BookingSettings } from "./components/booking-settings";
-import { NotificationSettings } from "./components/notification-settings";
-import { TaxSettings } from "./components/tax-settings";
-import { LoyaltySettings } from "./components/loyalty-settings";
-import { ReceiptSettings } from "./components/receipt-settings";
 
 type SettingsTab =
   | "general"
   | "booking"
-  | "notifications"
-  | "tax"
-  | "loyalty"
-  | "receipt"
   | "hours";
 
 export function SalonSettingsPage() {
@@ -161,14 +149,6 @@ export function SalonSettingsPage() {
     { id: "general", label: t("salonSettings.tabs.general"), icon: Building2 },
     { id: "hours", label: t("salonSettings.tabs.hours"), icon: Clock },
     { id: "booking", label: t("salonSettings.tabs.booking"), icon: Calendar },
-    {
-      id: "notifications",
-      label: t("salonSettings.tabs.notifications"),
-      icon: Bell,
-    },
-    { id: "tax", label: t("salonSettings.tabs.tax"), icon: Percent },
-    { id: "loyalty", label: t("salonSettings.tabs.loyalty"), icon: Heart },
-    { id: "receipt", label: t("salonSettings.tabs.receipt"), icon: Receipt },
   ];
 
   return (
@@ -233,27 +213,6 @@ export function SalonSettingsPage() {
               )}
               {activeTab === "booking" && (
                 <BookingSettings
-                  formData={formData}
-                  updateField={updateField}
-                />
-              )}
-              {activeTab === "notifications" && (
-                <NotificationSettings
-                  formData={formData}
-                  updateField={updateField}
-                />
-              )}
-              {activeTab === "tax" && (
-                <TaxSettings formData={formData} updateField={updateField} />
-              )}
-              {activeTab === "loyalty" && (
-                <LoyaltySettings
-                  formData={formData}
-                  updateField={updateField}
-                />
-              )}
-              {activeTab === "receipt" && (
-                <ReceiptSettings
                   formData={formData}
                   updateField={updateField}
                 />

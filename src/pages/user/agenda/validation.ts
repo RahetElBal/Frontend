@@ -1,13 +1,42 @@
 import { z } from "zod";
 import { requiredString, optionalString } from "@/common/validator/zodI18n";
 
-export const appointmentFormSchema = z.object({
-  clientId: requiredString("Client"),
-  serviceId: requiredString("Service"),
-  date: requiredString("Date"),
-  startTime: requiredString("Heure"),
-  notes: optionalString(),
-  salonId: z.string().uuid().optional(),
-});
+export const appointmentFormSchema = z
+  .object({
+    clientId: optionalString(),
+    serviceId: requiredString("Service"),
+    date: requiredString("Date"),
+    startTime: requiredString("Heure"),
+    notes: optionalString(),
+    salonId: z.string().uuid().optional(),
+    walkInEnabled: z.boolean().optional(),
+    walkInFirstName: optionalString(),
+    walkInLastName: optionalString(),
+    walkInPhone: optionalString(),
+  })
+  .superRefine((values, ctx) => {
+    if (values.walkInEnabled) {
+      if (!values.walkInFirstName?.trim()) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "agenda.walkInFirstNameRequired",
+          path: ["walkInFirstName"],
+        });
+      }
+      if (!values.walkInLastName?.trim()) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "agenda.walkInLastNameRequired",
+          path: ["walkInLastName"],
+        });
+      }
+    } else if (!values.clientId?.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "agenda.selectClient",
+        path: ["clientId"],
+      });
+    }
+  });
 
 export type AppointmentFormData = z.infer<typeof appointmentFormSchema>;
