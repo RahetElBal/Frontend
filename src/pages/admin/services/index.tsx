@@ -24,10 +24,10 @@ import {
 } from "@/components/ui/table";
 import { toast } from "@/lib/toast";
 import { useGet } from "@/hooks/useGet";
-import { usePost } from "@/hooks/usePost";
 import { useUser } from "@/hooks/useUser";
 import { ROUTES } from "@/constants/navigation";
 import { patch } from "@/lib/http";
+import { translateServiceCategory } from "@/common/service-translations";
 import type { Category, PaginatedResponse, Salon, Service } from "@/types";
 
 export default function AdminServicesPage() {
@@ -42,6 +42,7 @@ export default function AdminServicesPage() {
     {},
   );
   const [isSavingAll, setIsSavingAll] = useState(false);
+  const [isUpdatingId, setIsUpdatingId] = useState<string | null>(null);
 
   const getCategoryName = (category?: string | Category): string => {
     if (!category) return "";
@@ -92,26 +93,11 @@ export default function AdminServicesPage() {
     setInitialPrices(nextPrices);
   }, [services]);
 
-  const { mutate: updateServicePrice, isPending: isUpdating } = usePost<
-    Service,
-    { id: string; price: number }
-  >("services", {
-    id: (vars) => vars.id,
-    method: "PATCH",
-    onSuccess: () => {
-      toast.success(t("admin.services.priceUpdated"));
-      refetch();
-    },
-    onError: (error) => {
-      toast.error(error.message || t("common.error"));
-    },
-  });
-
   const handlePriceChange = (serviceId: string, value: string) => {
     setPriceEdits((prev) => ({ ...prev, [serviceId]: value }));
   };
 
-  const handleSave = (serviceId: string) => {
+  const handleSave = async (serviceId: string) => {
     const rawValue = priceEdits[serviceId];
     const price = Number(rawValue);
     if (!Number.isFinite(price) || price < 0) {
@@ -119,7 +105,20 @@ export default function AdminServicesPage() {
       return;
     }
 
-    updateServicePrice({ id: serviceId, price });
+    setIsUpdatingId(serviceId);
+    try {
+      await patch<Service, { price: number }>(`services/${serviceId}`, {
+        price,
+      });
+      toast.success(t("admin.services.priceUpdated"));
+      refetch();
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : t("common.error");
+      toast.error(message);
+    } finally {
+      setIsUpdatingId(null);
+    }
   };
 
   const dirtyServiceIds = useMemo(() => {
@@ -262,7 +261,7 @@ export default function AdminServicesPage() {
                 </SelectItem>
                 {categories.map((category) => (
                   <SelectItem key={category} value={category}>
-                    {category}
+                    {translateServiceCategory(t, category).toUpperCase()}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -328,7 +327,7 @@ export default function AdminServicesPage() {
                     {groupByCategory && (
                       <TableRow className="bg-muted/50">
                         <TableCell colSpan={5} className="font-semibold">
-                          {category}
+                          {translateServiceCategory(t, category).toUpperCase()}
                         </TableCell>
                       </TableRow>
                     )}
@@ -337,7 +336,12 @@ export default function AdminServicesPage() {
                         <TableCell className="font-medium">
                           {service.name}
                         </TableCell>
-                        <TableCell>{getCategoryName(service.category)}</TableCell>
+                        <TableCell>
+                          {translateServiceCategory(
+                            t,
+                            getCategoryName(service.category),
+                          ).toUpperCase()}
+                        </TableCell>
                         <TableCell>{service.duration} min</TableCell>
                         <TableCell>
                           <Input
@@ -355,7 +359,7 @@ export default function AdminServicesPage() {
                           <Button
                             size="sm"
                             onClick={() => handleSave(service.id)}
-                            disabled={isUpdating}
+                            disabled={isUpdatingId === service.id}
                           >
                             {t("admin.services.updatePrice")}
                           </Button>
