@@ -38,6 +38,7 @@ import type { AppointmentFormData } from "../../validation";
 import type { AppointmentModalState } from "../../types";
 import { useLanguage } from "@/hooks/useLanguage";
 import { timeSlots, statusColors } from "../../utils";
+import { parseValidationMsg } from "@/common/validator/zodI18n";
 
 interface AppointmentModalsProps {
   modalState: AppointmentModalState;
@@ -68,6 +69,20 @@ export function AppointmentModals({
 }: AppointmentModalsProps) {
   const { t } = useTranslation();
   const { formatCurrency } = useLanguage();
+  const getErrorMessage = (name: keyof AppointmentFormData): string | undefined => {
+    const maybeGetError = (form as UseFormReturn<AppointmentFormData> & {
+      getError?: (field: keyof AppointmentFormData) => string | undefined;
+    }).getError;
+    const message =
+      maybeGetError?.(name) ??
+      (form.formState.errors[name]?.message as string | undefined);
+    if (!message) return undefined;
+    if (message.startsWith("validation.") || message.startsWith("errors.")) {
+      const { key, params } = parseValidationMsg(message);
+      return t(key, params);
+    }
+    return message;
+  };
 
   // Derive selected appointment
   const selectedAppointment = useMemo(() => {
@@ -379,9 +394,9 @@ export function AppointmentModals({
                     )}
                   </SelectContent>
                 </Select>
-                {form.formState.errors.clientId && (
+                {getErrorMessage("clientId") && (
                   <p className="text-sm text-destructive">
-                    {form.formState.errors.clientId.message}
+                    {getErrorMessage("clientId")}
                   </p>
                 )}
               </div>
@@ -418,9 +433,9 @@ export function AppointmentModals({
                     )}
                   </SelectContent>
                 </Select>
-                {form.formState.errors.serviceId && (
+                {getErrorMessage("serviceId") && (
                   <p className="text-sm text-destructive">
-                    {form.formState.errors.serviceId.message}
+                    {getErrorMessage("serviceId")}
                   </p>
                 )}
               </div>
@@ -445,9 +460,9 @@ export function AppointmentModals({
                 <div className="space-y-2">
                   <Label htmlFor="date">{t("fields.date")} *</Label>
                   <Input id="date" type="date" {...form.register("date")} />
-                  {form.formState.errors.date && (
+                  {getErrorMessage("date") && (
                     <p className="text-sm text-destructive">
-                      {form.formState.errors.date.message}
+                      {getErrorMessage("date")}
                     </p>
                   )}
                 </div>

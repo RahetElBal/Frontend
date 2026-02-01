@@ -15,6 +15,7 @@ import {
 import { DialogFooter } from "@/components/ui/dialog";
 import type { User, Salon } from "@/types/entities";
 import type { UserFormData } from "./validation";
+import { parseValidationMsg } from "@/common/validator/zodI18n";
 
 interface UserFormProps {
   form: UseFormReturn<UserFormData>;
@@ -38,6 +39,14 @@ export function UserForm({
 }: UserFormProps) {
   const { t } = useTranslation();
   const currentRole = form.watch("role");
+  const getErrorMessage = (message?: string): string | undefined => {
+    if (!message) return undefined;
+    if (message.startsWith("validation.") || message.startsWith("errors.")) {
+      const { key, params } = parseValidationMsg(message);
+      return t(key, params);
+    }
+    return message;
+  };
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)}>
@@ -52,7 +61,7 @@ export function UserForm({
           />
           {form.formState.errors.name && (
             <p className="text-sm text-destructive">
-              {form.formState.errors.name.message}
+              {getErrorMessage(form.formState.errors.name.message as string)}
             </p>
           )}
         </div>
@@ -68,7 +77,7 @@ export function UserForm({
           />
           {form.formState.errors.email && (
             <p className="text-sm text-destructive">
-              {form.formState.errors.email.message}
+              {getErrorMessage(form.formState.errors.email.message as string)}
             </p>
           )}
         </div>
@@ -88,7 +97,7 @@ export function UserForm({
           </div>
           {form.formState.errors.phone && (
             <p className="text-sm text-destructive">
-              {form.formState.errors.phone.message}
+              {getErrorMessage(form.formState.errors.phone.message as string)}
             </p>
           )}
         </div>

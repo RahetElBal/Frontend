@@ -28,13 +28,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useForm } from "@/hooks/useForm";
 import { useUser } from "@/hooks/useUser";
@@ -420,22 +413,21 @@ export function ServicesPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>{t("fields.category")} *</Label>
-                <Select
+                <Label htmlFor="category">{t("fields.category")} *</Label>
+                <Input
+                  id="category"
+                  list="service-category-options"
                   value={form.watch("category")}
-                  onValueChange={(value) => form.setValue("category", value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder={t("services.selectCategory")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.map((cat) => (
-                      <SelectItem key={cat.id} value={cat.id}>
-                        {cat.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  onChange={(event) =>
+                    form.setValue("category", event.target.value)
+                  }
+                  placeholder={t("services.selectCategory")}
+                />
+                <datalist id="service-category-options">
+                  {categories.map((cat) => (
+                    <option key={cat.id} value={cat.name} />
+                  ))}
+                </datalist>
                 {form.hasError("category") && (
                   <p className="text-sm text-destructive">
                     {form.getError("category")}

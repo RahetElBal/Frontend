@@ -759,6 +759,7 @@ export const en = {
     description: "{{count}} services available",
     addService: "Add Service",
     services: "services",
+    selectCategory: "Select or type a category",
     serviceDetails: "Service Details",
     deleteService: "Delete Service",
     deleteServiceConfirm:

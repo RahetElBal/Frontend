@@ -35,6 +35,7 @@ import {
 import { canModifySalon, type SalonModalState } from "../../utils";
 import { createSalonFormSchema, type SalonFormData } from "../../validation";
 import React from "react";
+import { parseValidationMsg } from "@/common/validator/zodI18n";
 
 interface SalonModalProps {
   modalState: SalonModalState;
@@ -54,6 +55,14 @@ export function SalonModals({
   onSuccess,
 }: SalonModalProps) {
   const { t } = useTranslation();
+  const getErrorMessage = (message?: string): string | undefined => {
+    if (!message) return undefined;
+    if (message.startsWith("validation.") || message.startsWith("errors.")) {
+      const { key, params } = parseValidationMsg(message);
+      return t(key, params);
+    }
+    return message;
+  };
 
   // Derive selected salon from modalState
   const selectedSalon = useMemo(() => {
@@ -333,7 +342,7 @@ export function SalonModals({
               <Input id="name" {...form.register("name")} />
               {form.formState.errors.name && (
                 <p className="text-sm text-destructive mt-1">
-                  {form.formState.errors.name.message}
+                  {getErrorMessage(form.formState.errors.name.message as string)}
                 </p>
               )}
             </div>
@@ -350,7 +359,7 @@ export function SalonModals({
               <Input id="email" type="email" {...form.register("email")} />
               {form.formState.errors.email && (
                 <p className="text-sm text-destructive mt-1">
-                  {form.formState.errors.email.message}
+                  {getErrorMessage(form.formState.errors.email.message as string)}
                 </p>
               )}
             </div>

@@ -30,6 +30,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/badge";
 import type { ClientModalState } from "@/pages/user/clients/types";
 import type { ClientFormData } from "@/pages/user/clients/validation";
+import { parseValidationMsg } from "@/common/validator/zodI18n";
 
 interface ClientModalsProps {
   modalState: ClientModalState;
@@ -49,6 +50,20 @@ export function ClientModals({
   const { t } = useTranslation();
   const { formatCurrency } = useLanguage();
   const { user } = useUser();
+  const getErrorMessage = (name: keyof ClientFormData): string | undefined => {
+    const maybeGetError = (form as UseFormReturn<ClientFormData> & {
+      getError?: (field: keyof ClientFormData) => string | undefined;
+    }).getError;
+    const message =
+      maybeGetError?.(name) ??
+      (form.formState.errors[name]?.message as string | undefined);
+    if (!message) return undefined;
+    if (message.startsWith("validation.") || message.startsWith("errors.")) {
+      const { key, params } = parseValidationMsg(message);
+      return t(key, params);
+    }
+    return message;
+  };
 
   const selectedClient = useMemo(() => {
     if (!modalState || modalState.clientId === "create") return null;
@@ -414,18 +429,18 @@ export function ClientModals({
               <div className="space-y-2">
                 <Label htmlFor="firstName">{t("fields.firstName")} *</Label>
                 <Input id="firstName" {...form.register("firstName")} />
-                {form.formState.errors.firstName && (
+                {getErrorMessage("firstName") && (
                   <p className="text-sm text-destructive">
-                    {form.formState.errors.firstName.message}
+                    {getErrorMessage("firstName")}
                   </p>
                 )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="lastName">{t("fields.lastName")} *</Label>
                 <Input id="lastName" {...form.register("lastName")} />
-                {form.formState.errors.lastName && (
+                {getErrorMessage("lastName") && (
                   <p className="text-sm text-destructive">
-                    {form.formState.errors.lastName.message}
+                    {getErrorMessage("lastName")}
                   </p>
                 )}
               </div>
@@ -433,9 +448,9 @@ export function ClientModals({
             <div className="space-y-2">
               <Label htmlFor="email">{t("fields.email")}</Label>
               <Input id="email" type="email" {...form.register("email")} />
-              {form.formState.errors.email && (
+              {getErrorMessage("email") && (
                 <p className="text-sm text-destructive">
-                  {form.formState.errors.email.message}
+                  {getErrorMessage("email")}
                 </p>
               )}
             </div>

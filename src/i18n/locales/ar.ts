@@ -417,6 +417,7 @@ export const ar = {
     description: "{{count}} خدمة متاحة",
     addService: "إضافة خدمة",
     services: "خدمات",
+    selectCategory: "اختر أو اكتب فئة",
   },
 
   products: {

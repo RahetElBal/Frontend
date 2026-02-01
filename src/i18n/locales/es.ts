@@ -418,6 +418,7 @@ export const es = {
     description: "{{count}} servicios disponibles",
     addService: "Añadir servicio",
     services: "servicios",
+    selectCategory: "Selecciona o escribe una categoría",
   },
 
   products: {
