@@ -1,5 +1,3 @@
-import type { PaymentMethod } from "@/types/entities";
-
 export interface SaleItem {
   id: string;
   name: string;
@@ -18,7 +16,5 @@ export interface CreateSaleDto {
     price: number;
   }[];
   total?: number;
-  paymentMethod: PaymentMethod;
-  discount?: number;
   notes?: string;
 }

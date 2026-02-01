@@ -31,18 +31,8 @@ import type {
   RevenueData,
   TopService,
 } from "@/types/entities";
+import type { PaginatedResponse } from "@/types";
 import { useGet } from "@/hooks/useGet";
-
-// Response types
-interface SalesResponse {
-  data: Sale[];
-  total: number;
-}
-
-interface ProductsResponse {
-  data: Product[];
-  total: number;
-}
 
 // Analytics API response types
 interface DashboardStatsResponse {
@@ -93,7 +83,9 @@ export function AnalyticsPage() {
   });
 
   // Fallback: Fetch raw data if analytics endpoints fail
-  const { data: salesResponse, isLoading: loadingSales } = useGet<SalesResponse>(
+  const { data: salesResponse, isLoading: loadingSales } = useGet<
+    PaginatedResponse<Sale>
+  >(
     "sales",
     {
       params: { salonId, perPage: 100 },
@@ -102,27 +94,36 @@ export function AnalyticsPage() {
   );
   const sales = salesResponse?.data || [];
 
-  const { data: appointments = [], isLoading: loadingAppointments } =
-    useGet<Appointment[]>("appointments", {
-      params: { salonId },
+  const { data: appointmentsResponse, isLoading: loadingAppointments } =
+    useGet<PaginatedResponse<Appointment>>("appointments", {
+      params: { salonId, perPage: 100 },
       enabled: !!salonId,
     });
+  const appointments = appointmentsResponse?.data || [];
   
-  const { data: clients = [], isLoading: loadingClients } =
-    useGet<Client[]>("clients", {
-      params: { salonId },
+  const { data: clientsResponse, isLoading: loadingClients } =
+    useGet<PaginatedResponse<Client>>("clients", {
+      params: { salonId, perPage: 100 },
       enabled: !!salonId,
     });
+  const clients = clientsResponse?.data || [];
   
-  const { data: services = [] } = useGet<Service[]>("services", {
-    params: { salonId },
-    enabled: !!salonId,
-  });
+  const { data: servicesResponse } = useGet<PaginatedResponse<Service>>(
+    "services",
+    {
+      params: { salonId, perPage: 100 },
+      enabled: !!salonId,
+    },
+  );
+  const services = servicesResponse?.data || [];
   
-  const { data: productsResponse } = useGet<ProductsResponse>("products", {
-    params: { salonId },
-    enabled: !!salonId,
-  });
+  const { data: productsResponse } = useGet<PaginatedResponse<Product>>(
+    "products",
+    {
+      params: { salonId, perPage: 100 },
+      enabled: !!salonId,
+    },
+  );
   const products = productsResponse?.data || [];
 
   const isLoading = loadingDashboard || loadingSales || loadingAppointments || loadingClients;

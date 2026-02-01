@@ -1,12 +1,4 @@
-import {
-  Receipt,
-  CreditCard,
-  Banknote,
-  MoreHorizontal,
-  Eye,
-  FileText,
-  CheckCircle,
-} from "lucide-react";
+import { Receipt, MoreHorizontal, Eye, FileText, CheckCircle } from "lucide-react";
 import type { TFunction } from "i18next";
 
 import { Button } from "@/components/ui/button";
@@ -18,7 +10,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import type { Sale, PaymentMethod, SaleStatus } from "@/types/entities";
+import type { Sale, SaleStatus } from "@/types/entities";
 
 const statusColors: Record<
   SaleStatus,
@@ -28,13 +20,6 @@ const statusColors: Record<
   pending: "warning",
   refunded: "error",
   cancelled: "error",
-};
-
-const paymentIcons: Record<PaymentMethod, typeof CreditCard> = {
-  card: CreditCard,
-  cash: Banknote,
-  bank_transfer: Receipt,
-  other: Receipt,
 };
 
 interface GetSalesColumnsProps {
@@ -104,34 +89,12 @@ export function getSalesColumns({
       ),
     },
     {
-      key: "paymentMethod",
-      header: t("fields.payment"),
-      render: (sale) => {
-        const Icon = paymentIcons[sale.paymentMethod];
-        return (
-          <div className="flex items-center gap-2">
-            <Icon className="h-4 w-4 text-muted-foreground" />
-            <span className="capitalize">
-              {t(
-                `sales.${sale.paymentMethod === "bank_transfer" ? "bankTransfer" : sale.paymentMethod}`,
-              )}
-            </span>
-          </div>
-        );
-      },
-    },
-    {
       key: "total",
       header: t("fields.total"),
       sortable: true,
       render: (sale) => (
         <div>
           <p className="font-semibold">{formatCurrency(sale.total)}</p>
-          {sale.discount > 0 && (
-            <p className="text-xs text-green-600">
-              -{formatCurrency(sale.discount)} {t("sales.discount")}
-            </p>
-          )}
         </div>
       ),
     },

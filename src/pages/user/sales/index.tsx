@@ -1,16 +1,6 @@
 import { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  Plus,
-  Receipt,
-  CreditCard,
-  Banknote,
-  Search,
-  User,
-  Package,
-  Scissors,
-  Trash2,
-} from "lucide-react";
+import { Plus, Receipt, Search, User, Package, Scissors, Trash2 } from "lucide-react";
 
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
@@ -38,7 +28,6 @@ import { useUser } from "@/hooks/useUser";
 import { toast } from "@/lib/toast";
 import type { Sale, Client, Service, Product } from "@/types/entities";
 import type { PaginatedResponse } from "@/types";
-import { PaymentMethod } from "@/types/entities";
 import { useGet } from "@/hooks/useGet";
 import { usePost } from "@/hooks/usePost";
 import { usePostAction } from "@/hooks/usePostAction";
@@ -60,10 +49,6 @@ export function SalesPage() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedClientId, setSelectedClientId] = useState<string>("");
   const [saleItems, setSaleItems] = useState<SaleItem[]>([]);
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(
-    "card" as PaymentMethod,
-  );
-  const [discount, setDiscount] = useState(0);
   const [searchItem, setSearchItem] = useState("");
 
   const salonId = user?.salon?.id;
@@ -136,7 +121,7 @@ export function SalesPage() {
     () => saleItems.reduce((sum, item) => sum + item.price * item.quantity, 0),
     [saleItems],
   );
-  const total = subtotal - discount;
+  const total = subtotal;
 
   const todayTotal = sales.reduce((sum, sale) => sum + sale.total, 0);
   const averageTicket = sales.length > 0 ? todayTotal / sales.length : 0;
@@ -166,8 +151,6 @@ export function SalesPage() {
     setIsAddModalOpen(false);
     setSelectedClientId("");
     setSaleItems([]);
-    setPaymentMethod("card" as PaymentMethod);
-    setDiscount(0);
     setSearchItem("");
   };
 
@@ -237,8 +220,6 @@ export function SalesPage() {
         price: item.price,
       })),
       total,
-      paymentMethod,
-      discount: discount > 0 ? discount : undefined,
     });
   };
 
@@ -471,56 +452,6 @@ export function SalesPage() {
                 </div>
               )}
 
-              {/* Payment & Discount */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>{t("sales.paymentMethod")}</Label>
-                  <Select
-                    value={paymentMethod}
-                    onValueChange={(value: string) =>
-                      setPaymentMethod(value as PaymentMethod)
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="card">
-                        <div className="flex items-center gap-2">
-                          <CreditCard className="h-4 w-4" />
-                          {t("sales.card")}
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="cash">
-                        <div className="flex items-center gap-2">
-                          <Banknote className="h-4 w-4" />
-                          {t("sales.cash")}
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="bank_transfer">
-                        <div className="flex items-center gap-2">
-                          <Receipt className="h-4 w-4" />
-                          {t("sales.bankTransfer")}
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="other">{t("sales.other")}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>{t("fields.discount")}</Label>
-                  <Input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={discount}
-                    onChange={(e) =>
-                      setDiscount(parseFloat(e.target.value) || 0)
-                    }
-                  />
-                </div>
-              </div>
-
               {/* Total Summary */}
               {saleItems.length > 0 && (
                 <Card className="p-4 bg-muted/50">
@@ -529,12 +460,6 @@ export function SalesPage() {
                       <span>{t("fields.subtotal")}</span>
                       <span>{formatCurrency(subtotal)}</span>
                     </div>
-                    {discount > 0 && (
-                      <div className="flex justify-between text-sm text-green-600">
-                        <span>{t("fields.discount")}</span>
-                        <span>-{formatCurrency(discount)}</span>
-                      </div>
-                    )}
                     <div className="flex justify-between text-lg font-bold pt-2 border-t">
                       <span>{t("fields.total")}</span>
                       <span className="text-accent-pink">

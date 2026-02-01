@@ -29,6 +29,7 @@ interface ServiceCardProps {
   onEdit: (service: Service) => void;
   onDelete: (service: Service) => void;
   onToggle: (service: Service) => void;
+  canManage?: boolean;
 }
 
 export function ServiceCard({
@@ -37,6 +38,7 @@ export function ServiceCard({
   onEdit,
   onDelete,
   onToggle,
+  canManage = false,
 }: ServiceCardProps) {
   const { t } = useTranslation();
   const { formatCurrency } = useLanguage();
@@ -82,31 +84,35 @@ export function ServiceCard({
               <Eye className="h-4 w-4 me-2" />
               {t("common.view")}
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onEdit(service)}>
-              <Edit className="h-4 w-4 me-2" />
-              {t("common.edit")}
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onToggle(service)}>
-              {service.isActive ? (
-                <>
-                  <ToggleLeft className="h-4 w-4 me-2" />
-                  {t("common.deactivate")}
-                </>
-              ) : (
-                <>
-                  <ToggleRight className="h-4 w-4 me-2" />
-                  {t("common.activate")}
-                </>
-              )}
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onClick={() => onDelete(service)}
-              className="text-destructive"
-            >
-              <Trash2 className="h-4 w-4 me-2" />
-              {t("common.delete")}
-            </DropdownMenuItem>
+            {canManage && (
+              <>
+                <DropdownMenuItem onClick={() => onEdit(service)}>
+                  <Edit className="h-4 w-4 me-2" />
+                  {t("common.edit")}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onToggle(service)}>
+                  {service.isActive ? (
+                    <>
+                      <ToggleLeft className="h-4 w-4 me-2" />
+                      {t("common.deactivate")}
+                    </>
+                  ) : (
+                    <>
+                      <ToggleRight className="h-4 w-4 me-2" />
+                      {t("common.activate")}
+                    </>
+                  )}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => onDelete(service)}
+                  className="text-destructive"
+                >
+                  <Trash2 className="h-4 w-4 me-2" />
+                  {t("common.delete")}
+                </DropdownMenuItem>
+              </>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

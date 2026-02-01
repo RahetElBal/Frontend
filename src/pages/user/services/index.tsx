@@ -66,13 +66,14 @@ type ServiceFormData = z.infer<typeof serviceFormSchema>;
 export function ServicesPage() {
   const { t } = useTranslation();
   const { formatCurrency } = useLanguage();
-  const { user } = useUser();
+  const { user, isSuperadmin } = useUser();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   // Unified modal state
   const [modalState, setModalState] = useState<ServiceModalState>(null);
 
   const salonId = user?.salon?.id;
+  const canManageServices = isSuperadmin;
 
   // Fetch services and categories from API (scoped to current salon)
   const {
@@ -238,14 +239,17 @@ export function ServicesPage() {
   };
 
   const handleEdit = (service: Service) => {
+    if (!canManageServices) return;
     setModalState({ serviceId: service.id, mode: "edit" });
   };
 
   const handleDelete = (service: Service) => {
+    if (!canManageServices) return;
     setModalState({ serviceId: service.id, mode: "delete" });
   };
 
   const handleToggle = (service: Service) => {
+    if (!canManageServices) return;
     toggleStatus(service.id);
   };
 
@@ -272,13 +276,17 @@ export function ServicesPage() {
         title={t("nav.services")}
         description={t("services.description", { count: services.length })}
         actions={
-          <Button
-            className="gap-2"
-            onClick={() => setModalState({ serviceId: "create", mode: "edit" })}
-          >
-            <Plus className="h-4 w-4" />
-            {t("services.addService")}
-          </Button>
+          canManageServices ? (
+            <Button
+              className="gap-2"
+              onClick={() =>
+                setModalState({ serviceId: "create", mode: "edit" })
+              }
+            >
+              <Plus className="h-4 w-4" />
+              {t("services.addService")}
+            </Button>
+          ) : null
         }
       />
 
@@ -337,6 +345,7 @@ export function ServicesPage() {
                     onEdit={handleEdit}
                     onDelete={handleDelete}
                     onToggle={handleToggle}
+                    canManage={canManageServices}
                   />
                 ))}
               </div>
@@ -358,6 +367,7 @@ export function ServicesPage() {
                       onEdit={handleEdit}
                       onDelete={handleDelete}
                       onToggle={handleToggle}
+                      canManage={canManageServices}
                     />
                   ))}
               </div>
