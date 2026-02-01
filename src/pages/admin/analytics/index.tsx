@@ -96,7 +96,7 @@ export function AnalyticsPage() {
   const { data: salesResponse, isLoading: loadingSales } = useGet<SalesResponse>(
     "sales",
     {
-      params: { salonId, perPage: 1000 },
+      params: { salonId, perPage: 100 },
       enabled: !!salonId && !dashboardStats,
     },
   );

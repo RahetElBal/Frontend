@@ -91,15 +91,16 @@ export function StaffPage() {
     },
   );
 
-  const approveTimeOff = usePost<StaffTimeOff, { status: TimeOffStatus }>(
-    "staff-time-off",
-    {
-      method: "PATCH",
-      invalidateQueries: ["staff-time-off"],
-      onSuccess: () => toast.success(t("staff.timeOffApproved")),
-      onError: (error) => toast.error(error.message),
-    },
-  );
+  const approveTimeOff = usePost<
+    StaffTimeOff,
+    { id: string; status: TimeOffStatus }
+  >("staff-time-off", {
+    id: (variables) => variables.id,
+    method: "PATCH",
+    invalidateQueries: ["staff-time-off"],
+    onSuccess: () => toast.success(t("staff.timeOffApproved")),
+    onError: (error) => toast.error(error.message),
+  });
 
   const filteredTimeOff = selectedStaff
     ? timeOffRequests.filter((t) => t.staffId === selectedStaff)
@@ -209,8 +210,8 @@ export function StaffPage() {
         <TimeOffView
           timeOffRequests={filteredTimeOff}
           staffMembers={staffMembers}
-          onApprove={() => approveTimeOff.mutate({ status: "approved" })}
-          onReject={() => approveTimeOff.mutate({ status: "rejected" })}
+          onApprove={(id) => approveTimeOff.mutate({ id, status: "approved" })}
+          onReject={(id) => approveTimeOff.mutate({ id, status: "rejected" })}
         />
       )}
 
@@ -222,7 +223,13 @@ export function StaffPage() {
           setEditingSchedule(null);
         }}
         staffMembers={staffMembers}
-        onSubmit={(data) => createSchedule.mutate(data)}
+        onSubmit={(data) => {
+          if (!salonId) {
+            toast.error(t("common.error"));
+            return;
+          }
+          createSchedule.mutate({ ...data, salonId });
+        }}
         isLoading={createSchedule.isPending}
         editingSchedule={editingSchedule}
       />
@@ -232,7 +239,13 @@ export function StaffPage() {
         isOpen={isTimeOffModalOpen}
         onClose={() => setIsTimeOffModalOpen(false)}
         staffMembers={staffMembers}
-        onSubmit={(data) => createTimeOff.mutate(data)}
+        onSubmit={(data) => {
+          if (!salonId) {
+            toast.error(t("common.error"));
+            return;
+          }
+          createTimeOff.mutate({ ...data, salonId });
+        }}
         isLoading={createTimeOff.isPending}
       />
     </div>

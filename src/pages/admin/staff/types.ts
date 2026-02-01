@@ -1,6 +1,7 @@
 import type { DayOfWeek, TimeOffType } from "@/types/entities";
 
 export interface CreateScheduleDto {
+  salonId?: string;
   staffId: string;
   dayOfWeek: DayOfWeek;
   startTime: string;
@@ -11,6 +12,7 @@ export interface CreateScheduleDto {
 }
 
 export interface CreateTimeOffDto {
+  salonId?: string;
   staffId: string;
   type: TimeOffType;
   startDate: string;
