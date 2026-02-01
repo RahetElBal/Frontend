@@ -3,7 +3,6 @@ import { Check, X, CalendarOff } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/badge";
 import {
   Table,
   TableBody,
@@ -12,7 +11,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import type { User as UserType, StaffTimeOff, TimeOffStatus } from "@/types/entities";
+import type { User as UserType, StaffTimeOff } from "@/types/entities";
+import { getStaffName, getTimeOffStatusBadge } from "../utils";
 
 interface TimeOffViewProps {
   timeOffRequests: StaffTimeOff[];
@@ -29,25 +29,7 @@ export function TimeOffView({
 }: TimeOffViewProps) {
   const { t } = useTranslation();
 
-  const getStaffName = (staffId: string) => {
-    const staff = staffMembers.find((s) => s.id === staffId);
-    return staff ? `${staff.firstName} ${staff.lastName}` : "Unknown";
-  };
-
-  const getStatusBadge = (status: TimeOffStatus) => {
-    switch (status) {
-      case "pending":
-        return <Badge variant="warning">{t("staff.pending")}</Badge>;
-      case "approved":
-        return <Badge variant="success">{t("staff.approved")}</Badge>;
-      case "rejected":
-        return <Badge variant="error">{t("staff.rejected")}</Badge>;
-      case "cancelled":
-        return <Badge variant="default">{t("staff.cancelled")}</Badge>;
-      default:
-        return <Badge>{status}</Badge>;
-    }
-  };
+  const staffName = (staffId: string) => getStaffName(staffMembers, staffId);
 
   if (timeOffRequests.length === 0) {
     return (
@@ -78,7 +60,7 @@ export function TimeOffView({
           {timeOffRequests.map((request) => (
             <TableRow key={request.id}>
               <TableCell className="font-medium">
-                {getStaffName(request.staffId)}
+                {staffName(request.staffId)}
               </TableCell>
               <TableCell>{t(`staff.timeOffTypes.${request.type}`)}</TableCell>
               <TableCell>
@@ -93,7 +75,7 @@ export function TimeOffView({
               <TableCell className="max-w-50 truncate">
                 {request.reason || "-"}
               </TableCell>
-              <TableCell>{getStatusBadge(request.status)}</TableCell>
+              <TableCell>{getTimeOffStatusBadge(t, request.status)}</TableCell>
               <TableCell className="text-end">
                 {request.status === "pending" && (
                   <div className="flex justify-end gap-2">

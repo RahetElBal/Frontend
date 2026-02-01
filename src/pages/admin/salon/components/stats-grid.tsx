@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { StatsCard } from "@/components/stats-card";
 import { useLanguage } from "@/hooks/useLanguage";
+import { AdminStatsGrid } from "@/pages/admin/components/stats-grid";
 
 interface StatsGridProps {
   totalSalons: number;
@@ -42,7 +43,7 @@ export function StatsGrid({
     return (
       <div className="space-y-4">
         {/* Top Row - Salon & User Stats */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <AdminStatsGrid className="sm:grid-cols-2 lg:grid-cols-3">
           <StatsCard
             title={t("admin.salons.totalSalons")}
             value={totalSalons}
@@ -64,10 +65,10 @@ export function StatsGrid({
             iconColor="text-accent-blue"
             iconBgColor="bg-accent-blue/10"
           />
-        </div>
+        </AdminStatsGrid>
 
         {/* Bottom Row - Revenue & Business Stats */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <AdminStatsGrid className="sm:grid-cols-2 lg:grid-cols-5">
           <StatsCard
             title="Revenu total"
             value={formatCurrency(totalRevenue)}
@@ -103,7 +104,7 @@ export function StatsGrid({
             iconColor="text-orange-600"
             iconBgColor="bg-orange-100"
           />
-        </div>
+        </AdminStatsGrid>
       </div>
     );
   }
@@ -112,7 +113,7 @@ export function StatsGrid({
   return (
     <div className="space-y-4">
       {/* Revenue Stats - Top Row */}
-      <div className="grid gap-4 sm:grid-cols-2">
+      <AdminStatsGrid className="sm:grid-cols-2">
         <StatsCard
           title="Revenu total"
           value={formatCurrency(totalRevenue)}
@@ -127,10 +128,10 @@ export function StatsGrid({
           iconColor="text-accent-pink"
           iconBgColor="bg-accent-pink/10"
         />
-      </div>
+      </AdminStatsGrid>
 
       {/* Other Stats - Bottom Row */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <AdminStatsGrid className="sm:grid-cols-2 lg:grid-cols-4">
         <StatsCard
           title="Clients"
           value={totalClients}
@@ -159,7 +160,7 @@ export function StatsGrid({
           iconColor="text-yellow-600"
           iconBgColor="bg-yellow-100"
         />
-      </div>
+      </AdminStatsGrid>
     </div>
   );
 }

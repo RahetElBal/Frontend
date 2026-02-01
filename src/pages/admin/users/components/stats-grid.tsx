@@ -3,6 +3,7 @@ import { Users, UserCog, UserCheck, UserX } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import type { User } from "@/types/entities";
 import { UserRole } from "@/types/entities";
+import { AdminStatsGrid } from "@/pages/admin/components/stats-grid";
 
 interface StatsGridProps {
   users: User[];
@@ -52,8 +53,8 @@ export function StatsGrid({ users, isSuperadmin }: StatsGridProps) {
   );
 
   return (
-    <div
-      className={`grid gap-4 md:grid-cols-2 ${isSuperadmin ? "lg:grid-cols-4" : "lg:grid-cols-3"}`}
+    <AdminStatsGrid
+      className={`md:grid-cols-2 ${isSuperadmin ? "lg:grid-cols-4" : "lg:grid-cols-3"}`}
     >
       {stats.map((stat) => {
         const Icon = stat.icon;
@@ -71,6 +72,6 @@ export function StatsGrid({ users, isSuperadmin }: StatsGridProps) {
           </Card>
         );
       })}
-    </div>
+    </AdminStatsGrid>
   );
 }

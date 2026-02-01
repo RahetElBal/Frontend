@@ -30,6 +30,7 @@ import { usePostAction } from "@/hooks/usePostAction";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useUser } from "@/hooks/useUser";
 import { toast } from "@/lib/toast";
+import { giftCardStatusColors } from "./utils";
 
 interface CreateGiftCardDto {
   salonId: string;
@@ -39,15 +40,6 @@ interface CreateGiftCardDto {
   message?: string;
 }
 
-const statusColors: Record<
-  GiftCardStatus,
-  "default" | "success" | "warning" | "error"
-> = {
-  [GiftCardStatus.ACTIVE]: "success",
-  [GiftCardStatus.REDEEMED]: "default",
-  [GiftCardStatus.EXPIRED]: "error",
-  [GiftCardStatus.CANCELLED]: "error",
-};
 
 export function GiftCardsPage() {
   const { t } = useTranslation();
@@ -248,11 +240,11 @@ export function GiftCardsPage() {
                   giftCard.status !== GiftCardStatus.ACTIVE && "opacity-60",
                 )}
               >
-                <div className="bg-gradient-to-r from-accent-pink to-accent-blue p-4 text-white">
+                <div className="bg-linear-to-r from-accent-pink to-accent-blue p-4 text-white">
                   <div className="flex items-center justify-between">
                     <Gift className="h-6 w-6" />
                     <Badge
-                      variant={statusColors[giftCard.status]}
+                      variant={giftCardStatusColors[giftCard.status]}
                       className="bg-white/20 text-white border-none"
                     >
                       {giftCard.status}
@@ -422,7 +414,7 @@ export function GiftCardsPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="font-mono text-lg">{lookupResult.code}</p>
-                    <Badge variant={statusColors[lookupResult.status]}>
+                    <Badge variant={giftCardStatusColors[lookupResult.status]}>
                       {lookupResult.status}
                     </Badge>
                   </div>

@@ -50,6 +50,16 @@ export function ServiceCard({
         !service.isActive && "opacity-60",
       )}
     >
+      {service.image && (
+        <div className="mb-3 overflow-hidden rounded-lg">
+          <img
+            src={service.image}
+            alt={service.name}
+            className="h-32 w-full object-cover"
+            loading="lazy"
+          />
+        </div>
+      )}
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <div className="flex items-center gap-2">

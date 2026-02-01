@@ -118,7 +118,8 @@ export interface Service extends BaseEntity {
   duration: number;
   price: number;
   categoryId?: string;
-  category?: Category;
+  category?: Category | string;
+  image?: string;
   isActive: boolean;
   salonId: string;
   salon?: Salon;

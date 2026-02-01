@@ -3,7 +3,6 @@ import { useTranslation } from "react-i18next";
 import {
   Plus,
   Tag,
-  Percent,
   Calendar,
   Copy,
   MoreHorizontal,
@@ -31,11 +30,17 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { useUser } from "@/hooks/useUser";
 import { toast } from "@/lib/toast";
 import { cn } from "@/lib/utils";
-import type { Promotion, PromotionType, PromotionStatus } from "@/types/entities";
+import type { Promotion, PromotionStatus } from "@/types/entities";
 import { usePost } from "@/hooks/usePost";
 import { useGet } from "@/hooks/useGet";
 import { PromotionModal } from "./components/dialog/promotion-modal";
 import type { CreatePromotionDto } from "./types";
+import {
+  copyPromotionCode,
+  formatPromotionDiscountValue,
+  getPromotionStatusBadge,
+  getPromotionTypeIcon,
+} from "./utils";
 
 // TODO: Backend needs to implement these endpoints:
 // - GET /promotions?salonId={salonId}
@@ -93,46 +98,8 @@ export function PromotionsPage() {
       ? promotions
       : promotions.filter((p) => p.status === selectedStatus);
 
-  const copyCode = (code: string) => {
-    navigator.clipboard.writeText(code);
-    toast.success(t("promotions.codeCopied"));
-  };
-
-  const getStatusBadge = (status: PromotionStatus) => {
-    switch (status) {
-      case "active":
-        return <Badge variant="success">{t("promotions.active")}</Badge>;
-      case "draft":
-        return <Badge variant="default">{t("promotions.draft")}</Badge>;
-      case "paused":
-        return <Badge variant="warning">{t("promotions.paused")}</Badge>;
-      case "expired":
-        return <Badge variant="error">{t("promotions.expired")}</Badge>;
-      case "cancelled":
-        return <Badge>{t("promotions.cancelled")}</Badge>;
-      default:
-        return <Badge>{status}</Badge>;
-    }
-  };
-
-  const getTypeIcon = (type: PromotionType) => {
-    switch (type) {
-      case "percentage":
-        return <Percent className="h-5 w-5" />;
-      case "fixed_amount":
-        return <Tag className="h-5 w-5" />;
-      default:
-        return <Tag className="h-5 w-5" />;
-    }
-  };
-
-  const formatDiscountValue = (promo: Promotion) => {
-    if (promo.type === "percentage") {
-      return `-${promo.discountValue}%`;
-    } else if (promo.type === "fixed_amount") {
-      return `-${formatCurrency(promo.discountValue || 0)}`;
-    }
-    return promo.type;
+  const handleCopyCode = (code: string) => {
+    copyPromotionCode(code, () => toast.success(t("promotions.codeCopied")));
   };
 
   return (
@@ -270,12 +237,15 @@ export function PromotionsPage() {
                           : "bg-muted text-muted-foreground",
                       )}
                     >
-                      {getTypeIcon(promotion.type)}
+                      {getPromotionTypeIcon(promotion.type)}
                     </div>
                     <div>
                       <h3 className="font-semibold">{promotion.name}</h3>
                       <p className="text-2xl font-bold text-accent-pink">
-                        {formatDiscountValue(promotion)}
+                        {formatPromotionDiscountValue(
+                          promotion,
+                          formatCurrency,
+                        )}
                       </p>
                     </div>
                   </div>
@@ -340,7 +310,7 @@ export function PromotionsPage() {
                       variant="ghost"
                       size="icon"
                       className="h-8 w-8"
-                      onClick={() => copyCode(promotion.code!)}
+                      onClick={() => handleCopyCode(promotion.code!)}
                     >
                       <Copy className="h-4 w-4" />
                     </Button>
@@ -354,7 +324,7 @@ export function PromotionsPage() {
                 )}
 
                 <div className="flex flex-wrap gap-2">
-                  {getStatusBadge(promotion.status)}
+                  {getPromotionStatusBadge(t, promotion.status)}
                   {promotion.isFirstTimeOnly && (
                     <Badge variant="info">
                       {t("promotions.firstTimeOnly")}

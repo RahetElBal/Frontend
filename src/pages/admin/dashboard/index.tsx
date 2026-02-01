@@ -7,6 +7,7 @@ import type { PaginatedResponse, Salon, User } from "@/types";
 import { StatsGrid } from "./components/stats-grid";
 import { RecentSalonsCard } from "./components/recent-salons";
 import { RecentUsersCard } from "./components/recent-users";
+import { getRecentItems } from "./utils";
 
 export default function AdminDashboardPage() {
   const { t } = useTranslation();
@@ -52,12 +53,7 @@ export default function AdminDashboardPage() {
       : undefined;
 
   const recentSalons = salonsToDisplay
-    ? [...salonsToDisplay]
-        .sort(
-          (a, b) =>
-            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-        )
-        .slice(0, 5)
+    ? getRecentItems(salonsToDisplay, 5)
     : [];
 
   // Filter users based on role
@@ -69,14 +65,7 @@ export default function AdminDashboardPage() {
         usersData.data.filter((u) => u.managedById === user?.id)
     : [];
 
-  const recentUsers = filteredUsers
-    ? [...filteredUsers]
-        .sort(
-          (a, b) =>
-            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-        )
-        .slice(0, 5)
-    : [];
+  const recentUsers = filteredUsers ? getRecentItems(filteredUsers, 5) : [];
 
   return (
     <div className="space-y-8">

@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { Plus, Receipt, Search, User, Package, Scissors, Trash2 } from "lucide-react";
+import { Plus, Search, User, Package, Scissors, Trash2 } from "lucide-react";
 
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";

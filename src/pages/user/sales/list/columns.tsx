@@ -10,17 +10,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import type { Sale, SaleStatus } from "@/types/entities";
-
-const statusColors: Record<
-  SaleStatus,
-  "default" | "success" | "warning" | "error"
-> = {
-  completed: "success",
-  pending: "warning",
-  refunded: "error",
-  cancelled: "error",
-};
+import type { Sale } from "@/types/entities";
+import { formatSaleTime, saleStatusColors } from "../utils";
 
 interface GetSalesColumnsProps {
   t: TFunction;
@@ -33,14 +24,6 @@ export function getSalesColumns({
   formatCurrency,
   onComplete,
 }: GetSalesColumnsProps): Column<Sale>[] {
-  const formatTime = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleTimeString("fr-FR", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
   return [
     {
       key: "id",
@@ -55,7 +38,7 @@ export function getSalesColumns({
               {sale.id.slice(0, 8).toUpperCase()}
             </p>
             <p className="text-xs text-muted-foreground">
-              {formatTime(sale.createdAt)}
+              {formatSaleTime(sale.createdAt)}
             </p>
           </div>
         </div>
@@ -102,7 +85,7 @@ export function getSalesColumns({
       key: "status",
       header: t("fields.status"),
       render: (sale) => (
-        <Badge variant={statusColors[sale.status]}>{sale.status}</Badge>
+        <Badge variant={saleStatusColors[sale.status]}>{sale.status}</Badge>
       ),
     },
     {

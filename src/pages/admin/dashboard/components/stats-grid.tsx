@@ -4,6 +4,7 @@ import { StatsCard } from "@/components/stats-card";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useUser } from "@/hooks/useUser";
 import type { PaginatedResponse, Salon, User } from "@/types";
+import { AdminStatsGrid } from "@/pages/admin/components/stats-grid";
 
 interface StatsGridProps {
   salonsData?: Salon[];
@@ -28,8 +29,8 @@ export function StatsGrid({
   const totalRevenue = isSuperadmin ? revenueData?.total || 0 : 0;
 
   return (
-    <div
-      className={`grid gap-4 sm:grid-cols-2 ${isSuperadmin ? "lg:grid-cols-4" : "lg:grid-cols-2"}`}
+    <AdminStatsGrid
+      className={`sm:grid-cols-2 ${isSuperadmin ? "lg:grid-cols-4" : "lg:grid-cols-2"}`}
     >
       {isSuperadmin && (
         <StatsCard
@@ -66,6 +67,6 @@ export function StatsGrid({
           iconBgColor="bg-purple-100"
         />
       )}
-    </div>
+    </AdminStatsGrid>
   );
 }

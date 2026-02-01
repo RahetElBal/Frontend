@@ -38,6 +38,7 @@ import { useGet } from "@/hooks/useGet";
 import { usePost } from "@/hooks/usePost";
 import { usePostAction } from "@/hooks/usePostAction";
 import { ServiceCard } from "./components/service-card";
+import { getServiceCategoryName } from "./utils";
 
 // Category type from API
 interface ServiceCategory {
@@ -217,12 +218,6 @@ export function ServicesPage() {
     showSuccessToast: true,
     successMessage: t("common.success"),
   });
-
-  // Helper to get category name from service (handles both string and object)
-  const getServiceCategoryName = (service: Service): string => {
-    if (typeof service.category === 'string') return service.category;
-    return service.category?.name || '';
-  };
 
   const filteredServices = selectedCategory
     ? services.filter((s) => getServiceCategoryName(s) === selectedCategory)

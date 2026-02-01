@@ -30,7 +30,8 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/badge";
 import type { ClientModalState } from "@/pages/user/clients/types";
 import type { ClientFormData } from "@/pages/user/clients/validation";
-import { parseValidationMsg } from "@/common/validator/zodI18n";
+import { getValidationErrorMessage } from "@/pages/user/utils";
+import { FormErrorMessage } from "@/pages/user/components/form-error-message";
 
 interface ClientModalsProps {
   modalState: ClientModalState;
@@ -57,12 +58,7 @@ export function ClientModals({
     const message =
       maybeGetError?.(name) ??
       (form.formState.errors[name]?.message as string | undefined);
-    if (!message) return undefined;
-    if (message.startsWith("validation.") || message.startsWith("errors.")) {
-      const { key, params } = parseValidationMsg(message);
-      return t(key, params);
-    }
-    return message;
+    return getValidationErrorMessage(t, message);
   };
 
   const selectedClient = useMemo(() => {
@@ -429,30 +425,18 @@ export function ClientModals({
               <div className="space-y-2">
                 <Label htmlFor="firstName">{t("fields.firstName")} *</Label>
                 <Input id="firstName" {...form.register("firstName")} />
-                {getErrorMessage("firstName") && (
-                  <p className="text-sm text-destructive">
-                    {getErrorMessage("firstName")}
-                  </p>
-                )}
+                <FormErrorMessage message={getErrorMessage("firstName")} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="lastName">{t("fields.lastName")} *</Label>
                 <Input id="lastName" {...form.register("lastName")} />
-                {getErrorMessage("lastName") && (
-                  <p className="text-sm text-destructive">
-                    {getErrorMessage("lastName")}
-                  </p>
-                )}
+                <FormErrorMessage message={getErrorMessage("lastName")} />
               </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">{t("fields.email")}</Label>
               <Input id="email" type="email" {...form.register("email")} />
-              {getErrorMessage("email") && (
-                <p className="text-sm text-destructive">
-                  {getErrorMessage("email")}
-                </p>
-              )}
+              <FormErrorMessage message={getErrorMessage("email")} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="phone">{t("fields.phone")}</Label>

@@ -1,8 +1,5 @@
-import {
-  AppointmentStatus,
-  type Appointment,
-  type Client,
-} from "@/types/entities";
+import { type Appointment, type Client } from "@/types/entities";
+import { dashboardStatusColors } from "../utils";
 
 export function getTodayRange() {
   const today = new Date();
@@ -68,14 +65,4 @@ export function getLastWeekNewClients(clients: Client[]): Client[] {
   return filterClientsByDateRange(clients, start, end);
 }
 
-export const statusColors: Record<
-  string,
-  "default" | "success" | "warning" | "info"
-> = {
-  [AppointmentStatus.CONFIRMED]: "success",
-  [AppointmentStatus.PENDING]: "warning",
-  [AppointmentStatus.IN_PROGRESS]: "info",
-  [AppointmentStatus.COMPLETED]: "default",
-  [AppointmentStatus.CANCELLED]: "default",
-  [AppointmentStatus.NO_SHOW]: "default",
-};
+export const statusColors = dashboardStatusColors;

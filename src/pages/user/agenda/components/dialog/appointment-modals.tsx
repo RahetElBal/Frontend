@@ -38,7 +38,8 @@ import type { AppointmentFormData } from "../../validation";
 import type { AppointmentModalState } from "../../types";
 import { useLanguage } from "@/hooks/useLanguage";
 import { timeSlots, statusColors } from "../../utils";
-import { parseValidationMsg } from "@/common/validator/zodI18n";
+import { getValidationErrorMessage } from "@/pages/user/utils";
+import { FormErrorMessage } from "@/pages/user/components/form-error-message";
 
 interface AppointmentModalsProps {
   modalState: AppointmentModalState;
@@ -69,19 +70,16 @@ export function AppointmentModals({
 }: AppointmentModalsProps) {
   const { t } = useTranslation();
   const { formatCurrency } = useLanguage();
-  const getErrorMessage = (name: keyof AppointmentFormData): string | undefined => {
+  const getErrorMessage = (
+    name: keyof AppointmentFormData,
+  ): string | undefined => {
     const maybeGetError = (form as UseFormReturn<AppointmentFormData> & {
       getError?: (field: keyof AppointmentFormData) => string | undefined;
     }).getError;
     const message =
       maybeGetError?.(name) ??
       (form.formState.errors[name]?.message as string | undefined);
-    if (!message) return undefined;
-    if (message.startsWith("validation.") || message.startsWith("errors.")) {
-      const { key, params } = parseValidationMsg(message);
-      return t(key, params);
-    }
-    return message;
+    return getValidationErrorMessage(t, message);
   };
 
   // Derive selected appointment
@@ -394,11 +392,7 @@ export function AppointmentModals({
                     )}
                   </SelectContent>
                 </Select>
-                {getErrorMessage("clientId") && (
-                  <p className="text-sm text-destructive">
-                    {getErrorMessage("clientId")}
-                  </p>
-                )}
+                <FormErrorMessage message={getErrorMessage("clientId")} />
               </div>
 
               <div className="space-y-2">
@@ -433,11 +427,7 @@ export function AppointmentModals({
                     )}
                   </SelectContent>
                 </Select>
-                {getErrorMessage("serviceId") && (
-                  <p className="text-sm text-destructive">
-                    {getErrorMessage("serviceId")}
-                  </p>
-                )}
+                <FormErrorMessage message={getErrorMessage("serviceId")} />
               </div>
 
               {selectedService && (
@@ -460,11 +450,7 @@ export function AppointmentModals({
                 <div className="space-y-2">
                   <Label htmlFor="date">{t("fields.date")} *</Label>
                   <Input id="date" type="date" {...form.register("date")} />
-                  {getErrorMessage("date") && (
-                    <p className="text-sm text-destructive">
-                      {getErrorMessage("date")}
-                    </p>
-                  )}
+                  <FormErrorMessage message={getErrorMessage("date")} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="startTime">{t("fields.time")} *</Label>

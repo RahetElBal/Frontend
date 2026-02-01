@@ -1,21 +1,11 @@
-import { AppointmentStatus } from "@/types/entities";
 import type { Appointment } from "@/types/entities";
 import { momentLocalizer } from "react-big-calendar";
 import moment from "moment";
+import { agendaStatusColors } from "../utils";
 
 export const localizer = momentLocalizer(moment);
 
-export const statusColors: Record<
-  string,
-  "default" | "success" | "warning" | "info" | "error"
-> = {
-  [AppointmentStatus.CONFIRMED]: "success",
-  [AppointmentStatus.PENDING]: "warning",
-  [AppointmentStatus.IN_PROGRESS]: "info",
-  [AppointmentStatus.COMPLETED]: "default",
-  [AppointmentStatus.CANCELLED]: "error",
-  [AppointmentStatus.NO_SHOW]: "error",
-};
+export const statusColors = agendaStatusColors;
 
 export const timeSlots = [
   "09:00",

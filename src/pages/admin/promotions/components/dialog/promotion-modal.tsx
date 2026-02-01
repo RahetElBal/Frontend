@@ -22,6 +22,7 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import type { PromotionType, PromotionAppliesTo } from "@/types/entities";
 import type { CreatePromotionDto } from "../../types";
+import { generatePromotionCode } from "../../utils";
 
 const PROMOTION_TYPES: PromotionType[] = [
   "percentage",
@@ -85,11 +86,7 @@ export function PromotionModal({
   });
 
   const generateCode = () => {
-    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    let code = "";
-    for (let i = 0; i < 8; i++) {
-      code += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
+    const code = generatePromotionCode();
     setFormData({ ...formData, code });
   };
 

@@ -33,6 +33,11 @@ import type {
 } from "@/types/entities";
 import type { PaginatedResponse } from "@/types";
 import { useGet } from "@/hooks/useGet";
+import {
+  aggregateProductSales,
+  aggregateServiceBookings,
+  getTopItems,
+} from "./utils";
 
 // Analytics API response types
 interface DashboardStatsResponse {
@@ -133,32 +138,10 @@ export function AnalyticsPage() {
     // If we have dashboard stats from the API, use those
     if (dashboardStats) {
       // Still need to calculate top products from sales data
-      const productSales: Record<
-        string,
-        { name: string; count: number; revenue: number }
-      > = {};
-      sales.forEach((sale) => {
-        sale.items.forEach((item) => {
-          if (item.type === "product") {
-            const product = products.find((p) => p.id === item.itemId);
-            if (product) {
-              if (!productSales[item.itemId]) {
-                productSales[item.itemId] = {
-                  name: product.name,
-                  count: 0,
-                  revenue: 0,
-                };
-              }
-              productSales[item.itemId].count += item.quantity;
-              productSales[item.itemId].revenue += item.price * item.quantity;
-            }
-          }
-        });
-      });
-
-      const topProductsFromSales = Object.values(productSales)
-        .sort((a, b) => b.count - a.count)
-        .slice(0, 5);
+      const topProductsFromSales = getTopItems(
+        aggregateProductSales(sales, products),
+        5,
+      );
 
       return {
         totalRevenue: dashboardStats.todayRevenue,
@@ -195,56 +178,15 @@ export function AnalyticsPage() {
     }).length;
 
     // Calculate service popularity from appointments
-    const serviceBookings: Record<
-      string,
-      { name: string; count: number; revenue: number }
-    > = {};
-    appointments.forEach((apt) => {
-      if (apt.service) {
-        const id = apt.service.id;
-        if (!serviceBookings[id]) {
-          serviceBookings[id] = {
-            name: apt.service.name,
-            count: 0,
-            revenue: 0,
-          };
-        }
-        serviceBookings[id].count += 1;
-        serviceBookings[id].revenue += apt.service.price;
-      }
-    });
+    const topServicesFromBookings = getTopItems(
+      aggregateServiceBookings(appointments),
+      5,
+    );
 
-    // Calculate product sales from sales items
-    const productSales: Record<
-      string,
-      { name: string; count: number; revenue: number }
-    > = {};
-    sales.forEach((sale) => {
-      sale.items.forEach((item) => {
-        if (item.type === "product") {
-          const product = products.find((p) => p.id === item.itemId);
-          if (product) {
-            if (!productSales[item.itemId]) {
-              productSales[item.itemId] = {
-                name: product.name,
-                count: 0,
-                revenue: 0,
-              };
-            }
-            productSales[item.itemId].count += item.quantity;
-            productSales[item.itemId].revenue += item.price * item.quantity;
-          }
-        }
-      });
-    });
-
-    const topServicesFromBookings = Object.values(serviceBookings)
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 5);
-
-    const topProductsFromSales = Object.values(productSales)
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 5);
+    const topProductsFromSales = getTopItems(
+      aggregateProductSales(sales, products),
+      5,
+    );
 
     return {
       totalRevenue,
