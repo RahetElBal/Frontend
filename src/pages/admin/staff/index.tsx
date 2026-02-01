@@ -1,27 +1,18 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Plus, Calendar, CalendarOff, User } from "lucide-react";
+import { Plus, User } from "lucide-react";
 
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/badge";
-import { cn } from "@/lib/utils";
 import { toast } from "@/lib/toast";
-import type {
-  User as UserType,
-  StaffSchedule,
-  StaffTimeOff,
-  TimeOffStatus,
-} from "@/types/entities";
+import type { User as UserType, StaffSchedule } from "@/types/entities";
 import type { PaginatedResponse } from "@/types";
 import { useGet } from "@/hooks/useGet";
 import { usePost } from "@/hooks/usePost";
 import { useUser } from "@/hooks/useUser";
 import { SchedulesView } from "./components/schedules-view";
-import { TimeOffView } from "./components/timeoff-view";
 import { ScheduleModal } from "./components/dialog/schedule-modal";
-import { TimeOffModal } from "./components/dialog/timeoff-modal";
-import type { CreateScheduleDto, CreateTimeOffDto } from "./types";
+import type { CreateScheduleDto } from "./types";
 
 // TODO: Backend needs to implement these endpoints:
 // - GET /staff-schedules?salonId={salonId}
@@ -35,12 +26,8 @@ import type { CreateScheduleDto, CreateTimeOffDto } from "./types";
 export function StaffPage() {
   const { t } = useTranslation();
   const { user } = useUser();
-  const [activeTab, setActiveTab] = useState<"schedules" | "timeoff">(
-    "schedules",
-  );
   const [selectedStaff, setSelectedStaff] = useState<string | null>(null);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
-  const [isTimeOffModalOpen, setIsTimeOffModalOpen] = useState(false);
   const [editingSchedule, setEditingSchedule] = useState<StaffSchedule | null>(
     null,
   );
@@ -65,17 +52,6 @@ export function StaffPage() {
   });
   const schedules = Array.isArray(schedulesResponse) ? schedulesResponse : [];
 
-  const { data: timeOffRequestsResponse } = useGet<StaffTimeOff[]>(
-    "staff-time-off",
-    {
-      params: { salonId },
-      enabled: !!salonId,
-    },
-  );
-  const timeOffRequests = Array.isArray(timeOffRequestsResponse)
-    ? timeOffRequestsResponse
-    : [];
-
   // Mutations - NOTE: These endpoints need to be implemented in backend
   const createSchedule = usePost<StaffSchedule, CreateScheduleDto>(
     "staff-schedules",
@@ -89,33 +65,6 @@ export function StaffPage() {
     },
   );
 
-  const createTimeOff = usePost<StaffTimeOff, CreateTimeOffDto>(
-    "staff-time-off",
-    {
-      invalidateQueries: ["staff-time-off"],
-      onSuccess: () => {
-        toast.success(t("staff.timeOffRequested"));
-        setIsTimeOffModalOpen(false);
-      },
-      onError: (error) => toast.error(error.message || t("common.error")),
-    },
-  );
-
-  const approveTimeOff = usePost<
-    StaffTimeOff,
-    { id: string; status: TimeOffStatus }
-  >("staff-time-off", {
-    id: (variables) => variables.id,
-    method: "PATCH",
-    invalidateQueries: ["staff-time-off"],
-    onSuccess: () => toast.success(t("staff.timeOffApproved")),
-    onError: (error) => toast.error(error.message),
-  });
-
-  const filteredTimeOff = selectedStaff
-    ? timeOffRequests.filter((t) => t.staffId === selectedStaff)
-    : timeOffRequests;
-
   const getStaffScheduleForDay = (staffId: string, day: string) => {
     return schedules.find((s) => s.staffId === staffId && s.dayOfWeek === day);
   };
@@ -127,13 +76,6 @@ export function StaffPage() {
         description={t("staff.description")}
         actions={
           <div className="flex gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setIsTimeOffModalOpen(true)}
-            >
-              <CalendarOff className="h-4 w-4 me-2" />
-              {t("staff.requestTimeOff")}
-            </Button>
             <Button onClick={() => setIsScheduleModalOpen(true)}>
               <Plus className="h-4 w-4 me-2" />
               {t("staff.addSchedule")}
@@ -141,39 +83,6 @@ export function StaffPage() {
           </div>
         }
       />
-
-      {/* Tabs */}
-      <div className="flex gap-2 border-b">
-        <button
-          className={cn(
-            "px-4 py-2 -mb-px border-b-2 transition-colors",
-            activeTab === "schedules"
-              ? "border-accent-pink text-accent-pink"
-              : "border-transparent text-muted-foreground hover:text-foreground",
-          )}
-          onClick={() => setActiveTab("schedules")}
-        >
-          <Calendar className="h-4 w-4 inline-block me-2" />
-          {t("staff.schedules")}
-        </button>
-        <button
-          className={cn(
-            "px-4 py-2 -mb-px border-b-2 transition-colors",
-            activeTab === "timeoff"
-              ? "border-accent-pink text-accent-pink"
-              : "border-transparent text-muted-foreground hover:text-foreground",
-          )}
-          onClick={() => setActiveTab("timeoff")}
-        >
-          <CalendarOff className="h-4 w-4 inline-block me-2" />
-          {t("staff.timeOff")}
-          {timeOffRequests.filter((r) => r.status === "pending").length > 0 && (
-            <Badge variant="warning" className="ms-2">
-              {timeOffRequests.filter((r) => r.status === "pending").length}
-            </Badge>
-          )}
-        </button>
-      </div>
 
       {/* Staff Filter */}
       <div className="flex gap-2 flex-wrap">
@@ -206,24 +115,15 @@ export function StaffPage() {
         ))}
       </div>
 
-      {activeTab === "schedules" ? (
-        <SchedulesView
-          staffMembers={staffMembers}
-          selectedStaff={selectedStaff}
-          getStaffScheduleForDay={getStaffScheduleForDay}
-          onEditSchedule={(schedule) => {
-            setEditingSchedule(schedule);
-            setIsScheduleModalOpen(true);
-          }}
-        />
-      ) : (
-        <TimeOffView
-          timeOffRequests={filteredTimeOff}
-          staffMembers={staffMembers}
-          onApprove={(id) => approveTimeOff.mutate({ id, status: "approved" })}
-          onReject={(id) => approveTimeOff.mutate({ id, status: "rejected" })}
-        />
-      )}
+      <SchedulesView
+        staffMembers={staffMembers}
+        selectedStaff={selectedStaff}
+        getStaffScheduleForDay={getStaffScheduleForDay}
+        onEditSchedule={(schedule) => {
+          setEditingSchedule(schedule);
+          setIsScheduleModalOpen(true);
+        }}
+      />
 
       {/* Schedule Modal */}
       <ScheduleModal
@@ -244,20 +144,6 @@ export function StaffPage() {
         editingSchedule={editingSchedule}
       />
 
-      {/* Time Off Modal */}
-      <TimeOffModal
-        isOpen={isTimeOffModalOpen}
-        onClose={() => setIsTimeOffModalOpen(false)}
-        staffMembers={staffMembers}
-        onSubmit={(data) => {
-          if (!salonId) {
-            toast.error(t("common.error"));
-            return;
-          }
-          createTimeOff.mutate({ ...data, salonId });
-        }}
-        isLoading={createTimeOff.isPending}
-      />
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import { useMemo, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import type { UseFormReturn } from "react-hook-form";
-import { User, Scissors, Clock, Calendar, Edit, Trash2, XCircle, CheckCircle } from "lucide-react";
+import { User, Scissors, Clock, Calendar, Edit, Trash2, XCircle, CheckCircle, DollarSign } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -53,6 +53,8 @@ interface AppointmentModalsProps {
   onDelete: () => void;
   onCancel?: (id: string) => void;
   onComplete?: (id: string) => void;
+  onCreateSale?: (appointment: Appointment) => void;
+  isCreatingSale?: boolean;
   isPending: boolean;
 }
 
@@ -67,6 +69,8 @@ export function AppointmentModals({
   onDelete,
   onCancel,
   onComplete,
+  onCreateSale,
+  isCreatingSale = false,
   isPending,
 }: AppointmentModalsProps) {
   const { t } = useTranslation();
@@ -218,11 +222,26 @@ export function AppointmentModals({
                   </div>
                 </div>
                 <Badge variant={statusColors[selectedAppointment.status]}>
-                  {selectedAppointment.status}
+                  {t(`agenda.statuses.${selectedAppointment.status}`, {
+                    defaultValue: selectedAppointment.status,
+                  })}
                 </Badge>
               </div>
 
               <div className="grid gap-4">
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+                  <DollarSign className="h-5 w-5 text-muted-foreground" />
+                  <div>
+                    <p className="text-sm text-muted-foreground">
+                      {t("agenda.paymentStatus")}
+                    </p>
+                    <p className="font-medium">
+                      {selectedAppointment.paid
+                        ? t("agenda.paymentPaid")
+                        : t("agenda.paymentUnpaid")}
+                    </p>
+                  </div>
+                </div>
                 <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
                   <Scissors className="h-5 w-5 text-muted-foreground" />
                   <div className="flex-1">
@@ -230,11 +249,17 @@ export function AppointmentModals({
                       {t("fields.service")}
                     </p>
                     <p className="font-medium">
-                      {selectedAppointment.service?.name}
+                      {selectedAppointment.service
+                        ? translateServiceName(t, selectedAppointment.service)
+                        : t("common.unknown")}
                     </p>
                   </div>
                   <p className="font-bold text-accent-pink">
-                    {formatCurrency(selectedAppointment.service?.price || 0)}
+                    {formatCurrency(
+                      selectedAppointment.service?.price ??
+                        selectedAppointment.price ??
+                        0,
+                    )}
                   </p>
                 </div>
 
@@ -277,8 +302,10 @@ export function AppointmentModals({
           <DialogFooter className="flex flex-col sm:flex-row gap-2">
             {selectedAppointment && (
               <div className="flex gap-2 w-full sm:w-auto">
-                {/* Cancel button - show for non-cancelled/completed appointments */}
-                {onCancel && selectedAppointment.status !== "cancelled" && selectedAppointment.status !== "completed" && (
+                {/* Cancel button - allow if not cancelled and not paid */}
+                {onCancel &&
+                  selectedAppointment.status !== "cancelled" &&
+                  !selectedAppointment.paid && (
                   <Button
                     variant="outline"
                     className="text-orange-600 hover:text-orange-700"
@@ -301,6 +328,19 @@ export function AppointmentModals({
                     {t("agenda.complete")}
                   </Button>
                 )}
+                {onCreateSale &&
+                  selectedAppointment.status === "completed" &&
+                  !selectedAppointment.paid && (
+                    <Button
+                      onClick={() => onCreateSale(selectedAppointment)}
+                      disabled={isPending || isCreatingSale}
+                    >
+                      <DollarSign className="h-4 w-4 me-2" />
+                      {isCreatingSale
+                        ? t("common.loading")
+                        : t("agenda.recordPayment")}
+                    </Button>
+                  )}
               </div>
             )}
             <div className="flex gap-2 w-full sm:w-auto sm:ms-auto">

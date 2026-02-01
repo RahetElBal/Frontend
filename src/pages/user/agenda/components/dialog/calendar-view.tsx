@@ -1,4 +1,5 @@
 import { useMemo, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { Calendar, momentLocalizer } from "react-big-calendar";
 import moment from "moment";
 import "react-big-calendar/lib/css/react-big-calendar.css";
@@ -21,9 +22,28 @@ export function CalendarView({
   onSelectSlot,
   onSelectEvent,
 }: CalendarViewProps) {
+  const { t } = useTranslation();
   const events = useMemo(
     () => appointments.map((apt) => appointmentToCalendarEvent(apt)),
     [appointments],
+  );
+
+  const messages = useMemo(
+    () => ({
+      today: t("agenda.today"),
+      previous: t("agenda.previous"),
+      next: t("agenda.next"),
+      month: t("agenda.month"),
+      week: t("agenda.week"),
+      day: t("agenda.day"),
+      agenda: t("agenda.agenda"),
+      date: t("agenda.date"),
+      time: t("agenda.time"),
+      event: t("agenda.event"),
+      noEventsInRange: t("agenda.noEventsInRange"),
+      showMore: (total: number) => t("agenda.showMore", { count: total }),
+    }),
+    [t],
   );
 
   const eventStyleGetter = useCallback((event: CalendarEvent) => {
@@ -84,6 +104,7 @@ export function CalendarView({
         onSelectEvent={onSelectEvent}
         selectable
         eventPropGetter={eventStyleGetter}
+        messages={messages}
         popup
       />
     </div>

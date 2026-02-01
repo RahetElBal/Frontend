@@ -3,14 +3,11 @@ import {
   Users,
   Calendar,
   Scissors,
-  Package,
   ShoppingCart,
   BarChart3,
   Settings,
   Building2,
   UserCog,
-  Clock,
-  Tag,
   Sliders,
 } from "lucide-react";
 import type { NavSection } from "@/types/navigation";
@@ -129,12 +126,6 @@ export const USER_NAVIGATION: NavSection[] = [
     titleKey: "nav.sections.inventory",
     items: [
       {
-        id: "products",
-        titleKey: "nav.products",
-        href: ROUTES.PRODUCTS,
-        icon: Package,
-      },
-      {
         id: "sales",
         titleKey: "nav.sales",
         href: ROUTES.SALES,
@@ -195,12 +186,6 @@ export const ADMIN_SALON_NAVIGATION: NavSection[] = [
         href: ROUTES.SERVICES,
         icon: Scissors,
       },
-      {
-        id: "staff",
-        titleKey: "nav.staff",
-        href: ROUTES.STAFF,
-        icon: Clock,
-      },
     ],
   },
   {
@@ -208,22 +193,10 @@ export const ADMIN_SALON_NAVIGATION: NavSection[] = [
     titleKey: "nav.sections.inventory",
     items: [
       {
-        id: "products",
-        titleKey: "nav.products",
-        href: ROUTES.PRODUCTS,
-        icon: Package,
-      },
-      {
         id: "sales",
         titleKey: "nav.sales",
         href: ROUTES.SALES,
         icon: ShoppingCart,
-      },
-      {
-        id: "promotions",
-        titleKey: "nav.promotions",
-        href: ROUTES.PROMOTIONS,
-        icon: Tag,
       },
     ],
   },

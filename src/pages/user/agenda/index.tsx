@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { PageHeader } from "@/components/page-header";
 import { toast } from "@/lib/toast";
@@ -8,7 +9,13 @@ import { usePostAction } from "@/hooks/usePostAction";
 import { useForm } from "@/hooks/useForm";
 import { useUser } from "@/hooks/useUser";
 
-import type { Appointment, Client, Service, PaginatedResponse } from "@/types";
+import type {
+  Appointment,
+  Client,
+  Service,
+  PaginatedResponse,
+  Sale,
+} from "@/types";
 import { AppointmentStatus } from "@/types/entities";
 import type { AppointmentModalState } from "./types";
 import { appointmentFormSchema, type AppointmentFormData } from "./validation";
@@ -25,21 +32,31 @@ import {
 import { CalendarToolbar } from "./components/dialog/calendar-toolbar";
 import { CalendarView } from "./components/dialog/calendar-view";
 import { AppointmentModals } from "./components/dialog/appointment-modals";
+import { translateServiceName } from "@/common/service-translations";
 
 export function AgendaPage() {
   const { t } = useTranslation();
   const { user } = useUser();
+  const queryClient = useQueryClient();
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [modalState, setModalState] = useState<AppointmentModalState>(null);
 
   const salonId = user?.salon?.id;
+  const appointmentsParams = useMemo(
+    () => ({ salonId, perPage: 100 }),
+    [salonId],
+  );
+  const appointmentsQueryKey = useMemo(
+    () => ["appointments", appointmentsParams].filter(Boolean),
+    [appointmentsParams],
+  );
 
   const {
     data: appointmentsData,
     isLoading,
     refetch,
   } = useGet<PaginatedResponse<Appointment>>("appointments", {
-    params: { salonId, perPage: 100 },
+    params: appointmentsParams,
     enabled: !!salonId,
   });
 
@@ -135,7 +152,9 @@ export function AgendaPage() {
         clientName: apt.client
           ? `${apt.client.firstName} ${apt.client.lastName}`
           : "Client",
-        serviceName: apt.service?.name || "Service",
+        serviceName: apt.service
+          ? translateServiceName(t, apt.service)
+          : "Service",
         time: apt.startTime,
         date: apt.date,
         reminderTime: new Date(),
@@ -144,7 +163,60 @@ export function AgendaPage() {
     });
 
     return () => cancelAllReminders();
-  }, [appointments, notificationsEnabled, handleReminder]);
+  }, [appointments, notificationsEnabled, handleReminder, t]);
+
+  // Check for overdue unpaid appointments and notify
+  useEffect(() => {
+    if (!Array.isArray(appointments) || appointments.length === 0) return;
+
+    const now = new Date();
+    const today = now.toISOString().split("T")[0];
+    const currentTime = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`;
+
+    // Find overdue unpaid appointments (completed but not paid, or past end time and not paid)
+    const overdueUnpaid = appointments.filter((apt) => {
+      // Skip cancelled appointments
+      if (apt.status === "cancelled") return false;
+      
+      // Already paid, no need to notify
+      if (apt.paid) return false;
+
+      // Check if appointment is in the past
+      const isPastDate = apt.date < today;
+      const isPastTime = apt.date === today && apt.endTime && apt.endTime < currentTime;
+      const isOverdue = isPastDate || isPastTime;
+
+      // Appointment is overdue and unpaid
+      return isOverdue;
+    });
+
+    // Show notification for each overdue unpaid appointment (only once per session)
+    overdueUnpaid.forEach((apt) => {
+      const notificationKey = `overdue-notified-${apt.id}`;
+      if (sessionStorage.getItem(notificationKey)) return;
+      
+      sessionStorage.setItem(notificationKey, "true");
+      
+      const clientName = apt.client
+        ? `${apt.client.firstName} ${apt.client.lastName}`
+        : t("common.client");
+      const serviceName = apt.service
+        ? translateServiceName(t, apt.service)
+        : t("common.service");
+
+      toast.warning(
+        `${t("agenda.overdueUnpaid")}: ${clientName} - ${serviceName} (${apt.date} ${apt.startTime})`,
+        { duration: 10000 }
+      );
+
+      if (notificationsEnabled) {
+        showNotification(t("agenda.overdueUnpaidTitle"), {
+          body: `${clientName} - ${serviceName} (${apt.date} ${apt.startTime})`,
+          playSound: true,
+        });
+      }
+    });
+  }, [appointments, notificationsEnabled, t]);
 
   const { mutate: createAppointment, isPending: isCreating } = usePost<
     Appointment,
@@ -226,6 +298,46 @@ export function AgendaPage() {
       refetch();
     },
   });
+
+  const { mutate: createSaleFromAppointment, isPending: isCreatingSale } =
+    usePost<
+      Sale,
+      {
+        salonId: string;
+        appointmentId: string;
+        clientId?: string;
+        items: {
+          type: "service";
+          itemId: string;
+          quantity: number;
+          price: number;
+        }[];
+      }
+    >("sales", {
+      invalidateQueries: ["sales", "appointments"],
+      onSuccess: (_sale, variables) => {
+        toast.success(t("agenda.paymentRecorded") + " - " + t("common.success"));
+        queryClient.setQueryData<PaginatedResponse<Appointment> | undefined>(
+          appointmentsQueryKey,
+          (current) => {
+            if (!current) return current;
+            return {
+              ...current,
+              data: current.data.map((appointment) =>
+                appointment.id === variables.appointmentId
+                  ? { ...appointment, status: "completed", paid: true }
+                  : appointment,
+              ),
+            };
+          },
+        );
+        setModalState(null);
+        refetch();
+      },
+      onError: (error) => {
+        toast.error(error.message || t("common.error"));
+      },
+    });
 
   const handleSelectSlot = useCallback(
     ({ start }: { start: Date; end: Date }) => {
@@ -321,7 +433,34 @@ export function AgendaPage() {
         onDelete={() => deleteAppointment()}
         onCancel={(id) => cancelAppointment(id)}
         onComplete={(id) => completeAppointment(id)}
-        isPending={isCreating || isUpdating || isDeleting || isCancelling || isCompleting}
+        onCreateSale={(appointment) => {
+          if (!salonId || !appointment.serviceId) {
+            toast.error(t("common.error"));
+            return;
+          }
+          createSaleFromAppointment({
+            salonId,
+            appointmentId: appointment.id,
+            clientId: appointment.clientId,
+            items: [
+              {
+                type: "service",
+                itemId: appointment.serviceId,
+                quantity: 1,
+                price: appointment.price,
+              },
+            ],
+          });
+        }}
+        isCreatingSale={isCreatingSale}
+        isPending={
+          isCreating ||
+          isUpdating ||
+          isDeleting ||
+          isCancelling ||
+          isCompleting ||
+          isCreatingSale
+        }
       />
     </div>
   );

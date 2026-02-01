@@ -28,11 +28,13 @@ export const getInitials = (user: User): string => {
     .toUpperCase();
 };
 
-export const formatCurrency = (value: number) =>
-  new Intl.NumberFormat("fr-FR", {
+export const formatCurrency = (value: number) => {
+  const safeValue = Number.isFinite(value) ? value : 0;
+  return new Intl.NumberFormat("fr-FR", {
     style: "currency",
     currency: "EUR",
-  }).format(value);
+  }).format(safeValue);
+};
 
 export function calculatePercentageChange(
   current: number,

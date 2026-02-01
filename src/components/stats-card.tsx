@@ -21,7 +21,8 @@ export function StatsCard({
   iconColor = 'text-accent-pink',
   iconBgColor = 'bg-accent-pink/10',
 }: StatsCardProps) {
-  const isPositive = change !== undefined && change >= 0;
+  const safeChange = Number.isFinite(change) ? change : undefined;
+  const isPositive = safeChange !== undefined && safeChange >= 0;
 
   return (
     <Card className="p-6">
@@ -29,7 +30,7 @@ export function StatsCard({
         <div className="space-y-2">
           <p className="text-sm font-medium text-muted-foreground">{title}</p>
           <p className="text-2xl font-bold">{value}</p>
-          {change !== undefined && (
+          {safeChange !== undefined && (
             <div className="flex items-center gap-1 text-sm">
               {isPositive ? (
                 <TrendingUp className="h-4 w-4 text-green-500" />
@@ -37,7 +38,7 @@ export function StatsCard({
                 <TrendingDown className="h-4 w-4 text-red-500" />
               )}
               <span className={cn(isPositive ? 'text-green-500' : 'text-red-500')}>
-                {isPositive ? '+' : ''}{change.toFixed(1)}%
+                {isPositive ? '+' : ''}{safeChange.toFixed(1)}%
               </span>
               {changeLabel && (
                 <span className="text-muted-foreground">{changeLabel}</span>

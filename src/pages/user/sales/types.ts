@@ -9,6 +9,7 @@ export interface SaleItem {
 export interface CreateSaleDto {
   salonId: string;
   clientId?: string;
+  appointmentId?: string;
   items: {
     type: "service" | "product";
     itemId: string;

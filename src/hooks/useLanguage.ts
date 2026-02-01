@@ -82,6 +82,7 @@ export function useLanguage(): UseLanguageReturn {
   // Format currency based on selected currency
   const formatCurrency = useCallback(
     (value: number): string => {
+      const safeValue = Number.isFinite(value) ? value : 0;
       try {
         // Use no decimal places for DZD, MAD, TND
         const noDecimalCurrencies = ['DZD', 'MAD', 'TND'];
@@ -92,10 +93,10 @@ export function useLanguage(): UseLanguageReturn {
           currency: currency.code,
           minimumFractionDigits: decimals,
           maximumFractionDigits: decimals,
-        }).format(value);
+        }).format(safeValue);
       } catch {
         // Fallback if locale not supported
-        return `${currency.symbol}${value.toFixed(2)}`;
+        return `${currency.symbol}${safeValue.toFixed(2)}`;
       }
     },
     [currency]

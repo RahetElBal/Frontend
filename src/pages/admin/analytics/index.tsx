@@ -64,6 +64,8 @@ export function AnalyticsPage() {
   const [revenuePeriod, setRevenuePeriod] = useState<string>("weekly");
 
   const salonId = user?.salon?.id;
+  const toNumber = (value?: number | null) =>
+    typeof value === "number" && Number.isFinite(value) ? value : 0;
 
   // Fetch dashboard stats from dedicated analytics endpoint
   const { data: dashboardStats, isLoading: loadingDashboard } =
@@ -144,27 +146,31 @@ export function AnalyticsPage() {
       );
 
       return {
-        totalRevenue: dashboardStats.todayRevenue,
-        totalAppointments: dashboardStats.todayAppointments,
+        totalRevenue: toNumber(dashboardStats.todayRevenue),
+        totalAppointments: toNumber(dashboardStats.todayAppointments),
         totalClients: clients.length,
-        newClientsThisMonth: dashboardStats.newClients,
-        averageTicket: dashboardStats.averageTicket,
+        newClientsThisMonth: toNumber(dashboardStats.newClients),
+        averageTicket: toNumber(dashboardStats.averageTicket),
         revenueChange: dashboardStats.revenueChange,
         appointmentsChange: dashboardStats.appointmentsChange,
         topServices: topServices.map((s) => ({
           name: s.name,
-          count: s.count,
-          revenue: s.revenue,
+          count: toNumber(s.count),
+          revenue: toNumber(s.revenue),
         })),
         topProducts: topProductsFromSales,
       };
     }
 
     // Fallback: Calculate from raw data
-    const totalRevenue = sales.reduce((sum, sale) => sum + sale.total, 0);
+    const totalRevenue = (sales ?? []).reduce(
+      (sum, sale) => sum + toNumber(sale?.total),
+      0,
+    );
     const totalAppointments = appointments.length;
     const totalClients = clients.length;
-    const averageTicket = sales.length > 0 ? totalRevenue / sales.length : 0;
+    const averageTicket =
+      sales.length > 0 ? totalRevenue / sales.length : 0;
 
     // Count new clients this month
     const thisMonth = new Date().getMonth();
@@ -193,7 +199,7 @@ export function AnalyticsPage() {
       totalAppointments,
       totalClients,
       newClientsThisMonth,
-      averageTicket,
+      averageTicket: toNumber(averageTicket),
       revenueChange: undefined,
       appointmentsChange: undefined,
       topServices: topServicesFromBookings,
@@ -215,7 +221,7 @@ export function AnalyticsPage() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatsCard
           title={t("analytics.totalRevenue")}
-          value={formatCurrency(metrics.totalRevenue)}
+          value={formatCurrency(toNumber(metrics.totalRevenue))}
           change={metrics.revenueChange}
           changeLabel={metrics.revenueChange !== undefined ? t("analytics.vsLastPeriod") : undefined}
           icon={DollarSign}
@@ -241,7 +247,7 @@ export function AnalyticsPage() {
         />
         <StatsCard
           title={t("analytics.averageTicket")}
-          value={formatCurrency(metrics.averageTicket)}
+          value={formatCurrency(toNumber(metrics.averageTicket))}
           icon={ShoppingCart}
         />
       </div>
@@ -307,7 +313,7 @@ export function AnalyticsPage() {
                       </div>
                     </div>
                     <p className="font-semibold text-green-600">
-                      {formatCurrency(service.revenue)}
+                      {formatCurrency(toNumber(service.revenue))}
                     </p>
                   </div>
                 ))}
@@ -315,41 +321,6 @@ export function AnalyticsPage() {
             )}
           </Card>
 
-          {/* Top Products */}
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-4">
-              {t("analytics.topProducts")}
-            </h3>
-            {metrics.topProducts.length === 0 ? (
-              <p className="text-muted-foreground text-center py-8">
-                {t("common.noResults")}
-              </p>
-            ) : (
-              <div className="space-y-4">
-                {metrics.topProducts.map((product, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500 font-bold text-sm">
-                        {index + 1}
-                      </div>
-                      <div>
-                        <p className="font-medium">{product.name}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {product.count} {t("analytics.sold")}
-                        </p>
-                      </div>
-                    </div>
-                    <p className="font-semibold text-green-600">
-                      {formatCurrency(product.revenue)}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            )}
-          </Card>
 
           {/* KPIs */}
           <Card className="p-6 lg:col-span-2">

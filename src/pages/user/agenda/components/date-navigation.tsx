@@ -28,10 +28,22 @@ export function DateNavigation({
     <Card className="p-4">
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="icon" onClick={onPrevDay}>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={onPrevDay}
+            title={t("agenda.previous")}
+            aria-label={t("agenda.previous")}
+          >
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <Button variant="outline" size="icon" onClick={onNextDay}>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={onNextDay}
+            title={t("agenda.next")}
+            aria-label={t("agenda.next")}
+          >
             <ChevronRight className="h-4 w-4" />
           </Button>
           <Button variant="outline" onClick={onToday}>

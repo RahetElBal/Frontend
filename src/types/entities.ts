@@ -187,6 +187,7 @@ export interface Appointment extends BaseEntity {
   startTime: string;
   endTime: string;
   status: AppointmentStatus;
+  paid?: boolean;
   notes?: string;
   price: number;
   reminderSent: boolean;

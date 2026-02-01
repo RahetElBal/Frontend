@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import type { Appointment } from "@/types/entities";
 import { AppointmentStatus } from "@/types/entities";
 import { timeSlots, statusColors, getCurrentTimeString } from "../utils";
+import { translateServiceName } from "@/common/service-translations";
 
 interface TimelineViewProps {
   appointments: Appointment[];
@@ -113,7 +114,11 @@ export function TimelineView({
                             </div>
                             <div className="flex items-center gap-2 text-sm text-muted-foreground">
                               <Scissors className="h-3 w-3" />
-                              <span>{appointment.service?.name}</span>
+                              <span>
+                                {appointment.service
+                                  ? translateServiceName(t, appointment.service)
+                                  : t("common.unknown")}
+                              </span>
                             </div>
                             <div className="flex items-center gap-2 text-sm text-muted-foreground">
                               <Clock className="h-3 w-3" />
@@ -126,7 +131,9 @@ export function TimelineView({
                             variant={statusColors[appointment.status]}
                             className="text-xs shrink-0"
                           >
-                            {appointment.status}
+                            {t(`agenda.statuses.${appointment.status}`, {
+                              defaultValue: appointment.status,
+                            })}
                           </Badge>
                         </div>
                       </div>

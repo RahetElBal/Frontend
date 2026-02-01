@@ -52,6 +52,8 @@ export function SalesPage() {
   const [searchItem, setSearchItem] = useState("");
 
   const salonId = user?.salon?.id;
+  const toNumber = (value?: number | null) =>
+    typeof value === "number" && Number.isFinite(value) ? value : 0;
 
   // Fetch data from API (scoped to current salon)
   const { data: salesResponse, isLoading } = useGet<SalesResponse>("sales", {
@@ -118,12 +120,20 @@ export function SalesPage() {
 
   // Calculate totals
   const subtotal = useMemo(
-    () => saleItems.reduce((sum, item) => sum + item.price * item.quantity, 0),
+    () =>
+      (saleItems ?? []).reduce(
+        (sum, item) =>
+          sum + toNumber(item?.price) * (item?.quantity ?? 0),
+        0,
+      ),
     [saleItems],
   );
   const total = subtotal;
 
-  const todayTotal = sales.reduce((sum, sale) => sum + sale.total, 0);
+  const todayTotal = (sales ?? []).reduce(
+    (sum, sale) => sum + toNumber(sale?.total),
+    0,
+  );
   const averageTicket = sales.length > 0 ? todayTotal / sales.length : 0;
 
   // Filter services and products for search
