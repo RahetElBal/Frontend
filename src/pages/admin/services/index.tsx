@@ -28,7 +28,7 @@ import { usePost } from "@/hooks/usePost";
 import { useUser } from "@/hooks/useUser";
 import { ROUTES } from "@/constants/navigation";
 import { patch } from "@/lib/http";
-import type { PaginatedResponse, Salon, Service } from "@/types";
+import type { Category, PaginatedResponse, Salon, Service } from "@/types";
 
 export default function AdminServicesPage() {
   const { t } = useTranslation();
@@ -42,6 +42,12 @@ export default function AdminServicesPage() {
     {},
   );
   const [isSavingAll, setIsSavingAll] = useState(false);
+
+  const getCategoryName = (category?: string | Category): string => {
+    if (!category) return "";
+    if (typeof category === "string") return category;
+    return category.name || "";
+  };
 
   const { data: salons = [] } = useGet<Salon[]>("salons", {
     enabled: isSuperadmin,
@@ -61,7 +67,8 @@ export default function AdminServicesPage() {
   const categories = useMemo(() => {
     const unique = new Set<string>();
     services.forEach((service) => {
-      if (service.category) unique.add(service.category);
+      const name = getCategoryName(service.category);
+      if (name) unique.add(name);
     });
     return Array.from(unique).sort((a, b) => a.localeCompare(b));
   }, [services]);
@@ -154,12 +161,13 @@ export default function AdminServicesPage() {
   const filteredServices = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase();
     return services.filter((service) => {
+      const categoryName = getCategoryName(service.category);
       const matchesCategory =
-        selectedCategory === "all" || service.category === selectedCategory;
+        selectedCategory === "all" || categoryName === selectedCategory;
       const matchesSearch =
         !normalizedSearch ||
         service.name.toLowerCase().includes(normalizedSearch) ||
-        service.category.toLowerCase().includes(normalizedSearch);
+        categoryName.toLowerCase().includes(normalizedSearch);
       return matchesCategory && matchesSearch;
     });
   }, [services, searchTerm, selectedCategory]);
@@ -168,9 +176,10 @@ export default function AdminServicesPage() {
     if (!groupByCategory) return { all: filteredServices };
     return filteredServices.reduce<Record<string, Service[]>>(
       (acc, service) => {
-        const category = service.category || t("common.unknown");
-        if (!acc[category]) acc[category] = [];
-        acc[category].push(service);
+        const categoryName =
+          getCategoryName(service.category) || t("common.unknown");
+        if (!acc[categoryName]) acc[categoryName] = [];
+        acc[categoryName].push(service);
         return acc;
       },
       {},
@@ -328,7 +337,7 @@ export default function AdminServicesPage() {
                         <TableCell className="font-medium">
                           {service.name}
                         </TableCell>
-                        <TableCell>{service.category}</TableCell>
+                        <TableCell>{getCategoryName(service.category)}</TableCell>
                         <TableCell>{service.duration} min</TableCell>
                         <TableCell>
                           <Input
