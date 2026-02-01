@@ -706,6 +706,8 @@ export const ar = {
       unsavedChanges: "{{count}} تغيير غير محفوظ",
       addService: "إضافة خدمة",
       editService: "تعديل الخدمة",
+      addServiceDescription: "إنشاء خدمة جديدة للصالون المحدد",
+      editServiceDescription: "تحديث تفاصيل الخدمة",
       nameLabel: "الاسم",
       categoryLabel: "الفئة",
       durationLabel: "المدة (دقائق)",

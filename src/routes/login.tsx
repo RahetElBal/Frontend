@@ -90,7 +90,7 @@ export function LoginPage() {
           <Button
             variant="outline"
             size="lg"
-            className="w-full h-12 text-base font-medium border-2 hover:bg-muted/50 transition-all duration-200"
+            className="w-full h-12 text-base font-medium border-2 border-pink-100 bg-linear-to-br from-pink-50 to-blue-50 text-gray-900 shadow-sm transition-all duration-200 hover:from-pink-100 hover:to-blue-100"
             onClick={loginWithGoogle}
             disabled={isLoading}
           >

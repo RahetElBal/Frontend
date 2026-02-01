@@ -14,6 +14,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
 import {
@@ -515,6 +516,11 @@ export default function AdminServicesPage() {
                 ? t("admin.services.addService")
                 : t("admin.services.editService")}
             </DialogTitle>
+            <DialogDescription>
+              {modalMode === "create"
+                ? t("admin.services.addServiceDescription")
+                : t("admin.services.editServiceDescription")}
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div>

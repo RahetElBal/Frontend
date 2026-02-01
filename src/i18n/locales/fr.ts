@@ -959,6 +959,8 @@ export const fr = {
       unsavedChanges: "{{count}} modification(s) non enregistrée(s)",
       addService: "Ajouter un service",
       editService: "Modifier le service",
+      addServiceDescription: "Créer un nouveau service pour le salon sélectionné",
+      editServiceDescription: "Mettre à jour les détails du service",
       nameLabel: "Nom",
       categoryLabel: "Catégorie",
       durationLabel: "Durée (minutes)",

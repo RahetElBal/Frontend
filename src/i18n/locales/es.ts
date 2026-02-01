@@ -710,6 +710,8 @@ export const es = {
       unsavedChanges: "{{count}} cambio(s) sin guardar",
       addService: "Añadir servicio",
       editService: "Editar servicio",
+      addServiceDescription: "Crea un nuevo servicio para el salón seleccionado",
+      editServiceDescription: "Actualiza los detalles del servicio",
       nameLabel: "Nombre",
       categoryLabel: "Categoría",
       durationLabel: "Duración (minutos)",

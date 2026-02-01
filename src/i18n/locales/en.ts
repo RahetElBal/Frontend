@@ -1310,6 +1310,8 @@ export const en = {
       unsavedChanges: "{{count}} unsaved change(s)",
       addService: "Add Service",
       editService: "Edit Service",
+      addServiceDescription: "Create a new service for the selected salon",
+      editServiceDescription: "Update the service details",
       nameLabel: "Name",
       categoryLabel: "Category",
       durationLabel: "Duration (minutes)",
