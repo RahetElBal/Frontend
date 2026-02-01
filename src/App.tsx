@@ -20,6 +20,7 @@ import { PromotionsPage } from "./pages/admin/promotions";
 import { AnalyticsPage } from "./pages/admin/analytics";
 import { SalonSettingsPage } from "./pages/admin/salon-settings";
 import { SettingsPage } from "./pages/user/settings";
+import AdminServicesPage from "./pages/admin/services";
 
 function App() {
   return (
@@ -50,6 +51,7 @@ function App() {
           <Route path={ROUTES.ADMIN} element={<AdminDashboardPage />} />
           <Route path={ROUTES.ADMIN_USERS} element={<AdminUsersPage />} />
           <Route path={ROUTES.ADMIN_SALON} element={<SalonsPage />} />
+        <Route path={ROUTES.ADMIN_SERVICES} element={<AdminServicesPage />} />
           <Route path={ROUTES.ADMIN_SETTINGS} element={<SettingsPage />} />
         </Route>
 

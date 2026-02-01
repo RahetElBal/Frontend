@@ -51,10 +51,8 @@ export function AdminLayout() {
 
       {/* Main Content Area */}
       <main
-        className={cn(
-          "min-h-screen transition-all duration-300",
-          "ps-64", // Padding start for sidebar (RTL-aware)
-        )}
+        className={cn("min-h-screen transition-all duration-300")}
+        style={{ paddingInlineStart: "var(--app-sidebar-width, 256px)" }}
       >
         <div className="p-6">
           <Outlet />

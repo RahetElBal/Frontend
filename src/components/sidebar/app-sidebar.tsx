@@ -1,5 +1,5 @@
 // app-sidebar.tsx (minor updates)
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { PanelLeftClose, PanelLeft } from "lucide-react";
 
@@ -36,6 +36,14 @@ export function AppSidebar({
   const { t } = useTranslation();
   const [collapsed, setCollapsed] = useState(false);
   const navigation = getNavigationForRole(userRole, isInAdminPanel);
+
+  useEffect(() => {
+    const width = collapsed ? SIDEBAR_WIDTH_COLLAPSED : SIDEBAR_WIDTH;
+    document.documentElement.style.setProperty(
+      "--app-sidebar-width",
+      `${width}px`,
+    );
+  }, [collapsed]);
 
   return (
     <TooltipProvider>

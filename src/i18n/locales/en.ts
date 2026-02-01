@@ -279,7 +279,9 @@ export interface TranslationKeys {
     admin: {
       dashboard: string;
       users: string;
+      salon: string;
       salons: string;
+      services: string;
       tags: string;
       templates: string;
       permissions: string;
@@ -684,6 +686,7 @@ export const en = {
       dashboard: "Admin Dashboard",
       users: "Users",
       salon: "Salon",
+      services: "Services",
       tags: "Tags",
       templates: "Templates",
       permissions: "Permissions",
@@ -1267,6 +1270,7 @@ export const en = {
       deleteSalon: "Delete Salon",
       deleteSalonConfirm:
         "Are you sure you want to delete {{name}}? This action cannot be undone.",
+      owner: "Owner",
       salonOwner: "Salon Owner",
       selectOwner: "Select an admin as owner",
       selectOwnerRequired: "Please select a salon owner",
@@ -1277,10 +1281,34 @@ export const en = {
       yourSalon: "Your salon",
       staffCount: "Staff",
       name: "Salon Name",
-      addSalonDescription: "Add your salon",
+      addSalonDescription: "Add a salon",
       address: "Address",
       phone: "Phone Number",
       email: "Email",
+    },
+    services: {
+      title: "Services",
+      description: "Manage service pricing per salon",
+      selectSalon: "Select salon",
+      selectSalonPlaceholder: "Choose a salon",
+      noSalonSelected: "Select a salon to view services",
+      noServices: "No services found",
+      priceUpdated: "Price updated",
+      priceInvalid: "Please enter a valid price",
+      bulkUpdated: "Prices updated",
+      saveAll: "Save all",
+      savingAll: "Saving...",
+      resetChanges: "Reset changes",
+      searchPlaceholder: "Search services...",
+      filterCategory: "Filter by category",
+      allCategories: "All categories",
+      groupByCategory: "Group by category",
+      unsavedChanges: "{{count}} unsaved change(s)",
+      updatePrice: "Update",
+      name: "Name",
+      category: "Category",
+      duration: "Duration",
+      price: "Price",
     },
   },
 } as const;

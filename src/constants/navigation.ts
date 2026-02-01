@@ -77,6 +77,7 @@ export const ROUTES = {
   ADMIN: "/admin",
   ADMIN_USERS: "/admin/users",
   ADMIN_SALON: "/admin/salon",
+  ADMIN_SERVICES: "/admin/services",
   ADMIN_SETTINGS: "/admin/settings",
 } as const;
 
@@ -265,6 +266,12 @@ export const ADMIN_NAVIGATION: NavSection[] = [
         href: ROUTES.ADMIN_SALON,
         icon: Building2,
       },
+      {
+        id: "admin-services",
+        titleKey: "nav.admin.services",
+        href: ROUTES.ADMIN_SERVICES,
+        icon: Scissors,
+      },
     ],
   },
   {
@@ -291,6 +298,12 @@ export function getNavigationForRole(
   if (isInAdminPanel) {
     // Admin panel is only for superadmin and admin
     if (role === "superadmin" || role === "admin") {
+      if (role === "admin") {
+        return ADMIN_NAVIGATION.map((section) => ({
+          ...section,
+          items: section.items.filter((item) => item.id !== "admin-services"),
+        }));
+      }
       return ADMIN_NAVIGATION;
     }
     return [];
