@@ -7,6 +7,15 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -26,9 +35,11 @@ import { toast } from "@/lib/toast";
 import { useGet } from "@/hooks/useGet";
 import { useUser } from "@/hooks/useUser";
 import { ROUTES } from "@/constants/navigation";
-import { patch } from "@/lib/http";
+import { patch, post } from "@/lib/http";
 import { translateServiceCategory } from "@/common/service-translations";
 import type { Category, PaginatedResponse, Salon, Service } from "@/types";
+
+type ServiceModalMode = "create" | "edit";
 
 export default function AdminServicesPage() {
   const { t } = useTranslation();
@@ -43,6 +54,19 @@ export default function AdminServicesPage() {
   );
   const [isSavingAll, setIsSavingAll] = useState(false);
   const [isUpdatingId, setIsUpdatingId] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState<ServiceModalMode>("create");
+  const [editingServiceId, setEditingServiceId] = useState<string | null>(null);
+  const [isSavingService, setIsSavingService] = useState(false);
+  const [formValues, setFormValues] = useState({
+    name: "",
+    category: "",
+    duration: "",
+    price: "",
+    description: "",
+    image: "",
+    isActive: true,
+  });
 
   const getCategoryName = (category?: string | Category): string => {
     if (!category) return "";
@@ -157,6 +181,104 @@ export default function AdminServicesPage() {
     }
   };
 
+  const openCreateModal = () => {
+    if (!selectedSalonId) {
+      toast.error(t("admin.services.selectSalonFirst"));
+      return;
+    }
+    setModalMode("create");
+    setEditingServiceId(null);
+    setFormValues({
+      name: "",
+      category: "",
+      duration: "",
+      price: "",
+      description: "",
+      image: "",
+      isActive: true,
+    });
+    setIsModalOpen(true);
+  };
+
+  const openEditModal = (service: Service) => {
+    setModalMode("edit");
+    setEditingServiceId(service.id);
+    setFormValues({
+      name: service.name ?? "",
+      category: getCategoryName(service.category),
+      duration: String(service.duration ?? ""),
+      price: String(service.price ?? ""),
+      description: service.description ?? "",
+      image: service.image ?? "",
+      isActive: service.isActive ?? true,
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleFormChange = (
+    field: keyof typeof formValues,
+    value: string | boolean,
+  ) => {
+    setFormValues((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleSubmitService = async () => {
+    const duration = Number(formValues.duration);
+    const price = Number(formValues.price);
+    if (!formValues.name.trim()) {
+      toast.error(t("admin.services.nameRequired"));
+      return;
+    }
+    if (!formValues.category.trim()) {
+      toast.error(t("admin.services.categoryRequired"));
+      return;
+    }
+    if (!Number.isFinite(duration) || duration <= 0) {
+      toast.error(t("admin.services.durationInvalid"));
+      return;
+    }
+    if (!Number.isFinite(price) || price < 0) {
+      toast.error(t("admin.services.priceInvalid"));
+      return;
+    }
+
+    setIsSavingService(true);
+    try {
+      if (modalMode === "create") {
+        await post<Service, any>("services", {
+          salonId: selectedSalonId,
+          name: formValues.name.trim(),
+          category: formValues.category.trim(),
+          duration,
+          price,
+          description: formValues.description.trim() || undefined,
+          image: formValues.image.trim() || undefined,
+          isActive: formValues.isActive,
+        });
+        toast.success(t("admin.services.created"));
+      } else if (editingServiceId) {
+        await patch<Service, any>(`services/${editingServiceId}`, {
+          name: formValues.name.trim(),
+          category: formValues.category.trim(),
+          duration,
+          price,
+          description: formValues.description.trim() || undefined,
+          image: formValues.image.trim() || undefined,
+          isActive: formValues.isActive,
+        });
+        toast.success(t("admin.services.updated"));
+      }
+      setIsModalOpen(false);
+      refetch();
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : t("common.error");
+      toast.error(message);
+    } finally {
+      setIsSavingService(false);
+    }
+  };
+
   const filteredServices = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase();
     return services.filter((service) => {
@@ -197,6 +319,9 @@ export default function AdminServicesPage() {
         actions={
           selectedSalonId ? (
             <div className="flex flex-wrap gap-2">
+              <Button onClick={openCreateModal}>
+                {t("admin.services.addService")}
+              </Button>
               <Button
                 variant="outline"
                 onClick={handleReset}
@@ -356,13 +481,22 @@ export default function AdminServicesPage() {
                           />
                         </TableCell>
                         <TableCell className="text-end">
-                          <Button
-                            size="sm"
-                            onClick={() => handleSave(service.id)}
-                            disabled={isUpdatingId === service.id}
-                          >
-                            {t("admin.services.updatePrice")}
-                          </Button>
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => openEditModal(service)}
+                            >
+                              {t("common.edit")}
+                            </Button>
+                            <Button
+                              size="sm"
+                              onClick={() => handleSave(service.id)}
+                              disabled={isUpdatingId === service.id}
+                            >
+                              {t("admin.services.updatePrice")}
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -372,6 +506,108 @@ export default function AdminServicesPage() {
           </Table>
         </Card>
       )}
+
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {modalMode === "create"
+                ? t("admin.services.addService")
+                : t("admin.services.editService")}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>{t("admin.services.nameLabel")}</Label>
+              <Input
+                value={formValues.name}
+                onChange={(event) =>
+                  handleFormChange("name", event.target.value)
+                }
+              />
+            </div>
+            <div>
+              <Label>{t("admin.services.categoryLabel")}</Label>
+              <Input
+                value={formValues.category}
+                list="admin-service-categories"
+                onChange={(event) =>
+                  handleFormChange("category", event.target.value)
+                }
+              />
+              <datalist id="admin-service-categories">
+                {categories.map((category) => (
+                  <option key={category} value={category} />
+                ))}
+              </datalist>
+            </div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div>
+                <Label>{t("admin.services.durationLabel")}</Label>
+                <Input
+                  type="number"
+                  min="1"
+                  value={formValues.duration}
+                  onChange={(event) =>
+                    handleFormChange("duration", event.target.value)
+                  }
+                />
+              </div>
+              <div>
+                <Label>{t("admin.services.priceLabel")}</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={formValues.price}
+                  onChange={(event) =>
+                    handleFormChange("price", event.target.value)
+                  }
+                />
+              </div>
+            </div>
+            <div>
+              <Label>{t("admin.services.descriptionLabel")}</Label>
+              <Textarea
+                value={formValues.description}
+                onChange={(event) =>
+                  handleFormChange("description", event.target.value)
+                }
+              />
+            </div>
+            <div>
+              <Label>{t("admin.services.imageLabel")}</Label>
+              <Input
+                value={formValues.image}
+                onChange={(event) =>
+                  handleFormChange("image", event.target.value)
+                }
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <Switch
+                checked={formValues.isActive}
+                onCheckedChange={(value) => handleFormChange("isActive", value)}
+              />
+              <span className="text-sm">
+                {t("admin.services.activeLabel")}
+              </span>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsModalOpen(false)}>
+              {t("common.cancel")}
+            </Button>
+            <Button onClick={handleSubmitService} disabled={isSavingService}>
+              {isSavingService
+                ? t("admin.services.savingService")
+                : modalMode === "create"
+                  ? t("common.create")
+                  : t("common.save")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
