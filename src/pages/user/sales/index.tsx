@@ -37,6 +37,7 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { useUser } from "@/hooks/useUser";
 import { toast } from "@/lib/toast";
 import type { Sale, Client, Service, Product } from "@/types/entities";
+import type { PaginatedResponse } from "@/types";
 import { PaymentMethod } from "@/types/entities";
 import { useGet } from "@/hooks/useGet";
 import { usePost } from "@/hooks/usePost";
@@ -50,11 +51,6 @@ interface SalesResponse {
   total: number;
   page: number;
   perPage: number;
-}
-
-interface ProductsResponse {
-  data: Product[];
-  total: number;
 }
 
 export function SalesPage() {
@@ -79,17 +75,19 @@ export function SalesPage() {
   });
   const sales = salesResponse?.data || [];
   
-  const { data: clients = [] } = useGet<Client[]>("clients", {
+  const { data: clientsResponse } = useGet<PaginatedResponse<Client>>("clients", {
     params: { salonId },
     enabled: !!salonId,
   });
+  const clients = clientsResponse?.data ?? [];
   
-  const { data: services = [] } = useGet<Service[]>("services", {
+  const { data: servicesResponse } = useGet<PaginatedResponse<Service>>("services", {
     params: { salonId },
     enabled: !!salonId,
   });
+  const services = servicesResponse?.data ?? [];
   
-  const { data: productsResponse } = useGet<ProductsResponse>("products", {
+  const { data: productsResponse } = useGet<PaginatedResponse<Product>>("products", {
     params: { salonId },
     enabled: !!salonId,
   });

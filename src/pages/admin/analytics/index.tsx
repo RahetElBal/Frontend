@@ -281,7 +281,7 @@ export function AnalyticsPage() {
         />
         <StatsCard
           title={t("analytics.totalAppointments")}
-          value={metrics.totalAppointments.toString()}
+          value={(metrics.totalAppointments ?? 0).toString()}
           change={metrics.appointmentsChange}
           changeLabel={metrics.appointmentsChange !== undefined ? t("analytics.vsLastPeriod") : undefined}
           icon={Calendar}
@@ -290,7 +290,7 @@ export function AnalyticsPage() {
         />
         <StatsCard
           title={t("analytics.newClients")}
-          value={metrics.newClientsThisMonth.toString()}
+          value={(metrics.newClientsThisMonth ?? 0).toString()}
           changeLabel={t("analytics.thisMonth")}
           icon={Users}
           iconColor="text-purple-600"

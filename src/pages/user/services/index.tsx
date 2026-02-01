@@ -40,6 +40,7 @@ import { useForm } from "@/hooks/useForm";
 import { useUser } from "@/hooks/useUser";
 import { toast } from "@/lib/toast";
 import type { Service } from "@/types/entities";
+import type { PaginatedResponse } from "@/types";
 import { useGet } from "@/hooks/useGet";
 import { usePost } from "@/hooks/usePost";
 import { usePostAction } from "@/hooks/usePostAction";
@@ -82,25 +83,32 @@ export function ServicesPage() {
 
   // Fetch services and categories from API (scoped to current salon)
   const {
-    data: services = [],
+    data: servicesResponse,
     isLoading,
     refetch,
-  } = useGet<Service[]>("services", {
+  } = useGet<PaginatedResponse<Service>>("services", {
     params: { salonId },
     enabled: !!salonId,
   });
+  const services = servicesResponse?.data ?? [];
   
-  const { data: categoriesData = [] } = useGet<ServiceCategory[]>("services/categories", {
+  const { data: categoriesData = [] } = useGet<ServiceCategory[] | string[]>(
+    "services/categories",
+    {
     params: { salonId },
     enabled: !!salonId,
-  });
+  },
+  );
   
   // Transform categories data for display
-  const categories = categoriesData.map((cat) => ({
-    id: cat.category,
-    name: cat.category,
-    color: "#ec4899", // Default color, could be dynamic
-  }));
+  const categories = categoriesData.map((cat) => {
+    const name = typeof cat === "string" ? cat : cat.category;
+    return {
+      id: name,
+      name,
+      color: "#ec4899", // Default color, could be dynamic
+    };
+  });
 
   // Helper functions
   const getSelectedService = (): Service | null => {

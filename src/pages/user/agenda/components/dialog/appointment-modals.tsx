@@ -101,8 +101,10 @@ export function AppointmentModals({
     [services],
   );
 
+  const { reset, watch } = form;
+
   // Selected service for display
-  const selectedServiceId = form.watch("serviceId");
+  const selectedServiceId = watch("serviceId");
   const selectedService = useMemo(
     () => safeServices.find((s) => s.id === selectedServiceId) || null,
     [safeServices, selectedServiceId],
@@ -112,8 +114,8 @@ export function AppointmentModals({
   useEffect(() => {
     if (!modalState) return;
 
-    if (derived?.isCreateMode && derived?.isEditMode) {
-      form.reset({
+    if (derived?.isCreateMode) {
+      reset({
         clientId: "",
         serviceId: "",
         date: modalState?.prefillDate || new Date().toISOString().split("T")[0],
@@ -121,7 +123,7 @@ export function AppointmentModals({
         notes: "",
       });
     } else if (selectedAppointment && derived?.isEditMode) {
-      form.reset({
+      reset({
         clientId: selectedAppointment.clientId,
         serviceId: selectedAppointment.serviceId,
         date: selectedAppointment.date,
@@ -134,7 +136,7 @@ export function AppointmentModals({
     selectedAppointment,
     derived?.isCreateMode,
     derived?.isEditMode,
-    form,
+    reset,
   ]);
 
   if (!derived) return null;

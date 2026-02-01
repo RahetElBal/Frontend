@@ -65,24 +65,28 @@ export function PromotionsPage() {
   );
 
   // Mutations - NOTE: These endpoints need to be implemented in backend
-  const createPromotion = usePost<Promotion, CreatePromotionDto>("promotions", {
+  const createPromotion = usePost<Promotion, CreatePromotionDto & { salonId: string }>(
+    "promotions",
+    {
     invalidateQueries: ["promotions"],
     onSuccess: () => {
       toast.success(t("promotions.created"));
       setIsAddModalOpen(false);
     },
     onError: (error) => toast.error(error.message || t("common.error")),
-  });
-
-  const updatePromotionStatus = usePost<Promotion, { status: PromotionStatus }>(
-    "promotions",
-    {
-      method: "PATCH",
-      invalidateQueries: ["promotions"],
-      onSuccess: () => toast.success(t("promotions.statusUpdated")),
-      onError: (error) => toast.error(error.message),
-    },
+  },
   );
+
+  const updatePromotionStatus = usePost<
+    Promotion,
+    { id: string; status: PromotionStatus }
+  >("promotions", {
+    id: (variables) => variables.id,
+    method: "PATCH",
+    invalidateQueries: ["promotions"],
+    onSuccess: () => toast.success(t("promotions.statusUpdated")),
+    onError: (error) => toast.error(error.message),
+  });
 
   const filteredPromotions =
     selectedStatus === "all"
@@ -294,7 +298,10 @@ export function PromotionsPage() {
                       {promotion.status === "active" ? (
                         <DropdownMenuItem
                           onClick={() =>
-                            updatePromotionStatus.mutate({ status: "paused" })
+                            updatePromotionStatus.mutate({
+                              id: promotion.id,
+                              status: "paused",
+                            })
                           }
                         >
                           <Pause className="h-4 w-4 me-2" />
@@ -304,7 +311,10 @@ export function PromotionsPage() {
                         promotion.status === "draft" ? (
                         <DropdownMenuItem
                           onClick={() =>
-                            updatePromotionStatus.mutate({ status: "active" })
+                            updatePromotionStatus.mutate({
+                              id: promotion.id,
+                              status: "active",
+                            })
                           }
                         >
                           <Play className="h-4 w-4 me-2" />
@@ -403,7 +413,13 @@ export function PromotionsPage() {
       <PromotionModal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
-        onSubmit={(data) => createPromotion.mutate(data)}
+        onSubmit={(data) => {
+          if (!salonId) {
+            toast.error(t("common.error"));
+            return;
+          }
+          createPromotion.mutate({ ...data, salonId });
+        }}
         isLoading={createPromotion.isPending}
       />
     </div>
