@@ -1,0 +1,125 @@
+import { useTranslation } from "react-i18next";
+import { Check, X, CalendarOff } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import type { User as UserType, StaffTimeOff, TimeOffStatus } from "@/types/entities";
+
+interface TimeOffViewProps {
+  timeOffRequests: StaffTimeOff[];
+  staffMembers: UserType[];
+  onApprove: (id: string) => void;
+  onReject: (id: string) => void;
+}
+
+export function TimeOffView({
+  timeOffRequests,
+  staffMembers,
+  onApprove,
+  onReject,
+}: TimeOffViewProps) {
+  const { t } = useTranslation();
+
+  const getStaffName = (staffId: string) => {
+    const staff = staffMembers.find((s) => s.id === staffId);
+    return staff ? `${staff.firstName} ${staff.lastName}` : "Unknown";
+  };
+
+  const getStatusBadge = (status: TimeOffStatus) => {
+    switch (status) {
+      case "pending":
+        return <Badge variant="warning">{t("staff.pending")}</Badge>;
+      case "approved":
+        return <Badge variant="success">{t("staff.approved")}</Badge>;
+      case "rejected":
+        return <Badge variant="error">{t("staff.rejected")}</Badge>;
+      case "cancelled":
+        return <Badge variant="default">{t("staff.cancelled")}</Badge>;
+      default:
+        return <Badge>{status}</Badge>;
+    }
+  };
+
+  if (timeOffRequests.length === 0) {
+    return (
+      <Card className="p-8 text-center">
+        <CalendarOff className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+        <h3 className="font-semibold mb-2">{t("staff.noTimeOffRequests")}</h3>
+        <p className="text-muted-foreground">
+          {t("staff.noTimeOffRequestsDescription")}
+        </p>
+      </Card>
+    );
+  }
+
+  return (
+    <Card>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>{t("fields.staff")}</TableHead>
+            <TableHead>{t("fields.type")}</TableHead>
+            <TableHead>{t("fields.dates")}</TableHead>
+            <TableHead>{t("fields.reason")}</TableHead>
+            <TableHead>{t("fields.status")}</TableHead>
+            <TableHead className="text-end">{t("common.actions")}</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {timeOffRequests.map((request) => (
+            <TableRow key={request.id}>
+              <TableCell className="font-medium">
+                {getStaffName(request.staffId)}
+              </TableCell>
+              <TableCell>{t(`staff.timeOffTypes.${request.type}`)}</TableCell>
+              <TableCell>
+                {new Date(request.startDate).toLocaleDateString()} -{" "}
+                {new Date(request.endDate).toLocaleDateString()}
+                {request.isHalfDay && (
+                  <span className="text-xs text-muted-foreground ms-1">
+                    ({t(`staff.${request.halfDayPeriod}`)})
+                  </span>
+                )}
+              </TableCell>
+              <TableCell className="max-w-50 truncate">
+                {request.reason || "-"}
+              </TableCell>
+              <TableCell>{getStatusBadge(request.status)}</TableCell>
+              <TableCell className="text-end">
+                {request.status === "pending" && (
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="text-green-600 hover:text-green-700"
+                      onClick={() => onApprove(request.id)}
+                    >
+                      <Check className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="text-red-600 hover:text-red-700"
+                      onClick={() => onReject(request.id)}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </Card>
+  );
+}

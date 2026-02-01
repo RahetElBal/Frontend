@@ -354,7 +354,7 @@ export function LoyaltyPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="redemptionRate">Valeur du point (€)</Label>
+                  <Label htmlFor="redemptionRate">Valeur du point (EUR)</Label>
                   <Input
                     id="redemptionRate"
                     type="number"

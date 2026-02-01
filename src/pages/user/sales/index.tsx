@@ -5,27 +5,17 @@ import {
   Receipt,
   CreditCard,
   Banknote,
-  MoreHorizontal,
-  Eye,
-  FileText,
-  Trash2,
   Search,
   User,
   Package,
   Scissors,
+  Trash2,
 } from "lucide-react";
 
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/badge";
-import { DataTable, type Column } from "@/components/table/data-table";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { DataTable } from "@/components/table/data-table";
 import {
   Dialog,
   DialogContent,
@@ -46,51 +36,31 @@ import { useTable } from "@/hooks/useTable";
 import { useLanguage } from "@/hooks/useLanguage";
 import { toast } from "@/lib/toast";
 import type { Sale, Client, Service, Product } from "@/types/entities";
-import { PaymentMethod, SaleStatus } from "@/types/entities";
+import { PaymentMethod } from "@/types/entities";
 import { useGet } from "@/hooks/useGet";
 import { usePost } from "@/hooks/usePost";
+import { usePostAction } from "@/hooks/usePostAction";
+import { useSalon } from "@/contexts/SalonProvider";
+import { getSalesColumns } from "./list/columns";
+import type { SaleItem, CreateSaleDto } from "./types";
 
-interface SaleItem {
-  id: string;
-  name: string;
-  type: "service" | "product";
-  price: number;
-  quantity: number;
-}
-
-interface CreateSaleDto {
-  clientId?: string;
-  items: {
-    type: "service" | "product";
-    itemId: string;
-    quantity: number;
-    price: number;
-  }[];
+// API response types
+interface SalesResponse {
+  data: Sale[];
   total: number;
-  paymentMethod: PaymentMethod;
-  discount?: number;
+  page: number;
+  perPage: number;
 }
 
-const statusColors: Record<
-  SaleStatus,
-  "default" | "success" | "warning" | "error"
-> = {
-  [SaleStatus.COMPLETED]: "success",
-  [SaleStatus.PENDING]: "warning",
-  [SaleStatus.REFUNDED]: "error",
-  [SaleStatus.CANCELLED]: "error",
-};
-
-const paymentIcons: Record<PaymentMethod, typeof CreditCard> = {
-  [PaymentMethod.CARD]: CreditCard,
-  [PaymentMethod.CASH]: Banknote,
-  [PaymentMethod.BANK_TRANSFER]: Receipt,
-  [PaymentMethod.OTHER]: Receipt,
-};
+interface ProductsResponse {
+  data: Product[];
+  total: number;
+}
 
 export function SalesPage() {
   const { t } = useTranslation();
   const { formatCurrency } = useLanguage();
+  const { currentSalon } = useSalon();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedClientId, setSelectedClientId] = useState<string>("");
   const [saleItems, setSaleItems] = useState<SaleItem[]>([]);
@@ -100,14 +70,34 @@ export function SalesPage() {
   const [discount, setDiscount] = useState(0);
   const [searchItem, setSearchItem] = useState("");
 
-  // Fetch data from API (scoped to current salon)
-  const { data: sales = [], isLoading } = useGet<Sale[]>("sales");
-  const { data: clients = [] } = useGet<Client[]>("clients");
-  const { data: services = [] } = useGet<Service[]>("services");
-  const { data: products = [] } = useGet<Product[]>("products");
+  const salonId = currentSalon?.id;
 
-  // Create sale mutation (includes salonId automatically)
+  // Fetch data from API (scoped to current salon)
+  const { data: salesResponse, isLoading } = useGet<SalesResponse>("sales", {
+    params: { salonId },
+    enabled: !!salonId,
+  });
+  const sales = salesResponse?.data || [];
+  
+  const { data: clients = [] } = useGet<Client[]>("clients", {
+    params: { salonId },
+    enabled: !!salonId,
+  });
+  
+  const { data: services = [] } = useGet<Service[]>("services", {
+    params: { salonId },
+    enabled: !!salonId,
+  });
+  
+  const { data: productsResponse } = useGet<ProductsResponse>("products", {
+    params: { salonId },
+    enabled: !!salonId,
+  });
+  const products = productsResponse?.data || [];
+
+  // Create sale mutation
   const createSale = usePost<Sale, CreateSaleDto>("sales", {
+    invalidateQueries: ["sales"],
     onSuccess: () => {
       toast.success(t("sales.newSale") + " - " + t("common.success"));
       closeModal();
@@ -116,6 +106,27 @@ export function SalesPage() {
       toast.error(error.message || t("common.error"));
     },
   });
+
+  // Complete sale - POST /sales/{id}/complete
+  const { mutate: completeSale } = usePostAction<
+    Sale,
+    string
+  >("sales", {
+    id: (saleId) => saleId,
+    action: "complete",
+    invalidateQueries: ["sales"],
+    showSuccessToast: true,
+    successMessage: t("sales.saleCompleted"),
+  });
+
+  // Handler to complete a sale from the table
+  const handleCompleteSale = (sale: Sale) => {
+    if (sale.status === "completed") {
+      toast.info(t("sales.alreadyCompleted"));
+      return;
+    }
+    completeSale(sale.id);
+  };
 
   const table = useTable<Sale>({
     data: sales,
@@ -206,11 +217,17 @@ export function SalesPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (saleItems.length === 0) {
-      toast.error("Ajoutez au moins un article");
+      toast.error(t("sales.addAtLeastOneItem"));
+      return;
+    }
+    
+    if (!salonId) {
+      toast.error(t("common.error"));
       return;
     }
 
     createSale.mutate({
+      salonId,
       clientId:
         selectedClientId && selectedClientId !== "walk-in"
           ? selectedClientId
@@ -227,125 +244,7 @@ export function SalesPage() {
     });
   };
 
-  const formatTime = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleTimeString("fr-FR", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
-  const columns: Column<Sale>[] = [
-    {
-      key: "id",
-      header: t("fields.receipt"),
-      render: (sale) => (
-        <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded bg-accent-pink/10 flex items-center justify-center">
-            <Receipt className="h-4 w-4 text-accent-pink" />
-          </div>
-          <div>
-            <p className="font-mono text-sm">
-              {sale.id.slice(0, 8).toUpperCase()}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {formatTime(sale.createdAt)}
-            </p>
-          </div>
-        </div>
-      ),
-    },
-    {
-      key: "client",
-      header: t("fields.client"),
-      render: (sale) =>
-        sale.client ? (
-          <span>
-            {sale.client.firstName} {sale.client.lastName}
-          </span>
-        ) : (
-          <span className="text-muted-foreground">{t("sales.walkIn")}</span>
-        ),
-    },
-    {
-      key: "items",
-      header: t("fields.items"),
-      render: (sale) => (
-        <div>
-          <p className="text-sm">
-            {sale.items.length}{" "}
-            {sale.items.length === 1 ? t("common.item") : t("common.items")}
-          </p>
-          <p className="text-xs text-muted-foreground truncate max-w-50">
-            {sale.items.map((i) => i.name).join(", ")}
-          </p>
-        </div>
-      ),
-    },
-    {
-      key: "paymentMethod",
-      header: t("fields.payment"),
-      render: (sale) => {
-        const Icon = paymentIcons[sale.paymentMethod];
-        return (
-          <div className="flex items-center gap-2">
-            <Icon className="h-4 w-4 text-muted-foreground" />
-            <span className="capitalize">
-              {t(
-                `sales.${sale.paymentMethod === "bank_transfer" ? "bankTransfer" : sale.paymentMethod}`,
-              )}
-            </span>
-          </div>
-        );
-      },
-    },
-    {
-      key: "total",
-      header: t("fields.total"),
-      sortable: true,
-      render: (sale) => (
-        <div>
-          <p className="font-semibold">{formatCurrency(sale.total)}</p>
-          {sale.discount > 0 && (
-            <p className="text-xs text-green-600">
-              -{formatCurrency(sale.discount)} {t("sales.discount")}
-            </p>
-          )}
-        </div>
-      ),
-    },
-    {
-      key: "status",
-      header: t("fields.status"),
-      render: (sale) => (
-        <Badge variant={statusColors[sale.status]}>{sale.status}</Badge>
-      ),
-    },
-    {
-      key: "actions",
-      header: "",
-      className: "w-12",
-      render: () => (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-8 w-8">
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem>
-              <Eye className="h-4 w-4 me-2" />
-              {t("common.view")}
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-              <FileText className="h-4 w-4 me-2" />
-              {t("sales.printReceipt")}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      ),
-    },
-  ];
+  const columns = getSalesColumns({ t, formatCurrency, onComplete: handleCompleteSale });
 
   return (
     <div className="space-y-6">

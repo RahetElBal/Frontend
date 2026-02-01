@@ -1,30 +1,11 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
-import {
-  Plus,
-  Clock,
-  MoreHorizontal,
-  Edit,
-  Trash2,
-  ToggleLeft,
-  ToggleRight,
-  Eye,
-  DollarSign,
-} from "lucide-react";
+import { Plus, Clock, Edit, DollarSign } from "lucide-react";
 import { requiredString, optionalString } from "@/common/validator/zodI18n";
 
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/badge";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import {
   Dialog,
   DialogContent,
@@ -46,13 +27,29 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { cn } from "@/lib/utils";
+import { Badge } from "@/components/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useForm } from "@/hooks/useForm";
 import { toast } from "@/lib/toast";
-import type { Service, Category } from "@/types/entities";
+import type { Service } from "@/types/entities";
 import { useGet } from "@/hooks/useGet";
 import { usePost } from "@/hooks/usePost";
+import { usePostAction } from "@/hooks/usePostAction";
+import { useSalon } from "@/contexts/SalonProvider";
+import { ServiceCard } from "./components/service-card";
+
+// Category type from API
+interface ServiceCategory {
+  category: string;
+  count: number;
+}
 
 // Modal state type
 type ServiceModalState = {
@@ -66,7 +63,8 @@ const serviceFormSchema = z.object({
   description: optionalString(),
   duration: z.coerce.number().min(5, "validation.number.min"),
   price: z.coerce.number().min(0, "validation.number.positive"),
-  categoryId: optionalString(),
+  category: requiredString("Category"),
+  isActive: z.boolean().optional(),
 });
 
 type ServiceFormData = z.infer<typeof serviceFormSchema>;
@@ -74,18 +72,35 @@ type ServiceFormData = z.infer<typeof serviceFormSchema>;
 export function ServicesPage() {
   const { t } = useTranslation();
   const { formatCurrency } = useLanguage();
+  const { currentSalon } = useSalon();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   // Unified modal state
   const [modalState, setModalState] = useState<ServiceModalState>(null);
+
+  const salonId = currentSalon?.id;
 
   // Fetch services and categories from API (scoped to current salon)
   const {
     data: services = [],
     isLoading,
     refetch,
-  } = useGet<Service[]>("services");
-  const { data: categories = [] } = useGet<Category[]>("categories");
+  } = useGet<Service[]>("services", {
+    params: { salonId },
+    enabled: !!salonId,
+  });
+  
+  const { data: categoriesData = [] } = useGet<ServiceCategory[]>("services/categories", {
+    params: { salonId },
+    enabled: !!salonId,
+  });
+  
+  // Transform categories data for display
+  const categories = categoriesData.map((cat) => ({
+    id: cat.category,
+    name: cat.category,
+    color: "#ec4899", // Default color, could be dynamic
+  }));
 
   // Helper functions
   const getSelectedService = (): Service | null => {
@@ -107,7 +122,8 @@ export function ServicesPage() {
       description: "",
       duration: 30,
       price: 0,
-      categoryId: "",
+      category: "",
+      isActive: true,
     },
   });
 
@@ -119,15 +135,21 @@ export function ServicesPage() {
         description: "",
         duration: 30,
         price: 0,
-        categoryId: "",
+        category: "",
+        isActive: true,
       });
     } else if (selectedService && isEditMode) {
+      // Category can be a Category object or string depending on API response
+      const categoryValue = typeof selectedService.category === 'string' 
+        ? selectedService.category 
+        : selectedService.category?.name || "";
       form.reset({
         name: selectedService.name,
         description: selectedService.description || "",
         duration: selectedService.duration,
         price: selectedService.price,
-        categoryId: selectedService.categoryId || "",
+        category: categoryValue,
+        isActive: selectedService.isActive,
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -136,8 +158,9 @@ export function ServicesPage() {
   // Create service mutation
   const { mutate: createService, isPending: isCreating } = usePost<
     Service,
-    ServiceFormData
+    ServiceFormData & { salonId: string }
   >("services", {
+    invalidateQueries: ["services"],
     onSuccess: () => {
       toast.success(t("services.addService") + " - " + t("common.success"));
       setModalState(null);
@@ -155,6 +178,7 @@ export function ServicesPage() {
   >("services", {
     id: selectedService?.id,
     method: "PATCH",
+    invalidateQueries: ["services"],
     onSuccess: () => {
       toast.success(t("common.edit") + " - " + t("common.success"));
       setModalState(null);
@@ -171,6 +195,7 @@ export function ServicesPage() {
     {
       id: selectedService?.id,
       method: "DELETE",
+      invalidateQueries: ["services"],
       onSuccess: () => {
         toast.success(t("common.delete") + " - " + t("common.success"));
         setModalState(null);
@@ -182,25 +207,28 @@ export function ServicesPage() {
     },
   );
 
-  // Toggle service status
-  const { mutate: toggleStatus } = usePost<Service, void>("services", {
-    method: "PATCH",
-    onSuccess: () => {
-      toast.success(t("common.success"));
-      refetch();
-    },
-    onError: (error) => {
-      toast.error(error.message || t("common.error"));
-    },
+  // Toggle service status - POST /services/{id}/toggle
+  const { mutate: toggleStatus } = usePostAction<Service, string>("services", {
+    id: (serviceId) => serviceId,
+    action: "toggle",
+    invalidateQueries: ["services"],
+    showSuccessToast: true,
+    successMessage: t("common.success"),
   });
 
+  // Helper to get category name from service (handles both string and object)
+  const getServiceCategoryName = (service: Service): string => {
+    if (typeof service.category === 'string') return service.category;
+    return service.category?.name || '';
+  };
+
   const filteredServices = selectedCategory
-    ? services.filter((s) => s.categoryId === selectedCategory)
+    ? services.filter((s) => getServiceCategoryName(s) === selectedCategory)
     : services;
 
   const servicesByCategory = categories.map((cat) => ({
     ...cat,
-    services: services.filter((s) => s.categoryId === cat.id),
+    services: services.filter((s) => getServiceCategoryName(s) === cat.id),
   }));
 
   // Handlers
@@ -216,18 +244,24 @@ export function ServicesPage() {
     setModalState({ serviceId: service.id, mode: "delete" });
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const handleToggle = (_service: Service) => {
-    toggleStatus(undefined, {
-      onSuccess: () => refetch(),
-    });
+  const handleToggle = (service: Service) => {
+    toggleStatus(service.id);
   };
 
   const handleSubmit = (data: ServiceFormData) => {
+    if (!salonId) {
+      toast.error(t("common.error"));
+      return;
+    }
+    
     if (isEditMode) {
       updateService(data);
     } else {
-      createService(data);
+      // Include salonId when creating
+      createService({
+        ...data,
+        salonId,
+      });
     }
   };
 
@@ -268,7 +302,7 @@ export function ServicesPage() {
               className="h-2 w-2 rounded-full"
               style={{ backgroundColor: cat.color }}
             />
-            {cat.name} ({services.filter((s) => s.categoryId === cat.id).length}
+            {cat.name} ({services.filter((s) => getServiceCategoryName(s) === cat.id).length}
             )
           </Button>
         ))}
@@ -298,8 +332,6 @@ export function ServicesPage() {
                   <ServiceCard
                     key={service.id}
                     service={service}
-                    t={t}
-                    formatCurrency={formatCurrency}
                     onView={handleView}
                     onEdit={handleEdit}
                     onDelete={handleDelete}
@@ -309,20 +341,18 @@ export function ServicesPage() {
               </div>
             </div>
           ))}
-          {services.filter((s) => !s.categoryId).length > 0 && (
+          {services.filter((s) => !getServiceCategoryName(s)).length > 0 && (
             <div>
               <h2 className="text-lg font-semibold mb-4">
                 {t("common.other")}
               </h2>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {services
-                  .filter((s) => !s.categoryId)
+                  .filter((s) => !getServiceCategoryName(s))
                   .map((service) => (
                     <ServiceCard
                       key={service.id}
                       service={service}
-                      t={t}
-                      formatCurrency={formatCurrency}
                       onView={handleView}
                       onEdit={handleEdit}
                       onDelete={handleDelete}
@@ -339,8 +369,6 @@ export function ServicesPage() {
             <ServiceCard
               key={service.id}
               service={service}
-              t={t}
-              formatCurrency={formatCurrency}
               onView={handleView}
               onEdit={handleEdit}
               onDelete={handleDelete}
@@ -382,6 +410,29 @@ export function ServicesPage() {
                   {...form.register("description")}
                   rows={3}
                 />
+              </div>
+              <div className="space-y-2">
+                <Label>{t("fields.category")} *</Label>
+                <Select
+                  value={form.watch("category")}
+                  onValueChange={(value) => form.setValue("category", value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={t("services.selectCategory")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((cat) => (
+                      <SelectItem key={cat.id} value={cat.id}>
+                        {cat.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {form.hasError("category") && (
+                  <p className="text-sm text-destructive">
+                    {form.getError("category")}
+                  </p>
+                )}
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -541,97 +592,5 @@ export function ServicesPage() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
-  );
-}
-
-interface ServiceCardProps {
-  service: Service;
-  t: ReturnType<typeof useTranslation>["t"];
-  formatCurrency: (value: number) => string;
-  onView: (service: Service) => void;
-  onEdit: (service: Service) => void;
-  onDelete: (service: Service) => void;
-  onToggle: (service: Service) => void;
-}
-
-function ServiceCard({
-  service,
-  t,
-  formatCurrency,
-  onView,
-  onEdit,
-  onDelete,
-  onToggle,
-}: ServiceCardProps) {
-  return (
-    <Card
-      className={cn(
-        "p-4 transition-shadow hover:shadow-md",
-        !service.isActive && "opacity-60",
-      )}
-    >
-      <div className="flex items-start justify-between">
-        <div className="flex-1">
-          <div className="flex items-center gap-2">
-            <h3 className="font-semibold">{service.name}</h3>
-            {!service.isActive && (
-              <Badge variant="warning">{t("common.inactive")}</Badge>
-            )}
-          </div>
-          {service.description && (
-            <p className="mt-1 text-sm text-muted-foreground line-clamp-2">
-              {service.description}
-            </p>
-          )}
-          <div className="mt-3 flex items-center gap-4">
-            <div className="flex items-center gap-1 text-sm text-muted-foreground">
-              <Clock className="h-4 w-4" />
-              {service.duration} min
-            </div>
-            <span className="text-lg font-bold text-accent-pink">
-              {formatCurrency(service.price)}
-            </span>
-          </div>
-        </div>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-8 w-8">
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => onView(service)}>
-              <Eye className="h-4 w-4 me-2" />
-              {t("common.view")}
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onEdit(service)}>
-              <Edit className="h-4 w-4 me-2" />
-              {t("common.edit")}
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onToggle(service)}>
-              {service.isActive ? (
-                <>
-                  <ToggleLeft className="h-4 w-4 me-2" />
-                  {t("common.deactivate")}
-                </>
-              ) : (
-                <>
-                  <ToggleRight className="h-4 w-4 me-2" />
-                  {t("common.activate")}
-                </>
-              )}
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onClick={() => onDelete(service)}
-              className="text-destructive"
-            >
-              <Trash2 className="h-4 w-4 me-2" />
-              {t("common.delete")}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-    </Card>
   );
 }

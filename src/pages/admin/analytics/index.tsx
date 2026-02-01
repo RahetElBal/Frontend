@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   TrendingUp,
@@ -13,33 +13,170 @@ import {
 import { PageHeader } from "@/components/page-header";
 import { Card } from "@/components/ui/card";
 import { StatsCard } from "@/components/stats-card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useSalon } from "@/contexts/SalonProvider";
 import type {
   Sale,
   Appointment,
   Client,
   Service,
   Product,
+  RevenueData,
+  TopService,
 } from "@/types/entities";
 import { useGet } from "@/hooks/useGet";
+
+// Response types
+interface SalesResponse {
+  data: Sale[];
+  total: number;
+}
+
+interface ProductsResponse {
+  data: Product[];
+  total: number;
+}
+
+// Analytics API response types
+interface DashboardStatsResponse {
+  todayRevenue: number;
+  todayAppointments: number;
+  newClients: number;
+  averageTicket: number;
+  revenueChange: number;
+  appointmentsChange: number;
+  clientsChange: number;
+  ticketChange: number;
+}
+
+interface RevenueAnalyticsResponse {
+  data: RevenueData[];
+  total: number;
+  period: string;
+}
 
 export function AnalyticsPage() {
   const { t } = useTranslation();
   const { formatCurrency } = useLanguage();
+  const { currentSalon } = useSalon();
+  const [revenuePeriod, setRevenuePeriod] = useState<string>("weekly");
 
-  // Fetch all data (scoped to current salon)
-  const { data: sales = [], isLoading: loadingSales } = useGet<Sale[]>("sales");
+  const salonId = currentSalon?.id;
+
+  // Fetch dashboard stats from dedicated analytics endpoint
+  const { data: dashboardStats, isLoading: loadingDashboard } =
+    useGet<DashboardStatsResponse>("analytics/dashboard", {
+      params: { salonId },
+      enabled: !!salonId,
+    });
+
+  // Fetch revenue analytics (data available for future chart implementation)
+  const { data: _revenueAnalytics } = useGet<RevenueAnalyticsResponse>(
+    "analytics/revenue",
+    {
+      params: { salonId, period: revenuePeriod },
+      enabled: !!salonId,
+    },
+  );
+
+  // Fetch top services
+  const { data: topServices = [] } = useGet<TopService[]>("services/top", {
+    params: { salonId, limit: 5 },
+    enabled: !!salonId,
+  });
+
+  // Fallback: Fetch raw data if analytics endpoints fail
+  const { data: salesResponse, isLoading: loadingSales } = useGet<SalesResponse>(
+    "sales",
+    {
+      params: { salonId, perPage: 1000 },
+      enabled: !!salonId && !dashboardStats,
+    },
+  );
+  const sales = salesResponse?.data || [];
+
   const { data: appointments = [], isLoading: loadingAppointments } =
-    useGet<Appointment[]>("appointments");
+    useGet<Appointment[]>("appointments", {
+      params: { salonId },
+      enabled: !!salonId,
+    });
+  
   const { data: clients = [], isLoading: loadingClients } =
-    useGet<Client[]>("clients");
-  const { data: services = [] } = useGet<Service[]>("services");
-  const { data: products = [] } = useGet<Product[]>("products");
+    useGet<Client[]>("clients", {
+      params: { salonId },
+      enabled: !!salonId,
+    });
+  
+  const { data: services = [] } = useGet<Service[]>("services", {
+    params: { salonId },
+    enabled: !!salonId,
+  });
+  
+  const { data: productsResponse } = useGet<ProductsResponse>("products", {
+    params: { salonId },
+    enabled: !!salonId,
+  });
+  const products = productsResponse?.data || [];
 
-  const isLoading = loadingSales || loadingAppointments || loadingClients;
+  const isLoading = loadingDashboard || loadingSales || loadingAppointments || loadingClients;
 
-  // Calculate metrics
+  // Calculate metrics - use dashboard stats if available, otherwise calculate from raw data
   const metrics = useMemo(() => {
+    // If we have dashboard stats from the API, use those
+    if (dashboardStats) {
+      // Still need to calculate top products from sales data
+      const productSales: Record<
+        string,
+        { name: string; count: number; revenue: number }
+      > = {};
+      sales.forEach((sale) => {
+        sale.items.forEach((item) => {
+          if (item.type === "product") {
+            const product = products.find((p) => p.id === item.itemId);
+            if (product) {
+              if (!productSales[item.itemId]) {
+                productSales[item.itemId] = {
+                  name: product.name,
+                  count: 0,
+                  revenue: 0,
+                };
+              }
+              productSales[item.itemId].count += item.quantity;
+              productSales[item.itemId].revenue += item.price * item.quantity;
+            }
+          }
+        });
+      });
+
+      const topProductsFromSales = Object.values(productSales)
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 5);
+
+      return {
+        totalRevenue: dashboardStats.todayRevenue,
+        totalAppointments: dashboardStats.todayAppointments,
+        totalClients: clients.length,
+        newClientsThisMonth: dashboardStats.newClients,
+        averageTicket: dashboardStats.averageTicket,
+        revenueChange: dashboardStats.revenueChange,
+        appointmentsChange: dashboardStats.appointmentsChange,
+        topServices: topServices.map((s) => ({
+          name: s.name,
+          count: s.count,
+          revenue: s.revenue,
+        })),
+        topProducts: topProductsFromSales,
+      };
+    }
+
+    // Fallback: Calculate from raw data
     const totalRevenue = sales.reduce((sum, sale) => sum + sale.total, 0);
     const totalAppointments = appointments.length;
     const totalClients = clients.length;
@@ -100,11 +237,11 @@ export function AnalyticsPage() {
       });
     });
 
-    const topServices = Object.values(serviceBookings)
+    const topServicesFromBookings = Object.values(serviceBookings)
       .sort((a, b) => b.count - a.count)
       .slice(0, 5);
 
-    const topProducts = Object.values(productSales)
+    const topProductsFromSales = Object.values(productSales)
       .sort((a, b) => b.count - a.count)
       .slice(0, 5);
 
@@ -114,10 +251,12 @@ export function AnalyticsPage() {
       totalClients,
       newClientsThisMonth,
       averageTicket,
-      topServices,
-      topProducts,
+      revenueChange: undefined,
+      appointmentsChange: undefined,
+      topServices: topServicesFromBookings,
+      topProducts: topProductsFromSales,
     };
-  }, [sales, appointments, clients, products]);
+  }, [dashboardStats, topServices, sales, appointments, clients, products]);
 
   const hasData =
     sales.length > 0 || appointments.length > 0 || clients.length > 0;
@@ -134,6 +273,8 @@ export function AnalyticsPage() {
         <StatsCard
           title={t("analytics.totalRevenue")}
           value={formatCurrency(metrics.totalRevenue)}
+          change={metrics.revenueChange}
+          changeLabel={metrics.revenueChange !== undefined ? t("analytics.vsLastPeriod") : undefined}
           icon={DollarSign}
           iconColor="text-green-600"
           iconBgColor="bg-green-100"
@@ -141,6 +282,8 @@ export function AnalyticsPage() {
         <StatsCard
           title={t("analytics.totalAppointments")}
           value={metrics.totalAppointments.toString()}
+          change={metrics.appointmentsChange}
+          changeLabel={metrics.appointmentsChange !== undefined ? t("analytics.vsLastPeriod") : undefined}
           icon={Calendar}
           iconColor="text-blue-600"
           iconBgColor="bg-blue-100"
@@ -158,6 +301,22 @@ export function AnalyticsPage() {
           value={formatCurrency(metrics.averageTicket)}
           icon={ShoppingCart}
         />
+      </div>
+
+      {/* Period Selector */}
+      <div className="flex items-center gap-4">
+        <span className="text-sm text-muted-foreground">{t("analytics.period")}:</span>
+        <Select value={revenuePeriod} onValueChange={setRevenuePeriod}>
+          <SelectTrigger className="w-40">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="daily">{t("analytics.daily")}</SelectItem>
+            <SelectItem value="weekly">{t("analytics.weekly")}</SelectItem>
+            <SelectItem value="monthly">{t("analytics.monthly")}</SelectItem>
+            <SelectItem value="yearly">{t("analytics.yearly")}</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Main Content */}

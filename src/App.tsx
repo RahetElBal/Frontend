@@ -6,22 +6,20 @@ import { UserLayout } from "@/layouts/user-layout";
 import { AdminLayout } from "@/layouts/admin-layout";
 import { ROUTES } from "@/constants/navigation";
 
-import {
-  ServicesPage,
-  ProductsPage,
-  SalesPage,
-  AnalyticsPage,
-  SettingsPage,
-  StaffPage,
-  PromotionsPage,
-  SalonSettingsPage,
-} from "@/pages";
 import AdminDashboardPage from "./pages/admin/dashboard";
 import { AdminUsersPage } from "./pages/admin/users";
 import SalonsPage from "./pages/admin/salon";
 import { ClientsPage } from "./pages/user/clients";
 import { DashboardPage } from "./pages/user/dashboard";
 import { AgendaPage } from "./pages/user/agenda";
+import { ServicesPage } from "./pages/user/services";
+import { StaffPage } from "./pages/admin/staff";
+import { ProductsPage } from "./pages/user/products";
+import { SalesPage } from "./pages/user/sales";
+import { PromotionsPage } from "./pages/admin/promotions";
+import { AnalyticsPage } from "./pages/admin/analytics";
+import { SalonSettingsPage } from "./pages/admin/salon-settings";
+import { SettingsPage } from "./pages/user/settings";
 
 function App() {
   return (

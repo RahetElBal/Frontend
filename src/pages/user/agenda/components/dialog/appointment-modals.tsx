@@ -1,7 +1,7 @@
 import { useMemo, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import type { UseFormReturn } from "react-hook-form";
-import { User, Scissors, Clock, Calendar, Edit, Trash2 } from "lucide-react";
+import { User, Scissors, Clock, Calendar, Edit, Trash2, XCircle, CheckCircle } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -48,6 +48,8 @@ interface AppointmentModalsProps {
   form: UseFormReturn<AppointmentFormData>;
   onSubmit: (data: AppointmentFormData) => void;
   onDelete: () => void;
+  onCancel?: (id: string) => void;
+  onComplete?: (id: string) => void;
   isPending: boolean;
 }
 
@@ -60,6 +62,8 @@ export function AppointmentModals({
   form,
   onSubmit,
   onDelete,
+  onCancel,
+  onComplete,
   isPending,
 }: AppointmentModalsProps) {
   const { t } = useTranslation();
@@ -254,38 +258,68 @@ export function AppointmentModals({
               </div>
             </div>
           )}
-          <DialogFooter className="flex gap-2 sm:gap-0">
-            <Button variant="outline" onClick={handleClose}>
-              {t("common.close")}
-            </Button>
+          <DialogFooter className="flex flex-col sm:flex-row gap-2">
             {selectedAppointment && (
-              <>
-                <Button
-                  variant="outline"
-                  className="text-destructive"
-                  onClick={() =>
-                    setModalState({
-                      appointmentId: selectedAppointment.id,
-                      mode: "delete",
-                    })
-                  }
-                >
-                  <Trash2 className="h-4 w-4 me-2" />
-                  {t("common.delete")}
-                </Button>
-                <Button
-                  onClick={() =>
-                    setModalState({
-                      appointmentId: selectedAppointment.id,
-                      mode: "edit",
-                    })
-                  }
-                >
-                  <Edit className="h-4 w-4 me-2" />
-                  {t("common.edit")}
-                </Button>
-              </>
+              <div className="flex gap-2 w-full sm:w-auto">
+                {/* Cancel button - show for non-cancelled/completed appointments */}
+                {onCancel && selectedAppointment.status !== "cancelled" && selectedAppointment.status !== "completed" && (
+                  <Button
+                    variant="outline"
+                    className="text-orange-600 hover:text-orange-700"
+                    onClick={() => onCancel(selectedAppointment.id)}
+                    disabled={isPending}
+                  >
+                    <XCircle className="h-4 w-4 me-2" />
+                    {t("agenda.cancel")}
+                  </Button>
+                )}
+                {/* Complete button - show for non-completed/cancelled appointments */}
+                {onComplete && selectedAppointment.status !== "completed" && selectedAppointment.status !== "cancelled" && (
+                  <Button
+                    variant="outline"
+                    className="text-green-600 hover:text-green-700"
+                    onClick={() => onComplete(selectedAppointment.id)}
+                    disabled={isPending}
+                  >
+                    <CheckCircle className="h-4 w-4 me-2" />
+                    {t("agenda.complete")}
+                  </Button>
+                )}
+              </div>
             )}
+            <div className="flex gap-2 w-full sm:w-auto sm:ms-auto">
+              <Button variant="outline" onClick={handleClose}>
+                {t("common.close")}
+              </Button>
+              {selectedAppointment && (
+                <>
+                  <Button
+                    variant="outline"
+                    className="text-destructive"
+                    onClick={() =>
+                      setModalState({
+                        appointmentId: selectedAppointment.id,
+                        mode: "delete",
+                      })
+                    }
+                  >
+                    <Trash2 className="h-4 w-4 me-2" />
+                    {t("common.delete")}
+                  </Button>
+                  <Button
+                    onClick={() =>
+                      setModalState({
+                        appointmentId: selectedAppointment.id,
+                        mode: "edit",
+                      })
+                    }
+                  >
+                    <Edit className="h-4 w-4 me-2" />
+                    {t("common.edit")}
+                  </Button>
+                </>
+              )}
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>

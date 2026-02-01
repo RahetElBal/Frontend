@@ -1,10 +1,11 @@
 import { useMemo, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import type { UseFormReturn } from "react-hook-form";
-import { Phone, Award, DollarSign, Calendar, Edit } from "lucide-react";
+import { Phone, Award, DollarSign, Calendar, Edit, Archive, Plus, Minus } from "lucide-react";
 import type { Client } from "@/types/entities";
 import { toast } from "@/lib/toast";
 import { usePost } from "@/hooks/usePost";
+import { usePostAction } from "@/hooks/usePostAction";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useUser } from "@/hooks/useUser";
 import {
@@ -56,8 +57,9 @@ export function ClientModals({
 
   const { mutate: createClientMutate, isPending: isCreating } = usePost<
     Client,
-    ClientFormData
+    ClientFormData & { salonId: string }
   >("clients", {
+    invalidateQueries: ["clients"],
     onSuccess: () => {
       toast.success(t("clients.addClient") + " - " + t("common.success"));
       setModalState(null);
@@ -74,6 +76,7 @@ export function ClientModals({
   >("clients", {
     id: selectedClient?.id,
     method: "PATCH",
+    invalidateQueries: ["clients"],
     onSuccess: () => {
       toast.success(t("common.edit") + " - " + t("common.success"));
       setModalState(null);
@@ -90,6 +93,7 @@ export function ClientModals({
   >("clients", {
     id: selectedClient?.id,
     method: "DELETE",
+    invalidateQueries: ["clients"],
     onSuccess: () => {
       toast.success(t("common.delete") + " - " + t("common.success"));
       setModalState(null);
@@ -97,6 +101,52 @@ export function ClientModals({
     },
     onError: (error) => {
       toast.error(error.message || t("common.error"));
+    },
+  });
+
+  // Archive client - POST /clients/{id}/archive
+  const { mutate: archiveClientMutate, isPending: isArchiving } = usePostAction<
+    void,
+    string
+  >("clients", {
+    id: (clientId) => clientId,
+    action: "archive",
+    invalidateQueries: ["clients"],
+    showSuccessToast: true,
+    successMessage: t("clients.archived"),
+    onSuccess: () => {
+      setModalState(null);
+      onSuccess();
+    },
+  });
+
+  // Add loyalty points - POST /clients/{id}/loyalty/add
+  const { mutate: addLoyaltyPoints, isPending: isAddingPoints } = usePostAction<
+    Client,
+    { points: number }
+  >("clients", {
+    id: selectedClient?.id,
+    action: "loyalty/add",
+    invalidateQueries: ["clients"],
+    showSuccessToast: true,
+    successMessage: t("clients.pointsAdded"),
+    onSuccess: () => {
+      onSuccess();
+    },
+  });
+
+  // Deduct loyalty points - POST /clients/{id}/loyalty/deduct
+  const { mutate: deductLoyaltyPoints, isPending: isDeductingPoints } = usePostAction<
+    Client,
+    { points: number }
+  >("clients", {
+    id: selectedClient?.id,
+    action: "loyalty/deduct",
+    invalidateQueries: ["clients"],
+    showSuccessToast: true,
+    successMessage: t("clients.pointsDeducted"),
+    onSuccess: () => {
+      onSuccess();
     },
   });
 
@@ -230,21 +280,45 @@ export function ClientModals({
                   </div>
                 )}
 
-                <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
-                  <Award className="h-5 w-5 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">
-                      {t("fields.loyaltyPoints")}
-                    </p>
-                    <Badge
-                      variant={
-                        selectedClient.loyaltyPoints >= 500
-                          ? "success"
-                          : "default"
-                      }
+                <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                  <div className="flex items-center gap-3">
+                    <Award className="h-5 w-5 text-muted-foreground" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">
+                        {t("fields.loyaltyPoints")}
+                      </p>
+                      <Badge
+                        variant={
+                          selectedClient.loyaltyPoints >= 500
+                            ? "success"
+                            : "default"
+                        }
+                      >
+                        {selectedClient.loyaltyPoints} pts
+                      </Badge>
+                    </div>
+                  </div>
+                  <div className="flex gap-1">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => addLoyaltyPoints({ points: 10 })}
+                      disabled={isAddingPoints}
+                      title={t("clients.addPoints")}
                     >
-                      {selectedClient.loyaltyPoints} pts
-                    </Badge>
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => deductLoyaltyPoints({ points: 10 })}
+                      disabled={isDeductingPoints || selectedClient.loyaltyPoints < 10}
+                      title={t("clients.deductPoints")}
+                    >
+                      <Minus className="h-4 w-4" />
+                    </Button>
                   </div>
                 </div>
 
@@ -284,20 +358,34 @@ export function ClientModals({
               </div>
             </div>
           )}
-          <DialogFooter>
-            <Button variant="outline" onClick={handleClose}>
-              {t("common.close")}
-            </Button>
-            {selectedClient && (
-              <Button
-                onClick={() =>
-                  setModalState({ clientId: selectedClient.id, mode: "edit" })
-                }
-              >
-                <Edit className="h-4 w-4 me-2" />
-                {t("common.edit")}
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <div className="flex gap-2">
+              {selectedClient && selectedClient.isActive && (
+                <Button
+                  variant="outline"
+                  onClick={() => archiveClientMutate(selectedClient.id)}
+                  disabled={isArchiving}
+                >
+                  <Archive className="h-4 w-4 me-2" />
+                  {t("clients.archive")}
+                </Button>
+              )}
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={handleClose}>
+                {t("common.close")}
               </Button>
-            )}
+              {selectedClient && (
+                <Button
+                  onClick={() =>
+                    setModalState({ clientId: selectedClient.id, mode: "edit" })
+                  }
+                >
+                  <Edit className="h-4 w-4 me-2" />
+                  {t("common.edit")}
+                </Button>
+              )}
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>

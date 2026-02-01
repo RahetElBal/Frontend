@@ -4,6 +4,7 @@ import { PageHeader } from "@/components/page-header";
 import { toast } from "@/lib/toast";
 import { useGet } from "@/hooks/useGet";
 import { usePost } from "@/hooks/usePost";
+import { usePostAction } from "@/hooks/usePostAction";
 import { useForm } from "@/hooks/useForm";
 import { useUser } from "@/hooks/useUser";
 
@@ -149,6 +150,7 @@ export function AgendaPage() {
     Appointment,
     AppointmentFormData
   >("appointments", {
+    invalidateQueries: ["appointments"],
     onSuccess: () => {
       toast.success(t("agenda.newAppointment") + " - " + t("common.success"));
       setModalState(null);
@@ -165,6 +167,7 @@ export function AgendaPage() {
   >("appointments", {
     id: selectedAppointment?.id,
     method: "PATCH",
+    invalidateQueries: ["appointments"],
     onSuccess: () => {
       toast.success(t("common.edit") + " - " + t("common.success"));
       setModalState(null);
@@ -181,6 +184,7 @@ export function AgendaPage() {
   >("appointments", {
     id: selectedAppointment?.id,
     method: "DELETE",
+    invalidateQueries: ["appointments"],
     onSuccess: () => {
       toast.success(t("common.delete") + " - " + t("common.success"));
       setModalState(null);
@@ -188,6 +192,38 @@ export function AgendaPage() {
     },
     onError: (error) => {
       toast.error(error.message || t("common.error"));
+    },
+  });
+
+  // Cancel appointment - POST /appointments/{id}/cancel
+  const { mutate: cancelAppointment, isPending: isCancelling } = usePostAction<
+    Appointment,
+    string
+  >("appointments", {
+    id: (appointmentId) => appointmentId,
+    action: "cancel",
+    invalidateQueries: ["appointments"],
+    showSuccessToast: true,
+    successMessage: t("agenda.appointmentCancelled"),
+    onSuccess: () => {
+      setModalState(null);
+      refetch();
+    },
+  });
+
+  // Complete appointment - POST /appointments/{id}/complete
+  const { mutate: completeAppointment, isPending: isCompleting } = usePostAction<
+    Appointment,
+    string
+  >("appointments", {
+    id: (appointmentId) => appointmentId,
+    action: "complete",
+    invalidateQueries: ["appointments"],
+    showSuccessToast: true,
+    successMessage: t("agenda.appointmentCompleted"),
+    onSuccess: () => {
+      setModalState(null);
+      refetch();
     },
   });
 
@@ -283,7 +319,9 @@ export function AgendaPage() {
         form={form}
         onSubmit={handleSubmit}
         onDelete={() => deleteAppointment()}
-        isPending={isCreating || isUpdating || isDeleting}
+        onCancel={(id) => cancelAppointment(id)}
+        onComplete={(id) => completeAppointment(id)}
+        isPending={isCreating || isUpdating || isDeleting || isCancelling || isCompleting}
       />
     </div>
   );

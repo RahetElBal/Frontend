@@ -5,10 +5,7 @@ import {
   Plus,
   AlertTriangle,
   Package,
-  MoreHorizontal,
   Edit,
-  Trash2,
-  Eye,
   DollarSign,
   BarChart3,
 } from "lucide-react";
@@ -18,14 +15,7 @@ import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/badge";
-import { DataTable, type Column } from "@/components/table/data-table";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { DataTable } from "@/components/table/data-table";
 import {
   Dialog,
   DialogContent,
@@ -54,7 +44,10 @@ import { toast } from "@/lib/toast";
 import type { Product } from "@/types/entities";
 import { cn } from "@/lib/utils";
 import { usePost } from "@/hooks/usePost";
+import { usePostAction } from "@/hooks/usePostAction";
 import { useGet } from "@/hooks/useGet";
+import { useSalon } from "@/contexts/SalonProvider";
+import { getProductColumns } from "./list/columns";
 
 // Modal state type
 type ProductModalState = {
@@ -62,32 +55,56 @@ type ProductModalState = {
   mode: "view" | "edit" | "delete";
 } | null;
 
-// Zod schema for product form
+// Zod schema for product form - matches API CreateProductDto
 const productFormSchema = z.object({
   name: requiredString("Nom"),
+  reference: requiredString("Reference"), // SKU/reference
   description: optionalString(),
-  sku: optionalString(),
   price: z.coerce.number().min(0, "validation.number.positive"),
-  cost: z.coerce.number().min(0, "validation.number.positive").optional(),
   stock: z.coerce.number().min(0, "validation.number.positive"),
-  minStock: z.coerce.number().min(0, "validation.number.positive").optional(),
+  alertThreshold: z.coerce.number().min(0, "validation.number.positive").optional(),
+  category: requiredString("Category"),
+  brand: optionalString(),
+  isActive: z.boolean().optional(),
 });
 
 type ProductFormData = z.infer<typeof productFormSchema>;
 
+// API response type for paginated products
+interface ProductsResponse {
+  data: Product[];
+  total: number;
+  page: number;
+  perPage: number;
+}
+
 export function ProductsPage() {
   const { t } = useTranslation();
   const { formatCurrency } = useLanguage();
+  const { currentSalon } = useSalon();
 
   // Unified modal state
   const [modalState, setModalState] = useState<ProductModalState>(null);
 
+  const salonId = currentSalon?.id;
+
   // Fetch products from API (scoped to current salon)
   const {
-    data: products = [],
+    data: productsResponse,
     isLoading,
     refetch,
-  } = useGet<Product[]>("products");
+  } = useGet<ProductsResponse>("products", {
+    params: { salonId },
+    enabled: !!salonId,
+  });
+  
+  const products = productsResponse?.data || [];
+
+  // Fetch low stock products - GET /products/low-stock
+  const { data: lowStockProducts = [] } = useGet<Product[]>("products/low-stock", {
+    params: { salonId },
+    enabled: !!salonId,
+  });
 
   // Helper functions
   const getSelectedProduct = (): Product | null => {
@@ -106,12 +123,14 @@ export function ProductsPage() {
     schema: productFormSchema,
     defaultValues: {
       name: "",
+      reference: "",
       description: "",
-      sku: "",
       price: 0,
-      cost: 0,
       stock: 0,
-      minStock: 5,
+      alertThreshold: 5,
+      category: "",
+      brand: "",
+      isActive: true,
     },
   });
 
@@ -120,22 +139,26 @@ export function ProductsPage() {
     if (isCreateMode) {
       form.reset({
         name: "",
+        reference: "",
         description: "",
-        sku: "",
         price: 0,
-        cost: 0,
         stock: 0,
-        minStock: 5,
+        alertThreshold: 5,
+        category: "",
+        brand: "",
+        isActive: true,
       });
     } else if (selectedProduct && isEditMode) {
       form.reset({
         name: selectedProduct.name,
+        reference: selectedProduct.sku || "",
         description: selectedProduct.description || "",
-        sku: selectedProduct.sku || "",
         price: selectedProduct.price,
-        cost: selectedProduct.cost || 0,
         stock: selectedProduct.stock,
-        minStock: selectedProduct.minStock || 5,
+        alertThreshold: selectedProduct.minStock || 5,
+        category: selectedProduct.category?.name || "",
+        brand: "",
+        isActive: selectedProduct.isActive ?? true,
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -144,8 +167,9 @@ export function ProductsPage() {
   // Create product mutation
   const { mutate: createProduct, isPending: isCreating } = usePost<
     Product,
-    ProductFormData
+    ProductFormData & { salonId: string }
   >("products", {
+    invalidateQueries: ["products"],
     onSuccess: () => {
       toast.success(t("products.addProduct") + " - " + t("common.success"));
       setModalState(null);
@@ -163,6 +187,7 @@ export function ProductsPage() {
   >("products", {
     id: selectedProduct?.id,
     method: "PATCH",
+    invalidateQueries: ["products"],
     onSuccess: () => {
       toast.success(t("common.edit") + " - " + t("common.success"));
       setModalState(null);
@@ -179,6 +204,7 @@ export function ProductsPage() {
     {
       id: selectedProduct?.id,
       method: "DELETE",
+      invalidateQueries: ["products"],
       onSuccess: () => {
         toast.success(t("common.delete") + " - " + t("common.success"));
         setModalState(null);
@@ -190,16 +216,41 @@ export function ProductsPage() {
     },
   );
 
+  // Update stock - POST /products/{id}/stock
+  const { mutate: updateStock, isPending: isUpdatingStock } = usePostAction<
+    Product,
+    { quantity: number; type: "add" | "remove" | "set" }
+  >("products", {
+    id: selectedProduct?.id,
+    action: "stock",
+    invalidateQueries: ["products", "products/low-stock"],
+    showSuccessToast: true,
+    successMessage: t("products.stockUpdated"),
+    onSuccess: () => {
+      refetch();
+    },
+  });
+
+  // Stock adjustment state
+  const [stockAdjustment, setStockAdjustment] = useState<number>(0);
+
+  const handleStockUpdate = (type: "add" | "remove") => {
+    if (stockAdjustment <= 0) {
+      toast.error(t("products.enterQuantity"));
+      return;
+    }
+    updateStock({ quantity: stockAdjustment, type });
+    setStockAdjustment(0);
+  };
+
   const table = useTable<Product>({
     data: products,
     searchKeys: ["name", "sku", "barcode"],
   });
 
-  const lowStockCount = products.filter(
-    (p) => p.minStock !== undefined && p.stock <= p.minStock,
-  ).length;
-
-  const outOfStockCount = products.filter((p) => p.stock === 0).length;
+  // Use the dedicated low-stock endpoint for counts
+  const lowStockCount = lowStockProducts.filter((p) => p.stock > 0).length;
+  const outOfStockCount = lowStockProducts.filter((p) => p.stock === 0).length;
 
   // Handlers
   const handleView = (product: Product) => {
@@ -215,127 +266,28 @@ export function ProductsPage() {
   };
 
   const handleSubmit = (data: ProductFormData) => {
+    if (!salonId) {
+      toast.error(t("common.error"));
+      return;
+    }
+    
     if (isEditMode) {
       updateProduct(data);
     } else {
-      createProduct(data);
+      createProduct({
+        ...data,
+        salonId,
+      });
     }
   };
 
-  const columns: Column<Product>[] = [
-    {
-      key: "name",
-      header: t("fields.product"),
-      sortable: true,
-      render: (product) => (
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center">
-            <Package className="h-5 w-5 text-muted-foreground" />
-          </div>
-          <div>
-            <p className="font-medium">{product.name}</p>
-            <p className="text-xs text-muted-foreground">
-              SKU: {product.sku || "-"}
-            </p>
-          </div>
-        </div>
-      ),
-    },
-    {
-      key: "category",
-      header: t("fields.category"),
-      render: (product) => (
-        <div className="flex items-center gap-2">
-          {product.category && (
-            <>
-              <span
-                className="h-2 w-2 rounded-full"
-                style={{ backgroundColor: product.category.color }}
-              />
-              <span>{product.category.name}</span>
-            </>
-          )}
-        </div>
-      ),
-    },
-    {
-      key: "price",
-      header: t("fields.price"),
-      sortable: true,
-      render: (product) => (
-        <div>
-          <p className="font-medium">{formatCurrency(product.price)}</p>
-          {product.cost && (
-            <p className="text-xs text-muted-foreground">
-              {t("products.cost")}: {formatCurrency(product.cost)}
-            </p>
-          )}
-        </div>
-      ),
-    },
-    {
-      key: "stock",
-      header: t("fields.stock"),
-      sortable: true,
-      render: (product) => {
-        const isLowStock =
-          product.minStock !== undefined && product.stock <= product.minStock;
-        const isOutOfStock = product.stock === 0;
-
-        return (
-          <div className="flex items-center gap-2">
-            <span
-              className={cn(
-                "font-medium",
-                isOutOfStock && "text-red-600",
-                isLowStock && !isOutOfStock && "text-yellow-600",
-              )}
-            >
-              {product.stock}
-            </span>
-            {isOutOfStock && (
-              <Badge variant="error">{t("products.outOfStock")}</Badge>
-            )}
-            {isLowStock && !isOutOfStock && (
-              <Badge variant="warning">{t("products.lowStock")}</Badge>
-            )}
-          </div>
-        );
-      },
-    },
-    {
-      key: "actions",
-      header: "",
-      className: "w-12",
-      render: (product) => (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-8 w-8">
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => handleView(product)}>
-              <Eye className="h-4 w-4 me-2" />
-              {t("common.view")}
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleEdit(product)}>
-              <Edit className="h-4 w-4 me-2" />
-              {t("common.edit")}
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onClick={() => handleDelete(product)}
-              className="text-destructive"
-            >
-              <Trash2 className="h-4 w-4 me-2" />
-              {t("common.delete")}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      ),
-    },
-  ];
+  const columns = getProductColumns({
+    t,
+    formatCurrency,
+    onView: handleView,
+    onEdit: handleEdit,
+    onDelete: handleDelete,
+  });
 
   return (
     <div className="space-y-6">
@@ -424,8 +376,13 @@ export function ProductsPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="sku">SKU</Label>
-                <Input id="sku" {...form.register("sku")} />
+                <Label htmlFor="reference">SKU / {t("fields.reference")} *</Label>
+                <Input id="reference" {...form.register("reference")} />
+                {form.hasError("reference") && (
+                  <p className="text-sm text-destructive">
+                    {form.getError("reference")}
+                  </p>
+                )}
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -444,13 +401,10 @@ export function ProductsPage() {
                   )}
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="cost">{t("products.cost")}</Label>
+                  <Label htmlFor="brand">{t("products.brand")}</Label>
                   <Input
-                    id="cost"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    {...form.register("cost")}
+                    id="brand"
+                    {...form.register("brand")}
                   />
                 </div>
               </div>
@@ -470,12 +424,12 @@ export function ProductsPage() {
                   )}
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="minStock">{t("products.minStock")}</Label>
+                  <Label htmlFor="alertThreshold">{t("products.minStock")}</Label>
                   <Input
-                    id="minStock"
+                    id="alertThreshold"
                     type="number"
                     min="0"
-                    {...form.register("minStock")}
+                    {...form.register("alertThreshold")}
                   />
                 </div>
               </div>
@@ -590,6 +544,40 @@ export function ProductsPage() {
                         {t("products.minStock")}: {selectedProduct.minStock}
                       </p>
                     )}
+                  </div>
+                </div>
+
+                {/* Stock Adjustment */}
+                <div className="p-3 rounded-lg bg-muted/50">
+                  <p className="text-sm text-muted-foreground mb-2">
+                    {t("products.adjustStock")}
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="number"
+                      min="1"
+                      value={stockAdjustment}
+                      onChange={(e) => setStockAdjustment(parseInt(e.target.value) || 0)}
+                      className="w-24"
+                      placeholder="0"
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleStockUpdate("add")}
+                      disabled={isUpdatingStock || stockAdjustment <= 0}
+                    >
+                      <Plus className="h-4 w-4 me-1" />
+                      {t("products.addStock")}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleStockUpdate("remove")}
+                      disabled={isUpdatingStock || stockAdjustment <= 0 || selectedProduct.stock < stockAdjustment}
+                    >
+                      {t("products.removeStock")}
+                    </Button>
                   </div>
                 </div>
               </div>
