@@ -13,6 +13,7 @@ import type {
   StaffTimeOff,
   TimeOffStatus,
 } from "@/types/entities";
+import type { PaginatedResponse } from "@/types";
 import { useGet } from "@/hooks/useGet";
 import { usePost } from "@/hooks/usePost";
 import { useUser } from "@/hooks/useUser";
@@ -47,24 +48,33 @@ export function StaffPage() {
   const salonId = user?.salon?.id;
 
   // Fetch staff members (users) for the current salon
-  const { data: staffMembers = [] } = useGet<UserType[]>("users", {
+  const { data: staffMembersResponse } = useGet<PaginatedResponse<UserType>>(
+    "users",
+    {
     params: { salonId },
     enabled: !!salonId,
-  });
+  },
+  );
+  const staffMembers = staffMembersResponse?.data ?? [];
 
   // NOTE: These endpoints are not yet implemented in the backend API
   // For now, we'll use empty arrays as fallback
-  const { data: schedules = [] } = useGet<StaffSchedule[]>("staff-schedules", {
+  const { data: schedulesResponse } = useGet<StaffSchedule[]>("staff-schedules", {
     params: { salonId },
     enabled: !!salonId,
   });
-  const { data: timeOffRequests = [] } = useGet<StaffTimeOff[]>(
+  const schedules = Array.isArray(schedulesResponse) ? schedulesResponse : [];
+
+  const { data: timeOffRequestsResponse } = useGet<StaffTimeOff[]>(
     "staff-time-off",
     {
       params: { salonId },
       enabled: !!salonId,
     },
   );
+  const timeOffRequests = Array.isArray(timeOffRequestsResponse)
+    ? timeOffRequestsResponse
+    : [];
 
   // Mutations - NOTE: These endpoints need to be implemented in backend
   const createSchedule = usePost<StaffSchedule, CreateScheduleDto>(
