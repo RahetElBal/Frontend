@@ -48,7 +48,7 @@ export function getProductColumns({
           <div>
             <p className="font-medium">{product.name}</p>
             <p className="text-xs text-muted-foreground">
-              SKU: {product.sku || "-"}
+              SKU: {product.reference || product.sku || "-"}
             </p>
           </div>
         </div>
@@ -57,19 +57,28 @@ export function getProductColumns({
     {
       key: "category",
       header: t("fields.category"),
-      render: (product) => (
-        <div className="flex items-center gap-2">
-          {product.category && (
-            <>
-              <span
-                className="h-2 w-2 rounded-full"
-                style={{ backgroundColor: product.category.color }}
-              />
-              <span>{product.category.name}</span>
-            </>
-          )}
-        </div>
-      ),
+      render: (product) => {
+        const categoryName =
+          typeof product.category === "string"
+            ? product.category
+            : product.category?.name;
+        const categoryColor =
+          typeof product.category === "string" ? undefined : product.category?.color;
+
+        return (
+          <div className="flex items-center gap-2">
+            {categoryName && (
+              <>
+                <span
+                  className="h-2 w-2 rounded-full"
+                  style={categoryColor ? { backgroundColor: categoryColor } : undefined}
+                />
+                <span>{categoryName}</span>
+              </>
+            )}
+          </div>
+        );
+      },
     },
     {
       key: "price",

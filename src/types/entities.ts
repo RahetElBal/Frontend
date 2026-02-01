@@ -142,13 +142,15 @@ export interface Product extends BaseEntity {
   name: string;
   description?: string;
   sku?: string;
+  reference?: string;
   barcode?: string;
   price: number;
   cost?: number;
   stock: number;
   minStock?: number;
   categoryId?: string;
-  category?: Category;
+  category?: Category | string;
+  brand?: string;
   image?: string;
   isActive: boolean;
   salonId: string;

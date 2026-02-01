@@ -151,6 +151,8 @@ export const ar = {
     salon: "الصالون",
     role: "الدور",
     createdAt: "تاريخ الإنشاء",
+    staff: "الموظفون",
+    reference: "المرجع",
 
     // Placeholders
     placeholders: {
@@ -425,6 +427,8 @@ export const ar = {
     addProduct: "إضافة منتج",
     searchPlaceholder: "البحث بالاسم أو الرمز...",
     noProducts: "لم يتم العثور على منتجات",
+    brand: "العلامة التجارية",
+    selectCategory: "اختر أو اكتب فئة",
     cost: "التكلفة",
     outOfStock: "نفذ من المخزون",
     lowStock: "مخزون منخفض",

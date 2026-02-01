@@ -457,6 +457,8 @@ export const en = {
     createdAt: "Created At",
     service: "Service",
     minStock: "Min stock",
+    staff: "Staff",
+    reference: "Reference",
 
     // Placeholders
     placeholders: {
@@ -774,6 +776,8 @@ export const en = {
     addProduct: "Add Product",
     searchPlaceholder: "Search products by name or SKU...",
     noProducts: "No products found",
+    brand: "Brand",
+    selectCategory: "Select or type a category",
     cost: "Cost",
     outOfStock: "Out of Stock",
     lowStock: "Low Stock",

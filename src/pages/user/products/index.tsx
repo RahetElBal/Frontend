@@ -100,6 +100,14 @@ export function ProductsPage() {
   
   const products = productsResponse?.data || [];
 
+  const { data: productCategories = [] } = useGet<string[]>(
+    "products/categories",
+    {
+      params: { salonId },
+      enabled: !!salonId,
+    },
+  );
+
   // Fetch low stock products - GET /products/low-stock
   const { data: lowStockProducts = [] } = useGet<Product[]>("products/low-stock", {
     params: { salonId },
@@ -149,15 +157,19 @@ export function ProductsPage() {
         isActive: true,
       });
     } else if (selectedProduct && isEditMode) {
+      const categoryValue =
+        typeof selectedProduct.category === "string"
+          ? selectedProduct.category
+          : selectedProduct.category?.name || "";
       form.reset({
         name: selectedProduct.name,
-        reference: selectedProduct.sku || "",
+        reference: selectedProduct.reference || "",
         description: selectedProduct.description || "",
         price: selectedProduct.price,
         stock: selectedProduct.stock,
         alertThreshold: selectedProduct.minStock || 5,
-        category: selectedProduct.category?.name || "",
-        brand: "",
+        category: categoryValue,
+        brand: selectedProduct.brand || "",
         isActive: selectedProduct.isActive ?? true,
       });
     }
@@ -245,7 +257,7 @@ export function ProductsPage() {
 
   const table = useTable<Product>({
     data: products,
-    searchKeys: ["name", "sku", "barcode"],
+    searchKeys: ["name", "reference", "sku", "barcode"],
   });
 
   // Use the dedicated low-stock endpoint for counts
@@ -408,6 +420,28 @@ export function ProductsPage() {
                   />
                 </div>
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="category">{t("fields.category")} *</Label>
+                <Input
+                  id="category"
+                  list="product-category-options"
+                  value={form.watch("category")}
+                  onChange={(event) =>
+                    form.setValue("category", event.target.value)
+                  }
+                  placeholder={t("products.selectCategory")}
+                />
+                <datalist id="product-category-options">
+                  {productCategories.map((category) => (
+                    <option key={category} value={category} />
+                  ))}
+                </datalist>
+                {form.hasError("category") && (
+                  <p className="text-sm text-destructive">
+                    {form.getError("category")}
+                  </p>
+                )}
+              </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="stock">{t("fields.stock")} *</Label>
@@ -474,9 +508,9 @@ export function ProductsPage() {
                   <h3 className="text-xl font-semibold">
                     {selectedProduct.name}
                   </h3>
-                  {selectedProduct.sku && (
+                  {(selectedProduct.reference || selectedProduct.sku) && (
                     <p className="text-muted-foreground">
-                      SKU: {selectedProduct.sku}
+                      SKU: {selectedProduct.reference || selectedProduct.sku}
                     </p>
                   )}
                 </div>

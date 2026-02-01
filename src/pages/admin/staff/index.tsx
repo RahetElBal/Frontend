@@ -51,7 +51,7 @@ export function StaffPage() {
   const { data: staffMembersResponse } = useGet<PaginatedResponse<UserType>>(
     "users",
     {
-    params: { salonId },
+    params: { salonId, role: "user" },
     enabled: !!salonId,
   },
   );

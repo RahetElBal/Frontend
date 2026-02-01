@@ -159,6 +159,8 @@ export const fr = {
     createdAt: "Créé le",
     service: "Service",
     minStock: "Stock minimum",
+    staff: "Personnel",
+    reference: "Référence",
 
     // Placeholders
     placeholders: {
@@ -464,6 +466,8 @@ export const fr = {
     addProduct: "Ajouter un produit",
     searchPlaceholder: "Rechercher par nom ou SKU...",
     noProducts: "Aucun produit trouvé",
+    brand: "Marque",
+    selectCategory: "Sélectionner ou saisir une catégorie",
     cost: "Coût",
     outOfStock: "Rupture de stock",
     lowStock: "Stock faible",

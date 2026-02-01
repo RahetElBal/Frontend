@@ -86,6 +86,7 @@ export const FIELD_LABELS = {
   price: 'Prix',
   duration: 'Durée',
   category: 'Catégorie',
+  reference: 'Référence',
   
   // Date/Time
   date: 'Date',

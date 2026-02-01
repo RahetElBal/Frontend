@@ -151,6 +151,8 @@ export const es = {
     salon: "Salón",
     role: "Rol",
     createdAt: "Creado el",
+    staff: "Personal",
+    reference: "Referencia",
 
     // Placeholders
     placeholders: {
@@ -426,6 +428,8 @@ export const es = {
     addProduct: "Añadir producto",
     searchPlaceholder: "Buscar por nombre o SKU...",
     noProducts: "No se encontraron productos",
+    brand: "Marca",
+    selectCategory: "Selecciona o escribe una categoría",
     cost: "Coste",
     outOfStock: "Sin stock",
     lowStock: "Stock bajo",
