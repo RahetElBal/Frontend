@@ -65,6 +65,15 @@ export function timeToDate(time: string, date?: string): Date {
   return new Date(`${baseDate}T${time}`);
 }
 
+export function normalizeTime(value?: string): string {
+  if (!value) return "";
+  const parts = value.split(":");
+  if (parts.length < 2) return value;
+  const hours = parts[0].padStart(2, "0");
+  const minutes = parts[1].padStart(2, "0");
+  return `${hours}:${minutes}`;
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function safeExtractArray<T>(data: any): T[] {
   if (!data) return [];

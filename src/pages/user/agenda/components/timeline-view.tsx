@@ -13,7 +13,12 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { Appointment } from "@/types/entities";
 import { AppointmentStatus } from "@/types/entities";
-import { timeSlots, statusColors, getCurrentTimeString } from "../utils";
+import {
+  timeSlots,
+  statusColors,
+  getCurrentTimeString,
+  normalizeTime,
+} from "../utils";
 import {
   getServiceImage,
   getServiceImageFallback,
@@ -66,7 +71,7 @@ export function TimelineView({
               const isCurrentTime = time === currentTimeString;
               const isPastTime = time < currentTimeString;
               const appointment = dayAppointments.find(
-                (apt) => apt.startTime === time
+                (apt) => normalizeTime(apt.startTime) === time
               );
 
               return (
@@ -162,7 +167,8 @@ export function TimelineView({
                             <div className="flex items-center gap-2 text-sm text-muted-foreground">
                               <Clock className="h-3 w-3" />
                               <span>
-                                {appointment.startTime} - {appointment.endTime}
+                                {normalizeTime(appointment.startTime)} -{" "}
+                                {normalizeTime(appointment.endTime)}
                               </span>
                             </div>
                             {!appointment.paid &&
