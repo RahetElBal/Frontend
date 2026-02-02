@@ -729,6 +729,8 @@ export const en = {
     deleteClient: "Delete Client",
     deleteClientConfirm:
       "Are you sure you want to delete {{name}}? This action cannot be undone.",
+    pointsAdded: "Points added successfully",
+    pointsDeducted: "Points deducted successfully",
   },
 
   // ============================================
@@ -808,6 +810,9 @@ export const en = {
     paymentStatus: "Payment Status",
     paymentPaid: "Paid",
     paymentUnpaid: "Unpaid",
+    redeemNow: "Redeem loyalty now",
+    redeemNowDescription: "Apply the reward discount ({{points}} pts required)",
+    redeemNowNotEligible: "Not eligible for redemption",
   },
 
   // ============================================
@@ -1216,6 +1221,14 @@ export const en = {
     pointValueDescription: "Value in currency per point",
     minimumRedemption: "Minimum redemption",
     minimumRedemptionDescription: "Minimum points to redeem",
+    loyaltyRewardService: "Reward service",
+    loyaltyRewardServicePlaceholder: "Select a service for the reward",
+    loyaltyRewardServiceDescription:
+      "Discount is applied once when the client has enough points and this service is paid",
+    loyaltyRewardDiscountType: "Discount type",
+    loyaltyRewardDiscountTypePercent: "Percent",
+    loyaltyRewardDiscountTypeFixed: "Fixed amount",
+    loyaltyRewardDiscountValue: "Discount value",
     // Receipt
     receiptHeader: "Receipt header",
     receiptHeaderPlaceholder: "Thank you for visiting...",

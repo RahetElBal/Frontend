@@ -398,6 +398,7 @@ export function AgendaPage() {
         salonId: string;
         appointmentId: string;
         clientId?: string;
+        redeemLoyalty?: boolean;
         items: {
           type: "service";
           itemId: string;
@@ -683,6 +684,7 @@ export function AgendaPage() {
             salonId,
             appointmentId: appointment.id,
             clientId: appointment.clientId,
+            redeemLoyalty: false,
             items: [
               {
                 type: "service",
@@ -707,7 +709,7 @@ export function AgendaPage() {
         onDelete={() => deleteAppointment()}
         onCancel={(id) => cancelAppointment(id)}
         onComplete={(id) => completeAppointment(id)}
-        onCreateSale={(appointment) => {
+        onCreateSale={(appointment, options) => {
           if (!salonId || !appointment.serviceId) {
             toast.error(t("common.error"));
             return;
@@ -716,6 +718,7 @@ export function AgendaPage() {
             salonId,
             appointmentId: appointment.id,
             clientId: appointment.clientId,
+            redeemLoyalty: options?.redeemLoyalty ?? false,
             items: [
               {
                 type: "service",

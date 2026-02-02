@@ -1,4 +1,4 @@
-import { useMemo, useEffect } from "react";
+import { useMemo, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { UseFormReturn } from "react-hook-form";
 import {
@@ -49,6 +49,7 @@ import type { Appointment, Client, Service } from "@/types/entities";
 import type { AppointmentFormData } from "../../validation";
 import type { AppointmentModalState } from "../../types";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useUser } from "@/hooks/useUser";
 import { timeSlots, statusColors } from "../../utils";
 import { getValidationErrorMessage } from "@/pages/user/utils";
 import { FormErrorMessage } from "@/pages/user/components/form-error-message";
@@ -69,7 +70,10 @@ interface AppointmentModalsProps {
   onDelete: () => void;
   onCancel?: (id: string) => void;
   onComplete?: (id: string) => void;
-  onCreateSale?: (appointment: Appointment) => void;
+  onCreateSale?: (
+    appointment: Appointment,
+    options?: { redeemLoyalty?: boolean }
+  ) => void;
   isCreatingSale?: boolean;
   isPending: boolean;
 }
@@ -91,6 +95,8 @@ export function AppointmentModals({
 }: AppointmentModalsProps) {
   const { t } = useTranslation();
   const { formatCurrency } = useLanguage();
+  const { salon } = useUser();
+  const [redeemLoyalty, setRedeemLoyalty] = useState(false);
   const getErrorMessage = (
     name: keyof AppointmentFormData
   ): string | undefined => {
@@ -127,6 +133,22 @@ export function AppointmentModals({
     };
   }, [modalState]);
 
+  const loyaltySettings = salon?.settings;
+  const loyaltyEnabled = !!loyaltySettings?.loyaltyEnabled;
+  const loyaltyRewardServiceId = loyaltySettings?.loyaltyRewardServiceId || "";
+  const loyaltyMinimumRedemption = Number(
+    loyaltySettings?.loyaltyMinimumRedemption || 0
+  );
+  const loyaltyClientPoints = selectedAppointment?.client?.loyaltyPoints ?? 0;
+  const loyaltyServiceMatch =
+    !!loyaltyRewardServiceId &&
+    selectedAppointment?.serviceId === loyaltyRewardServiceId;
+  const loyaltyEligible =
+    loyaltyEnabled &&
+    loyaltyServiceMatch &&
+    loyaltyClientPoints >= loyaltyMinimumRedemption &&
+    loyaltyMinimumRedemption > 0;
+
   // Safe arrays
   const safeClients = useMemo(
     () => (Array.isArray(clients) ? clients : []),
@@ -151,6 +173,7 @@ export function AppointmentModals({
   // Reset form when modal state changes
   useEffect(() => {
     if (!modalState) return;
+    setRedeemLoyalty(false);
 
     if (derived?.isCreateMode) {
       reset({
@@ -270,6 +293,30 @@ export function AppointmentModals({
                     </p>
                   </div>
                 </div>
+                {onCreateSale &&
+                  selectedAppointment.status === "completed" &&
+                  !selectedAppointment.paid &&
+                  loyaltyEnabled && (
+                    <div className="flex items-center justify-between gap-4 p-3 rounded-lg bg-muted/50">
+                      <div>
+                        <p className="text-sm font-medium">
+                          {t("agenda.redeemNow")}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {loyaltyEligible
+                            ? t("agenda.redeemNowDescription", {
+                                points: loyaltyMinimumRedemption,
+                              })
+                            : t("agenda.redeemNowNotEligible")}
+                        </p>
+                      </div>
+                      <Switch
+                        checked={redeemLoyalty}
+                        onCheckedChange={setRedeemLoyalty}
+                        disabled={!loyaltyEligible}
+                      />
+                    </div>
+                  )}
                 <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
                   <Scissors className="h-5 w-5 text-muted-foreground" />
                   <div className="flex-1">
@@ -385,7 +432,11 @@ export function AppointmentModals({
                   selectedAppointment.status === "completed" &&
                   !selectedAppointment.paid && (
                     <Button
-                      onClick={() => onCreateSale(selectedAppointment)}
+                      onClick={() =>
+                        onCreateSale(selectedAppointment, {
+                          redeemLoyalty,
+                        })
+                      }
                       disabled={isPending || isCreatingSale}
                     >
                       <DollarSign className="h-4 w-4 me-2" />

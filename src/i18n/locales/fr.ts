@@ -425,6 +425,8 @@ export const fr = {
     deleteClient: "Supprimer le client",
     deleteClientConfirm:
       "Êtes-vous sûr de vouloir supprimer {{name}} ? Cette action est irréversible.",
+    pointsAdded: "Points ajoutés avec succès",
+    pointsDeducted: "Points déduits avec succès",
   },
 
   agenda: {
@@ -501,6 +503,9 @@ export const fr = {
     paymentStatus: "Statut du paiement",
     paymentPaid: "Payé",
     paymentUnpaid: "Non payé",
+    redeemNow: "Utiliser la fidélité maintenant",
+    redeemNowDescription: "Appliquer la réduction ({{points}} pts requis)",
+    redeemNowNotEligible: "Non éligible à l'utilisation",
   },
 
   services: {
@@ -873,6 +878,14 @@ export const fr = {
     pointValueDescription: "Valeur en euros par point",
     minimumRedemption: "Échange minimum",
     minimumRedemptionDescription: "Points minimum pour échanger",
+    loyaltyRewardService: "Service de récompense",
+    loyaltyRewardServicePlaceholder: "Sélectionner un service de récompense",
+    loyaltyRewardServiceDescription:
+      "La réduction s'applique une fois lorsque le client a assez de points",
+    loyaltyRewardDiscountType: "Type de réduction",
+    loyaltyRewardDiscountTypePercent: "Pourcentage",
+    loyaltyRewardDiscountTypeFixed: "Montant fixe",
+    loyaltyRewardDiscountValue: "Valeur de la réduction",
     receiptHeader: "En-tête du reçu",
     receiptHeaderPlaceholder: "Merci de votre visite...",
     receiptFooter: "Pied de page du reçu",

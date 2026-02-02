@@ -579,6 +579,9 @@ export interface SalonSettingsExtended extends BaseEntity {
   loyaltyPointsPerCurrency: number;
   loyaltyPointValue: number;
   loyaltyMinimumRedemption: number;
+  loyaltyRewardServiceId?: string;
+  loyaltyRewardDiscountType?: "percent" | "fixed";
+  loyaltyRewardDiscountValue?: number;
 
   // Receipt Settings
   receiptHeader?: string;

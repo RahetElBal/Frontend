@@ -4,9 +4,26 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import type { Service } from "@/types/entities";
+import { translateServiceName } from "@/common/service-translations";
 import type { SettingsSectionProps } from "../types";
 
-export function LoyaltySettings({ formData, updateField }: SettingsSectionProps) {
+interface LoyaltySettingsProps extends SettingsSectionProps {
+  services: Service[];
+}
+
+export function LoyaltySettings({
+  formData,
+  updateField,
+  services,
+}: LoyaltySettingsProps) {
   const { t } = useTranslation();
 
   return (
@@ -42,7 +59,7 @@ export function LoyaltySettings({ formData, updateField }: SettingsSectionProps)
                 onChange={(e) =>
                   updateField(
                     "loyaltyPointsPerCurrency",
-                    parseInt(e.target.value),
+                    parseInt(e.target.value)
                   )
                 }
               />
@@ -74,13 +91,80 @@ export function LoyaltySettings({ formData, updateField }: SettingsSectionProps)
                 onChange={(e) =>
                   updateField(
                     "loyaltyMinimumRedemption",
-                    parseInt(e.target.value),
+                    parseInt(e.target.value)
                   )
                 }
               />
               <p className="text-xs text-muted-foreground">
                 {t("salonSettings.minimumRedemptionDescription")}
               </p>
+            </div>
+            <div className="space-y-2 sm:col-span-3">
+              <Label>{t("salonSettings.loyaltyRewardService")}</Label>
+              <Select
+                value={formData.loyaltyRewardServiceId || ""}
+                onValueChange={(value) =>
+                  updateField("loyaltyRewardServiceId", value)
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue
+                    placeholder={t(
+                      "salonSettings.loyaltyRewardServicePlaceholder"
+                    )}
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">{t("common.none")}</SelectItem>
+                  {services.map((service) => (
+                    <SelectItem key={service.id} value={service.id}>
+                      {translateServiceName(t, service)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                {t("salonSettings.loyaltyRewardServiceDescription")}
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label>{t("salonSettings.loyaltyRewardDiscountType")}</Label>
+              <Select
+                value={formData.loyaltyRewardDiscountType || "percent"}
+                onValueChange={(value) =>
+                  updateField(
+                    "loyaltyRewardDiscountType",
+                    value as "percent" | "fixed"
+                  )
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="percent">
+                    {t("salonSettings.loyaltyRewardDiscountTypePercent")}
+                  </SelectItem>
+                  <SelectItem value="fixed">
+                    {t("salonSettings.loyaltyRewardDiscountTypeFixed")}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>{t("salonSettings.loyaltyRewardDiscountValue")}</Label>
+              <Input
+                type="number"
+                min="0"
+                step="0.01"
+                value={formData.loyaltyRewardDiscountValue ?? ""}
+                onChange={(e) =>
+                  updateField(
+                    "loyaltyRewardDiscountValue",
+                    parseFloat(e.target.value)
+                  )
+                }
+              />
             </div>
           </div>
         )}

@@ -76,7 +76,7 @@ export interface ClientFilters {
   page?: number;
   limit?: number;
   sortBy?: string;
-  sortOrder?: 'ASC' | 'DESC';
+  sortOrder?: "ASC" | "DESC";
 }
 
 // ============================================
@@ -109,7 +109,7 @@ export interface ServiceFilters {
   page?: number;
   limit?: number;
   sortBy?: string;
-  sortOrder?: 'ASC' | 'DESC';
+  sortOrder?: "ASC" | "DESC";
 }
 
 // ============================================
@@ -154,7 +154,7 @@ export interface ProductFilters {
   page?: number;
   limit?: number;
   sortBy?: string;
-  sortOrder?: 'ASC' | 'DESC';
+  sortOrder?: "ASC" | "DESC";
 }
 
 // ============================================
@@ -190,7 +190,7 @@ export interface AppointmentFilters {
   page?: number;
   limit?: number;
   sortBy?: string;
-  sortOrder?: 'ASC' | 'DESC';
+  sortOrder?: "ASC" | "DESC";
 }
 
 // ============================================
@@ -204,10 +204,11 @@ export interface CreateSaleDto {
   paymentMethod: string;
   notes?: string;
   appointmentId?: string;
+  redeemLoyalty?: boolean;
 }
 
 export interface CreateSaleItemDto {
-  type: 'service' | 'product';
+  type: "service" | "product";
   itemId: string;
   quantity: number;
   price: number;
@@ -226,7 +227,7 @@ export interface SaleFilters {
   page?: number;
   limit?: number;
   sortBy?: string;
-  sortOrder?: 'ASC' | 'DESC';
+  sortOrder?: "ASC" | "DESC";
 }
 
 // ============================================
@@ -252,7 +253,7 @@ export interface GiftCardFilters {
   page?: number;
   limit?: number;
   sortBy?: string;
-  sortOrder?: 'ASC' | 'DESC';
+  sortOrder?: "ASC" | "DESC";
 }
 
 // ============================================
@@ -321,7 +322,7 @@ export interface PaginatedResponse<T> {
 export interface AnalyticsFilters {
   dateFrom?: string;
   dateTo?: string;
-  groupBy?: 'day' | 'week' | 'month';
+  groupBy?: "day" | "week" | "month";
 }
 
 export interface DashboardResponse {

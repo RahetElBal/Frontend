@@ -408,6 +408,8 @@ export const es = {
     addClient: "Añadir cliente",
     searchPlaceholder: "Buscar por nombre, email o teléfono...",
     noClients: "No se encontraron clientes",
+    pointsAdded: "Puntos añadidos correctamente",
+    pointsDeducted: "Puntos descontados correctamente",
   },
 
   agenda: {
@@ -468,6 +470,9 @@ export const es = {
     paymentStatus: "Estado del pago",
     paymentPaid: "Pagado",
     paymentUnpaid: "Sin pagar",
+    redeemNow: "Canjear fidelidad ahora",
+    redeemNowDescription: "Aplicar el descuento ({{points}} pts requeridos)",
+    redeemNowNotEligible: "No elegible para canjear",
   },
 
   services: {
@@ -651,6 +656,28 @@ export const es = {
     switchedToAdmin: "Cambiado a vista de administrador",
     switchedToUser: "Cambiado a vista de usuario",
     description: "Previsualizar la aplicación como otro rol",
+  },
+
+  salonSettings: {
+    tabs: {
+      loyalty: "Fidelidad",
+    },
+    loyaltyEnabled: "Activar programa de fidelidad",
+    loyaltyEnabledDescription: "Recompensa a los clientes con puntos",
+    pointsPerCurrency: "Puntos por moneda",
+    pointsPerCurrencyDescription: "Puntos ganados por cada moneda gastada",
+    pointValue: "Valor del punto",
+    pointValueDescription: "Valor en moneda por punto",
+    minimumRedemption: "Canje mínimo",
+    minimumRedemptionDescription: "Puntos mínimos para canjear",
+    loyaltyRewardService: "Servicio de recompensa",
+    loyaltyRewardServicePlaceholder: "Selecciona el servicio de recompensa",
+    loyaltyRewardServiceDescription:
+      "El descuento se aplica una vez cuando el cliente tiene puntos suficientes",
+    loyaltyRewardDiscountType: "Tipo de descuento",
+    loyaltyRewardDiscountTypePercent: "Porcentaje",
+    loyaltyRewardDiscountTypeFixed: "Importe fijo",
+    loyaltyRewardDiscountValue: "Valor del descuento",
   },
 
   admin: {

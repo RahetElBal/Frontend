@@ -407,6 +407,8 @@ export const ar = {
     addClient: "إضافة عميل",
     searchPlaceholder: "البحث بالاسم أو البريد أو الهاتف...",
     noClients: "لم يتم العثور على عملاء",
+    pointsAdded: "تمت إضافة النقاط بنجاح",
+    pointsDeducted: "تم خصم النقاط بنجاح",
   },
 
   agenda: {
@@ -467,6 +469,9 @@ export const ar = {
     paymentStatus: "حالة الدفع",
     paymentPaid: "مدفوع",
     paymentUnpaid: "غير مدفوع",
+    redeemNow: "استخدام نقاط الولاء الآن",
+    redeemNowDescription: "تطبيق الخصم (يتطلب {{points}} نقطة)",
+    redeemNowNotEligible: "غير مؤهل للاستخدام",
   },
 
   services: {
@@ -649,6 +654,28 @@ export const ar = {
     switchedToAdmin: "تم التبديل إلى عرض المدير",
     switchedToUser: "تم التبديل إلى عرض المستخدم",
     description: "معاينة التطبيق كدور مختلف",
+  },
+
+  salonSettings: {
+    tabs: {
+      loyalty: "الولاء",
+    },
+    loyaltyEnabled: "تفعيل برنامج الولاء",
+    loyaltyEnabledDescription: "مكافأة العملاء بالنقاط",
+    pointsPerCurrency: "النقاط لكل عملة",
+    pointsPerCurrencyDescription: "النقاط المكتسبة لكل عملة يتم إنفاقها",
+    pointValue: "قيمة النقطة",
+    pointValueDescription: "قيمة النقطة بالعملة",
+    minimumRedemption: "الحد الأدنى للاستبدال",
+    minimumRedemptionDescription: "الحد الأدنى للنقاط للاستبدال",
+    loyaltyRewardService: "خدمة المكافأة",
+    loyaltyRewardServicePlaceholder: "اختر خدمة المكافأة",
+    loyaltyRewardServiceDescription:
+      "يتم تطبيق الخصم مرة واحدة عند توفر نقاط كافية",
+    loyaltyRewardDiscountType: "نوع الخصم",
+    loyaltyRewardDiscountTypePercent: "نسبة مئوية",
+    loyaltyRewardDiscountTypeFixed: "مبلغ ثابت",
+    loyaltyRewardDiscountValue: "قيمة الخصم",
   },
 
   admin: {

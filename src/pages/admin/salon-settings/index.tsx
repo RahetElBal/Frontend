@@ -1,28 +1,23 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  Building2,
-  Clock,
-  Save,
-  Calendar,
-} from "lucide-react";
+import { Building2, Clock, Save, Calendar, Heart } from "lucide-react";
 
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { toast } from "@/lib/toast";
 import { cn } from "@/lib/utils";
-import type { SalonSettingsExtended, Salon } from "@/types/entities";
+import type { SalonSettingsExtended, Salon, Service } from "@/types/entities";
+import type { PaginatedResponse } from "@/types";
 import { usePost } from "@/hooks/usePost";
 import { useUser } from "@/hooks/useUser";
+import { useGet } from "@/hooks/useGet";
 import { GeneralSettings } from "./components/general-settings";
 import { WorkingHoursSettings } from "./components/working-hours-settings";
 import { BookingSettings } from "./components/booking-settings";
+import { LoyaltySettings } from "./components/loyalty-settings";
 
-type SettingsTab =
-  | "general"
-  | "booking"
-  | "hours";
+type SettingsTab = "general" | "booking" | "hours" | "loyalty";
 
 export function SalonSettingsPage() {
   const { t } = useTranslation();
@@ -36,6 +31,18 @@ export function SalonSettingsPage() {
   // Settings are stored within the salon entity
   const settings = currentSalon?.settings as SalonSettingsExtended | undefined;
   const isLoading = !currentSalon;
+  const { data: servicesData } = useGet<PaginatedResponse<Service>>(
+    "services",
+    {
+      params: { salonId: currentSalon?.id, perPage: 200 },
+      enabled: !!currentSalon?.id,
+    }
+  );
+  const services = Array.isArray(servicesData?.data)
+    ? servicesData.data
+    : Array.isArray(servicesData)
+    ? servicesData
+    : [];
 
   // Default settings state
   const [formData, setFormData] = useState<Partial<SalonSettingsExtended>>({
@@ -66,6 +73,9 @@ export function SalonSettingsPage() {
     loyaltyPointsPerCurrency: 1,
     loyaltyPointValue: 0.01,
     loyaltyMinimumRedemption: 100,
+    loyaltyRewardServiceId: "",
+    loyaltyRewardDiscountType: "percent",
+    loyaltyRewardDiscountValue: 10,
     receiptHeader: "",
     receiptFooter: "",
     showStaffOnReceipt: true,
@@ -106,7 +116,7 @@ export function SalonSettingsPage() {
 
   const updateField = <K extends keyof SalonSettingsExtended>(
     field: K,
-    value: SalonSettingsExtended[K],
+    value: SalonSettingsExtended[K]
   ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     setHasChanges(true);
@@ -115,7 +125,7 @@ export function SalonSettingsPage() {
   const updateWorkingHours = (
     day: string,
     field: string,
-    value: string | boolean,
+    value: string | boolean
   ) => {
     setFormData((prev) => {
       const currentDayHours = prev.workingHours?.[day] || {
@@ -149,6 +159,7 @@ export function SalonSettingsPage() {
     { id: "general", label: t("salonSettings.tabs.general"), icon: Building2 },
     { id: "hours", label: t("salonSettings.tabs.hours"), icon: Clock },
     { id: "booking", label: t("salonSettings.tabs.booking"), icon: Calendar },
+    { id: "loyalty", label: t("salonSettings.tabs.loyalty"), icon: Heart },
   ];
 
   return (
@@ -182,7 +193,7 @@ export function SalonSettingsPage() {
                 "w-full flex items-center gap-3 px-4 py-3 rounded-lg text-start transition-colors",
                 activeTab === tab.id
                   ? "bg-accent-pink/10 text-accent-pink"
-                  : "hover:bg-muted text-muted-foreground hover:text-foreground",
+                  : "hover:bg-muted text-muted-foreground hover:text-foreground"
               )}
             >
               <tab.icon className="h-5 w-5" />
@@ -215,6 +226,13 @@ export function SalonSettingsPage() {
                 <BookingSettings
                   formData={formData}
                   updateField={updateField}
+                />
+              )}
+              {activeTab === "loyalty" && (
+                <LoyaltySettings
+                  formData={formData}
+                  updateField={updateField}
+                  services={services}
                 />
               )}
             </>
