@@ -4,6 +4,7 @@ export const fr = {
   // ============================================
   common: {
     loading: "Chargement...",
+    saving: "Enregistrement...",
     error: "Erreur",
     retry: "Réessayer",
     save: "Enregistrer",
@@ -50,6 +51,7 @@ export const fr = {
     active: "Actif",
     deactivate: "Désactiver",
     activate: "Activer",
+    detectAddress: "Détecter l’adresse",
     hour: "heure",
     hours: "heures",
     day: "jour",

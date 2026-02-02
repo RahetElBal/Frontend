@@ -1,5 +1,5 @@
 // src/pages/admin/salons/components/dialog/salon-modal.tsx
-import { useMemo, useEffect } from "react";
+import { useMemo, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -36,6 +36,8 @@ import { canModifySalon, type SalonModalState } from "../../utils";
 import { createSalonFormSchema, type SalonFormData } from "../../validation";
 import React from "react";
 import { parseValidationMsg } from "@/common/validator/zodI18n";
+import { normalizePhone } from "@/common/phone";
+import { detectAddress } from "@/common/geo";
 
 interface SalonModalProps {
   modalState: SalonModalState;
@@ -152,6 +154,22 @@ export function SalonModals({
     };
   }, [modalState, selectedSalon, user, isCreating, isUpdating, isDeleting]);
 
+  const [isDetectingAddress, setIsDetectingAddress] = useState(false);
+
+  const handleDetectAddress = async () => {
+    setIsDetectingAddress(true);
+    try {
+      const result = await detectAddress();
+      if (result.displayAddress) {
+        form.setValue("address", result.displayAddress);
+      }
+    } catch (error) {
+      toast.error(t("common.error"));
+    } finally {
+      setIsDetectingAddress(false);
+    }
+  };
+
   // Reset form when modal opens or changes
   useEffect(() => {
     if (!modalState) {
@@ -171,7 +189,7 @@ export function SalonModals({
             keepDirty: false,
             keepTouched: false,
             keepIsSubmitted: false,
-          },
+          }
         );
         setSelectedOwnerId("");
       }, 0);
@@ -189,7 +207,7 @@ export function SalonModals({
             keepDirty: false,
             keepTouched: false,
             keepIsSubmitted: false,
-          },
+          }
         );
         setSelectedOwnerId(selectedSalon.ownerId || "");
       }, 0);
@@ -342,24 +360,51 @@ export function SalonModals({
               <Input id="name" {...form.register("name")} />
               {form.formState.errors.name && (
                 <p className="text-sm text-destructive mt-1">
-                  {getErrorMessage(form.formState.errors.name.message as string)}
+                  {getErrorMessage(
+                    form.formState.errors.name.message as string
+                  )}
                 </p>
               )}
             </div>
             <div>
-              <Label htmlFor="address">{t("admin.salons.address")}</Label>
+              <div className="flex items-center justify-between gap-2">
+                <Label htmlFor="address">{t("admin.salons.address")}</Label>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleDetectAddress}
+                  disabled={isDetectingAddress}
+                >
+                  {isDetectingAddress
+                    ? t("common.loading")
+                    : t("common.detectAddress")}
+                </Button>
+              </div>
               <Input id="address" {...form.register("address")} />
             </div>
             <div>
               <Label htmlFor="phone">{t("admin.salons.phone")}</Label>
-              <Input id="phone" {...form.register("phone")} />
+              <Input
+                id="phone"
+                {...form.register("phone", {
+                  onBlur: (event) => {
+                    const normalized = normalizePhone(event.target.value);
+                    if (normalized) {
+                      form.setValue("phone", normalized);
+                    }
+                  },
+                })}
+              />
             </div>
             <div>
               <Label htmlFor="email">{t("admin.salons.email")}</Label>
               <Input id="email" type="email" {...form.register("email")} />
               {form.formState.errors.email && (
                 <p className="text-sm text-destructive mt-1">
-                  {getErrorMessage(form.formState.errors.email.message as string)}
+                  {getErrorMessage(
+                    form.formState.errors.email.message as string
+                  )}
                 </p>
               )}
             </div>
@@ -410,8 +455,8 @@ export function SalonModals({
                 {derived.isPending
                   ? t("common.saving")
                   : derived.isCreateMode
-                    ? t("common.create")
-                    : t("common.save")}
+                  ? t("common.create")
+                  : t("common.save")}
               </Button>
             </DialogFooter>
           </form>

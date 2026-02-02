@@ -5,6 +5,7 @@
 export interface TranslationKeys {
   common: {
     loading: string;
+    saving: string;
     error: string;
     retry: string;
     save: string;
@@ -45,6 +46,7 @@ export interface TranslationKeys {
     archive: string;
     success: string;
     total: string;
+    detectAddress: string;
   };
   auth: {
     login: {
@@ -306,6 +308,7 @@ export const en = {
   // ============================================
   common: {
     loading: "Loading...",
+    saving: "Saving...",
     error: "Error",
     retry: "Retry",
     save: "Save",
@@ -352,6 +355,7 @@ export const en = {
     active: "Active",
     deactivate: "Deactivate",
     activate: "Activate",
+    detectAddress: "Auto-detect address",
     hour: "hour",
     hours: "hours",
     day: "day",

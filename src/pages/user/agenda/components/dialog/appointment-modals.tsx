@@ -53,6 +53,7 @@ import { useUser } from "@/hooks/useUser";
 import { timeSlots, statusColors } from "../../utils";
 import { getValidationErrorMessage } from "@/pages/user/utils";
 import { FormErrorMessage } from "@/pages/user/components/form-error-message";
+import { normalizePhone } from "@/common/phone";
 import {
   getServiceImage,
   getServiceImageFallback,
@@ -583,6 +584,14 @@ export function AppointmentModals({
                         <Input
                           {...form.register("walkInPhone")}
                           placeholder={t("agenda.walkInPhonePlaceholder")}
+                          onBlur={(event) => {
+                            const normalized = normalizePhone(
+                              event.target.value
+                            );
+                            if (normalized) {
+                              form.setValue("walkInPhone", normalized);
+                            }
+                          }}
                         />
                       </div>
                       <div className="space-y-2">

@@ -16,6 +16,7 @@ import { DialogFooter } from "@/components/ui/dialog";
 import type { User, Salon } from "@/types/entities";
 import type { UserFormData } from "./validation";
 import { parseValidationMsg } from "@/common/validator/zodI18n";
+import { normalizePhone } from "@/common/phone";
 
 interface UserFormProps {
   form: UseFormReturn<UserFormData>;
@@ -90,7 +91,14 @@ export function UserForm({
             <Input
               id="phone"
               type="tel"
-              {...form.register("phone")}
+              {...form.register("phone", {
+                onBlur: (event) => {
+                  const normalized = normalizePhone(event.target.value);
+                  if (normalized) {
+                    form.setValue("phone", normalized);
+                  }
+                },
+              })}
               placeholder="+213 XXX XXX XXX"
               className="pl-10"
             />

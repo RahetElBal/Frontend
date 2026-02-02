@@ -4,6 +4,7 @@ export const ar = {
   // ============================================
   common: {
     loading: "جارٍ التحميل...",
+    saving: "جارٍ الحفظ...",
     error: "خطأ",
     retry: "إعادة المحاولة",
     save: "حفظ",
@@ -50,6 +51,7 @@ export const ar = {
     active: "نشط",
     deactivate: "تعطيل",
     activate: "تفعيل",
+    detectAddress: "كشف العنوان تلقائيًا",
     unknown: "غير معروف",
     unauthorized: "غير مصرح لك بتنفيذ هذا الإجراء",
     success: "نجاح",

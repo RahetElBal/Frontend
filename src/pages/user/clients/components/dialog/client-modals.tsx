@@ -1,7 +1,16 @@
 import { useMemo, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import type { UseFormReturn } from "react-hook-form";
-import { Phone, Award, DollarSign, Calendar, Edit, Archive, Plus, Minus } from "lucide-react";
+import {
+  Phone,
+  Award,
+  DollarSign,
+  Calendar,
+  Edit,
+  Archive,
+  Plus,
+  Minus,
+} from "lucide-react";
 import type { Client } from "@/types/entities";
 import { toast } from "@/lib/toast";
 import { usePost } from "@/hooks/usePost";
@@ -32,6 +41,7 @@ import type { ClientModalState } from "@/pages/user/clients/types";
 import type { ClientFormData } from "@/pages/user/clients/validation";
 import { getValidationErrorMessage } from "@/pages/user/utils";
 import { FormErrorMessage } from "@/pages/user/components/form-error-message";
+import { normalizePhone } from "@/common/phone";
 
 interface ClientModalsProps {
   modalState: ClientModalState;
@@ -52,9 +62,11 @@ export function ClientModals({
   const { formatCurrency } = useLanguage();
   const { user } = useUser();
   const getErrorMessage = (name: keyof ClientFormData): string | undefined => {
-    const maybeGetError = (form as UseFormReturn<ClientFormData> & {
-      getError?: (field: keyof ClientFormData) => string | undefined;
-    }).getError;
+    const maybeGetError = (
+      form as UseFormReturn<ClientFormData> & {
+        getError?: (field: keyof ClientFormData) => string | undefined;
+      }
+    ).getError;
     const message =
       maybeGetError?.(name) ??
       (form.formState.errors[name]?.message as string | undefined);
@@ -147,19 +159,17 @@ export function ClientModals({
   });
 
   // Deduct loyalty points - POST /clients/{id}/loyalty/deduct
-  const { mutate: deductLoyaltyPoints, isPending: isDeductingPoints } = usePostAction<
-    Client,
-    { points: number }
-  >("clients", {
-    id: selectedClient?.id,
-    action: "loyalty/deduct",
-    invalidateQueries: ["clients"],
-    showSuccessToast: true,
-    successMessage: t("clients.pointsDeducted"),
-    onSuccess: () => {
-      onSuccess();
-    },
-  });
+  const { mutate: deductLoyaltyPoints, isPending: isDeductingPoints } =
+    usePostAction<Client, { points: number }>("clients", {
+      id: selectedClient?.id,
+      action: "loyalty/deduct",
+      invalidateQueries: ["clients"],
+      showSuccessToast: true,
+      successMessage: t("clients.pointsDeducted"),
+      onSuccess: () => {
+        onSuccess();
+      },
+    });
 
   const derived = useMemo(() => {
     if (!modalState) return null;
@@ -325,7 +335,9 @@ export function ClientModals({
                       size="icon"
                       className="h-8 w-8"
                       onClick={() => deductLoyaltyPoints({ points: 10 })}
-                      disabled={isDeductingPoints || selectedClient.loyaltyPoints < 10}
+                      disabled={
+                        isDeductingPoints || selectedClient.loyaltyPoints < 10
+                      }
                       title={t("clients.deductPoints")}
                     >
                       <Minus className="h-4 w-4" />
@@ -358,7 +370,7 @@ export function ClientModals({
                         <span className="text-muted-foreground text-sm ml-2">
                           ({t("fields.lastVisit")}:{" "}
                           {new Date(
-                            selectedClient.lastVisit,
+                            selectedClient.lastVisit
                           ).toLocaleDateString()}
                           )
                         </span>
@@ -440,7 +452,18 @@ export function ClientModals({
             </div>
             <div className="space-y-2">
               <Label htmlFor="phone">{t("fields.phone")}</Label>
-              <Input id="phone" type="tel" {...form.register("phone")} />
+              <Input
+                id="phone"
+                type="tel"
+                {...form.register("phone", {
+                  onBlur: (event) => {
+                    const normalized = normalizePhone(event.target.value);
+                    if (normalized) {
+                      form.setValue("phone", normalized);
+                    }
+                  },
+                })}
+              />
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={handleClose}>

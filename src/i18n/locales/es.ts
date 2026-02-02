@@ -4,6 +4,7 @@ export const es = {
   // ============================================
   common: {
     loading: "Cargando...",
+    saving: "Guardando...",
     error: "Error",
     retry: "Reintentar",
     save: "Guardar",
@@ -50,6 +51,7 @@ export const es = {
     active: "Activo",
     deactivate: "Desactivar",
     activate: "Activar",
+    detectAddress: "Detectar dirección",
     unknown: "Desconocido",
     unauthorized: "No está autorizado para realizar esta acción",
     success: "Éxito",
