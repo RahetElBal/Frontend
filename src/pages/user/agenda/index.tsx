@@ -497,6 +497,20 @@ export function AgendaPage() {
       return;
     }
 
+    if (isCreateMode) {
+      const conflictingAppointment = appointments.find(
+        (apt) =>
+          apt.date === data.date &&
+          apt.startTime === data.startTime &&
+          apt.status !== "cancelled",
+      );
+
+      if (conflictingAppointment) {
+        toast.error(t("agenda.timeSlotOccupied"));
+        return;
+      }
+    }
+
     if (modalState?.mode === "edit" && !isCreateMode) {
       updateAppointment(toAppointmentPayload(data));
     } else {

@@ -174,7 +174,6 @@ export function AppointmentModals({
   // Reset form when modal state changes
   useEffect(() => {
     if (!modalState) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setRedeemLoyalty(false);
 
     if (derived?.isCreateMode) {

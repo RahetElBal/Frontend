@@ -18,6 +18,7 @@ import {
   statusColors,
   getCurrentTimeString,
   normalizeTime,
+  getLocalDateString,
 } from "../utils";
 import {
   getServiceImage,
@@ -49,9 +50,10 @@ export function TimelineView({
   const currentHour = new Date().getHours();
   const currentMinutes = new Date().getMinutes();
 
-  const selectedDateStr = selectedDate.toISOString().split("T")[0];
+  // FIX: Use getLocalDateString instead of toISOString to avoid timezone shifts
+  const selectedDateStr = getLocalDateString(selectedDate);
   const dayAppointments = appointments.filter(
-    (apt) => apt.date === selectedDateStr
+    (apt) => apt.date === selectedDateStr,
   );
 
   if (isLoading) {
@@ -71,7 +73,7 @@ export function TimelineView({
               const isCurrentTime = time === currentTimeString;
               const isPastTime = time < currentTimeString;
               const appointment = dayAppointments.find(
-                (apt) => normalizeTime(apt.startTime) === time
+                (apt) => normalizeTime(apt.startTime) === time,
               );
 
               return (
@@ -80,13 +82,13 @@ export function TimelineView({
                   className={cn(
                     "flex border-b relative",
                     isCurrentTime && "bg-accent-pink/5",
-                    isPastTime && "opacity-60"
+                    isPastTime && "opacity-60",
                   )}
                 >
                   <div
                     className={cn(
                       "w-20 shrink-0 py-4 px-3 text-sm font-medium border-r bg-muted/30",
-                      isCurrentTime && "text-accent-pink font-bold"
+                      isCurrentTime && "text-accent-pink font-bold",
                     )}
                   >
                     {time}
@@ -96,7 +98,7 @@ export function TimelineView({
                     className={cn(
                       "flex-1 min-h-15 p-2 hover:bg-muted/30 cursor-pointer transition-colors",
                       !appointment &&
-                        "border-l-4 border-l-transparent hover:border-l-accent-pink/30"
+                        "border-l-4 border-l-transparent hover:border-l-accent-pink/30",
                     )}
                     onClick={() => {
                       if (!appointment) {
@@ -121,7 +123,7 @@ export function TimelineView({
                           appointment.status === AppointmentStatus.COMPLETED &&
                             "bg-gray-50 border-l-gray-400",
                           appointment.status === AppointmentStatus.CANCELLED &&
-                            "bg-red-50 border-l-red-500"
+                            "bg-red-50 border-l-red-500",
                         )}
                       >
                         <div className="flex items-start justify-between gap-2">
@@ -141,13 +143,13 @@ export function TimelineView({
                                     src={getServiceImage(appointment.service)}
                                     alt={translateServiceName(
                                       t,
-                                      appointment.service
+                                      appointment.service,
                                     )}
                                     className="h-5 w-5 rounded object-cover"
                                     loading="lazy"
                                     onError={(event) => {
                                       const fallback = getServiceImageFallback(
-                                        appointment.service!
+                                        appointment.service!,
                                       );
                                       if (
                                         fallback &&
@@ -189,9 +191,9 @@ export function TimelineView({
                                     {isRecordingPayment
                                       ? t("common.loading")
                                       : appointment.status ===
-                                        AppointmentStatus.COMPLETED
-                                      ? t("agenda.recordPayment")
-                                      : t("agenda.completeAndPay")}
+                                          AppointmentStatus.COMPLETED
+                                        ? t("agenda.recordPayment")
+                                        : t("agenda.completeAndPay")}
                                   </Button>
                                 </div>
                               )}
