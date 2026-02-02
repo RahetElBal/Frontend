@@ -5,6 +5,7 @@ import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
+import { Input } from "@/components/ui/input";
 import { toast } from "@/lib/toast";
 import { useGet } from "@/hooks/useGet";
 import { usePost } from "@/hooks/usePost";
@@ -49,6 +50,9 @@ export function AgendaPage() {
   const [filter, setFilter] = useState<
     "all" | "today" | "unpaid" | "overdue" | "completed"
   >("all");
+  const [selectedDate, setSelectedDate] = useState(
+    () => new Date().toISOString().split("T")[0]
+  );
   const [autoArchiveWalkIns, setAutoArchiveWalkIns] = useState<boolean>(() => {
     try {
       return localStorage.getItem("agenda.autoArchiveWalkIns") === "true";
@@ -571,7 +575,11 @@ export function AgendaPage() {
         notificationsEnabled={notificationsEnabled}
         onNotificationToggle={handleNotificationToggle}
         onNewAppointment={() =>
-          setModalState({ appointmentId: "create", mode: "edit" })
+          setModalState({
+            appointmentId: "create",
+            mode: "edit",
+            prefillDate: selectedDate,
+          })
         }
         confirmedCount={confirmedCount}
         pendingCount={pendingCount}
@@ -597,7 +605,18 @@ export function AgendaPage() {
         </Card>
       </div>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-2 items-center">
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">
+            {t("fields.date")}
+          </span>
+          <Input
+            type="date"
+            value={selectedDate}
+            onChange={(event) => setSelectedDate(event.target.value)}
+            className="w-40"
+          />
+        </div>
         <Button
           variant={filter === "all" ? "default" : "outline"}
           size="sm"
@@ -656,12 +675,12 @@ export function AgendaPage() {
 
       <TimelineView
         appointments={filteredAppointments}
-        selectedDate={new Date()}
+        selectedDate={new Date(`${selectedDate}T00:00:00`)}
         isLoading={isLoading}
         onTimeSlotClick={(time) =>
           handleSelectSlot({
-            start: timeToDate(time),
-            end: timeToDate(time),
+            start: timeToDate(time, selectedDate),
+            end: timeToDate(time, selectedDate),
           })
         }
         onAppointmentClick={(appointment) =>
