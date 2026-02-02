@@ -64,7 +64,10 @@ export function LoginPage() {
 
   return (
     <AuthLayout>
-      <Card className="shadow-xl border-0 bg-transparent backdrop-blur-sm">
+      <Card
+        className="border-0 !bg-transparent shadow-none"
+        style={{ background: "transparent" }}
+      >
         <CardHeader className="text-center space-y-2 pb-2">
           {/* Logo placeholder - can be replaced with actual logo */}
           <div className="mx-auto mb-4 w-16 h-16 rounded-2xl bg-linear-to-br from-accent-pink-400 to-accent-pink-500 flex items-center justify-center shadow-lg">
