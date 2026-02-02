@@ -556,7 +556,9 @@ export const ar = {
   },
 
   loyalty: {
+    description: "إدارة برنامج الولاء",
     programSettings: "إعدادات البرنامج",
+    programDescription: "تهيئة قواعد ومكافآت الولاء",
     activeMembers: "الأعضاء النشطون",
     pointsIssued: "النقاط الممنوحة",
     pointsRedeemed: "النقاط المستخدمة",
@@ -565,8 +567,15 @@ export const ar = {
     multiplier: "مضاعف",
     points: "نقاط",
     topMembers: "أفضل الأعضاء",
+    noMembers: "لا يوجد أعضاء بعد",
     spent: "أنفق",
     recentActivity: "النشاط الأخير",
+    recentPayments: "المدفوعات الأخيرة",
+    noPayments: "لا توجد مدفوعات",
+    paymentDate: "التاريخ",
+    paymentClient: "العميل",
+    paymentStatus: "الحالة",
+    paymentTotal: "الإجمالي",
   },
 
   analytics: {

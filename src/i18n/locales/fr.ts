@@ -611,7 +611,9 @@ export const fr = {
   },
 
   loyalty: {
+    description: "Gérer votre programme de fidélité",
     programSettings: "Paramètres du programme",
+    programDescription: "Configurer les règles et récompenses de fidélité",
     activeMembers: "Membres actifs",
     pointsIssued: "Points attribués",
     pointsRedeemed: "Points utilisés",
@@ -620,8 +622,15 @@ export const fr = {
     multiplier: "multiplicateur",
     points: "points",
     topMembers: "Meilleurs membres",
+    noMembers: "Aucun membre pour le moment",
     spent: "dépensé",
     recentActivity: "Activité récente",
+    recentPayments: "Paiements récents",
+    noPayments: "Aucun paiement trouvé",
+    paymentDate: "Date",
+    paymentClient: "Client",
+    paymentStatus: "Statut",
+    paymentTotal: "Total",
   },
 
   analytics: {

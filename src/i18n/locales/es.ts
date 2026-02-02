@@ -557,7 +557,9 @@ export const es = {
   },
 
   loyalty: {
+    description: "Gestionar el programa de fidelidad",
     programSettings: "Configuración del programa",
+    programDescription: "Configurar reglas y recompensas de fidelidad",
     activeMembers: "Miembros activos",
     pointsIssued: "Puntos emitidos",
     pointsRedeemed: "Puntos canjeados",
@@ -566,8 +568,15 @@ export const es = {
     multiplier: "multiplicador",
     points: "puntos",
     topMembers: "Mejores miembros",
+    noMembers: "Aún no hay miembros",
     spent: "gastado",
     recentActivity: "Actividad reciente",
+    recentPayments: "Pagos recientes",
+    noPayments: "No se encontraron pagos",
+    paymentDate: "Fecha",
+    paymentClient: "Cliente",
+    paymentStatus: "Estado",
+    paymentTotal: "Total",
   },
 
   analytics: {

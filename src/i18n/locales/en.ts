@@ -933,7 +933,9 @@ export const en = {
   // LOYALTY
   // ============================================
   loyalty: {
+    description: "Manage your loyalty program",
     programSettings: "Program Settings",
+    programDescription: "Configure loyalty rules and rewards",
     activeMembers: "Active Members",
     pointsIssued: "Points Issued",
     pointsRedeemed: "Points Redeemed",
@@ -942,8 +944,15 @@ export const en = {
     multiplier: "multiplier",
     points: "points",
     topMembers: "Top Members",
+    noMembers: "No members yet",
     spent: "spent",
     recentActivity: "Recent Activity",
+    recentPayments: "Recent Payments",
+    noPayments: "No payments found",
+    paymentDate: "Date",
+    paymentClient: "Client",
+    paymentStatus: "Status",
+    paymentTotal: "Total",
   },
 
   // ============================================

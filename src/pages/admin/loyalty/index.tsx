@@ -1,19 +1,19 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  Heart,
-  Star,
-  Trophy,
-  Crown,
-  Gift,
-  TrendingUp,
-  Settings,
-} from "lucide-react";
+import { Heart, TrendingUp, Settings } from "lucide-react";
 
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   Dialog,
   DialogContent,
@@ -22,89 +22,177 @@ import {
   DialogFooter,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
+import { toast } from "@/lib/toast";
+import { useGet } from "@/hooks/useGet";
+import { usePost } from "@/hooks/usePost";
+import { useUser } from "@/hooks/useUser";
+import { useLanguage } from "@/hooks/useLanguage";
 import type {
-  LoyaltyProgram,
-  LoyaltyTransaction,
   Client,
+  Sale,
+  Service,
+  Salon,
+  SalonSettings,
+  SalonSettingsExtended,
 } from "@/types/entities";
-import { formatCurrency } from "@/common/utils";
+import type { PaginatedResponse } from "@/types";
+import { LoyaltySettings } from "../salon-settings/components/loyalty-settings";
+import type { SettingsSectionProps } from "../salon-settings/types";
 
-// TODO: Replace with real API data
-const loyaltyProgram: LoyaltyProgram = {
-  id: "",
-  name: "Programme Fidélité",
-  pointsPerCurrency: 1,
-  redemptionRate: 0.05,
-  minimumPoints: 100,
-  isActive: true,
-  salonId: "",
-  tiers: [],
-  createdAt: "",
-  updatedAt: "",
+const defaultSettings = {
+  loyaltyEnabled: false,
+  loyaltyPointsPerCurrency: 1,
+  loyaltyPointValue: 0.01,
+  loyaltyMinimumRedemption: 100,
+  loyaltyRewardServiceId: "",
+  loyaltyRewardDiscountType: "percent" as const,
+  loyaltyRewardDiscountValue: 10,
 };
 
-const loyaltyTransactions: LoyaltyTransaction[] = [];
-const clients: Client[] = [];
-
-const tierIcons = [Star, Trophy, Crown, Gift];
-const tierColors = [
-  "text-orange-500",
-  "text-gray-400",
-  "text-yellow-500",
-  "text-purple-500",
-];
+const extractArray = <T,>(
+  data: PaginatedResponse<T> | T[] | undefined
+): T[] => {
+  if (!data) return [];
+  if (Array.isArray(data)) return data;
+  return Array.isArray(data.data) ? data.data : [];
+};
 
 export function LoyaltyPage() {
   const { t } = useTranslation();
+  const { salon } = useUser();
+  const { formatCurrency } = useLanguage();
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
-  const [settings, setSettings] = useState({
-    name: loyaltyProgram.name,
-    pointsPerCurrency: loyaltyProgram.pointsPerCurrency,
-    redemptionRate: loyaltyProgram.redemptionRate,
-    minimumPoints: loyaltyProgram.minimumPoints,
-    isActive: loyaltyProgram.isActive,
+  const [settings, setSettings] = useState<Partial<SalonSettingsExtended>>({
+    ...defaultSettings,
   });
-  const totalPointsIssued = loyaltyTransactions
-    .filter((tx) => tx.type === "earn")
-    .reduce((sum, tx) => sum + tx.points, 0);
-  const totalPointsRedeemed = Math.abs(
-    loyaltyTransactions
-      .filter((tx) => tx.type === "redeem")
-      .reduce((sum, tx) => sum + tx.points, 0),
+  const salonId = salon?.id;
+
+  const { data: clientsData } = useGet<PaginatedResponse<Client>>("clients", {
+    params: { salonId, perPage: 200 },
+    enabled: !!salonId,
+  });
+
+  const { data: salesData } = useGet<PaginatedResponse<Sale>>("sales", {
+    params: { salonId, perPage: 10, sortBy: "createdAt", sortOrder: "desc" },
+    enabled: !!salonId,
+  });
+
+  const { data: servicesData } = useGet<PaginatedResponse<Service>>(
+    "services",
+    {
+      params: { salonId, perPage: 200 },
+      enabled: !!salonId,
+    }
   );
 
-  const topClients = [...clients]
-    .sort((a, b) => b.loyaltyPoints - a.loyaltyPoints)
-    .slice(0, 5);
+  const clients = extractArray<Client>(clientsData);
+  const sales = extractArray<Sale>(salesData);
+  const services = extractArray<Service>(servicesData);
 
-  const getTier = (points: number) => {
-    if (!loyaltyProgram.tiers) return null;
-    return [...loyaltyProgram.tiers]
-      .reverse()
-      .find((tier) => points >= tier.minPoints);
+  const derivedSettings = useMemo<Partial<SalonSettingsExtended>>(
+    () => ({
+      ...defaultSettings,
+      loyaltyEnabled: !!salon?.settings?.loyaltyEnabled,
+      loyaltyPointsPerCurrency:
+        salon?.settings?.loyaltyPointsPerCurrency ??
+        defaultSettings.loyaltyPointsPerCurrency,
+      loyaltyPointValue:
+        salon?.settings?.loyaltyPointValue ?? defaultSettings.loyaltyPointValue,
+      loyaltyMinimumRedemption:
+        salon?.settings?.loyaltyMinimumRedemption ??
+        defaultSettings.loyaltyMinimumRedemption,
+      loyaltyRewardServiceId: salon?.settings?.loyaltyRewardServiceId || "",
+      loyaltyRewardDiscountType:
+        salon?.settings?.loyaltyRewardDiscountType ??
+        defaultSettings.loyaltyRewardDiscountType,
+      loyaltyRewardDiscountValue:
+        salon?.settings?.loyaltyRewardDiscountValue ??
+        defaultSettings.loyaltyRewardDiscountValue,
+    }),
+    [salon]
+  );
+
+  const totalPointsIssued = useMemo(
+    () => clients.reduce((sum, client) => sum + (client.loyaltyPoints || 0), 0),
+    [clients]
+  );
+
+  const totalPointsRedeemed = useMemo(() => {
+    const pointValue = Number(derivedSettings.loyaltyPointValue || 0);
+    if (pointValue <= 0) return 0;
+    const totalDiscount = sales.reduce(
+      (sum, sale) => sum + Number(sale.discount || 0),
+      0
+    );
+    return Math.round(totalDiscount / pointValue);
+  }, [sales, derivedSettings.loyaltyPointValue]);
+
+  const topClients = useMemo(
+    () =>
+      [...clients]
+        .sort((a, b) => (b.loyaltyPoints || 0) - (a.loyaltyPoints || 0))
+        .slice(0, 5),
+    [clients]
+  );
+
+  const activeMembers = useMemo(
+    () => clients.filter((client) => (client.loyaltyPoints || 0) > 0).length,
+    [clients]
+  );
+
+  const updateField: SettingsSectionProps["updateField"] = (field, value) => {
+    setSettings((prev) => ({ ...prev, [field]: value }));
   };
+
+  const saveSettings = usePost<Salon, { settings: Partial<SalonSettings> }>(
+    "salons",
+    {
+      id: salonId,
+      method: "PATCH",
+      invalidateQueries: ["salons", "auth"],
+      onSuccess: () => {
+        toast.success(t("salonSettings.saved"));
+        setIsSettingsModalOpen(false);
+      },
+      onError: (error) => toast.error(error.message || t("common.error")),
+    }
+  );
 
   const handleSaveSettings = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Call API to update loyalty program settings
-    console.log("Saving loyalty settings:", settings);
-    setIsSettingsModalOpen(false);
+    if (!salonId) {
+      toast.error(t("common.error"));
+      return;
+    }
+
+    saveSettings.mutate({
+      settings: {
+        ...salon?.settings,
+        loyaltyEnabled: settings.loyaltyEnabled,
+        loyaltyPointsPerCurrency: settings.loyaltyPointsPerCurrency,
+        loyaltyPointValue: settings.loyaltyPointValue,
+        loyaltyMinimumRedemption: settings.loyaltyMinimumRedemption,
+        loyaltyRewardServiceId: settings.loyaltyRewardServiceId,
+        loyaltyRewardDiscountType: settings.loyaltyRewardDiscountType,
+        loyaltyRewardDiscountValue: settings.loyaltyRewardDiscountValue,
+      },
+    });
   };
 
   return (
     <div className="space-y-6">
       <PageHeader
         title={t("nav.loyalty")}
-        description={loyaltyProgram.name}
+        description={t("loyalty.description")}
         actions={
           <Button
             variant="outline"
             className="gap-2"
-            onClick={() => setIsSettingsModalOpen(true)}
+            onClick={() => {
+              setSettings(derivedSettings);
+              setIsSettingsModalOpen(true);
+            }}
           >
             <Settings className="h-4 w-4" />
             {t("loyalty.programSettings")}
@@ -123,7 +211,7 @@ export function LoyaltyPage() {
               <p className="text-sm text-muted-foreground">
                 {t("loyalty.activeMembers")}
               </p>
-              <p className="text-xl font-bold">{clients.length}</p>
+              <p className="text-xl font-bold">{activeMembers}</p>
             </div>
           </div>
         </Card>
@@ -145,7 +233,7 @@ export function LoyaltyPage() {
         <Card className="p-4">
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-lg bg-blue-100 flex items-center justify-center">
-              <Gift className="h-5 w-5 text-blue-600" />
+              <Heart className="h-5 w-5 text-blue-600" />
             </div>
             <div>
               <p className="text-sm text-muted-foreground">
@@ -160,7 +248,7 @@ export function LoyaltyPage() {
         <Card className="p-4">
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-lg bg-purple-100 flex items-center justify-center">
-              <Star className="h-5 w-5 text-purple-600" />
+              <Heart className="h-5 w-5 text-purple-600" />
             </div>
             <div>
               <p className="text-sm text-muted-foreground">
@@ -168,7 +256,7 @@ export function LoyaltyPage() {
               </p>
               <p className="text-xl font-bold">
                 {formatCurrency(
-                  totalPointsRedeemed * loyaltyProgram.redemptionRate,
+                  totalPointsRedeemed * (derivedSettings.loyaltyPointValue || 0)
                 )}
               </p>
             </div>
@@ -177,65 +265,6 @@ export function LoyaltyPage() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* Loyalty Tiers */}
-        <Card className="p-6">
-          <h2 className="text-lg font-semibold mb-4">{t("loyalty.tiers")}</h2>
-          {loyaltyProgram.tiers && loyaltyProgram.tiers.length > 0 ? (
-            <div className="space-y-4">
-              {loyaltyProgram.tiers.map((tier, index) => {
-                const Icon = tierIcons[index] || Star;
-                const colorClass = tierColors[index] || "text-muted-foreground";
-
-                return (
-                  <div
-                    key={tier.id}
-                    className="flex items-start gap-4 p-4 rounded-lg bg-muted/50"
-                  >
-                    <div
-                      className={cn(
-                        "h-12 w-12 rounded-full flex items-center justify-center",
-                        index === 0
-                          ? "bg-orange-100"
-                          : index === 1
-                            ? "bg-gray-200"
-                            : index === 2
-                              ? "bg-yellow-100"
-                              : "bg-purple-100",
-                      )}
-                    >
-                      <Icon className={cn("h-6 w-6", colorClass)} />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between">
-                        <h3 className="font-semibold">{tier.name}</h3>
-                        <Badge variant="default">
-                          {tier.multiplier}x {t("loyalty.multiplier")}
-                        </Badge>
-                      </div>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        {tier.minPoints.toLocaleString()}+ {t("loyalty.points")}
-                      </p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="text-center py-8 text-muted-foreground">
-              <Star className="h-8 w-8 mx-auto mb-2 opacity-50" />
-              <p>Aucun palier configuré</p>
-              <Button
-                variant="outline"
-                size="sm"
-                className="mt-2"
-                onClick={() => setIsSettingsModalOpen(true)}
-              >
-                Configurer les paliers
-              </Button>
-            </div>
-          )}
-        </Card>
-
         {/* Top Loyalty Members */}
         <Card className="p-6">
           <h2 className="text-lg font-semibold mb-4">
@@ -243,57 +272,98 @@ export function LoyaltyPage() {
           </h2>
           {topClients.length > 0 ? (
             <div className="space-y-3">
-              {topClients.map((client, index) => {
-                const tier = getTier(client.loyaltyPoints);
-                const Icon =
-                  tierIcons[loyaltyProgram.tiers?.indexOf(tier!) ?? 0] || Star;
-
-                return (
-                  <div
-                    key={client.id}
-                    className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
-                  >
-                    <div className="flex items-center gap-3">
-                      <span
-                        className={cn(
-                          "flex items-center justify-center h-8 w-8 rounded-full text-sm font-bold",
-                          index === 0
-                            ? "bg-yellow-100 text-yellow-700"
-                            : index === 1
-                              ? "bg-gray-200 text-gray-700"
-                              : index === 2
-                                ? "bg-orange-100 text-orange-700"
-                                : "bg-muted text-muted-foreground",
-                        )}
-                      >
-                        {index + 1}
-                      </span>
-                      <div>
-                        <p className="font-medium">
-                          {client.firstName} {client.lastName}
-                        </p>
-                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                          <Icon className="h-3 w-3" />
-                          {tier?.name || "Member"}
-                        </div>
+              {topClients.map((client, index) => (
+                <div
+                  key={client.id}
+                  className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
+                >
+                  <div className="flex items-center gap-3">
+                    <span
+                      className={cn(
+                        "flex items-center justify-center h-8 w-8 rounded-full text-sm font-bold",
+                        index === 0
+                          ? "bg-yellow-100 text-yellow-700"
+                          : index === 1
+                          ? "bg-gray-200 text-gray-700"
+                          : index === 2
+                          ? "bg-orange-100 text-orange-700"
+                          : "bg-muted text-muted-foreground"
+                      )}
+                    >
+                      {index + 1}
+                    </span>
+                    <div>
+                      <p className="font-medium">
+                        {client.firstName} {client.lastName}
+                      </p>
+                      <div className="text-xs text-muted-foreground">
+                        {t("loyalty.points")}
                       </div>
                     </div>
-                    <div className="text-end">
-                      <p className="font-bold text-accent-pink">
-                        {client.loyaltyPoints.toLocaleString()} pts
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {formatCurrency(client.totalSpent)} {t("loyalty.spent")}
-                      </p>
-                    </div>
                   </div>
-                );
-              })}
+                  <div className="text-end">
+                    <p className="font-bold text-accent-pink">
+                      {client.loyaltyPoints.toLocaleString()} pts
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {formatCurrency(Number(client.totalSpent || 0))}{" "}
+                      {t("loyalty.spent")}
+                    </p>
+                  </div>
+                </div>
+              ))}
             </div>
           ) : (
             <div className="text-center py-8 text-muted-foreground">
               <Heart className="h-8 w-8 mx-auto mb-2 opacity-50" />
-              <p>Aucun membre pour le moment</p>
+              <p>{t("loyalty.noMembers")}</p>
+            </div>
+          )}
+        </Card>
+
+        {/* Recent Payments */}
+        <Card className="p-6">
+          <h2 className="text-lg font-semibold mb-4">
+            {t("loyalty.recentPayments")}
+          </h2>
+          {sales.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <p>{t("loyalty.noPayments")}</p>
+            </div>
+          ) : (
+            <div className="border rounded-lg overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{t("loyalty.paymentDate")}</TableHead>
+                    <TableHead>{t("loyalty.paymentClient")}</TableHead>
+                    <TableHead>{t("loyalty.paymentStatus")}</TableHead>
+                    <TableHead className="text-right">
+                      {t("loyalty.paymentTotal")}
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {sales.map((sale) => (
+                    <TableRow key={sale.id}>
+                      <TableCell>
+                        {new Date(sale.createdAt).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell>
+                        {sale.client
+                          ? `${sale.client.firstName} ${sale.client.lastName}`
+                          : t("common.unknown")}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="default">{sale.status}</Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {formatCurrency(Number(sale.total || 0))}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </div>
           )}
         </Card>
@@ -305,88 +375,16 @@ export function LoyaltyPage() {
           <DialogHeader>
             <DialogTitle>{t("loyalty.programSettings")}</DialogTitle>
             <DialogDescription>
-              Configurez les paramètres de votre programme de fidélité
+              {t("loyalty.programDescription")}
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSaveSettings}>
-            <div className="grid gap-4 py-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label>Programme actif</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Activer ou désactiver le programme
-                  </p>
-                </div>
-                <Switch
-                  checked={settings.isActive}
-                  onCheckedChange={(checked) =>
-                    setSettings({ ...settings, isActive: checked })
-                  }
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="programName">Nom du programme</Label>
-                <Input
-                  id="programName"
-                  value={settings.name}
-                  onChange={(e) =>
-                    setSettings({ ...settings, name: e.target.value })
-                  }
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="pointsPerCurrency">
-                    Points par € dépensé
-                  </Label>
-                  <Input
-                    id="pointsPerCurrency"
-                    type="number"
-                    min="0.1"
-                    step="0.1"
-                    value={settings.pointsPerCurrency}
-                    onChange={(e) =>
-                      setSettings({
-                        ...settings,
-                        pointsPerCurrency: parseFloat(e.target.value),
-                      })
-                    }
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="redemptionRate">Valeur du point (EUR)</Label>
-                  <Input
-                    id="redemptionRate"
-                    type="number"
-                    min="0.01"
-                    step="0.01"
-                    value={settings.redemptionRate}
-                    onChange={(e) =>
-                      setSettings({
-                        ...settings,
-                        redemptionRate: parseFloat(e.target.value),
-                      })
-                    }
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="minimumPoints">
-                  Points minimum pour utilisation
-                </Label>
-                <Input
-                  id="minimumPoints"
-                  type="number"
-                  min="0"
-                  value={settings.minimumPoints}
-                  onChange={(e) =>
-                    setSettings({
-                      ...settings,
-                      minimumPoints: parseInt(e.target.value),
-                    })
-                  }
-                />
-              </div>
+            <div className="py-4">
+              <LoyaltySettings
+                formData={settings}
+                updateField={updateField}
+                services={services}
+              />
             </div>
             <DialogFooter>
               <Button
