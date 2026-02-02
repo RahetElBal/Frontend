@@ -40,10 +40,10 @@ export interface CalendarEvent {
 }
 
 export function appointmentToCalendarEvent(
-  appointment: Appointment
+  appointment: Appointment,
 ): CalendarEvent {
   const startDateTime = new Date(
-    `${appointment.date}T${appointment.startTime}`
+    `${appointment.date}T${appointment.startTime}`,
   );
   const endDateTime = new Date(`${appointment.date}T${appointment.endTime}`);
 
@@ -61,7 +61,7 @@ export function appointmentToCalendarEvent(
 }
 
 export function timeToDate(time: string, date?: string): Date {
-  const baseDate = date || new Date().toISOString().split("T")[0];
+  const baseDate = date || getLocalDateString();
   return new Date(`${baseDate}T${time}`);
 }
 
@@ -82,9 +82,21 @@ export function safeExtractArray<T>(data: any): T[] {
   if (data.items && Array.isArray(data.items)) return data.items;
   return [];
 }
+
 export function getCurrentTimeString(): string {
   const now = new Date();
   const hours = now.getHours();
   const minutes = now.getMinutes();
   return `${hours.toString().padStart(2, "0")}:${minutes >= 30 ? "30" : "00"}`;
+}
+
+/**
+ * Gets the local date string in YYYY-MM-DD format without timezone conversion.
+ * This prevents issues with toISOString() shifting dates based on timezone.
+ */
+export function getLocalDateString(date: Date = new Date()): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }

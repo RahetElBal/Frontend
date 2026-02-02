@@ -25,7 +25,7 @@ import { AppointmentStatus } from "@/types/entities";
 import type { AppointmentModalState } from "./types";
 import { appointmentFormSchema, type AppointmentFormData } from "./validation";
 import type { CalendarEvent } from "./utils";
-import { safeExtractArray } from "./utils";
+import { safeExtractArray, getLocalDateString } from "./utils";
 import { timeToDate } from "./utils";
 
 import {
@@ -50,9 +50,7 @@ export function AgendaPage() {
   const [filter, setFilter] = useState<
     "all" | "today" | "unpaid" | "overdue" | "completed"
   >("all");
-  const [selectedDate, setSelectedDate] = useState(
-    () => new Date().toISOString().split("T")[0]
-  );
+  const [selectedDate, setSelectedDate] = useState(() => getLocalDateString());
   const [autoArchiveWalkIns, setAutoArchiveWalkIns] = useState<boolean>(() => {
     try {
       return localStorage.getItem("agenda.autoArchiveWalkIns") === "true";
@@ -64,11 +62,11 @@ export function AgendaPage() {
   const salonId = user?.salon?.id;
   const appointmentsParams = useMemo(
     () => ({ salonId, perPage: 100 }),
-    [salonId]
+    [salonId],
   );
   const appointmentsQueryKey = useMemo(
     () => ["appointments", appointmentsParams].filter(Boolean),
-    [appointmentsParams]
+    [appointmentsParams],
   );
 
   const {
@@ -90,7 +88,7 @@ export function AgendaPage() {
     {
       params: { salonId, perPage: 100 },
       enabled: !!salonId,
-    }
+    },
   );
 
   const appointments = safeExtractArray<Appointment>(appointmentsData);
@@ -102,7 +100,7 @@ export function AgendaPage() {
     defaultValues: {
       clientId: "",
       serviceId: "",
-      date: new Date().toISOString().split("T")[0],
+      date: getLocalDateString(),
       startTime: "09:00",
       notes: "",
       walkInEnabled: false,
@@ -120,20 +118,20 @@ export function AgendaPage() {
 
   const isCreateMode = useMemo(
     () => modalState?.appointmentId === "create",
-    [modalState]
+    [modalState],
   );
 
   const confirmedCount = useMemo(
     () =>
       appointments.filter((a) => a.status === AppointmentStatus.CONFIRMED)
         .length,
-    [appointments]
+    [appointments],
   );
 
   const pendingCount = useMemo(
     () =>
       appointments.filter((a) => a.status === AppointmentStatus.PENDING).length,
-    [appointments]
+    [appointments],
   );
 
   useEffect(() => {
@@ -143,7 +141,7 @@ export function AgendaPage() {
   const isOverdue = useCallback((apt: Appointment) => {
     if (apt.status === "cancelled" || apt.paid) return false;
     const now = new Date();
-    const today = now.toISOString().split("T")[0];
+    const today = getLocalDateString(now);
     const currentTime = `${now.getHours().toString().padStart(2, "0")}:${now
       .getMinutes()
       .toString()
@@ -155,33 +153,33 @@ export function AgendaPage() {
 
   const unpaidAppointments = useMemo(
     () => appointments.filter((apt) => !apt.paid && apt.status !== "cancelled"),
-    [appointments]
+    [appointments],
   );
 
-  const today = useMemo(() => new Date().toISOString().split("T")[0], []);
+  const today = useMemo(() => getLocalDateString(), []);
 
   const todayAppointments = useMemo(
     () => appointments.filter((apt) => apt.date === today),
-    [appointments, today]
+    [appointments, today],
   );
 
   const unpaidTodayAppointments = useMemo(
     () => unpaidAppointments.filter((apt) => apt.date === today),
-    [unpaidAppointments, today]
+    [unpaidAppointments, today],
   );
 
   const overdueAppointments = useMemo(
     () => unpaidAppointments.filter((apt) => isOverdue(apt)),
-    [unpaidAppointments, isOverdue]
+    [unpaidAppointments, isOverdue],
   );
 
   const unpaidTotalToday = useMemo(
     () =>
       unpaidTodayAppointments.reduce(
         (sum, apt) => sum + (apt.service?.price ?? apt.price ?? 0),
-        0
+        0,
       ),
-    [unpaidTodayAppointments]
+    [unpaidTodayAppointments],
   );
 
   const filteredAppointments = useMemo(() => {
@@ -215,10 +213,10 @@ export function AgendaPage() {
       toast.info(
         `${t("agenda.upcomingAppointment")}: ${reminder.clientName} - ${
           reminder.serviceName
-        } à ${reminder.time}`
+        } à ${reminder.time}`,
       );
     },
-    [t]
+    [t],
   );
 
   useEffect(() => {
@@ -229,12 +227,12 @@ export function AgendaPage() {
     )
       return;
 
-    const today = new Date().toISOString().split("T")[0];
+    const today = getLocalDateString();
     const todayAppointments = appointments.filter(
       (apt) =>
         apt.date === today &&
         apt.status !== "cancelled" &&
-        apt.status !== "completed"
+        apt.status !== "completed",
     );
 
     todayAppointments.forEach((apt) => {
@@ -262,7 +260,7 @@ export function AgendaPage() {
     if (!Array.isArray(appointments) || appointments.length === 0) return;
 
     const now = new Date();
-    const today = now.toISOString().split("T")[0];
+    const today = getLocalDateString(now);
     const currentTime = `${now.getHours().toString().padStart(2, "0")}:${now
       .getMinutes()
       .toString()
@@ -304,7 +302,7 @@ export function AgendaPage() {
         `${t("agenda.overdueUnpaid")}: ${clientName} - ${serviceName} (${
           apt.date
         } ${apt.startTime})`,
-        { duration: 10000 }
+        { duration: 10000 },
       );
 
       if (notificationsEnabled) {
@@ -414,11 +412,11 @@ export function AgendaPage() {
       invalidateQueries: ["sales", "appointments"],
       onSuccess: (_sale, variables) => {
         toast.success(
-          t("agenda.paymentRecorded") + " - " + t("common.success")
+          t("agenda.paymentRecorded") + " - " + t("common.success"),
         );
         if (autoArchiveWalkIns) {
           const paidAppointment = appointments.find(
-            (appointment) => appointment.id === variables.appointmentId
+            (appointment) => appointment.id === variables.appointmentId,
           );
           const clientId = paidAppointment?.client?.id;
           const clientEmail = paidAppointment?.client?.email || "";
@@ -435,10 +433,10 @@ export function AgendaPage() {
               data: current.data.map((appointment) =>
                 appointment.id === variables.appointmentId
                   ? { ...appointment, status: "completed", paid: true }
-                  : appointment
+                  : appointment,
               ),
             };
-          }
+          },
         );
         setModalState(null);
         refetch();
@@ -459,12 +457,12 @@ export function AgendaPage() {
       showSuccessToast: true,
       successMessage: t("clients.archived"),
       showErrorToast: true,
-    }
+    },
   );
 
   const handleSelectSlot = useCallback(
     ({ start }: { start: Date; end: Date }) => {
-      const date = start.toISOString().split("T")[0];
+      const date = getLocalDateString(start);
       const hours = start.getHours();
       const minutes = start.getMinutes();
       const time = `${hours.toString().padStart(2, "0")}:${minutes
@@ -478,7 +476,7 @@ export function AgendaPage() {
         prefillTime: time,
       });
     },
-    []
+    [],
   );
 
   const handleSelectEvent = useCallback((event: CalendarEvent) => {
@@ -530,7 +528,8 @@ export function AgendaPage() {
             salonId,
             clientId: walkInClient.id,
           });
-        } catch (error) {
+        } catch (e) {
+          console.log(e);
           toast.error(t("common.error"));
         }
       } else {
@@ -660,7 +659,7 @@ export function AgendaPage() {
               try {
                 localStorage.setItem(
                   "agenda.autoArchiveWalkIns",
-                  String(checked)
+                  String(checked),
                 );
               } catch {
                 // ignore

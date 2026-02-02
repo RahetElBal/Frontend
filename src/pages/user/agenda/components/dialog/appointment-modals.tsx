@@ -50,7 +50,7 @@ import type { AppointmentFormData } from "../../validation";
 import type { AppointmentModalState } from "../../types";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useUser } from "@/hooks/useUser";
-import { timeSlots, statusColors } from "../../utils";
+import { timeSlots, statusColors, getLocalDateString } from "../../utils";
 import { getValidationErrorMessage } from "@/pages/user/utils";
 import { FormErrorMessage } from "@/pages/user/components/form-error-message";
 import { normalizePhone } from "@/common/phone";
@@ -73,7 +73,7 @@ interface AppointmentModalsProps {
   onComplete?: (id: string) => void;
   onCreateSale?: (
     appointment: Appointment,
-    options?: { redeemLoyalty?: boolean }
+    options?: { redeemLoyalty?: boolean },
   ) => void;
   isCreatingSale?: boolean;
   isPending: boolean;
@@ -99,7 +99,7 @@ export function AppointmentModals({
   const { salon } = useUser();
   const [redeemLoyalty, setRedeemLoyalty] = useState(false);
   const getErrorMessage = (
-    name: keyof AppointmentFormData
+    name: keyof AppointmentFormData,
   ): string | undefined => {
     const maybeGetError = (
       form as UseFormReturn<AppointmentFormData> & {
@@ -138,7 +138,7 @@ export function AppointmentModals({
   const loyaltyEnabled = !!loyaltySettings?.loyaltyEnabled;
   const loyaltyRewardServiceId = loyaltySettings?.loyaltyRewardServiceId || "";
   const loyaltyMinimumRedemption = Number(
-    loyaltySettings?.loyaltyMinimumRedemption || 0
+    loyaltySettings?.loyaltyMinimumRedemption || 0,
   );
   const loyaltyClientPoints = selectedAppointment?.client?.loyaltyPoints ?? 0;
   const loyaltyServiceMatch =
@@ -153,11 +153,11 @@ export function AppointmentModals({
   // Safe arrays
   const safeClients = useMemo(
     () => (Array.isArray(clients) ? clients : []),
-    [clients]
+    [clients],
   );
   const safeServices = useMemo(
     () => (Array.isArray(services) ? services : []),
-    [services]
+    [services],
   );
 
   const { reset, watch } = form;
@@ -166,7 +166,7 @@ export function AppointmentModals({
   const selectedServiceId = watch("serviceId");
   const selectedService = useMemo(
     () => safeServices.find((s) => s.id === selectedServiceId) || null,
-    [safeServices, selectedServiceId]
+    [safeServices, selectedServiceId],
   );
 
   const walkInEnabled = watch("walkInEnabled");
@@ -174,13 +174,14 @@ export function AppointmentModals({
   // Reset form when modal state changes
   useEffect(() => {
     if (!modalState) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setRedeemLoyalty(false);
 
     if (derived?.isCreateMode) {
       reset({
         clientId: "",
         serviceId: "",
-        date: modalState?.prefillDate || new Date().toISOString().split("T")[0],
+        date: modalState?.prefillDate || getLocalDateString(),
         startTime: modalState?.prefillTime || "09:00",
         notes: "",
         walkInEnabled: false,
@@ -336,13 +337,13 @@ export function AppointmentModals({
                         src={getServiceImage(selectedAppointment.service)}
                         alt={translateServiceName(
                           t,
-                          selectedAppointment.service
+                          selectedAppointment.service,
                         )}
                         className="h-10 w-10 rounded-md object-cover"
                         loading="lazy"
                         onError={(event) => {
                           const fallback = getServiceImageFallback(
-                            selectedAppointment.service!
+                            selectedAppointment.service!,
                           );
                           if (
                             fallback &&
@@ -357,7 +358,7 @@ export function AppointmentModals({
                     {formatCurrency(
                       selectedAppointment.service?.price ??
                         selectedAppointment.price ??
-                        0
+                        0,
                     )}
                   </p>
                 </div>
@@ -586,7 +587,7 @@ export function AppointmentModals({
                           placeholder={t("agenda.walkInPhonePlaceholder")}
                           onBlur={(event) => {
                             const normalized = normalizePhone(
-                              event.target.value
+                              event.target.value,
                             );
                             if (normalized) {
                               form.setValue("walkInPhone", normalized);
