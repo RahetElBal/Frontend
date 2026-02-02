@@ -21,6 +21,7 @@ import { AnalyticsPage } from "./pages/admin/analytics";
 import { SalonSettingsPage } from "./pages/admin/salon-settings";
 import { SettingsPage } from "./pages/user/settings";
 import AdminServicesPage from "./pages/admin/services";
+import { LoyaltyPage } from "./pages/admin/loyalty";
 
 function App() {
   return (
@@ -41,6 +42,7 @@ function App() {
           <Route path={ROUTES.SALES} element={<SalesPage />} />
           <Route path={ROUTES.PROMOTIONS} element={<PromotionsPage />} />
           <Route path={ROUTES.ANALYTICS} element={<AnalyticsPage />} />
+          <Route path={ROUTES.LOYALTY} element={<LoyaltyPage />} />
           <Route path={ROUTES.SALON_SETTINGS} element={<SalonSettingsPage />} />
           <Route path={ROUTES.SETTINGS} element={<SettingsPage />} />
           <Route path={ROUTES.PROFILE} element={<SettingsPage />} />
@@ -51,7 +53,7 @@ function App() {
           <Route path={ROUTES.ADMIN} element={<AdminDashboardPage />} />
           <Route path={ROUTES.ADMIN_USERS} element={<AdminUsersPage />} />
           <Route path={ROUTES.ADMIN_SALON} element={<SalonsPage />} />
-        <Route path={ROUTES.ADMIN_SERVICES} element={<AdminServicesPage />} />
+          <Route path={ROUTES.ADMIN_SERVICES} element={<AdminServicesPage />} />
           <Route path={ROUTES.ADMIN_SETTINGS} element={<SettingsPage />} />
         </Route>
 
