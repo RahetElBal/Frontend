@@ -102,9 +102,12 @@ export function LoyaltySettings({
             <div className="space-y-2 sm:col-span-3">
               <Label>{t("salonSettings.loyaltyRewardService")}</Label>
               <Select
-                value={formData.loyaltyRewardServiceId || ""}
+                value={formData.loyaltyRewardServiceId || "none"}
                 onValueChange={(value) =>
-                  updateField("loyaltyRewardServiceId", value)
+                  updateField(
+                    "loyaltyRewardServiceId",
+                    value === "none" ? "" : value
+                  )
                 }
               >
                 <SelectTrigger>
@@ -115,7 +118,7 @@ export function LoyaltySettings({
                   />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">{t("common.none")}</SelectItem>
+                  <SelectItem value="none">{t("common.none")}</SelectItem>
                   {services.map((service) => (
                     <SelectItem key={service.id} value={service.id}>
                       {translateServiceName(t, service)}
