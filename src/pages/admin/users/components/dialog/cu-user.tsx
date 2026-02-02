@@ -6,8 +6,6 @@ import {
   Shield,
   Calendar,
   Crown,
-  ToggleLeft,
-  ToggleRight,
   Building2,
   UserCog,
 } from "lucide-react";
@@ -121,7 +119,7 @@ export function UserDialog({
             keepDirty: false,
             keepTouched: false,
             keepIsSubmitted: false,
-          },
+          }
         );
       }, 0);
     } else if (user && mode === "edit") {
@@ -142,7 +140,7 @@ export function UserDialog({
             keepDirty: false,
             keepTouched: false,
             keepIsSubmitted: false,
-          },
+          }
         );
       }, 0);
     }
@@ -248,7 +246,7 @@ export function UserDialog({
         toast.error("Vous ne pouvez pas supprimer votre propre compte");
       } else {
         toast.error(
-          "Vous n'avez pas la permission de supprimer cet utilisateur",
+          "Vous n'avez pas la permission de supprimer cet utilisateur"
         );
       }
       onOpenChange(false);
@@ -321,7 +319,9 @@ export function UserDialog({
           <div className="space-y-6 py-4">
             <div className="flex items-center gap-4">
               <div
-                className={`h-16 w-16 rounded-full flex items-center justify-center ${userIsSuperadmin ? "bg-yellow-100" : "bg-accent-pink/10"}`}
+                className={`h-16 w-16 rounded-full flex items-center justify-center ${
+                  userIsSuperadmin ? "bg-yellow-100" : "bg-accent-pink/10"
+                }`}
               >
                 {user.picture ? (
                   <img
@@ -331,7 +331,9 @@ export function UserDialog({
                   />
                 ) : (
                   <span
-                    className={`text-2xl font-bold ${userIsSuperadmin ? "text-yellow-600" : "text-accent-pink"}`}
+                    className={`text-2xl font-bold ${
+                      userIsSuperadmin ? "text-yellow-600" : "text-accent-pink"
+                    }`}
                   >
                     {initials}
                   </span>
@@ -378,8 +380,8 @@ export function UserDialog({
                     {userIsSuperadmin
                       ? "Super Admin"
                       : user.role === UserRole.ADMIN
-                        ? "Administrateur"
-                        : "Utilisateur"}
+                      ? "Administrateur"
+                      : "Utilisateur"}
                   </Badge>
                 </div>
               </div>
@@ -422,26 +424,6 @@ export function UserDialog({
                   <p className="font-medium">
                     {new Date(user.createdAt).toLocaleDateString()}
                   </p>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                <div className="flex items-center gap-3">
-                  {user.isActive ? (
-                    <ToggleRight className="h-5 w-5 text-green-600" />
-                  ) : (
-                    <ToggleLeft className="h-5 w-5 text-muted-foreground" />
-                  )}
-                  <div>
-                    <p className="text-sm text-muted-foreground">
-                      {t("fields.status")}
-                    </p>
-                    <Badge variant={user.isActive ? "success" : "error"}>
-                      {user.isActive
-                        ? t("common.active")
-                        : t("common.inactive")}
-                    </Badge>
-                  </div>
                 </div>
               </div>
             </div>

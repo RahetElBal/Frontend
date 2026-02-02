@@ -46,7 +46,9 @@ export function useUsersColumns({
         return (
           <div className="flex items-center gap-3">
             <div
-              className={`h-10 w-10 rounded-full flex items-center justify-center ${userIsSuperadmin ? "bg-yellow-100" : "bg-accent-pink/10"}`}
+              className={`h-10 w-10 rounded-full flex items-center justify-center ${
+                userIsSuperadmin ? "bg-yellow-100" : "bg-accent-pink/10"
+              }`}
             >
               {user.picture ? (
                 <img
@@ -56,7 +58,9 @@ export function useUsersColumns({
                 />
               ) : (
                 <span
-                  className={`font-medium ${userIsSuperadmin ? "text-yellow-600" : "text-accent-pink"}`}
+                  className={`font-medium ${
+                    userIsSuperadmin ? "text-yellow-600" : "text-accent-pink"
+                  }`}
                 >
                   {initials}
                 </span>
@@ -148,8 +152,8 @@ export function useUsersColumns({
             {userIsSuperadmin
               ? "Super Admin"
               : user.role === UserRole.ADMIN
-                ? "Admin"
-                : "Utilisateur"}
+              ? "Admin"
+              : "Utilisateur"}
           </Badge>
         );
       },
@@ -176,15 +180,6 @@ export function useUsersColumns({
 
   // Common columns for both
   columns.push(
-    {
-      key: "status",
-      header: t("fields.status"),
-      render: (user) => (
-        <Badge variant={user.isActive ? "success" : "error"}>
-          {user.isActive ? t("common.active") : t("common.inactive")}
-        </Badge>
-      ),
-    },
     {
       key: "createdAt",
       header: t("fields.createdAt"),
@@ -243,7 +238,7 @@ export function useUsersColumns({
           </div>
         );
       },
-    },
+    }
   );
 
   return columns;

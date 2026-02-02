@@ -1,4 +1,4 @@
-import { Users, UserCog, UserCheck, UserX } from "lucide-react";
+import { Users, UserCog } from "lucide-react";
 
 import { Card } from "@/components/ui/card";
 import type { User } from "@/types/entities";
@@ -12,8 +12,6 @@ interface StatsGridProps {
 
 export function StatsGrid({ users, isSuperadmin }: StatsGridProps) {
   const totalUsers = users.length;
-  const activeUsers = users.filter((u) => u.isActive).length;
-  const inactiveUsers = users.filter((u) => !u.isActive).length;
   const admins = users.filter((u) => u.role === UserRole.ADMIN).length;
 
   const allStats = [
@@ -25,13 +23,6 @@ export function StatsGrid({ users, isSuperadmin }: StatsGridProps) {
       bgColor: "bg-accent-pink/10",
     },
     {
-      title: "Utilisateurs actifs",
-      value: activeUsers,
-      icon: UserCheck,
-      color: "text-green-600",
-      bgColor: "bg-green-100",
-    },
-    {
       title: "Administrateurs",
       value: admins,
       icon: UserCog,
@@ -39,22 +30,17 @@ export function StatsGrid({ users, isSuperadmin }: StatsGridProps) {
       bgColor: "bg-accent-blue/10",
       showOnlyForSuperadmin: true,
     },
-    {
-      title: "Utilisateurs inactifs",
-      value: inactiveUsers,
-      icon: UserX,
-      color: "text-gray-500",
-      bgColor: "bg-gray-100",
-    },
   ];
 
   const stats = allStats.filter(
-    (stat) => !stat.showOnlyForSuperadmin || isSuperadmin,
+    (stat) => !stat.showOnlyForSuperadmin || isSuperadmin
   );
 
   return (
     <AdminStatsGrid
-      className={`md:grid-cols-2 ${isSuperadmin ? "lg:grid-cols-4" : "lg:grid-cols-3"}`}
+      className={`md:grid-cols-1 ${
+        isSuperadmin ? "lg:grid-cols-2" : "lg:grid-cols-1"
+      }`}
     >
       {stats.map((stat) => {
         const Icon = stat.icon;
