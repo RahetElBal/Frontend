@@ -47,6 +47,13 @@ export interface SalonSettings {
   timezone?: string;
   language?: string;
   workingHours?: WorkingHours;
+  loyaltyEnabled?: boolean;
+  loyaltyPointsPerCurrency?: number;
+  loyaltyPointValue?: number;
+  loyaltyMinimumRedemption?: number;
+  loyaltyRewardServiceId?: string;
+  loyaltyRewardDiscountType?: "percent" | "fixed";
+  loyaltyRewardDiscountValue?: number;
 }
 
 export interface WorkingHours {
