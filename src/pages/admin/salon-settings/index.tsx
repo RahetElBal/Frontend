@@ -25,8 +25,15 @@ export function SalonSettingsPage() {
   const [activeTab, setActiveTab] = useState<SettingsTab>("general");
   const [hasChanges, setHasChanges] = useState(false);
 
-  // Use salon from useUser hook (already fetched via /salons/my-salons or user context)
-  const currentSalon = userSalon;
+  const { data: fetchedSalon } = useGet<Salon>("salons", {
+    id: userSalon?.id,
+    enabled: !!userSalon?.id,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: "always",
+  });
+
+  // Use latest salon settings when available
+  const currentSalon = fetchedSalon || userSalon;
 
   // Settings are stored within the salon entity
   const settings = currentSalon?.settings as SalonSettingsExtended | undefined;

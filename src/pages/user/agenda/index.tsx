@@ -346,9 +346,9 @@ export function AgendaPage() {
 
   const { mutate: deleteAppointment, isPending: isDeleting } = usePost<
     void,
-    void
+    string
   >("appointments", {
-    id: selectedAppointment?.id,
+    id: (appointmentId) => appointmentId,
     method: "DELETE",
     invalidateQueries: ["appointments"],
     onSuccess: () => {
@@ -706,7 +706,13 @@ export function AgendaPage() {
         services={services}
         form={form}
         onSubmit={handleSubmit}
-        onDelete={() => deleteAppointment()}
+        onDelete={() => {
+          if (!selectedAppointment?.id) {
+            toast.error(t("common.error"));
+            return;
+          }
+          deleteAppointment(selectedAppointment.id);
+        }}
         onCancel={(id) => cancelAppointment(id)}
         onComplete={(id) => completeAppointment(id)}
         onCreateSale={(appointment, options) => {
