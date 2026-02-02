@@ -16,6 +16,7 @@ import { AppointmentStatus } from "@/types/entities";
 import { timeSlots, statusColors, getCurrentTimeString } from "../utils";
 import {
   getServiceImage,
+  getServiceImageFallback,
   translateServiceName,
 } from "@/common/service-translations";
 
@@ -130,19 +131,26 @@ export function TimelineView({
                             <div className="flex items-center gap-2 text-sm text-muted-foreground">
                               <Scissors className="h-3 w-3" />
                               {appointment.service &&
-                                (appointment.service.image ||
-                                  getServiceImage(appointment.service)) && (
+                                getServiceImage(appointment.service) && (
                                   <img
-                                    src={
-                                      appointment.service.image ||
-                                      getServiceImage(appointment.service)
-                                    }
+                                    src={getServiceImage(appointment.service)}
                                     alt={translateServiceName(
                                       t,
                                       appointment.service
                                     )}
                                     className="h-5 w-5 rounded object-cover"
                                     loading="lazy"
+                                    onError={(event) => {
+                                      const fallback = getServiceImageFallback(
+                                        appointment.service!
+                                      );
+                                      if (
+                                        fallback &&
+                                        event.currentTarget.src !== fallback
+                                      ) {
+                                        event.currentTarget.src = fallback;
+                                      }
+                                    }}
                                   />
                                 )}
                               <span>

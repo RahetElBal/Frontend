@@ -24,6 +24,7 @@ import { useLanguage } from "@/hooks/useLanguage";
 import type { Service } from "@/types/entities";
 import {
   getServiceImage,
+  getServiceImageFallback,
   translateServiceName,
 } from "@/common/service-translations";
 
@@ -56,13 +57,19 @@ export function ServiceCard({
         !service.isActive && "opacity-60"
       )}
     >
-      {(service.image || getServiceImage(service)) && (
+      {getServiceImage(service) && (
         <div className="mb-3 overflow-hidden rounded-lg">
           <img
-            src={service.image || getServiceImage(service)}
+            src={getServiceImage(service)}
             alt={displayName}
             className="h-32 w-full object-cover"
             loading="lazy"
+            onError={(event) => {
+              const fallback = getServiceImageFallback(service);
+              if (fallback && event.currentTarget.src !== fallback) {
+                event.currentTarget.src = fallback;
+              }
+            }}
           />
         </div>
       )}

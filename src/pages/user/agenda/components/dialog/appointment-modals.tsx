@@ -54,6 +54,7 @@ import { getValidationErrorMessage } from "@/pages/user/utils";
 import { FormErrorMessage } from "@/pages/user/components/form-error-message";
 import {
   getServiceImage,
+  getServiceImageFallback,
   translateServiceName,
 } from "@/common/service-translations";
 
@@ -282,19 +283,26 @@ export function AppointmentModals({
                     </p>
                   </div>
                   {selectedAppointment.service &&
-                    (selectedAppointment.service.image ||
-                      getServiceImage(selectedAppointment.service)) && (
+                    getServiceImage(selectedAppointment.service) && (
                       <img
-                        src={
-                          selectedAppointment.service.image ||
-                          getServiceImage(selectedAppointment.service)
-                        }
+                        src={getServiceImage(selectedAppointment.service)}
                         alt={translateServiceName(
                           t,
                           selectedAppointment.service
                         )}
                         className="h-10 w-10 rounded-md object-cover"
                         loading="lazy"
+                        onError={(event) => {
+                          const fallback = getServiceImageFallback(
+                            selectedAppointment.service!
+                          );
+                          if (
+                            fallback &&
+                            event.currentTarget.src !== fallback
+                          ) {
+                            event.currentTarget.src = fallback;
+                          }
+                        }}
                       />
                     )}
                   <p className="font-bold text-accent-pink">

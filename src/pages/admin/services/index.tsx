@@ -39,6 +39,7 @@ import { ROUTES } from "@/constants/navigation";
 import { patch, post } from "@/lib/http";
 import {
   getServiceImage,
+  getServiceImageFallback,
   translateServiceCategory,
 } from "@/common/service-translations";
 import type { Category, PaginatedResponse, Salon, Service } from "@/types";
@@ -464,12 +465,22 @@ export default function AdminServicesPage() {
                       <TableRow key={service.id}>
                         <TableCell className="font-medium">
                           <div className="flex items-center gap-2">
-                            {(service.image || getServiceImage(service)) && (
+                            {getServiceImage(service) && (
                               <img
-                                src={service.image || getServiceImage(service)}
+                                src={getServiceImage(service)}
                                 alt={service.name}
                                 className="h-8 w-8 rounded-md object-cover"
                                 loading="lazy"
+                                onError={(event) => {
+                                  const fallback =
+                                    getServiceImageFallback(service);
+                                  if (
+                                    fallback &&
+                                    event.currentTarget.src !== fallback
+                                  ) {
+                                    event.currentTarget.src = fallback;
+                                  }
+                                }}
                               />
                             )}
                             <span>{service.name}</span>

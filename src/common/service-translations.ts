@@ -3,6 +3,9 @@ import type { Service } from "@/types/entities";
 
 const normalize = (value?: string) => value?.trim().toLowerCase() ?? "";
 
+const isBlockedUnsplashSource = (value?: string) =>
+  !!value && value.includes("source.unsplash.com");
+
 const defaultServiceKeyMap: Record<string, string> = {
   "nails|manicure": "services.defaults.nails.manicure",
   "nails|pedicure": "services.defaults.nails.pedicure",
@@ -49,12 +52,38 @@ export const translateServiceCategory = (
   return key ? t(key) : category;
 };
 
-export const getServiceImage = (service: Service): string | undefined => {
-  if (service.image) return service.image;
+const defaultCategoryImageMap: Record<string, string> = {
+  nails:
+    "https://images.unsplash.com/photo-1519014816548-bf5fe059798b?auto=format&fit=crop&w=800&q=80",
+  makeup:
+    "https://images.unsplash.com/photo-1522336572468-97b06e8ef143?auto=format&fit=crop&w=800&q=80",
+  hair: "https://images.unsplash.com/photo-1519415943484-9fa1873496d4?auto=format&fit=crop&w=800&q=80",
+  skincare:
+    "https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=800&q=80",
+};
+
+const genericServiceImage =
+  "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=800&q=80";
+
+export const getServiceImageFallback = (
+  service: Service
+): string | undefined => {
   const category = normalize(getServiceCategoryValue(service));
   const name = normalize(service.name);
   const key = defaultServiceKeyMap[`${category}|${name}`];
-  return key ? defaultServiceImageMap[key] : undefined;
+  if (key && defaultServiceImageMap[key]) return defaultServiceImageMap[key];
+  if (defaultCategoryImageMap[category]) {
+    return defaultCategoryImageMap[category];
+  }
+  return genericServiceImage;
+};
+
+export const getServiceImage = (service: Service): string | undefined => {
+  const fallback = getServiceImageFallback(service);
+  if (service.image) {
+    return isBlockedUnsplashSource(service.image) ? fallback : service.image;
+  }
+  return fallback;
 };
 
 const defaultServiceImageMap: Record<string, string> = {
