@@ -9,6 +9,7 @@ import {
   Building2,
   UserCog,
   Sliders,
+  Heart,
 } from "lucide-react";
 import type { NavSection } from "@/types/navigation";
 
@@ -120,6 +121,12 @@ export const USER_NAVIGATION: NavSection[] = [
         href: ROUTES.SERVICES,
         icon: Scissors,
       },
+      {
+        id: "loyalty",
+        titleKey: "nav.loyalty",
+        href: ROUTES.LOYALTY,
+        icon: Heart,
+      },
     ],
   },
   {
@@ -186,6 +193,12 @@ export const ADMIN_SALON_NAVIGATION: NavSection[] = [
         titleKey: "nav.services",
         href: ROUTES.SERVICES,
         icon: Scissors,
+      },
+      {
+        id: "loyalty",
+        titleKey: "nav.loyalty",
+        href: ROUTES.LOYALTY,
+        icon: Heart,
       },
     ],
   },
@@ -293,7 +306,7 @@ export const ADMIN_NAVIGATION: NavSection[] = [
  */
 export function getNavigationForRole(
   role: NavRole,
-  isInAdminPanel: boolean = false,
+  isInAdminPanel: boolean = false
 ): NavSection[] {
   if (isInAdminPanel) {
     // Admin panel is only for superadmin and admin
@@ -320,7 +333,7 @@ export function getNavigationForRole(
               ...section,
               items: section.items.filter((item) => item.id !== "services"),
             }
-          : section,
+          : section
       );
     case "user":
     default:
