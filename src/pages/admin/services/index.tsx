@@ -37,7 +37,10 @@ import { useGet } from "@/hooks/useGet";
 import { useUser } from "@/hooks/useUser";
 import { ROUTES } from "@/constants/navigation";
 import { patch, post } from "@/lib/http";
-import { translateServiceCategory } from "@/common/service-translations";
+import {
+  getServiceImage,
+  translateServiceCategory,
+} from "@/common/service-translations";
 import type { Category, PaginatedResponse, Salon, Service } from "@/types";
 
 type ServiceModalMode = "create" | "edit";
@@ -51,7 +54,7 @@ export default function AdminServicesPage() {
   const [groupByCategory, setGroupByCategory] = useState(true);
   const [priceEdits, setPriceEdits] = useState<Record<string, string>>({});
   const [initialPrices, setInitialPrices] = useState<Record<string, string>>(
-    {},
+    {}
   );
   const [isSavingAll, setIsSavingAll] = useState(false);
   const [isUpdatingId, setIsUpdatingId] = useState<string | null>(null);
@@ -79,15 +82,18 @@ export default function AdminServicesPage() {
     enabled: isSuperadmin,
   });
 
-  const { data: servicesResponse, isLoading: servicesLoading, refetch } =
-    useGet<PaginatedResponse<Service>>("services", {
-      params: selectedSalonId ? { salonId: selectedSalonId, perPage: 200 } : {},
-      enabled: !!selectedSalonId,
-    });
+  const {
+    data: servicesResponse,
+    isLoading: servicesLoading,
+    refetch,
+  } = useGet<PaginatedResponse<Service>>("services", {
+    params: selectedSalonId ? { salonId: selectedSalonId, perPage: 200 } : {},
+    enabled: !!selectedSalonId,
+  });
 
   const services = useMemo(
     () => servicesResponse?.data ?? [],
-    [servicesResponse],
+    [servicesResponse]
   );
 
   const categories = useMemo(() => {
@@ -112,7 +118,7 @@ export default function AdminServicesPage() {
         acc[service.id] = String(service.price ?? 0);
         return acc;
       },
-      {},
+      {}
     );
     setPriceEdits(nextPrices);
     setInitialPrices(nextPrices);
@@ -169,7 +175,7 @@ export default function AdminServicesPage() {
           return patch<Service, { price: number }>(`services/${serviceId}`, {
             price,
           });
-        }),
+        })
       );
       toast.success(t("admin.services.bulkUpdated"));
       refetch();
@@ -218,7 +224,7 @@ export default function AdminServicesPage() {
 
   const handleFormChange = (
     field: keyof typeof formValues,
-    value: string | boolean,
+    value: string | boolean
   ) => {
     setFormValues((prev) => ({ ...prev, [field]: value }));
   };
@@ -304,7 +310,7 @@ export default function AdminServicesPage() {
         acc[categoryName].push(service);
         return acc;
       },
-      {},
+      {}
     );
   }, [filteredServices, groupByCategory, t]);
 
@@ -349,10 +355,7 @@ export default function AdminServicesPage() {
             <div className="text-sm font-medium">
               {t("admin.services.selectSalon")}
             </div>
-            <Select
-              value={selectedSalonId}
-              onValueChange={setSelectedSalonId}
-            >
+            <Select value={selectedSalonId} onValueChange={setSelectedSalonId}>
               <SelectTrigger className="w-full sm:w-80">
                 <SelectValue
                   placeholder={t("admin.services.selectSalonPlaceholder")}
@@ -460,12 +463,22 @@ export default function AdminServicesPage() {
                     {items.map((service) => (
                       <TableRow key={service.id}>
                         <TableCell className="font-medium">
-                          {service.name}
+                          <div className="flex items-center gap-2">
+                            {(service.image || getServiceImage(service)) && (
+                              <img
+                                src={service.image || getServiceImage(service)}
+                                alt={service.name}
+                                className="h-8 w-8 rounded-md object-cover"
+                                loading="lazy"
+                              />
+                            )}
+                            <span>{service.name}</span>
+                          </div>
                         </TableCell>
                         <TableCell>
                           {translateServiceCategory(
                             t,
-                            getCategoryName(service.category),
+                            getCategoryName(service.category)
                           ).toUpperCase()}
                         </TableCell>
                         <TableCell>{service.duration} min</TableCell>
@@ -595,9 +608,7 @@ export default function AdminServicesPage() {
                 checked={formValues.isActive}
                 onCheckedChange={(value) => handleFormChange("isActive", value)}
               />
-              <span className="text-sm">
-                {t("admin.services.activeLabel")}
-              </span>
+              <span className="text-sm">{t("admin.services.activeLabel")}</span>
             </div>
           </div>
           <DialogFooter>
@@ -608,8 +619,8 @@ export default function AdminServicesPage() {
               {isSavingService
                 ? t("admin.services.savingService")
                 : modalMode === "create"
-                  ? t("common.create")
-                  : t("common.save")}
+                ? t("common.create")
+                : t("common.save")}
             </Button>
           </DialogFooter>
         </DialogContent>

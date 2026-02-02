@@ -10,24 +10,17 @@ export const appointmentFormSchema = z
     notes: optionalString(),
     salonId: z.string().uuid().optional(),
     walkInEnabled: z.boolean().optional(),
-    walkInFirstName: optionalString(),
-    walkInLastName: optionalString(),
+    walkInName: optionalString(),
     walkInPhone: optionalString(),
+    walkInEmail: optionalString(),
   })
   .superRefine((values, ctx) => {
     if (values.walkInEnabled) {
-      if (!values.walkInFirstName?.trim()) {
+      if (!values.walkInName?.trim()) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: "agenda.walkInFirstNameRequired",
-          path: ["walkInFirstName"],
-        });
-      }
-      if (!values.walkInLastName?.trim()) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "agenda.walkInLastNameRequired",
-          path: ["walkInLastName"],
+          message: "agenda.walkInNameRequired",
+          path: ["walkInName"],
         });
       }
     } else if (!values.clientId?.trim()) {

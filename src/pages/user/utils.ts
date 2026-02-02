@@ -4,12 +4,15 @@ import { parseValidationMsg } from "@/common/validator/zodI18n";
 
 export const getValidationErrorMessage = (
   t: TFunction,
-  message?: string,
+  message?: string
 ): string | undefined => {
   if (!message) return undefined;
   if (message.startsWith("validation.") || message.startsWith("errors.")) {
     const { key, params } = parseValidationMsg(message);
     return t(key, params);
+  }
+  if (message.startsWith("agenda.")) {
+    return t(message);
   }
   return message;
 };

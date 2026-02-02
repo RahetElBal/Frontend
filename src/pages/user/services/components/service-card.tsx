@@ -22,7 +22,10 @@ import {
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/hooks/useLanguage";
 import type { Service } from "@/types/entities";
-import { translateServiceName } from "@/common/service-translations";
+import {
+  getServiceImage,
+  translateServiceName,
+} from "@/common/service-translations";
 
 interface ServiceCardProps {
   service: Service;
@@ -50,13 +53,13 @@ export function ServiceCard({
     <Card
       className={cn(
         "p-4 transition-shadow hover:shadow-md",
-        !service.isActive && "opacity-60",
+        !service.isActive && "opacity-60"
       )}
     >
-      {service.image && (
+      {(service.image || getServiceImage(service)) && (
         <div className="mb-3 overflow-hidden rounded-lg">
           <img
-            src={service.image}
+            src={service.image || getServiceImage(service)}
             alt={displayName}
             className="h-32 w-full object-cover"
             loading="lazy"

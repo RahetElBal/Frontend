@@ -1,12 +1,23 @@
 import { useTranslation } from "react-i18next";
-import { Plus, Calendar, User, Scissors, Clock } from "lucide-react";
+import {
+  Plus,
+  Calendar,
+  User,
+  Scissors,
+  Clock,
+  DollarSign,
+} from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/badge";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { Appointment } from "@/types/entities";
 import { AppointmentStatus } from "@/types/entities";
 import { timeSlots, statusColors, getCurrentTimeString } from "../utils";
-import { translateServiceName } from "@/common/service-translations";
+import {
+  getServiceImage,
+  translateServiceName,
+} from "@/common/service-translations";
 
 interface TimelineViewProps {
   appointments: Appointment[];
@@ -14,6 +25,8 @@ interface TimelineViewProps {
   isLoading: boolean;
   onTimeSlotClick: (time: string) => void;
   onAppointmentClick: (appointment: Appointment) => void;
+  onRecordPayment?: (appointment: Appointment) => void;
+  isRecordingPayment?: boolean;
 }
 
 export function TimelineView({
@@ -22,6 +35,8 @@ export function TimelineView({
   isLoading,
   onTimeSlotClick,
   onAppointmentClick,
+  onRecordPayment,
+  isRecordingPayment = false,
 }: TimelineViewProps) {
   const { t } = useTranslation();
   const currentTimeString = getCurrentTimeString();
@@ -30,7 +45,7 @@ export function TimelineView({
 
   const selectedDateStr = selectedDate.toISOString().split("T")[0];
   const dayAppointments = appointments.filter(
-    (apt) => apt.date === selectedDateStr,
+    (apt) => apt.date === selectedDateStr
   );
 
   if (isLoading) {
@@ -50,7 +65,7 @@ export function TimelineView({
               const isCurrentTime = time === currentTimeString;
               const isPastTime = time < currentTimeString;
               const appointment = dayAppointments.find(
-                (apt) => apt.startTime === time,
+                (apt) => apt.startTime === time
               );
 
               return (
@@ -59,13 +74,13 @@ export function TimelineView({
                   className={cn(
                     "flex border-b relative",
                     isCurrentTime && "bg-accent-pink/5",
-                    isPastTime && "opacity-60",
+                    isPastTime && "opacity-60"
                   )}
                 >
                   <div
                     className={cn(
                       "w-20 shrink-0 py-4 px-3 text-sm font-medium border-r bg-muted/30",
-                      isCurrentTime && "text-accent-pink font-bold",
+                      isCurrentTime && "text-accent-pink font-bold"
                     )}
                   >
                     {time}
@@ -75,7 +90,7 @@ export function TimelineView({
                     className={cn(
                       "flex-1 min-h-15 p-2 hover:bg-muted/30 cursor-pointer transition-colors",
                       !appointment &&
-                        "border-l-4 border-l-transparent hover:border-l-accent-pink/30",
+                        "border-l-4 border-l-transparent hover:border-l-accent-pink/30"
                     )}
                     onClick={() => {
                       if (!appointment) {
@@ -100,7 +115,7 @@ export function TimelineView({
                           appointment.status === AppointmentStatus.COMPLETED &&
                             "bg-gray-50 border-l-gray-400",
                           appointment.status === AppointmentStatus.CANCELLED &&
-                            "bg-red-50 border-l-red-500",
+                            "bg-red-50 border-l-red-500"
                         )}
                       >
                         <div className="flex items-start justify-between gap-2">
@@ -114,6 +129,22 @@ export function TimelineView({
                             </div>
                             <div className="flex items-center gap-2 text-sm text-muted-foreground">
                               <Scissors className="h-3 w-3" />
+                              {appointment.service &&
+                                (appointment.service.image ||
+                                  getServiceImage(appointment.service)) && (
+                                  <img
+                                    src={
+                                      appointment.service.image ||
+                                      getServiceImage(appointment.service)
+                                    }
+                                    alt={translateServiceName(
+                                      t,
+                                      appointment.service
+                                    )}
+                                    className="h-5 w-5 rounded object-cover"
+                                    loading="lazy"
+                                  />
+                                )}
                               <span>
                                 {appointment.service
                                   ? translateServiceName(t, appointment.service)
@@ -126,6 +157,30 @@ export function TimelineView({
                                 {appointment.startTime} - {appointment.endTime}
                               </span>
                             </div>
+                            {!appointment.paid &&
+                              appointment.status !==
+                                AppointmentStatus.CANCELLED &&
+                              onRecordPayment && (
+                                <div className="pt-1">
+                                  <Button
+                                    size="sm"
+                                    className="h-7 px-2 text-xs"
+                                    onClick={(event) => {
+                                      event.stopPropagation();
+                                      onRecordPayment(appointment);
+                                    }}
+                                    disabled={isRecordingPayment}
+                                  >
+                                    <DollarSign className="h-3 w-3 me-1" />
+                                    {isRecordingPayment
+                                      ? t("common.loading")
+                                      : appointment.status ===
+                                        AppointmentStatus.COMPLETED
+                                      ? t("agenda.recordPayment")
+                                      : t("agenda.completeAndPay")}
+                                  </Button>
+                                </div>
+                              )}
                           </div>
                           <Badge
                             variant={statusColors[appointment.status]}
@@ -152,7 +207,11 @@ export function TimelineView({
               <div
                 className="absolute left-0 right-0 h-0.5 bg-accent-pink z-10 pointer-events-none"
                 style={{
-                  top: `${((currentHour - 9) * 2 + (currentMinutes >= 30 ? 1 : 0)) * 60 + (currentMinutes % 30) * 2}px`,
+                  top: `${
+                    ((currentHour - 9) * 2 + (currentMinutes >= 30 ? 1 : 0)) *
+                      60 +
+                    (currentMinutes % 30) * 2
+                  }px`,
                 }}
               >
                 <div className="absolute -left-1 -top-1.5 w-3 h-3 rounded-full bg-accent-pink" />

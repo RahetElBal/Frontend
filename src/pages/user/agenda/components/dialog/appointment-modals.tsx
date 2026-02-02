@@ -1,7 +1,18 @@
 import { useMemo, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import type { UseFormReturn } from "react-hook-form";
-import { User, Scissors, Clock, Calendar, Edit, Trash2, XCircle, CheckCircle, DollarSign, UserPlus } from "lucide-react";
+import {
+  User,
+  Scissors,
+  Clock,
+  Calendar,
+  Edit,
+  Trash2,
+  XCircle,
+  CheckCircle,
+  DollarSign,
+  UserPlus,
+} from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -41,7 +52,10 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { timeSlots, statusColors } from "../../utils";
 import { getValidationErrorMessage } from "@/pages/user/utils";
 import { FormErrorMessage } from "@/pages/user/components/form-error-message";
-import { translateServiceName } from "@/common/service-translations";
+import {
+  getServiceImage,
+  translateServiceName,
+} from "@/common/service-translations";
 
 interface AppointmentModalsProps {
   modalState: AppointmentModalState;
@@ -77,11 +91,13 @@ export function AppointmentModals({
   const { t } = useTranslation();
   const { formatCurrency } = useLanguage();
   const getErrorMessage = (
-    name: keyof AppointmentFormData,
+    name: keyof AppointmentFormData
   ): string | undefined => {
-    const maybeGetError = (form as UseFormReturn<AppointmentFormData> & {
-      getError?: (field: keyof AppointmentFormData) => string | undefined;
-    }).getError;
+    const maybeGetError = (
+      form as UseFormReturn<AppointmentFormData> & {
+        getError?: (field: keyof AppointmentFormData) => string | undefined;
+      }
+    ).getError;
     const message =
       maybeGetError?.(name) ??
       (form.formState.errors[name]?.message as string | undefined);
@@ -113,11 +129,11 @@ export function AppointmentModals({
   // Safe arrays
   const safeClients = useMemo(
     () => (Array.isArray(clients) ? clients : []),
-    [clients],
+    [clients]
   );
   const safeServices = useMemo(
     () => (Array.isArray(services) ? services : []),
-    [services],
+    [services]
   );
 
   const { reset, watch } = form;
@@ -126,7 +142,7 @@ export function AppointmentModals({
   const selectedServiceId = watch("serviceId");
   const selectedService = useMemo(
     () => safeServices.find((s) => s.id === selectedServiceId) || null,
-    [safeServices, selectedServiceId],
+    [safeServices, selectedServiceId]
   );
 
   const walkInEnabled = watch("walkInEnabled");
@@ -143,9 +159,9 @@ export function AppointmentModals({
         startTime: modalState?.prefillTime || "09:00",
         notes: "",
         walkInEnabled: false,
-        walkInFirstName: "",
-        walkInLastName: "",
+        walkInName: "",
         walkInPhone: "",
+        walkInEmail: "",
       });
     } else if (selectedAppointment && derived?.isEditMode) {
       reset({
@@ -155,9 +171,9 @@ export function AppointmentModals({
         startTime: selectedAppointment.startTime,
         notes: selectedAppointment.notes || "",
         walkInEnabled: false,
-        walkInFirstName: "",
-        walkInLastName: "",
+        walkInName: "",
         walkInPhone: "",
+        walkInEmail: "",
       });
     }
   }, [
@@ -265,11 +281,27 @@ export function AppointmentModals({
                         : t("common.unknown")}
                     </p>
                   </div>
+                  {selectedAppointment.service &&
+                    (selectedAppointment.service.image ||
+                      getServiceImage(selectedAppointment.service)) && (
+                      <img
+                        src={
+                          selectedAppointment.service.image ||
+                          getServiceImage(selectedAppointment.service)
+                        }
+                        alt={translateServiceName(
+                          t,
+                          selectedAppointment.service
+                        )}
+                        className="h-10 w-10 rounded-md object-cover"
+                        loading="lazy"
+                      />
+                    )}
                   <p className="font-bold text-accent-pink">
                     {formatCurrency(
                       selectedAppointment.service?.price ??
                         selectedAppointment.price ??
-                        0,
+                        0
                     )}
                   </p>
                 </div>
@@ -317,28 +349,30 @@ export function AppointmentModals({
                 {onCancel &&
                   selectedAppointment.status !== "cancelled" &&
                   !selectedAppointment.paid && (
-                  <Button
-                    variant="outline"
-                    className="text-orange-600 hover:text-orange-700"
-                    onClick={() => onCancel(selectedAppointment.id)}
-                    disabled={isPending}
-                  >
-                    <XCircle className="h-4 w-4 me-2" />
-                    {t("agenda.cancel")}
-                  </Button>
-                )}
+                    <Button
+                      variant="outline"
+                      className="text-orange-600 hover:text-orange-700"
+                      onClick={() => onCancel(selectedAppointment.id)}
+                      disabled={isPending}
+                    >
+                      <XCircle className="h-4 w-4 me-2" />
+                      {t("agenda.cancel")}
+                    </Button>
+                  )}
                 {/* Complete button - show for non-completed/cancelled appointments */}
-                {onComplete && selectedAppointment.status !== "completed" && selectedAppointment.status !== "cancelled" && (
-                  <Button
-                    variant="outline"
-                    className="text-green-600 hover:text-green-700"
-                    onClick={() => onComplete(selectedAppointment.id)}
-                    disabled={isPending}
-                  >
-                    <CheckCircle className="h-4 w-4 me-2" />
-                    {t("agenda.complete")}
-                  </Button>
-                )}
+                {onComplete &&
+                  selectedAppointment.status !== "completed" &&
+                  selectedAppointment.status !== "cancelled" && (
+                    <Button
+                      variant="outline"
+                      className="text-green-600 hover:text-green-700"
+                      onClick={() => onComplete(selectedAppointment.id)}
+                      disabled={isPending}
+                    >
+                      <CheckCircle className="h-4 w-4 me-2" />
+                      {t("agenda.complete")}
+                    </Button>
+                  )}
                 {onCreateSale &&
                   selectedAppointment.status === "completed" &&
                   !selectedAppointment.paid && (
@@ -471,24 +505,35 @@ export function AppointmentModals({
               </div>
 
               {walkInEnabled && (
-                <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid gap-4">
                   <div className="space-y-2">
-                    <Label>{t("agenda.walkInFirstName")}</Label>
-                    <Input {...form.register("walkInFirstName")} />
-                    <FormErrorMessage
-                      message={getErrorMessage("walkInFirstName")}
+                    <Label>{t("agenda.walkInName")}</Label>
+                    <Input
+                      {...form.register("walkInName")}
+                      placeholder={t("agenda.walkInNamePlaceholder")}
                     />
+                    <FormErrorMessage message={getErrorMessage("walkInName")} />
                   </div>
                   <div className="space-y-2">
-                    <Label>{t("agenda.walkInLastName")}</Label>
-                    <Input {...form.register("walkInLastName")} />
-                    <FormErrorMessage
-                      message={getErrorMessage("walkInLastName")}
-                    />
-                  </div>
-                  <div className="space-y-2 sm:col-span-2">
-                    <Label>{t("agenda.walkInPhone")}</Label>
-                    <Input {...form.register("walkInPhone")} />
+                    <p className="text-xs text-muted-foreground">
+                      {t("agenda.walkInOptionalDetails")}
+                    </p>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label>{t("agenda.walkInPhone")}</Label>
+                        <Input
+                          {...form.register("walkInPhone")}
+                          placeholder={t("agenda.walkInPhonePlaceholder")}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>{t("agenda.walkInEmail")}</Label>
+                        <Input
+                          {...form.register("walkInEmail")}
+                          placeholder={t("agenda.walkInEmailPlaceholder")}
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}

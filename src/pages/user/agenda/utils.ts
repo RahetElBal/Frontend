@@ -40,22 +40,29 @@ export interface CalendarEvent {
 }
 
 export function appointmentToCalendarEvent(
-  appointment: Appointment,
+  appointment: Appointment
 ): CalendarEvent {
   const startDateTime = new Date(
-    `${appointment.date}T${appointment.startTime}`,
+    `${appointment.date}T${appointment.startTime}`
   );
   const endDateTime = new Date(`${appointment.date}T${appointment.endTime}`);
 
   return {
     id: appointment.id,
     title: appointment.client
-      ? `${appointment.client.firstName} ${appointment.client.lastName} - ${appointment.service?.name || ""}`
+      ? `${appointment.client.firstName} ${appointment.client.lastName} - ${
+          appointment.service?.name || ""
+        }`
       : appointment.service?.name || "Appointment",
     start: startDateTime,
     end: endDateTime,
     resource: appointment,
   };
+}
+
+export function timeToDate(time: string, date?: string): Date {
+  const baseDate = date || new Date().toISOString().split("T")[0];
+  return new Date(`${baseDate}T${time}`);
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
