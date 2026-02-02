@@ -1,8 +1,8 @@
-import { useTranslation } from 'react-i18next';
-import { Phone } from 'lucide-react';
+import { useTranslation } from "react-i18next";
+import { Phone } from "lucide-react";
 
-import { AuthLayout } from '@/layouts/auth-layout';
-import { Button } from '@/components/ui/button';
+import { AuthLayout } from "@/layouts/auth-layout";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -10,11 +10,11 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { Spinner } from '@/components/spinner';
-import { useAuthentication } from '@/hooks/useAuthentication';
-import { useUser } from '@/hooks/useUser';
-import { CONTACT_INFO } from '@/constants/auth';
+} from "@/components/ui/card";
+import { Spinner } from "@/components/spinner";
+import { useAuthentication } from "@/hooks/useAuthentication";
+import { useUser } from "@/hooks/useUser";
+import { CONTACT_INFO } from "@/constants/auth";
 
 // Google Icon SVG
 function GoogleIcon({ className }: { className?: string }) {
@@ -53,28 +53,28 @@ export function LoginPage() {
 
   const getErrorMessage = (errorKey: string): string => {
     switch (errorKey) {
-      case 'cancelled':
-        return t('auth.login.error.cancelled');
-      case 'popup':
-        return t('auth.login.error.popup');
+      case "cancelled":
+        return t("auth.login.error.cancelled");
+      case "popup":
+        return t("auth.login.error.popup");
       default:
-        return t('auth.login.error.generic');
+        return t("auth.login.error.generic");
     }
   };
 
   return (
     <AuthLayout>
-      <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
+      <Card className="shadow-xl border-0 bg-transparent backdrop-blur-sm">
         <CardHeader className="text-center space-y-2 pb-2">
           {/* Logo placeholder - can be replaced with actual logo */}
           <div className="mx-auto mb-4 w-16 h-16 rounded-2xl bg-linear-to-br from-accent-pink-400 to-accent-pink-500 flex items-center justify-center shadow-lg">
             <span className="text-2xl font-bold text-white">BS</span>
           </div>
           <CardTitle className="text-2xl font-bold text-foreground">
-            {t('auth.login.title')}
+            {t("auth.login.title")}
           </CardTitle>
           <CardDescription className="text-muted-foreground">
-            {t('auth.login.subtitle')}
+            {t("auth.login.subtitle")}
           </CardDescription>
         </CardHeader>
 
@@ -97,12 +97,12 @@ export function LoginPage() {
             {isLoading ? (
               <>
                 <Spinner size="sm" />
-                <span>{t('auth.login.loading')}</span>
+                <span>{t("auth.login.loading")}</span>
               </>
             ) : (
               <>
                 <GoogleIcon className="w-5 h-5" />
-                <span>{t('auth.login.googleButton')}</span>
+                <span>{t("auth.login.googleButton")}</span>
               </>
             )}
           </Button>
@@ -113,18 +113,18 @@ export function LoginPage() {
           <div className="w-full flex items-center gap-3">
             <div className="flex-1 h-px bg-border" />
             <span className="text-xs text-muted-foreground uppercase tracking-wider">
-              {t('auth.login.contactUs')}
+              {t("auth.login.contactUs")}
             </span>
             <div className="flex-1 h-px bg-border" />
           </div>
 
           {/* Contact Info */}
           <a
-            href={`tel:${CONTACT_INFO.PHONE.replace(/\s/g, '')}`}
+            href={`tel:${CONTACT_INFO.PHONE.replace(/\s/g, "")}`}
             className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-accent-pink-500 transition-colors"
           >
             <Phone className="w-4 h-4" />
-            <span>{t('auth.login.phoneLabel')}:</span>
+            <span>{t("auth.login.phoneLabel")}:</span>
             <span className="font-medium text-foreground">
               {CONTACT_INFO.PHONE}
             </span>
