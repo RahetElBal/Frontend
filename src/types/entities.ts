@@ -244,6 +244,7 @@ export interface Sale extends BaseEntity {
   items: SaleItem[];
   subtotal: number;
   discount: number;
+  redeemedPoints?: number;
   tax: number;
   total: number;
   paymentMethod: PaymentMethod;

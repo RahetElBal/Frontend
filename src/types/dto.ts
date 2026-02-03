@@ -205,6 +205,7 @@ export interface CreateSaleDto {
   notes?: string;
   appointmentId?: string;
   redeemLoyalty?: boolean;
+  redeemServiceId?: string;
 }
 
 export interface CreateSaleItemDto {

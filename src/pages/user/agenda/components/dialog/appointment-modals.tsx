@@ -111,7 +111,7 @@ export function AppointmentModals({
 }: AppointmentModalsProps) {
   const { t } = useTranslation();
   const { formatCurrency } = useLanguage();
-  const { salon } = useUser();
+  const { salon, isAdmin, isSuperadmin } = useUser();
   const [redeemLoyalty, setRedeemLoyalty] = useState(false);
   const getErrorMessage = (
     name: keyof AppointmentFormData,
@@ -166,6 +166,7 @@ export function AppointmentModals({
     loyaltyServiceMatch &&
     loyaltyClientPoints >= loyaltyMinimumRedemption &&
     loyaltyMinimumRedemption > 0;
+  const canRedeemLoyalty = isAdmin || isSuperadmin;
 
   // Safe arrays
   const safeClients = useMemo(
@@ -434,7 +435,8 @@ export function AppointmentModals({
                 {onCreateSale &&
                   selectedAppointment.status === "completed" &&
                   !selectedAppointment.paid &&
-                  loyaltyEnabled && (
+                  loyaltyEnabled &&
+                  canRedeemLoyalty && (
                     <div className="flex items-center justify-between gap-4 p-3 rounded-lg bg-muted/50">
                       <div>
                         <p className="text-sm font-medium">
@@ -544,7 +546,7 @@ export function AppointmentModals({
                   <Button
                     onClick={() =>
                       onCreateSale(selectedAppointment, {
-                        redeemLoyalty,
+                        redeemLoyalty: canRedeemLoyalty ? redeemLoyalty : false,
                       })
                     }
                     disabled={isPending || isCreatingSale}

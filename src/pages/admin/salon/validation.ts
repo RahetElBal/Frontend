@@ -16,6 +16,13 @@ export const createSalonFormSchema = (
         (val) => !val || z.string().email().safeParse(val).success,
         t("validation.email"),
       ),
+    logo: z
+      .string()
+      .optional()
+      .refine(
+        (val) => !val || z.string().url().safeParse(val).success,
+        t("validation.url"),
+      ),
   });
 
 export type SalonFormData = z.infer<ReturnType<typeof createSalonFormSchema>>;

@@ -13,6 +13,8 @@ export interface TranslationKeys {
     delete: string;
     edit: string;
     add: string;
+    upload: string;
+    remove: string;
     search: string;
     filter: string;
     clear: string;
@@ -325,6 +327,8 @@ export const en = {
     delete: "Delete",
     edit: "Edit",
     add: "Add",
+    upload: "Upload",
+    remove: "Remove",
     search: "Search",
     filter: "Filter",
     clear: "Clear",
@@ -978,6 +982,15 @@ export const en = {
     tiers: "Loyalty Tiers",
     multiplier: "multiplier",
     points: "points",
+    redeemPoints: "Redeem points",
+    redeemPointsDescription: "Deduct points from a client account",
+    selectClient: "Select a client",
+    pointsToRedeem: "Points to redeem",
+    availablePoints: "Available points",
+    redeem: "Redeem",
+    redeemSuccess: "Points redeemed successfully",
+    redeemConfigMissing: "Configure loyalty redemption settings first",
+    redeemNotEligible: "Client does not have enough points to redeem",
     topMembers: "Top Members",
     noMembers: "No members yet",
     spent: "spent",
@@ -1369,6 +1382,10 @@ export const en = {
       address: "Address",
       phone: "Phone Number",
       email: "Email",
+      logo: "Salon image URL",
+      cropImage: "Crop image",
+      cropImageDescription: "Drag to reposition and adjust zoom",
+      zoom: "Zoom",
     },
     services: {
       title: "Services",

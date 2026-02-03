@@ -48,8 +48,17 @@ export function SalonCard({
       <div className="p-6">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
-            <div className="h-12 w-12 rounded-lg bg-accent-pink/10 flex items-center justify-center">
-              <Building2 className="h-6 w-6 text-accent-pink" />
+            <div className="h-12 w-12 rounded-lg bg-accent-pink/10 flex items-center justify-center overflow-hidden">
+              {salon.logo ? (
+                <img
+                  src={salon.logo}
+                  alt={salon.name}
+                  className="h-full w-full object-cover"
+                  loading="lazy"
+                />
+              ) : (
+                <Building2 className="h-6 w-6 text-accent-pink" />
+              )}
             </div>
             <div>
               <h3 className="font-semibold">{salon.name}</h3>

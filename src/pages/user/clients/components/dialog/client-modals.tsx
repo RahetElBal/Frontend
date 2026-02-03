@@ -61,6 +61,7 @@ export function ClientModals({
   const { t } = useTranslation();
   const { formatCurrency } = useLanguage();
   const { user } = useUser();
+  const canManageLoyalty = user?.isSuperadmin || user?.role === "admin";
   const getErrorMessage = (name: keyof ClientFormData): string | undefined => {
     const maybeGetError = (
       form as UseFormReturn<ClientFormData> & {
@@ -320,30 +321,32 @@ export function ClientModals({
                       </Badge>
                     </div>
                   </div>
-                  <div className="flex gap-1">
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={() => addLoyaltyPoints({ points: 10 })}
-                      disabled={isAddingPoints}
-                      title={t("clients.addPoints")}
-                    >
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={() => deductLoyaltyPoints({ points: 10 })}
-                      disabled={
-                        isDeductingPoints || selectedClient.loyaltyPoints < 10
-                      }
-                      title={t("clients.deductPoints")}
-                    >
-                      <Minus className="h-4 w-4" />
-                    </Button>
-                  </div>
+                  {canManageLoyalty && (
+                    <div className="flex gap-1">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => addLoyaltyPoints({ points: 10 })}
+                        disabled={isAddingPoints}
+                        title={t("clients.addPoints")}
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => deductLoyaltyPoints({ points: 10 })}
+                        disabled={
+                          isDeductingPoints || selectedClient.loyaltyPoints < 10
+                        }
+                        title={t("clients.deductPoints")}
+                      >
+                        <Minus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">

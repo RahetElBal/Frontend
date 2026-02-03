@@ -1,11 +1,20 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Heart, TrendingUp, Settings } from "lucide-react";
+import { Heart, TrendingUp, Settings, Award } from "lucide-react";
 
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -60,13 +69,17 @@ const extractArray = <T,>(
 
 export function LoyaltyPage() {
   const { t } = useTranslation();
-  const { salon } = useUser();
+  const { salon, isAdmin, isSuperadmin } = useUser();
   const { formatCurrency } = useLanguage();
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const [isRedeemModalOpen, setIsRedeemModalOpen] = useState(false);
+  const [redeemClientId, setRedeemClientId] = useState("");
+  const [redeemServiceId, setRedeemServiceId] = useState("");
   const [settings, setSettings] = useState<Partial<SalonSettingsExtended>>({
     ...defaultSettings,
   });
   const salonId = salon?.id;
+  const canRedeem = isAdmin || isSuperadmin;
 
   const { data: clientsData } = useGet<PaginatedResponse<Client>>("clients", {
     params: { salonId, perPage: 200 },
@@ -76,6 +89,12 @@ export function LoyaltyPage() {
   const { data: salesData } = useGet<PaginatedResponse<Sale>>("sales", {
     params: { salonId, perPage: 10, sortBy: "createdAt", sortOrder: "desc" },
     enabled: !!salonId,
+  });
+
+  const { data: salesStatsData } = useGet<PaginatedResponse<Sale>>("sales", {
+    params: { salonId, perPage: 200, sortBy: "createdAt", sortOrder: "desc" },
+    enabled: !!salonId,
+    staleTime: 1000 * 60,
   });
 
   const { data: servicesData } = useGet<PaginatedResponse<Service>>(
@@ -88,6 +107,7 @@ export function LoyaltyPage() {
 
   const clients = extractArray<Client>(clientsData);
   const sales = extractArray<Sale>(salesData);
+  const salesStats = extractArray<Sale>(salesStatsData);
   const services = extractArray<Service>(servicesData);
 
   const derivedSettings = useMemo<Partial<SalonSettingsExtended>>(
@@ -119,14 +139,23 @@ export function LoyaltyPage() {
   );
 
   const totalPointsRedeemed = useMemo(() => {
+    const hasRedeemedPointsField = salesStats.some(
+      (sale) => sale.redeemedPoints !== undefined && sale.redeemedPoints !== null,
+    );
+    if (hasRedeemedPointsField) {
+      return salesStats.reduce(
+        (sum, sale) => sum + Number(sale.redeemedPoints || 0),
+        0,
+      );
+    }
     const pointValue = Number(derivedSettings.loyaltyPointValue || 0);
     if (pointValue <= 0) return 0;
-    const totalDiscount = sales.reduce(
+    const totalDiscount = salesStats.reduce(
       (sum, sale) => sum + Number(sale.discount || 0),
-      0
+      0,
     );
     return Math.round(totalDiscount / pointValue);
-  }, [sales, derivedSettings.loyaltyPointValue]);
+  }, [salesStats, derivedSettings.loyaltyPointValue]);
 
   const topClients = useMemo(
     () =>
@@ -140,6 +169,61 @@ export function LoyaltyPage() {
     () => clients.filter((client) => (client.loyaltyPoints || 0) > 0).length,
     [clients]
   );
+
+  const redeemableClients = useMemo(
+    () => clients.filter((client) => (client.loyaltyPoints || 0) > 0),
+    [clients],
+  );
+
+  const selectedRedeemClient = useMemo(
+    () => redeemableClients.find((client) => client.id === redeemClientId) || null,
+    [redeemableClients, redeemClientId],
+  );
+
+  const redeemableServices = useMemo(
+    () => services.filter((service) => service.isActive !== false),
+    [services],
+  );
+
+  const selectedRedeemService = useMemo(
+    () => redeemableServices.find((service) => service.id === redeemServiceId) || null,
+    [redeemableServices, redeemServiceId],
+  );
+
+  const requiredRedeemPoints = Number(
+    derivedSettings.loyaltyMinimumRedemption || 0,
+  );
+  const canSubmitRedeem =
+    !!selectedRedeemClient &&
+    !!selectedRedeemService &&
+    !!derivedSettings.loyaltyEnabled &&
+    requiredRedeemPoints > 0 &&
+    (selectedRedeemClient?.loyaltyPoints || 0) >= requiredRedeemPoints;
+
+  const { mutate: createRedeemSale, isPending: isRedeeming } = usePost<
+    Sale,
+    {
+      salonId: string;
+      clientId: string;
+      redeemLoyalty: boolean;
+      redeemServiceId: string;
+      items: {
+        type: "service";
+        itemId: string;
+        quantity: number;
+        price: number;
+      }[];
+    }
+  >("sales", {
+    invalidateQueries: ["sales", "clients"],
+    onSuccess: () => {
+      toast.success(t("loyalty.redeemSuccess"));
+      setIsRedeemModalOpen(false);
+      setRedeemClientId("");
+      setRedeemServiceId("");
+    },
+    onError: (error) => toast.error(error.message || t("common.error")),
+  });
 
   const updateField: SettingsSectionProps["updateField"] = (field, value) => {
     setSettings((prev) => ({ ...prev, [field]: value }));
@@ -180,23 +264,82 @@ export function LoyaltyPage() {
     });
   };
 
+  const handleRedeemPoints = () => {
+    if (!salonId) {
+      toast.error(t("common.error"));
+      return;
+    }
+    if (!selectedRedeemClient) {
+      toast.error(
+        t("validation.required", { field: t("loyalty.paymentClient") }),
+      );
+      return;
+    }
+    if (!derivedSettings.loyaltyEnabled || requiredRedeemPoints <= 0) {
+      toast.error(t("loyalty.redeemConfigMissing"));
+      return;
+    }
+    if (!selectedRedeemService) {
+      toast.error(
+        t("validation.required", { field: t("salonSettings.loyaltyRewardService") }),
+      );
+      return;
+    }
+    const availablePoints = selectedRedeemClient.loyaltyPoints || 0;
+    if (availablePoints < requiredRedeemPoints) {
+      toast.error(t("loyalty.redeemNotEligible"));
+      return;
+    }
+
+    createRedeemSale({
+      salonId,
+      clientId: selectedRedeemClient.id,
+      redeemLoyalty: true,
+      redeemServiceId: selectedRedeemService.id,
+      items: [
+        {
+          type: "service",
+          itemId: selectedRedeemService.id,
+          quantity: 1,
+          price: Number(selectedRedeemService.price || 0),
+        },
+      ],
+    });
+  };
+
   return (
     <div className="space-y-6">
       <PageHeader
         title={t("nav.loyalty")}
         description={t("loyalty.description")}
         actions={
-          <Button
-            variant="outline"
-            className="gap-2"
-            onClick={() => {
-              setSettings(derivedSettings);
-              setIsSettingsModalOpen(true);
-            }}
-          >
-            <Settings className="h-4 w-4" />
-            {t("loyalty.programSettings")}
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            {canRedeem && (
+              <Button
+                variant="outline"
+                className="gap-2"
+                onClick={() => {
+                  setRedeemClientId("");
+                  setRedeemServiceId(derivedSettings.loyaltyRewardServiceId || "");
+                  setIsRedeemModalOpen(true);
+                }}
+              >
+                <Award className="h-4 w-4" />
+                {t("loyalty.redeemPoints")}
+              </Button>
+            )}
+            <Button
+              variant="outline"
+              className="gap-2"
+              onClick={() => {
+                setSettings(derivedSettings);
+                setIsSettingsModalOpen(true);
+              }}
+            >
+              <Settings className="h-4 w-4" />
+              {t("loyalty.programSettings")}
+            </Button>
+          </div>
         }
       />
 
@@ -397,6 +540,91 @@ export function LoyaltyPage() {
               <Button type="submit">{t("common.save")}</Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isRedeemModalOpen} onOpenChange={setIsRedeemModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t("loyalty.redeemPoints")}</DialogTitle>
+            <DialogDescription>{t("loyalty.redeemPointsDescription")}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label>{t("loyalty.paymentClient")}</Label>
+              <Select value={redeemClientId} onValueChange={setRedeemClientId}>
+                <SelectTrigger>
+                  <SelectValue placeholder={t("loyalty.selectClient")} />
+                </SelectTrigger>
+                <SelectContent>
+                  {redeemableClients.length === 0 ? (
+                    <div className="p-2 text-sm text-muted-foreground">
+                      {t("clients.noClients")}
+                    </div>
+                  ) : (
+                    redeemableClients.map((client) => (
+                      <SelectItem key={client.id} value={client.id}>
+                        {client.firstName} {client.lastName} (
+                        {client.loyaltyPoints} {t("loyalty.points")})
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>{t("salonSettings.loyaltyRewardService")}</Label>
+              <Select
+                value={redeemServiceId}
+                onValueChange={setRedeemServiceId}
+              >
+                <SelectTrigger>
+                  <SelectValue
+                    placeholder={t("salonSettings.loyaltyRewardServicePlaceholder")}
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  {redeemableServices.length === 0 ? (
+                    <div className="p-2 text-sm text-muted-foreground">
+                      {t("services.services")} - {t("common.noResults")}
+                    </div>
+                  ) : (
+                    redeemableServices.map((service) => (
+                      <SelectItem key={service.id} value={service.id}>
+                        {service.name} ({service.duration} min)
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>{t("loyalty.pointsToRedeem")}</Label>
+              <Input
+                type="number"
+                min="1"
+                step="1"
+                value={requiredRedeemPoints || ""}
+                disabled
+              />
+              {selectedRedeemClient && (
+                <p className="text-xs text-muted-foreground">
+                  {t("loyalty.availablePoints")}: {selectedRedeemClient.loyaltyPoints}
+                </p>
+              )}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsRedeemModalOpen(false)}>
+              {t("common.cancel")}
+            </Button>
+            <Button
+              onClick={handleRedeemPoints}
+              disabled={isRedeeming || !canSubmitRedeem}
+            >
+              {isRedeeming ? t("common.loading") : t("loyalty.redeem")}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
