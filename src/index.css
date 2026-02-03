@@ -34,6 +34,10 @@
   /* Card */
   --color-card: oklch(1 0 0);
   --color-card-foreground: oklch(0.15 0 0);
+
+  /* Popover */
+  --color-popover: oklch(1 0 0);
+  --color-popover-foreground: oklch(0.15 0 0);
   
   /* Border */
   --color-border: oklch(0.90 0 0);
