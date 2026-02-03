@@ -264,7 +264,7 @@ export function TimelineView({
                               onRecordPayment && (
                                 <Button
                                   size="sm"
-                                  className="h-9 px-4 text-sm font-semibold whitespace-nowrap shadow-sm bg-accent-pink text-white hover:bg-accent-pink/90"
+                                  className="h-9 px-4 text-sm font-semibold whitespace-nowrap shadow-sm bg-red-600 text-white hover:bg-red-500"
                                   onClick={(event) => {
                                     event.stopPropagation();
                                     onRecordPayment(appointment);
