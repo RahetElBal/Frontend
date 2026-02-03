@@ -12,6 +12,7 @@ export interface AuthUser {
   role: AppRole;
   isSuperadmin: boolean;
   salon?: Salon;
+  isActive?: boolean;
 }
 
 // Full user type from database (not superadmin)

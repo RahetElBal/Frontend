@@ -115,6 +115,17 @@ export default function AuthCallback() {
           throw new Error("Failed to fetch user data");
         }
 
+        if ((user as AuthUser & { isActive?: boolean }).isActive === false) {
+          localStorage.removeItem(AUTH_STORAGE_KEY);
+          localStorage.removeItem("user");
+          setError("Your account has been deactivated. Please contact your administrator.");
+          setIsProcessing(false);
+          setTimeout(() => {
+            navigate(AUTH_ROUTES.LOGIN, { replace: true });
+          }, 4000);
+          return;
+        }
+
         // Login with user data
         login(user, token);
 
@@ -127,7 +138,10 @@ export default function AuthCallback() {
         console.error("Auth callback error:", err);
         localStorage.removeItem(AUTH_STORAGE_KEY);
         localStorage.removeItem("user");
-        setError("Failed to authenticate. Please try again.");
+        const message =
+          (err as { message?: string })?.message ||
+          "Failed to authenticate. Please try again.";
+        setError(message);
         setIsProcessing(false);
         setTimeout(() => {
           navigate(AUTH_ROUTES.LOGIN, { replace: true });

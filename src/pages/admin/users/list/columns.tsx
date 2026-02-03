@@ -7,6 +7,8 @@ import {
   Crown,
   UserCog,
   Phone,
+  UserCheck,
+  UserX,
 } from "lucide-react";
 
 import { Badge } from "@/components/badge";
@@ -22,6 +24,8 @@ interface UseUsersColumnsProps {
   onView: (user: User) => void;
   onEdit: (user: User) => void;
   onDelete: (user: User) => void;
+  onToggleActive?: (user: User) => void;
+  isTogglingActive?: boolean;
 }
 
 export function useUsersColumns({
@@ -30,6 +34,8 @@ export function useUsersColumns({
   onView,
   onEdit,
   onDelete,
+  onToggleActive,
+  isTogglingActive = false,
 }: UseUsersColumnsProps): Column<User>[] {
   const { t } = useTranslation();
 
@@ -80,6 +86,16 @@ export function useUsersColumns({
       },
     },
   ];
+
+  columns.push({
+    key: "status",
+    header: t("fields.status"),
+    render: (user) => (
+      <Badge variant={user.isActive ? "success" : "warning"}>
+        {user.isActive ? t("common.active") : t("common.inactive")}
+      </Badge>
+    ),
+  });
 
   // Conditional columns based on user role
   if (isSuperadmin) {
@@ -197,6 +213,11 @@ export function useUsersColumns({
         // Permission checks
         const canEdit = isSuperadmin || !userIsSuperadmin;
         const canDelete = isSuperadmin && !isSelf && !userIsSuperadmin;
+        const canToggle =
+          !!onToggleActive &&
+          !userIsSuperadmin &&
+          !isSelf &&
+          (isSuperadmin || user.managedById === currentUser?.id);
 
         return (
           <div className="flex items-center justify-end gap-2">
@@ -220,6 +241,31 @@ export function useUsersColumns({
                 }}
               >
                 <Pencil className="h-4 w-4" />
+              </Button>
+            )}
+            {canToggle && (
+              <Button
+                variant="ghost"
+                size="sm"
+                title={
+                  user.isActive ? t("common.deactivate") : t("common.activate")
+                }
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleActive?.(user);
+                }}
+                disabled={isTogglingActive}
+                className={
+                  user.isActive
+                    ? "text-destructive hover:text-destructive"
+                    : "text-green-600 hover:text-green-700"
+                }
+              >
+                {user.isActive ? (
+                  <UserX className="h-4 w-4" />
+                ) : (
+                  <UserCheck className="h-4 w-4" />
+                )}
               </Button>
             )}
             {canDelete && (
