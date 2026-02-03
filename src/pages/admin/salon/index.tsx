@@ -29,6 +29,8 @@ export default function SalonsPage() {
 
   // State
   const [modalState, setModalState] = useState<SalonModalState>(null);
+  const currentSalon = userIsSuperadmin ? null : adminSalon;
+  const salonId = currentSalon?.id;
 
   // Fetch data - only superadmin needs to fetch all salons
   const {
@@ -57,7 +59,10 @@ export default function SalonsPage() {
   const { data: clientsResponse } = useGet<{ data: Client[] }>("clients");
   const clientsData = clientsResponse?.data || [];
 
-  const { data: salesResponse } = useGet<{ data: Sale[] }>("sales");
+  const { data: salesResponse } = useGet<{ data: Sale[] }>("sales", {
+    params: { salonId, perPage: 200 },
+    enabled: !!salonId,
+  });
   const salesData = salesResponse?.data || [];
 
   // Salons - superadmin sees all, admin sees only their own from useUser
@@ -71,7 +76,7 @@ export default function SalonsPage() {
   });
 
   // Get current admin's salon - use from useUser hook
-  const currentSalon = userIsSuperadmin ? null : adminSalon;
+  // currentSalon defined above
 
   // Stats - calculated based on role
   const totalSalons = salons.length;
