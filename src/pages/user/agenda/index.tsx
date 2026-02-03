@@ -314,9 +314,13 @@ export function AgendaPage() {
     });
   }, [appointments, notificationsEnabled, t]);
 
+  type AppointmentPayload = Omit<AppointmentFormData, "price"> & {
+    price?: number;
+  };
+
   const { mutate: createAppointment, isPending: isCreating } = usePost<
     Appointment,
-    AppointmentFormData
+    AppointmentPayload
   >("appointments", {
     invalidateQueries: ["appointments"],
     onSuccess: () => {
@@ -331,7 +335,7 @@ export function AgendaPage() {
 
   const { mutate: updateAppointment, isPending: isUpdating } = usePost<
     Appointment,
-    AppointmentFormData
+    AppointmentPayload
   >("appointments", {
     id: selectedAppointment?.id,
     method: "PATCH",
@@ -483,7 +487,7 @@ export function AgendaPage() {
     setModalState({ appointmentId: event.id, mode: "view" });
   }, []);
 
-  const toAppointmentPayload = (data: AppointmentFormData) => {
+  const toAppointmentPayload = (data: AppointmentFormData): AppointmentPayload => {
     const rawPrice = data.price?.toString().trim();
     const parsedPrice = rawPrice ? Number(rawPrice) : undefined;
     return {
