@@ -49,6 +49,7 @@ import type {
   Appointment,
   Client,
   Service,
+  SalonSettings,
   SalonSettingsExtended,
 } from "@/types/entities";
 import type { AppointmentFormData } from "../../validation";
@@ -76,13 +77,15 @@ import {
 const isWalkInClient = (client: Client) =>
   (client.email || "").toLowerCase().startsWith("walkin+");
 
+type SalonSettingsLike = SalonSettings & Partial<SalonSettingsExtended>;
+
 interface AppointmentModalsProps {
   modalState: AppointmentModalState;
   setModalState: (state: AppointmentModalState) => void;
   appointments: Appointment[];
   clients: Client[];
   services: Service[];
-  salonSettings?: Partial<SalonSettingsExtended>;
+  salonSettings?: SalonSettingsLike;
   form: UseFormReturn<AppointmentFormData>;
   onSubmit: (data: AppointmentFormData) => void;
   onDelete: () => void;
@@ -152,7 +155,8 @@ export function AppointmentModals({
     };
   }, [modalState]);
 
-  const effectiveSalonSettings = salonSettings ?? salon?.settings;
+  const effectiveSalonSettings = (salonSettings ??
+    salon?.settings) as SalonSettingsLike | undefined;
   const loyaltySettings = effectiveSalonSettings;
   const loyaltyEnabled = !!loyaltySettings?.loyaltyEnabled;
   const loyaltyRewardServiceId = loyaltySettings?.loyaltyRewardServiceId || "";

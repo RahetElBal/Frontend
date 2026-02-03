@@ -22,6 +22,8 @@ import type {
   PaginatedResponse,
   Sale,
   Salon,
+  SalonSettings,
+  SalonSettingsExtended,
 } from "@/types";
 import { AppointmentStatus } from "@/types/entities";
 import type { AppointmentModalState } from "./types";
@@ -118,7 +120,9 @@ export function AgendaPage() {
   const appointments = safeExtractArray<Appointment>(appointmentsData);
   const clients = safeExtractArray<Client>(clientsData);
   const services = safeExtractArray<Service>(servicesData);
-  const salonSettings = salonData?.settings ?? user?.salon?.settings;
+  type SalonSettingsLike = SalonSettings & Partial<SalonSettingsExtended>;
+  const salonSettings = (salonData?.settings ??
+    user?.salon?.settings) as SalonSettingsLike | undefined;
   const bookingSlotMinutes = Number(
     salonSettings?.bookingSlotDuration || DEFAULT_SLOT_MINUTES,
   );
