@@ -209,8 +209,6 @@ export function AppointmentModals({
         price: "",
       });
     } else if (selectedAppointment && derived?.isEditMode) {
-      const appointmentPrice =
-        selectedAppointment.price ?? selectedAppointment.service?.price;
       reset({
         clientId: selectedAppointment.clientId,
         serviceId: selectedAppointment.serviceId,
@@ -220,7 +218,7 @@ export function AppointmentModals({
         walkInEnabled: false,
         walkInName: "",
         walkInPhone: "",
-        price: appointmentPrice !== undefined ? String(appointmentPrice) : "",
+        price: "",
       });
     }
   }, [
@@ -655,11 +653,7 @@ export function AppointmentModals({
                   min="0"
                   step="0.01"
                   {...form.register("price")}
-                  placeholder={
-                    selectedService?.price !== undefined
-                      ? String(selectedService.price)
-                      : t("fields.price")
-                  }
+                  placeholder={t("fields.price")}
                 />
                 <FormErrorMessage message={getErrorMessage("price")} />
               </div>
