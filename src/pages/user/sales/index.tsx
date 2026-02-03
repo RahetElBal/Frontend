@@ -17,7 +17,7 @@ import { useUser } from "@/hooks/useUser";
 import type { Sale } from "@/types/entities";
 import { useGet } from "@/hooks/useGet";
 import { getSalesColumns } from "./list/columns";
-import { saleStatusColors, formatSaleTime } from "./utils";
+import { saleStatusColors, formatSaleTime, toNumber } from "./utils";
 
 // API response types
 interface SalesResponse {
@@ -34,8 +34,6 @@ export function SalesPage() {
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
 
   const salonId = user?.salon?.id;
-  const toNumber = (value?: number | null) =>
-    typeof value === "number" && Number.isFinite(value) ? value : 0;
   const salesStaleTime = 1000 * 30;
 
   // Fetch data from API (scoped to current salon)
@@ -56,7 +54,7 @@ export function SalesPage() {
 
   const todayTotal = (sales ?? []).reduce(
     (sum, sale) => sum + toNumber(sale?.total),
-    0
+    0,
   );
   const averageTicket = sales.length > 0 ? todayTotal / sales.length : 0;
   const columns = getSalesColumns({
@@ -195,8 +193,9 @@ export function SalesPage() {
                 </div>
                 <div className="divide-y">
                   {(selectedSale.items ?? []).map((item) => {
-                    const unitPrice =
-                      item.unitPrice ?? item.price ?? item.total;
+                    const unitPrice = toNumber(
+                      item.unitPrice ?? item.price ?? item.total,
+                    );
                     return (
                       <div
                         key={item.id}
@@ -218,21 +217,23 @@ export function SalesPage() {
                   <span className="text-muted-foreground">
                     {t("fields.subtotal")}
                   </span>
-                  <span>{formatCurrency(selectedSale.subtotal)}</span>
+                  <span>{formatCurrency(toNumber(selectedSale.subtotal))}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">
                     {t("sales.discount")}
                   </span>
-                  <span>-{formatCurrency(selectedSale.discount || 0)}</span>
+                  <span>
+                    -{formatCurrency(toNumber(selectedSale.discount || 0))}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">{t("fields.tax")}</span>
-                  <span>{formatCurrency(selectedSale.tax || 0)}</span>
+                  <span>{formatCurrency(toNumber(selectedSale.tax || 0))}</span>
                 </div>
                 <div className="flex items-center justify-between text-base font-semibold">
                   <span>{t("fields.total")}</span>
-                  <span>{formatCurrency(selectedSale.total)}</span>
+                  <span>{formatCurrency(toNumber(selectedSale.total))}</span>
                 </div>
               </div>
 

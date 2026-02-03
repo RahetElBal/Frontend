@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { Sale } from "@/types/entities";
-import { formatSaleTime, saleStatusColors } from "../utils";
+import { formatSaleTime, saleStatusColors, toNumber } from "../utils";
 
 interface GetSalesColumnsProps {
   t: TFunction;
@@ -92,7 +92,9 @@ export function getSalesColumns({
       sortable: true,
       render: (sale) => (
         <div>
-          <p className="font-semibold">{formatCurrency(sale.total)}</p>
+          <p className="font-semibold">
+            {formatCurrency(toNumber(sale.total))}
+          </p>
         </div>
       ),
     },
