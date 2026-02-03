@@ -2,7 +2,7 @@ import { useQuery, type UseQueryResult } from "@tanstack/react-query";
 import { get } from "@/lib/http";
 import type { ApiError } from "@/types/api";
 
-interface UseGetOptions<TData> {
+interface UseGetOptions<TData, TSelect = TData> {
   id?: string;
   params?: Record<string, string | number | boolean | undefined>;
   enabled?: boolean;
@@ -14,6 +14,7 @@ interface UseGetOptions<TData> {
   retry?: boolean | number;
   onSuccess?: (data: TData) => void;
   onError?: (error: ApiError) => void;
+  select?: (data: TData) => TSelect;
 }
 
 /**
@@ -43,10 +44,10 @@ interface UseGetOptions<TData> {
  *   enabled: !!clientId
  * });
  */
-export function useGet<TData>(
+export function useGet<TData, TSelect = TData>(
   endpoint: string,
-  options?: UseGetOptions<TData>,
-): UseQueryResult<TData, ApiError> {
+  options?: UseGetOptions<TData, TSelect>,
+): UseQueryResult<TSelect, ApiError> {
   const {
     id,
     params,
@@ -59,6 +60,7 @@ export function useGet<TData>(
     retry,
     onSuccess,
     onError,
+    select,
   } = options || {};
 
   // Build URL: /{endpoint} or /{endpoint}/{id}
@@ -87,7 +89,7 @@ export function useGet<TData>(
     return queryString ? `${baseUrl}?${queryString}` : baseUrl;
   };
 
-  return useQuery<TData, ApiError>({
+  return useQuery<TData, ApiError, TSelect>({
     queryKey,
     queryFn: async () => {
       const fullUrl = buildUrlWithParams(url, params);
@@ -99,6 +101,7 @@ export function useGet<TData>(
 
       return data;
     },
+    ...(select && { select }),
     enabled,
     ...(staleTime !== undefined && { staleTime }),
     ...(cacheTime !== undefined && { gcTime: cacheTime }),

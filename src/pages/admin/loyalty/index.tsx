@@ -48,6 +48,7 @@ import type {
 import type { PaginatedResponse } from "@/types";
 import { LoyaltySettings } from "../salon-settings/components/loyalty-settings";
 import type { SettingsSectionProps } from "../salon-settings/types";
+import { normalizeSalesResponse } from "@/utils/normalize-sales";
 
 const defaultSettings = {
   loyaltyEnabled: false,
@@ -89,12 +90,14 @@ export function LoyaltyPage() {
   const { data: salesData } = useGet<PaginatedResponse<Sale>>("sales", {
     params: { salonId, perPage: 10, sortBy: "createdAt", sortOrder: "desc" },
     enabled: !!salonId,
+    select: normalizeSalesResponse,
   });
 
   const { data: salesStatsData } = useGet<PaginatedResponse<Sale>>("sales", {
     params: { salonId, perPage: 200, sortBy: "createdAt", sortOrder: "desc" },
     enabled: !!salonId,
     staleTime: 1000 * 60,
+    select: normalizeSalesResponse,
   });
 
   const { data: servicesData } = useGet<PaginatedResponse<Service>>(

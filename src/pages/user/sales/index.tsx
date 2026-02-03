@@ -18,6 +18,7 @@ import type { Sale } from "@/types/entities";
 import { useGet } from "@/hooks/useGet";
 import { getSalesColumns } from "./list/columns";
 import { saleStatusColors, formatSaleTime, toNumber } from "./utils";
+import { normalizeSalesResponse } from "@/utils/normalize-sales";
 
 // API response types
 interface SalesResponse {
@@ -44,6 +45,7 @@ export function SalesPage() {
     refetchOnMount: "always",
     refetchOnWindowFocus: true,
     refetchInterval: 15000,
+    select: normalizeSalesResponse,
   });
   const sales = salesResponse?.data || [];
 

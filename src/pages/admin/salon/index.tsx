@@ -16,6 +16,7 @@ import type {
   Client,
   Sale,
 } from "@/types/entities";
+import { normalizeSalesResponse } from "@/utils/normalize-sales";
 import { canModifySalon, type SalonModalState } from "./utils";
 import { StatsGrid } from "./components/stats-grid";
 import { useSalonsColumns } from "./list/columns";
@@ -74,6 +75,7 @@ export default function SalonsPage() {
     params: { salonId, perPage: 100 },
     enabled: !!salonId,
     staleTime: adminStatsStaleTime,
+    select: normalizeSalesResponse,
   });
   const salesData = salesResponse?.data || [];
 

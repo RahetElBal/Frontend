@@ -40,6 +40,7 @@ import {
   getTopItems,
   toNumber,
 } from "./utils";
+import { normalizeSalesResponse } from "@/utils/normalize-sales";
 
 // Analytics API response types
 interface DashboardStatsResponse {
@@ -130,6 +131,7 @@ export function AnalyticsPage() {
       params: { salonId, perPage: 100 },
       enabled: !!salonId && !loadingDashboard && !hasDashboardStats,
       staleTime: listStaleTime,
+      select: normalizeSalesResponse,
     },
   );
   const sales = useMemo(() => salesResponse?.data || [], [salesResponse]);
