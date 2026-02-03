@@ -442,6 +442,12 @@ export const es = {
     confirmed: "confirmadas",
     pending: "pendientes",
     appointments: "citas",
+      breakTime: "Pausa",
+      closedDay: "Este día está marcado como cerrado en la configuración del salón.",
+      timeOutsideWorkingHours:
+        "La hora seleccionada está fuera del horario del salón.",
+      timeSlotOccupied: "Este horario ya está reservado.",
+    timeSlotOccupiedDetails: "Conflicto con {{client}} ({{start}}-{{end}}).",
     recordPayment: "Registrar pago",
     paymentRecorded: "Pago registrado",
     completeAndPay: "Completar y cobrar",
@@ -552,7 +558,10 @@ export const es = {
     todayTotal: "Total de hoy",
     transactions: "Transacciones",
     averageTicket: "Ticket promedio",
-    printReceipt: "Imprimir recibo",
+      printReceipt: "Imprimir recibo",
+      viewPayment: "Ver pago",
+      paymentStatus: "Estado del pago",
+      paidBy: "Pagado por",
   },
 
   giftCards: {

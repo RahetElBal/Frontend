@@ -21,6 +21,7 @@ import type {
   Service,
   PaginatedResponse,
   Sale,
+  Salon,
 } from "@/types";
 import { AppointmentStatus } from "@/types/entities";
 import type { AppointmentModalState } from "./types";
@@ -30,8 +31,13 @@ import {
   safeExtractArray,
   getLocalDateString,
   isAppointmentOverdue,
+  timeToDate,
+  getWorkingHoursForDate,
+  buildTimeSlotsForHours,
+  DEFAULT_SLOT_MINUTES,
+  addMinutesToTime,
+  findConflictingAppointment,
 } from "./utils";
-import { timeToDate } from "./utils";
 
 import {
   requestNotificationPermission,
@@ -93,6 +99,13 @@ export function AgendaPage() {
     staleTime: clientsStaleTime,
   });
 
+  const { data: salonData } = useGet<Salon>("salons", {
+    id: salonId,
+    enabled: !!salonId,
+    staleTime: 1000 * 60 * 2,
+    refetchOnWindowFocus: true,
+  });
+
   const { data: servicesData } = useGet<PaginatedResponse<Service>>(
     "services",
     {
@@ -105,6 +118,26 @@ export function AgendaPage() {
   const appointments = safeExtractArray<Appointment>(appointmentsData);
   const clients = safeExtractArray<Client>(clientsData);
   const services = safeExtractArray<Service>(servicesData);
+  const salonSettings = salonData?.settings ?? user?.salon?.settings;
+  const bookingSlotMinutes = Number(
+    salonSettings?.bookingSlotDuration || DEFAULT_SLOT_MINUTES,
+  );
+  const workingHoursForSelectedDate = useMemo(
+    () => getWorkingHoursForDate(salonSettings, selectedDate),
+    [salonSettings, selectedDate],
+  );
+  const timelineSlots = useMemo(() => {
+    if (!workingHoursForSelectedDate.isOpen) {
+      return { slots: [] as string[], blocked: new Set<string>() };
+    }
+    return buildTimeSlotsForHours({
+      openTime: workingHoursForSelectedDate.openTime,
+      closeTime: workingHoursForSelectedDate.closeTime,
+      slotMinutes: bookingSlotMinutes,
+      breakStart: workingHoursForSelectedDate.breakStart || undefined,
+      breakEnd: workingHoursForSelectedDate.breakEnd || undefined,
+    });
+  }, [workingHoursForSelectedDate, bookingSlotMinutes]);
 
   const form = useForm<AppointmentFormData>({
     schema: appointmentFormSchema,
@@ -517,18 +550,54 @@ export function AgendaPage() {
       return;
     }
 
-    if (isCreateMode) {
-      const conflictingAppointment = appointments.find(
-        (apt) =>
-          apt.date === data.date &&
-          apt.startTime === data.startTime &&
-          apt.status !== "cancelled",
-      );
+    const workingHoursForDate = getWorkingHoursForDate(
+      salonSettings,
+      data.date,
+    );
+    if (!workingHoursForDate.isOpen) {
+      toast.error(t("agenda.closedDay"));
+      return;
+    }
+    const daySlots = buildTimeSlotsForHours({
+      openTime: workingHoursForDate.openTime,
+      closeTime: workingHoursForDate.closeTime,
+      slotMinutes: bookingSlotMinutes,
+      breakStart: workingHoursForDate.breakStart || undefined,
+      breakEnd: workingHoursForDate.breakEnd || undefined,
+    });
+    if (
+      !daySlots.slots.includes(data.startTime) ||
+      daySlots.blocked.has(data.startTime)
+    ) {
+      toast.error(t("agenda.timeOutsideWorkingHours"));
+      return;
+    }
 
-      if (conflictingAppointment) {
-        toast.error(t("agenda.timeSlotOccupied"));
-        return;
-      }
+    const selectedServiceForTime = services.find(
+      (service) => service.id === data.serviceId,
+    );
+    const durationMinutes =
+      selectedServiceForTime?.duration || bookingSlotMinutes;
+    const endTime = addMinutesToTime(data.startTime, durationMinutes);
+    const conflictingAppointment = findConflictingAppointment(appointments, {
+      date: data.date,
+      startTime: data.startTime,
+      endTime,
+      excludeId: isCreateMode ? null : selectedAppointment?.id,
+    });
+
+    if (conflictingAppointment) {
+      const conflictName = conflictingAppointment.client
+        ? `${conflictingAppointment.client.firstName} ${conflictingAppointment.client.lastName}`
+        : t("common.unknown");
+      toast.error(
+        `${t("agenda.timeSlotOccupied")} ${t("agenda.timeSlotOccupiedDetails", {
+          client: conflictName,
+          start: conflictingAppointment.startTime,
+          end: conflictingAppointment.endTime,
+        })}`,
+      );
+      return;
     }
 
     const usePriceOverride = !!data.priceOverrideEnabled;
@@ -757,6 +826,9 @@ export function AgendaPage() {
         appointments={filteredAppointments}
         selectedDate={new Date(`${selectedDate}T00:00:00`)}
         isLoading={isLoading}
+        timeSlots={timelineSlots.slots}
+        blockedSlots={timelineSlots.blocked}
+        isClosed={!workingHoursForSelectedDate.isOpen}
         onTimeSlotClick={(time) =>
           handleSelectSlot({
             start: timeToDate(time, selectedDate),
@@ -844,6 +916,7 @@ export function AgendaPage() {
           isCreatingSale ||
           isCreatingWalkIn
         }
+        salonSettings={salonSettings}
       />
     </div>
   );

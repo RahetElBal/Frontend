@@ -441,6 +441,11 @@ export const ar = {
     confirmed: "مؤكد",
     pending: "قيد الانتظار",
     appointments: "مواعيد",
+      breakTime: "استراحة",
+      closedDay: "هذا اليوم مُغلق حسب إعدادات الصالون.",
+      timeOutsideWorkingHours: "الوقت المحدد خارج ساعات عمل الصالون.",
+      timeSlotOccupied: "هذا الموعد محجوز بالفعل.",
+    timeSlotOccupiedDetails: "يتعارض مع {{client}} ({{start}}-{{end}}).",
     recordPayment: "تسجيل الدفع",
     paymentRecorded: "تم تسجيل الدفع",
     completeAndPay: "إنهاء والدفع",
@@ -551,7 +556,10 @@ export const ar = {
     todayTotal: "إجمالي اليوم",
     transactions: "المعاملات",
     averageTicket: "متوسط الفاتورة",
-    printReceipt: "طباعة الإيصال",
+      printReceipt: "طباعة الإيصال",
+      viewPayment: "عرض الدفع",
+      paymentStatus: "حالة الدفع",
+      paidBy: "مدفوع بواسطة",
   },
 
   giftCards: {

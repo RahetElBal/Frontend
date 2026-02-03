@@ -1,7 +1,7 @@
-import type { Appointment } from "@/types/entities";
 import { momentLocalizer } from "react-big-calendar";
 import moment from "moment";
 import { agendaStatusColors } from "../utils";
+import type { Appointment } from "@/types/entities";
 
 export const localizer = momentLocalizer(moment);
 
@@ -30,6 +30,183 @@ export const timeSlots = [
   "18:30",
   "19:00",
 ];
+
+export const DEFAULT_OPEN_TIME = "09:00";
+export const DEFAULT_CLOSE_TIME = "19:00";
+export const DEFAULT_SLOT_MINUTES = 30;
+
+const dayKeys = [
+  "sunday",
+  "monday",
+  "tuesday",
+  "wednesday",
+  "thursday",
+  "friday",
+  "saturday",
+];
+
+type WorkingHoursEntry = {
+  isOpen?: boolean;
+  openTime?: string;
+  closeTime?: string;
+  breakStart?: string;
+  breakEnd?: string;
+  open?: string;
+  close?: string;
+  closed?: boolean;
+};
+
+export function getDayKeyFromDate(date: string | Date): string {
+  const dateObj = typeof date === "string" ? new Date(`${date}T00:00:00`) : date;
+  return dayKeys[dateObj.getDay()] || "monday";
+}
+
+const normalizeTimeValue = (
+  value: string | undefined,
+  fallback: string,
+): string => {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : fallback;
+};
+
+export function getWorkingHoursForDate(
+  settings: { workingHours?: Record<string, WorkingHoursEntry> } | undefined,
+  date: string,
+) {
+  const dayKey = getDayKeyFromDate(date);
+  const dayConfig = settings?.workingHours?.[dayKey];
+
+  const isOpen =
+    dayConfig?.isOpen !== undefined
+      ? !!dayConfig.isOpen
+      : !(dayConfig as WorkingHoursEntry | undefined)?.closed;
+
+  const openTime = normalizeTimeValue(
+    dayConfig?.openTime ?? dayConfig?.open,
+    DEFAULT_OPEN_TIME,
+  );
+  const closeTime = normalizeTimeValue(
+    dayConfig?.closeTime ?? dayConfig?.close,
+    DEFAULT_CLOSE_TIME,
+  );
+
+  return {
+    isOpen,
+    openTime,
+    closeTime,
+    breakStart: normalizeTimeValue(dayConfig?.breakStart, ""),
+    breakEnd: normalizeTimeValue(dayConfig?.breakEnd, ""),
+  };
+}
+
+export function timeToMinutes(time: string): number {
+  const normalized = normalizeTime(time);
+  const [hours, minutes] = normalized.split(":").map(Number);
+  if (!Number.isFinite(hours) || !Number.isFinite(minutes)) return 0;
+  return hours * 60 + minutes;
+}
+
+export function minutesToTime(totalMinutes: number): string {
+  const safeMinutes = Math.max(0, totalMinutes);
+  const hours = Math.floor(safeMinutes / 60);
+  const minutes = safeMinutes % 60;
+  return `${hours.toString().padStart(2, "0")}:${minutes
+    .toString()
+    .padStart(2, "0")}`;
+}
+
+export function addMinutesToTime(time: string, minutes: number): string {
+  return minutesToTime(timeToMinutes(time) + minutes);
+}
+
+export function buildTimeSlotsForHours(options: {
+  openTime: string;
+  closeTime: string;
+  slotMinutes: number;
+  breakStart?: string;
+  breakEnd?: string;
+}) {
+  const slotMinutes = Math.max(5, Math.min(120, options.slotMinutes || 30));
+  const openMinutes = timeToMinutes(options.openTime);
+  const closeMinutes = timeToMinutes(options.closeTime);
+  const breakStartMinutes = options.breakStart
+    ? timeToMinutes(options.breakStart)
+    : null;
+  const breakEndMinutes = options.breakEnd
+    ? timeToMinutes(options.breakEnd)
+    : null;
+
+  if (!Number.isFinite(openMinutes) || !Number.isFinite(closeMinutes)) {
+    return { slots: [] as string[], blocked: new Set<string>() };
+  }
+
+  const slots: string[] = [];
+  const blocked = new Set<string>();
+  for (let minutes = openMinutes; minutes < closeMinutes; minutes += slotMinutes) {
+    const time = minutesToTime(minutes);
+    slots.push(time);
+
+    if (
+      breakStartMinutes !== null &&
+      breakEndMinutes !== null &&
+      minutes >= breakStartMinutes &&
+      minutes < breakEndMinutes
+    ) {
+      blocked.add(time);
+    }
+  }
+
+  return { slots, blocked };
+}
+
+export function isTimeOverlap(
+  startA: string,
+  endA: string,
+  startB: string,
+  endB: string,
+): boolean {
+  const aStart = timeToMinutes(startA);
+  const aEnd = timeToMinutes(endA);
+  const bStart = timeToMinutes(startB);
+  const bEnd = timeToMinutes(endB);
+  if (aEnd <= aStart || bEnd <= bStart) return false;
+  return aStart < bEnd && bStart < aEnd;
+}
+
+export function findConflictingAppointment(
+  appointments: Appointment[],
+  options: {
+    date: string;
+    startTime: string;
+    endTime?: string;
+    excludeId?: string | null;
+  },
+): Appointment | null {
+  const { date, startTime, endTime, excludeId } = options;
+  const normalizedStart = normalizeTime(startTime);
+  const normalizedEnd = endTime ? normalizeTime(endTime) : "";
+
+  return (
+    appointments.find((appointment) => {
+      if (appointment.status === "cancelled") return false;
+      if (excludeId && appointment.id === excludeId) return false;
+      if (appointment.date !== date) return false;
+      const appointmentStart = normalizeTime(appointment.startTime);
+      const appointmentEnd = normalizeTime(appointment.endTime);
+
+      if (normalizedEnd) {
+        return isTimeOverlap(
+          normalizedStart,
+          normalizedEnd,
+          appointmentStart,
+          appointmentEnd,
+        );
+      }
+
+      return appointmentStart === normalizedStart;
+    }) || null
+  );
+}
 
 export interface CalendarEvent {
   id: string;

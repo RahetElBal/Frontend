@@ -15,7 +15,6 @@ import { cn } from "@/lib/utils";
 import type { Appointment } from "@/types/entities";
 import { AppointmentStatus } from "@/types/entities";
 import {
-  timeSlots,
   statusColors,
   getCurrentTimeString,
   normalizeTime,
@@ -31,6 +30,9 @@ interface TimelineViewProps {
   appointments: Appointment[];
   selectedDate: Date;
   isLoading: boolean;
+  timeSlots: string[];
+  blockedSlots?: Set<string>;
+  isClosed?: boolean;
   onTimeSlotClick: (time: string) => void;
   onAppointmentClick: (appointment: Appointment) => void;
   onRecordPayment?: (appointment: Appointment) => void;
@@ -41,6 +43,9 @@ export function TimelineView({
   appointments,
   selectedDate,
   isLoading,
+  timeSlots,
+  blockedSlots,
+  isClosed = false,
   onTimeSlotClick,
   onAppointmentClick,
   onRecordPayment,
@@ -65,6 +70,17 @@ export function TimelineView({
     );
   }
 
+  if (isClosed) {
+    return (
+      <Card className="p-6">
+        <div className="text-center text-muted-foreground">
+          <Calendar className="h-10 w-10 mx-auto mb-3" />
+          <p className="text-sm font-medium">{t("agenda.closedDay")}</p>
+        </div>
+      </Card>
+    );
+  }
+
   return (
     <Card className="p-0 overflow-hidden">
       <div className="overflow-x-auto">
@@ -73,6 +89,7 @@ export function TimelineView({
             {timeSlots.map((time) => {
               const isCurrentTime = time === currentTimeString;
               const isPastTime = time < currentTimeString;
+              const isBlocked = blockedSlots?.has(time) ?? false;
               const appointment = dayAppointments.find(
                 (apt) => normalizeTime(apt.startTime) === time,
               );
@@ -99,9 +116,12 @@ export function TimelineView({
                     className={cn(
                       "flex-1 min-h-15 p-2 hover:bg-muted/30 cursor-pointer transition-colors",
                       !appointment &&
+                        !isBlocked &&
                         "border-l-4 border-l-transparent hover:border-l-accent-pink/30",
+                      isBlocked && "bg-muted/40 cursor-not-allowed",
                     )}
                     onClick={() => {
+                      if (isBlocked) return;
                       if (!appointment) {
                         onTimeSlotClick(time);
                       } else {
@@ -208,6 +228,10 @@ export function TimelineView({
                             })}
                           </Badge>
                         </div>
+                      </div>
+                    ) : isBlocked ? (
+                      <div className="h-full flex items-center justify-center text-muted-foreground text-sm">
+                        {t("agenda.breakTime")}
                       </div>
                     ) : (
                       <div className="h-full flex items-center justify-center text-muted-foreground/50 text-sm">

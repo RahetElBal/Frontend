@@ -17,12 +17,14 @@ interface GetSalesColumnsProps {
   t: TFunction;
   formatCurrency: (value: number) => string;
   onComplete?: (sale: Sale) => void;
+  onView?: (sale: Sale) => void;
 }
 
 export function getSalesColumns({
   t,
   formatCurrency,
   onComplete,
+  onView,
 }: GetSalesColumnsProps): Column<Sale>[] {
   return [
     {
@@ -57,19 +59,32 @@ export function getSalesColumns({
         ),
     },
     {
+      key: "staff",
+      header: t("sales.paidBy"),
+      render: (sale) =>
+        sale.staff?.name || sale.staff?.email ? (
+          <span>{sale.staff?.name || sale.staff?.email}</span>
+        ) : (
+          <span className="text-muted-foreground">{t("common.unknown")}</span>
+        ),
+    },
+    {
       key: "items",
       header: t("fields.items"),
-      render: (sale) => (
-        <div>
-          <p className="text-sm">
-            {sale.items.length}{" "}
-            {sale.items.length === 1 ? t("common.item") : t("common.items")}
-          </p>
-          <p className="text-xs text-muted-foreground truncate max-w-50">
-            {sale.items.map((i) => i.name).join(", ")}
-          </p>
-        </div>
-      ),
+      render: (sale) => {
+        const items = sale.items ?? [];
+        return (
+          <div>
+            <p className="text-sm">
+              {items.length}{" "}
+              {items.length === 1 ? t("common.item") : t("common.items")}
+            </p>
+            <p className="text-xs text-muted-foreground truncate max-w-50">
+              {items.map((i) => i.name).join(", ")}
+            </p>
+          </div>
+        );
+      },
     },
     {
       key: "total",
@@ -100,7 +115,10 @@ export function getSalesColumns({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => onView?.(sale)}
+              disabled={!onView}
+            >
               <Eye className="h-4 w-4 me-2" />
               {t("common.view")}
             </DropdownMenuItem>

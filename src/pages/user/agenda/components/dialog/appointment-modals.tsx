@@ -45,12 +45,25 @@ import {
 } from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/badge";
-import type { Appointment, Client, Service } from "@/types/entities";
+import type {
+  Appointment,
+  Client,
+  Service,
+  SalonSettingsExtended,
+} from "@/types/entities";
 import type { AppointmentFormData } from "../../validation";
 import type { AppointmentModalState } from "../../types";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useUser } from "@/hooks/useUser";
-import { timeSlots, statusColors, getLocalDateString } from "../../utils";
+import {
+  statusColors,
+  getLocalDateString,
+  getWorkingHoursForDate,
+  buildTimeSlotsForHours,
+  DEFAULT_SLOT_MINUTES,
+  addMinutesToTime,
+  findConflictingAppointment,
+} from "../../utils";
 import { getValidationErrorMessage } from "@/pages/user/utils";
 import { FormErrorMessage } from "@/pages/user/components/form-error-message";
 import { normalizePhone } from "@/common/phone";
@@ -69,6 +82,7 @@ interface AppointmentModalsProps {
   appointments: Appointment[];
   clients: Client[];
   services: Service[];
+  salonSettings?: Partial<SalonSettingsExtended>;
   form: UseFormReturn<AppointmentFormData>;
   onSubmit: (data: AppointmentFormData) => void;
   onDelete: () => void;
@@ -88,6 +102,7 @@ export function AppointmentModals({
   appointments,
   clients,
   services,
+  salonSettings,
   form,
   onSubmit,
   onDelete,
@@ -137,7 +152,8 @@ export function AppointmentModals({
     };
   }, [modalState]);
 
-  const loyaltySettings = salon?.settings;
+  const effectiveSalonSettings = salonSettings ?? salon?.settings;
+  const loyaltySettings = effectiveSalonSettings;
   const loyaltyEnabled = !!loyaltySettings?.loyaltyEnabled;
   const loyaltyRewardServiceId = loyaltySettings?.loyaltyRewardServiceId || "";
   const loyaltyMinimumRedemption = Number(
@@ -186,10 +202,60 @@ export function AppointmentModals({
   const priceOverrideEnabled = watch("priceOverrideEnabled");
   const customPriceInput = watch("price");
   const discountInput = watch("discount");
+  const selectedDate = watch("date") || getLocalDateString();
+  const selectedStartTime = watch("startTime");
   const selectedService = useMemo(
     () => safeServices.find((s) => s.id === selectedServiceId) || null,
     [safeServices, selectedServiceId],
   );
+
+  const bookingSlotMinutes = Number(
+    effectiveSalonSettings?.bookingSlotDuration || DEFAULT_SLOT_MINUTES,
+  );
+  const workingHoursForDate = useMemo(
+    () => getWorkingHoursForDate(effectiveSalonSettings, selectedDate),
+    [effectiveSalonSettings, selectedDate],
+  );
+  const { slots: availableSlots, blocked: blockedSlots } = useMemo(() => {
+    if (!workingHoursForDate.isOpen) {
+      return { slots: [] as string[], blocked: new Set<string>() };
+    }
+    return buildTimeSlotsForHours({
+      openTime: workingHoursForDate.openTime,
+      closeTime: workingHoursForDate.closeTime,
+      slotMinutes: bookingSlotMinutes,
+      breakStart: workingHoursForDate.breakStart || undefined,
+      breakEnd: workingHoursForDate.breakEnd || undefined,
+    });
+  }, [
+    workingHoursForDate.isOpen,
+    workingHoursForDate.openTime,
+    workingHoursForDate.closeTime,
+    workingHoursForDate.breakStart,
+    workingHoursForDate.breakEnd,
+    bookingSlotMinutes,
+  ]);
+  const isClosedDay = !workingHoursForDate.isOpen;
+
+  const conflict = useMemo(() => {
+    if (!selectedDate || !selectedStartTime) return null;
+    const durationMinutes = selectedService?.duration || bookingSlotMinutes;
+    const endTime = addMinutesToTime(selectedStartTime, durationMinutes);
+    return findConflictingAppointment(appointments, {
+      date: selectedDate,
+      startTime: selectedStartTime,
+      endTime,
+      excludeId: derived?.isCreateMode ? null : selectedAppointment?.id,
+    });
+  }, [
+    appointments,
+    selectedDate,
+    selectedStartTime,
+    selectedService?.duration,
+    bookingSlotMinutes,
+    derived?.isCreateMode,
+    selectedAppointment?.id,
+  ]);
 
   const walkInEnabled = watch("walkInEnabled");
 
@@ -772,23 +838,63 @@ export function AppointmentModals({
                   <Select
                     value={form.watch("startTime")}
                     onValueChange={(value) => form.setValue("startTime", value)}
+                    disabled={isClosedDay || availableSlots.length === 0}
                   >
                   <SelectTrigger className="bg-white text-black">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-white text-black">
-                      {timeSlots.map((time) => (
-                        <SelectItem key={time} value={time}>
-                          <div className="flex items-center gap-2">
-                            <Clock className="h-4 w-4" />
-                            {time}
-                          </div>
-                        </SelectItem>
-                      ))}
+                      {availableSlots.length === 0 ? (
+                        <div className="p-2 text-center text-muted-foreground text-sm">
+                          {t("common.noResults")}
+                        </div>
+                      ) : (
+                        availableSlots.map((time) => {
+                          const isBlocked = blockedSlots.has(time);
+                          return (
+                            <SelectItem
+                              key={time}
+                              value={time}
+                              disabled={isBlocked}
+                            >
+                              <div className="flex items-center gap-2">
+                                <Clock className="h-4 w-4" />
+                                {time}
+                                {isBlocked && (
+                                  <span className="text-xs text-muted-foreground">
+                                    ({t("agenda.breakTime")})
+                                  </span>
+                                )}
+                              </div>
+                            </SelectItem>
+                          );
+                        })
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
               </div>
+
+              {isClosedDay && (
+                <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+                  {t("agenda.closedDay")}
+                </div>
+              )}
+
+              {conflict && (
+                <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                  <p className="font-medium">{t("agenda.timeSlotOccupied")}</p>
+                  <p className="text-xs">
+                    {t("agenda.timeSlotOccupiedDetails", {
+                      client: conflict.client
+                        ? `${conflict.client.firstName} ${conflict.client.lastName}`
+                        : t("common.unknown"),
+                      start: conflict.startTime,
+                      end: conflict.endTime,
+                    })}
+                  </p>
+                </div>
+              )}
 
               <div className="space-y-2">
                 <Label htmlFor="notes">{t("fields.notes")}</Label>

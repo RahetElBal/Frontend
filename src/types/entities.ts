@@ -216,6 +216,15 @@ export const PaymentMethod = {
 
 export type PaymentMethod = (typeof PaymentMethod)[keyof typeof PaymentMethod];
 
+export const PaymentStatus = {
+  PENDING: "pending",
+  PARTIAL: "partial",
+  PAID: "paid",
+  REFUNDED: "refunded",
+} as const;
+
+export type PaymentStatus = (typeof PaymentStatus)[keyof typeof PaymentStatus];
+
 export const SaleStatus = {
   PENDING: "pending",
   COMPLETED: "completed",
@@ -238,6 +247,7 @@ export interface Sale extends BaseEntity {
   tax: number;
   total: number;
   paymentMethod: PaymentMethod;
+  paymentStatus: PaymentStatus;
   status: SaleStatus;
   notes?: string;
   appointmentId?: string;
@@ -251,7 +261,8 @@ export interface SaleItem {
   name: string;
   quantity: number;
   price: number;
-  discount: number;
+  unitPrice?: number;
+  discount?: number;
   total: number;
 }
 
