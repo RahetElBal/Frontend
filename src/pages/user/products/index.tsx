@@ -82,6 +82,9 @@ export function ProductsPage() {
   const { t } = useTranslation();
   const { formatCurrency } = useLanguage();
   const { user } = useUser();
+  const productsStaleTime = 1000 * 60 * 10;
+  const categoriesStaleTime = 1000 * 60 * 30;
+  const lowStockStaleTime = 1000 * 60 * 2;
 
   // Unified modal state
   const [modalState, setModalState] = useState<ProductModalState>(null);
@@ -96,6 +99,7 @@ export function ProductsPage() {
   } = useGet<ProductsResponse>("products", {
     params: { salonId },
     enabled: !!salonId,
+    staleTime: productsStaleTime,
   });
   
   const products = productsResponse?.data || [];
@@ -105,6 +109,7 @@ export function ProductsPage() {
     {
       params: { salonId },
       enabled: !!salonId,
+      staleTime: categoriesStaleTime,
     },
   );
 
@@ -112,6 +117,7 @@ export function ProductsPage() {
   const { data: lowStockProducts = [] } = useGet<Product[]>("products/low-stock", {
     params: { salonId },
     enabled: !!salonId,
+    staleTime: lowStockStaleTime,
   });
 
   // Helper functions

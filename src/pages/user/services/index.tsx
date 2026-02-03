@@ -73,6 +73,8 @@ export function ServicesPage() {
   const { t } = useTranslation();
   const { formatCurrency } = useLanguage();
   const { user, isSuperadmin } = useUser();
+  const servicesStaleTime = 1000 * 60 * 10;
+  const categoriesStaleTime = 1000 * 60 * 30;
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   // Unified modal state
@@ -86,18 +88,20 @@ export function ServicesPage() {
     data: servicesResponse,
     isLoading,
     refetch,
-  } = useGet<PaginatedResponse<Service>>("services", {
-    params: { salonId },
-    enabled: !!salonId,
-  });
+    } = useGet<PaginatedResponse<Service>>("services", {
+      params: { salonId },
+      enabled: !!salonId,
+      staleTime: servicesStaleTime,
+    });
   const services = servicesResponse?.data ?? [];
   
   const { data: categoriesData = [] } = useGet<ServiceCategory[] | string[]>(
     "services/categories",
     {
-    params: { salonId },
-    enabled: !!salonId,
-  },
+      params: { salonId },
+      enabled: !!salonId,
+      staleTime: categoriesStaleTime,
+    },
   );
   
   // Transform categories data for display

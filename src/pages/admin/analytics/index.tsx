@@ -74,12 +74,15 @@ export function AnalyticsPage() {
   const [revenuePeriod, setRevenuePeriod] = useState<string>("weekly");
 
   const salonId = user?.salon?.id;
+  const analyticsStaleTime = 1000 * 60; // 1m
+  const listStaleTime = 1000 * 60 * 10; // 10m
 
   // Fetch dashboard stats from dedicated analytics endpoint
   const { data: dashboardStats, isLoading: loadingDashboard } =
     useGet<DashboardStatsResponse>("analytics/dashboard", {
       params: { salonId },
       enabled: !!salonId,
+      staleTime: analyticsStaleTime,
     });
 
   const isDashboardStatsResponse = (
@@ -104,12 +107,14 @@ export function AnalyticsPage() {
   useGet<RevenueAnalyticsResponse>("analytics/revenue", {
     params: { salonId, period: revenuePeriod },
     enabled: !!salonId,
+    staleTime: analyticsStaleTime,
   });
 
   // Fetch top services
   const { data: topServices = [] } = useGet<TopService[]>("services/top", {
     params: { salonId, limit: 5 },
     enabled: !!salonId,
+    staleTime: listStaleTime,
   });
 
   // Fallback: Fetch raw data if analytics endpoints fail
@@ -120,6 +125,7 @@ export function AnalyticsPage() {
     {
       params: { salonId, perPage: 100 },
       enabled: !!salonId && !loadingDashboard && !hasDashboardStats,
+      staleTime: listStaleTime,
     },
   );
   const sales = useMemo(() => salesResponse?.data || [], [salesResponse]);
@@ -129,6 +135,7 @@ export function AnalyticsPage() {
     useGet<PaginatedResponse<Appointment>>("appointments", {
       params: { salonId, perPage: 100 },
       enabled: !!salonId && !loadingDashboard && !hasAggregates,
+      staleTime: listStaleTime,
     });
   const appointments = useMemo(
     () => appointmentsResponse?.data || [],
@@ -142,6 +149,7 @@ export function AnalyticsPage() {
     useGet<PaginatedResponse<Client>>("clients", {
       params: { salonId, perPage: 100 },
       enabled: !!salonId && !loadingDashboard && !hasAggregates,
+      staleTime: listStaleTime,
     });
   const clients = useMemo(() => clientsResponse?.data || [], [clientsResponse]);
   const totalClients = hasAggregates
@@ -153,6 +161,7 @@ export function AnalyticsPage() {
     {
       params: { salonId, perPage: 100 },
       enabled: !!salonId && !loadingDashboard && !hasAggregates,
+      staleTime: listStaleTime,
     },
   );
   const services = useMemo(
@@ -168,6 +177,7 @@ export function AnalyticsPage() {
     {
       params: { salonId, perPage: 100 },
       enabled: !!salonId && !loadingDashboard && !hasAggregates,
+      staleTime: listStaleTime,
     },
   );
   const products = useMemo(

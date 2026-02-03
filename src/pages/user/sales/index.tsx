@@ -26,11 +26,13 @@ export function SalesPage() {
   const salonId = user?.salon?.id;
   const toNumber = (value?: number | null) =>
     typeof value === "number" && Number.isFinite(value) ? value : 0;
+  const salesStaleTime = 1000 * 60 * 5;
 
   // Fetch data from API (scoped to current salon)
   const { data: salesResponse, isLoading } = useGet<SalesResponse>("sales", {
     params: { salonId, perPage: 100 },
     enabled: !!salonId,
+    staleTime: salesStaleTime,
   });
   const sales = salesResponse?.data || [];
 

@@ -25,6 +25,7 @@ import { SalonModals } from "./components/dialog/salon-modal";
 export default function SalonsPage() {
   const { t } = useTranslation();
   const { user, isSuperadmin: userIsSuperadmin, salon: adminSalon } = useUser();
+  const adminStatsStaleTime = 1000 * 60 * 5;
 
   // State
   const [modalState, setModalState] = useState<SalonModalState>(null);
@@ -38,35 +39,41 @@ export default function SalonsPage() {
     refetch,
   } = useGet<Salon[]>("salons", {
     enabled: userIsSuperadmin,
+    staleTime: adminStatsStaleTime,
   });
 
   const { data: admins = [] } = useGet<User[]>("users/admins", {
     enabled: userIsSuperadmin,
     retry: 1,
+    staleTime: adminStatsStaleTime,
   });
 
   // Users endpoint returns paginated data
   const { data: allUsersResponse } = useGet<{ data: User[] }>("users", {
     params: userIsSuperadmin ? undefined : { salonId },
     enabled: userIsSuperadmin || !!salonId,
+    staleTime: adminStatsStaleTime,
   });
   const allUsers = allUsersResponse?.data || [];
 
   const { data: servicesResponse } = useGet<{ data: Service[] }>("services", {
     params: { salonId },
     enabled: !!salonId,
+    staleTime: adminStatsStaleTime,
   });
   const servicesData = servicesResponse?.data || [];
 
   const { data: clientsResponse } = useGet<{ data: Client[] }>("clients", {
     params: { salonId, perPage: 100 },
     enabled: !!salonId,
+    staleTime: adminStatsStaleTime,
   });
   const clientsData = clientsResponse?.data || [];
 
   const { data: salesResponse } = useGet<{ data: Sale[] }>("sales", {
     params: { salonId, perPage: 100 },
     enabled: !!salonId,
+    staleTime: adminStatsStaleTime,
   });
   const salesData = salesResponse?.data || [];
 

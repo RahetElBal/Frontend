@@ -28,6 +28,7 @@ export function ClientsPage() {
   const [modalState, setModalState] = useState<ClientModalState>(null);
 
   const salonId = user?.salon?.id;
+  const clientsStaleTime = 1000 * 60 * 10;
 
   const {
     data: clientsResponse,
@@ -36,6 +37,7 @@ export function ClientsPage() {
   } = useGet<PaginatedResponse<Client>>("clients", {
     params: { salonId, perPage: 100 },
     enabled: !!salonId,
+    staleTime: clientsStaleTime,
   });
 
   const clients = useMemo(() => clientsResponse?.data || [], [clientsResponse]);

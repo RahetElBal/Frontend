@@ -65,6 +65,9 @@ export function AgendaPage() {
   });
 
   const salonId = user?.salon?.id;
+  const appointmentsStaleTime = 1000 * 30; // 30s for near real-time
+  const clientsStaleTime = 1000 * 60 * 10; // 10m
+  const servicesStaleTime = 1000 * 60 * 10; // 10m
   const appointmentsParams = useMemo(
     () => ({ salonId, perPage: 100 }),
     [salonId],
@@ -81,11 +84,13 @@ export function AgendaPage() {
   } = useGet<PaginatedResponse<Appointment>>("appointments", {
     params: appointmentsParams,
     enabled: !!salonId,
+    staleTime: appointmentsStaleTime,
   });
 
   const { data: clientsData } = useGet<PaginatedResponse<Client>>("clients", {
     params: { salonId, perPage: 100 },
     enabled: !!salonId,
+    staleTime: clientsStaleTime,
   });
 
   const { data: servicesData } = useGet<PaginatedResponse<Service>>(
@@ -93,6 +98,7 @@ export function AgendaPage() {
     {
       params: { salonId, perPage: 100 },
       enabled: !!salonId,
+      staleTime: servicesStaleTime,
     },
   );
 

@@ -60,6 +60,8 @@ type ServicePayload = {
 export default function AdminServicesPage() {
   const { t } = useTranslation();
   const { isSuperadmin, isLoading } = useUser();
+  const salonsStaleTime = 1000 * 60 * 10;
+  const servicesStaleTime = 1000 * 60 * 5;
   const [selectedSalonId, setSelectedSalonId] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -92,6 +94,7 @@ export default function AdminServicesPage() {
 
   const { data: salons = [] } = useGet<Salon[]>("salons", {
     enabled: isSuperadmin,
+    staleTime: salonsStaleTime,
   });
 
   const {
@@ -101,6 +104,7 @@ export default function AdminServicesPage() {
   } = useGet<PaginatedResponse<Service>>("services", {
     params: selectedSalonId ? { salonId: selectedSalonId, perPage: 200 } : {},
     enabled: !!selectedSalonId,
+    staleTime: servicesStaleTime,
   });
 
   const services = useMemo(
