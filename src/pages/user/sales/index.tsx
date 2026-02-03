@@ -36,13 +36,16 @@ export function SalesPage() {
   const salonId = user?.salon?.id;
   const toNumber = (value?: number | null) =>
     typeof value === "number" && Number.isFinite(value) ? value : 0;
-  const salesStaleTime = 1000 * 60 * 5;
+  const salesStaleTime = 1000 * 30;
 
   // Fetch data from API (scoped to current salon)
   const { data: salesResponse, isLoading } = useGet<SalesResponse>("sales", {
     params: { salonId, perPage: 100 },
     enabled: !!salonId,
     staleTime: salesStaleTime,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
+    refetchInterval: 15000,
   });
   const sales = salesResponse?.data || [];
 

@@ -19,6 +19,7 @@ import {
   getCurrentTimeString,
   normalizeTime,
   getLocalDateString,
+  timeToMinutes,
 } from "../utils";
 import {
   getServiceImage,
@@ -55,6 +56,7 @@ export function TimelineView({
   const currentTimeString = getCurrentTimeString();
   const currentHour = new Date().getHours();
   const currentMinutes = new Date().getMinutes();
+  const currentTotalMinutes = currentHour * 60 + currentMinutes;
 
   // FIX: Use getLocalDateString instead of toISOString to avoid timezone shifts
   const selectedDateStr = getLocalDateString(selectedDate);
@@ -87,12 +89,21 @@ export function TimelineView({
         <div className="min-w-150">
           <div className="relative">
             {timeSlots.map((time) => {
+              const slotMinutesValue = timeToMinutes(time);
               const isCurrentTime = time === currentTimeString;
-              const isPastTime = time < currentTimeString;
+              const isPastTime = slotMinutesValue < currentTotalMinutes;
               const isBlocked = blockedSlots?.has(time) ?? false;
-              const appointment = dayAppointments.find(
-                (apt) => normalizeTime(apt.startTime) === time,
-              );
+              const appointment = dayAppointments.find((apt) => {
+                const start = timeToMinutes(normalizeTime(apt.startTime));
+                const end = timeToMinutes(normalizeTime(apt.endTime));
+                if (end <= start) {
+                  return normalizeTime(apt.startTime) === time;
+                }
+                return slotMinutesValue >= start && slotMinutesValue < end;
+              });
+              const isStartSlot =
+                appointment && normalizeTime(appointment.startTime) === time;
+              const isOccupied = !!appointment && !isStartSlot;
 
               return (
                 <div
@@ -119,6 +130,7 @@ export function TimelineView({
                         !isBlocked &&
                         "border-l-4 border-l-transparent hover:border-l-accent-pink/30",
                       isBlocked && "bg-muted/40 cursor-not-allowed",
+                      isOccupied && "bg-muted/20",
                     )}
                     onClick={() => {
                       if (isBlocked) return;
@@ -129,7 +141,7 @@ export function TimelineView({
                       }
                     }}
                   >
-                    {appointment ? (
+                    {appointment && isStartSlot ? (
                       <div
                         className={cn(
                           "rounded-lg p-3 h-full cursor-pointer hover:shadow-md transition-all",
@@ -233,6 +245,8 @@ export function TimelineView({
                       <div className="h-full flex items-center justify-center text-muted-foreground text-sm">
                         {t("agenda.breakTime")}
                       </div>
+                    ) : isOccupied ? (
+                      <div className="h-full" />
                     ) : (
                       <div className="h-full flex items-center justify-center text-muted-foreground/50 text-sm">
                         <Plus className="h-4 w-4 me-1" />
