@@ -1,5 +1,9 @@
 import { z } from "zod";
-import { requiredString, optionalString } from "@/common/validator/zodI18n";
+import {
+  requiredString,
+  optionalString,
+  optionalEmailField,
+} from "@/common/validator/zodI18n";
 
 export const appointmentFormSchema = z
   .object({
@@ -12,6 +16,7 @@ export const appointmentFormSchema = z
     walkInEnabled: z.boolean().optional(),
     walkInName: optionalString(),
     walkInPhone: optionalString(),
+    walkInEmail: optionalEmailField(),
     price: optionalString(),
     discount: optionalString(),
     priceOverrideEnabled: z.boolean().optional(),

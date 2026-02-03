@@ -200,6 +200,7 @@ export function AppointmentModals({
   const priceOverrideEnabled = watch("priceOverrideEnabled");
   const customPriceInput = watch("price");
   const discountInput = watch("discount");
+  const walkInEmail = watch("walkInEmail");
   const selectedDate = watch("date") || getLocalDateString();
   const selectedStartTime = watch("startTime");
   const selectedService = useMemo(
@@ -256,6 +257,42 @@ export function AppointmentModals({
   ]);
 
   const walkInEnabled = watch("walkInEnabled");
+  const normalizedWalkInEmail = (walkInEmail || "").trim().toLowerCase();
+  const emailConflict = useMemo(() => {
+    if (!walkInEnabled || !normalizedWalkInEmail) return null;
+    return (
+      regularClients.find(
+        (client) =>
+          (client.email || "").toLowerCase() === normalizedWalkInEmail,
+      ) || null
+    );
+  }, [walkInEnabled, normalizedWalkInEmail, regularClients]);
+
+  useEffect(() => {
+    if (!walkInEnabled) {
+      if (
+        form.formState.errors.walkInEmail?.message === "agenda.walkInEmailExists"
+      ) {
+        form.clearErrors("walkInEmail");
+      }
+      return;
+    }
+    if (emailConflict) {
+      form.setError("walkInEmail", {
+        type: "custom",
+        message: "agenda.walkInEmailExists",
+      });
+    } else if (
+      form.formState.errors.walkInEmail?.message === "agenda.walkInEmailExists"
+    ) {
+      form.clearErrors("walkInEmail");
+    }
+  }, [
+    emailConflict,
+    walkInEnabled,
+    form,
+    form.formState.errors.walkInEmail?.message,
+  ]);
 
   // Reset form when modal state changes
   useEffect(() => {
@@ -273,6 +310,7 @@ export function AppointmentModals({
         walkInEnabled: false,
         walkInName: "",
         walkInPhone: "",
+        walkInEmail: "",
         price: "",
         discount: "",
         priceOverrideEnabled: false,
@@ -287,6 +325,7 @@ export function AppointmentModals({
         walkInEnabled: false,
         walkInName: "",
         walkInPhone: "",
+        walkInEmail: "",
         price: "",
         discount: "",
         priceOverrideEnabled: false,
@@ -305,6 +344,13 @@ export function AppointmentModals({
   const handleClose = () => setModalState(null);
 
   const handleFormSubmit = (data: AppointmentFormData) => {
+    if (data.walkInEnabled && emailConflict) {
+      form.setError("walkInEmail", {
+        type: "custom",
+        message: "agenda.walkInEmailExists",
+      });
+      return;
+    }
     onSubmit(data);
   };
 
@@ -649,6 +695,14 @@ export function AppointmentModals({
                       }}
                     />
                     <FormErrorMessage message={getErrorMessage("walkInPhone")} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>{t("agenda.walkInEmail")}</Label>
+                    <Input
+                      {...form.register("walkInEmail")}
+                      placeholder={t("agenda.walkInEmailPlaceholder")}
+                    />
+                    <FormErrorMessage message={getErrorMessage("walkInEmail")} />
                   </div>
                 </div>
               )}

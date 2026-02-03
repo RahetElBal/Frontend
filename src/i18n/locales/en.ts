@@ -819,8 +819,10 @@ export const en = {
     walkInOptionalDetails: "Optional details (can be added later)",
     walkInPhone: "Walk-in phone",
     walkInPhonePlaceholder: "Auto-filled if empty",
-    walkInEmail: "Walk-in email",
-    walkInEmailPlaceholder: "Auto-filled if empty",
+      walkInEmail: "Walk-in email",
+      walkInEmailPlaceholder: "Auto-filled if empty",
+      walkInEmailExists:
+        "This user is already registered. Select them from the client list.",
     walkInNameRequired: "Walk-in name is required",
     walkInLastNameFallback: "Walk-in",
     autoArchiveWalkIns: "Auto-archive walk-ins after payment",

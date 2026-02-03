@@ -154,6 +154,7 @@ export function AgendaPage() {
       walkInEnabled: false,
       walkInName: "",
       walkInPhone: "",
+      walkInEmail: "",
       price: "",
       discount: "",
       priceOverrideEnabled: false,
@@ -636,7 +637,9 @@ export function AgendaPage() {
           const firstName = nameParts[0] || t("agenda.walkIn");
           const lastName =
             nameParts.slice(1).join(" ") || t("agenda.walkInLastNameFallback");
-          const email = `walkin+${salonId}+${Date.now()}@salon.local`;
+          const email =
+            data.walkInEmail?.trim() ||
+            `walkin+${salonId}+${Date.now()}@salon.local`;
           const phone = data.walkInPhone?.trim() || "";
           const walkInClient = await createWalkInClient({
             salonId,

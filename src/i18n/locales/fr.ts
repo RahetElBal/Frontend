@@ -502,8 +502,10 @@ export const fr = {
     walkInOptionalDetails: "Détails optionnels (ajoutés plus tard)",
     walkInPhone: "Téléphone client de passage",
     walkInPhonePlaceholder: "Rempli automatiquement si vide",
-    walkInEmail: "Email client de passage",
-    walkInEmailPlaceholder: "Rempli automatiquement si vide",
+      walkInEmail: "Email client de passage",
+      walkInEmailPlaceholder: "Rempli automatiquement si vide",
+      walkInEmailExists:
+        "Ce client est déjà enregistré. Sélectionnez-le dans la liste.",
     walkInNameRequired: "Le nom complet est requis",
     walkInLastNameFallback: "Client de passage",
     autoArchiveWalkIns: "Archiver automatiquement après paiement",
