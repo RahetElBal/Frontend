@@ -1,3 +1,4 @@
+import { lazy } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import { LoginPage } from "@/routes/login";
@@ -6,22 +7,75 @@ import { UserLayout } from "@/layouts/user-layout";
 import { AdminLayout } from "@/layouts/admin-layout";
 import { ROUTES } from "@/constants/navigation";
 
-import AdminDashboardPage from "./pages/admin/dashboard";
-import { AdminUsersPage } from "./pages/admin/users";
-import SalonsPage from "./pages/admin/salon";
-import { ClientsPage } from "./pages/user/clients";
-import { DashboardPage } from "./pages/user/dashboard";
-import { AgendaPage } from "./pages/user/agenda";
-import { ServicesPage } from "./pages/user/services";
-import { StaffPage } from "./pages/admin/staff";
-import { ProductsPage } from "./pages/user/products";
-import { SalesPage } from "./pages/user/sales";
-import { PromotionsPage } from "./pages/admin/promotions";
-import { AnalyticsPage } from "./pages/admin/analytics";
-import { SalonSettingsPage } from "./pages/admin/salon-settings";
-import { SettingsPage } from "./pages/user/settings";
-import AdminServicesPage from "./pages/admin/services";
-import { LoyaltyPage } from "./pages/admin/loyalty";
+const AdminDashboardPage = lazy(() => import("./pages/admin/dashboard"));
+const AdminUsersPage = lazy(() =>
+  import("./pages/admin/users").then((module) => ({
+    default: module.AdminUsersPage,
+  })),
+);
+const SalonsPage = lazy(() => import("./pages/admin/salon"));
+const AdminServicesPage = lazy(() => import("./pages/admin/services"));
+const PromotionsPage = lazy(() =>
+  import("./pages/admin/promotions").then((module) => ({
+    default: module.PromotionsPage,
+  })),
+);
+const AnalyticsPage = lazy(() =>
+  import("./pages/admin/analytics").then((module) => ({
+    default: module.AnalyticsPage,
+  })),
+);
+const SalonSettingsPage = lazy(() =>
+  import("./pages/admin/salon-settings").then((module) => ({
+    default: module.SalonSettingsPage,
+  })),
+);
+const LoyaltyPage = lazy(() =>
+  import("./pages/admin/loyalty").then((module) => ({
+    default: module.LoyaltyPage,
+  })),
+);
+
+const ClientsPage = lazy(() =>
+  import("./pages/user/clients").then((module) => ({
+    default: module.ClientsPage,
+  })),
+);
+const DashboardPage = lazy(() =>
+  import("./pages/user/dashboard").then((module) => ({
+    default: module.DashboardPage,
+  })),
+);
+const AgendaPage = lazy(() =>
+  import("./pages/user/agenda").then((module) => ({
+    default: module.AgendaPage,
+  })),
+);
+const ServicesPage = lazy(() =>
+  import("./pages/user/services").then((module) => ({
+    default: module.ServicesPage,
+  })),
+);
+const StaffPage = lazy(() =>
+  import("./pages/admin/staff").then((module) => ({
+    default: module.StaffPage,
+  })),
+);
+const ProductsPage = lazy(() =>
+  import("./pages/user/products").then((module) => ({
+    default: module.ProductsPage,
+  })),
+);
+const SalesPage = lazy(() =>
+  import("./pages/user/sales").then((module) => ({
+    default: module.SalesPage,
+  })),
+);
+const SettingsPage = lazy(() =>
+  import("./pages/user/settings").then((module) => ({
+    default: module.SettingsPage,
+  })),
+);
 
 function App() {
   return (

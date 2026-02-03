@@ -1,7 +1,9 @@
+import { Suspense } from "react";
 import { Outlet, Navigate } from "react-router-dom";
 
 import { cn } from "@/lib/utils";
 import { AppSidebar } from "@/components/sidebar/app-sidebar";
+import { LoadingPanel } from "@/components/loading-panel";
 import { Spinner } from "@/components/spinner";
 import { MainLayout } from "@/layouts/main-layout";
 import { useUser } from "@/hooks/useUser";
@@ -55,7 +57,9 @@ export function AdminLayout() {
         style={{ paddingInlineStart: "var(--app-sidebar-width, 256px)" }}
       >
         <div className="p-6">
-          <Outlet />
+          <Suspense fallback={<LoadingPanel className="min-h-[60vh]" />}>
+            <Outlet />
+          </Suspense>
         </div>
       </main>
     </MainLayout>
