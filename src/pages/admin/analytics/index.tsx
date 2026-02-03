@@ -13,6 +13,7 @@ import {
 import { PageHeader } from "@/components/page-header";
 import { Card } from "@/components/ui/card";
 import { StatsCard } from "@/components/stats-card";
+import { LoadingPanel } from "@/components/loading-panel";
 import {
   Select,
   SelectContent,
@@ -277,8 +278,8 @@ export function AnalyticsPage() {
 
       {/* Main Content */}
       {isLoading ? (
-        <Card className="p-12 text-center">
-          <p className="text-muted-foreground">{t("common.loading")}</p>
+        <Card className="p-6">
+          <LoadingPanel label={t("common.loading")} />
         </Card>
       ) : !hasData ? (
         <Card className="p-12 text-center">

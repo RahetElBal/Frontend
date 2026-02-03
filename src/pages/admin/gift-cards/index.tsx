@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/badge";
+import { LoadingPanel } from "@/components/loading-panel";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -207,9 +208,7 @@ export function GiftCardsPage() {
 
       {/* Gift Cards Grid */}
       {isLoading ? (
-        <div className="text-center py-8 text-muted-foreground">
-          {t("common.loading")}
-        </div>
+        <LoadingPanel label={t("common.loading")} />
       ) : giftCards.length === 0 ? (
         <Card className="p-12 text-center">
           <Gift className="h-12 w-12 mx-auto text-muted-foreground mb-4" />

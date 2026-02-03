@@ -29,12 +29,13 @@ export function AdminUsersPage() {
   const { isSuperadmin, user: currentUser } = useUser();
 
   // Fetch all users
-  const { data: usersResponse, refetch } = useGet<PaginatedResponse<User>>(
-    "users",
-    {
-      retry: 1,
-    },
-  );
+  const {
+    data: usersResponse,
+    refetch,
+    isLoading: usersLoading,
+  } = useGet<PaginatedResponse<User>>("users", {
+    retry: 1,
+  });
 
   // Filter users based on role
   const allUsers = usersResponse?.data || [];
@@ -153,6 +154,7 @@ export function AdminUsersPage() {
         selectable
         searchPlaceholder={t("admin.users.searchPlaceholder")}
         emptyMessage={t("admin.users.noUsers")}
+        loading={usersLoading}
       />
 
       <UserDialog

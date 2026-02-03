@@ -349,9 +349,8 @@ export function ProductsPage() {
         columns={columns}
         selectable
         searchPlaceholder={t("products.searchPlaceholder")}
-        emptyMessage={
-          isLoading ? t("common.loading") : t("products.noProducts")
-        }
+        emptyMessage={t("products.noProducts")}
+        loading={isLoading}
       />
 
       {/* Create/Edit Product Modal */}

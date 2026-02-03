@@ -12,6 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Spinner } from "@/components/spinner";
 import { cn } from "@/lib/utils";
 import type { UseTableReturn, SortDirection } from "@/hooks/useTable";
 
@@ -141,8 +142,9 @@ export function DataTable<T extends { id: string }>({
                   colSpan={columns.length + (selectable ? 1 : 0)}
                   className="h-24 text-center"
                 >
-                  <div className="flex items-center justify-center">
-                    <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                  <div className="flex flex-col items-center justify-center gap-2 text-muted-foreground">
+                    <Spinner size="sm" />
+                    <span className="text-sm">{t("common.loading")}</span>
                   </div>
                 </TableCell>
               </TableRow>

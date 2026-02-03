@@ -5,6 +5,7 @@ import { Building2, Clock, Save, Calendar, Heart } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { LoadingPanel } from "@/components/loading-panel";
 import { toast } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import type { SalonSettingsExtended, Salon, Service } from "@/types/entities";
@@ -229,8 +230,8 @@ export function SalonSettingsPage() {
         {/* Content */}
         <div className="flex-1">
           {isLoading ? (
-            <Card className="p-8 text-center">
-              <p className="text-muted-foreground">{t("common.loading")}</p>
+            <Card className="p-6">
+              <LoadingPanel label={t("common.loading")} />
             </Card>
           ) : (
             <>

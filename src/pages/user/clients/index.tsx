@@ -120,7 +120,8 @@ export function ClientsPage() {
           columns={columns}
           selectable
           searchPlaceholder={t("clients.searchPlaceholder")}
-          emptyMessage={isLoading ? t("common.loading") : t("clients.noClients")}
+          emptyMessage={t("clients.noClients")}
+          loading={isLoading}
         />
       </div>
 
@@ -136,7 +137,8 @@ export function ClientsPage() {
           columns={columns}
           selectable
           searchPlaceholder={t("clients.searchPlaceholder")}
-          emptyMessage={isLoading ? t("common.loading") : t("clients.noClients")}
+          emptyMessage={t("clients.noClients")}
+          loading={isLoading}
         />
       </div>
 

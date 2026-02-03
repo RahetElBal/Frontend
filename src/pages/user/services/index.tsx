@@ -6,6 +6,7 @@ import { requiredString, optionalString } from "@/common/validator/zodI18n";
 
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
+import { LoadingPanel } from "@/components/loading-panel";
 import {
   Dialog,
   DialogContent,
@@ -320,9 +321,7 @@ export function ServicesPage() {
 
       {/* Services Grid */}
       {isLoading ? (
-        <div className="text-center py-8 text-muted-foreground">
-          {t("common.loading")}
-        </div>
+        <LoadingPanel label={t("common.loading")} />
       ) : selectedCategory === null ? (
         <div className="space-y-8">
           {servicesByCategory.map((category) => (

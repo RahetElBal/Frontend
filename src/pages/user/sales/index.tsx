@@ -81,7 +81,8 @@ export function SalesPage() {
         table={table}
         columns={columns}
         searchPlaceholder={t("sales.searchPlaceholder")}
-        emptyMessage={isLoading ? t("common.loading") : t("sales.noSales")}
+        emptyMessage={t("sales.noSales")}
+        loading={isLoading}
       />
     </div>
   );

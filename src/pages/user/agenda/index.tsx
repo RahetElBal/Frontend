@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { PageHeader } from "@/components/page-header";
+import { LoadingPanel } from "@/components/loading-panel";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
@@ -616,9 +617,7 @@ export function AgendaPage() {
           title={t("nav.agenda")}
           description={t("agenda.description")}
         />
-        <div className="flex items-center justify-center h-96">
-          <p className="text-muted-foreground">{t("common.loading")}</p>
-        </div>
+        <LoadingPanel label={t("common.loading")} className="h-96" />
       </div>
     );
   }

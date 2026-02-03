@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { PageHeader } from "@/components/page-header";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/spinner";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
@@ -449,8 +450,11 @@ export default function AdminServicesPage() {
             <TableBody>
               {servicesLoading && (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center">
-                    {t("common.loading")}
+                  <TableCell colSpan={5} className="h-24">
+                    <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                      <Spinner size="sm" />
+                      <span className="text-sm">{t("common.loading")}</span>
+                    </div>
                   </TableCell>
                 </TableRow>
               )}

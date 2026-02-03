@@ -10,6 +10,7 @@ import {
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/badge";
 import { Button } from "@/components/ui/button";
+import { LoadingPanel } from "@/components/loading-panel";
 import { cn } from "@/lib/utils";
 import type { Appointment } from "@/types/entities";
 import { AppointmentStatus } from "@/types/entities";
@@ -58,8 +59,8 @@ export function TimelineView({
 
   if (isLoading) {
     return (
-      <Card className="p-12 text-center text-muted-foreground">
-        {t("common.loading")}
+      <Card className="p-6">
+        <LoadingPanel label={t("common.loading")} />
       </Card>
     );
   }
