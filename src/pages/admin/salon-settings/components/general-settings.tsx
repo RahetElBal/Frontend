@@ -11,13 +11,6 @@ import {
 } from "@/components/ui/select";
 import type { SettingsSectionProps } from "../types";
 
-const CURRENCIES = [
-  { code: "EUR", symbol: "€", name: "Euro" },
-  { code: "USD", symbol: "$", name: "US Dollar" },
-  { code: "GBP", symbol: "£", name: "British Pound" },
-  { code: "DZD", symbol: "د.ج", name: "Algerian Dinar" },
-];
-
 const TIMEZONES = [
   "Europe/Paris",
   "Europe/London",
@@ -38,25 +31,6 @@ export function GeneralSettings({ formData, updateField }: SettingsSectionProps)
       </h2>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <div className="space-y-2">
-          <Label>{t("salonSettings.currency")}</Label>
-          <Select
-            value={formData.currency}
-            onValueChange={(value) => updateField("currency", value)}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {CURRENCIES.map((curr) => (
-                <SelectItem key={curr.code} value={curr.code}>
-                  {curr.symbol} {curr.code} - {curr.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
         <div className="space-y-2">
           <Label>{t("salonSettings.timezone")}</Label>
           <Select

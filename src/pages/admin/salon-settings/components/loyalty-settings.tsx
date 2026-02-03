@@ -17,12 +17,14 @@ import type { SettingsSectionProps } from "../types";
 
 interface LoyaltySettingsProps extends SettingsSectionProps {
   services: Service[];
+  isLoading?: boolean;
 }
 
 export function LoyaltySettings({
   formData,
   updateField,
   services,
+  isLoading = false,
 }: LoyaltySettingsProps) {
   const { t } = useTranslation();
 
@@ -119,11 +121,21 @@ export function LoyaltySettings({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">{t("common.none")}</SelectItem>
-                  {services.map((service) => (
-                    <SelectItem key={service.id} value={service.id}>
-                      {translateServiceName(t, service)}
-                    </SelectItem>
-                  ))}
+                  {isLoading ? (
+                    <div className="p-2 text-sm text-muted-foreground">
+                      {t("common.loading")}
+                    </div>
+                  ) : services.length === 0 ? (
+                    <div className="p-2 text-sm text-muted-foreground">
+                      {t("common.noResults")}
+                    </div>
+                  ) : (
+                    services.map((service) => (
+                      <SelectItem key={service.id} value={service.id}>
+                        {translateServiceName(t, service)}
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
               <p className="text-xs text-muted-foreground">

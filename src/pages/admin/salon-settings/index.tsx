@@ -76,8 +76,9 @@ export function SalonSettingsPage() {
   const { data: fetchedSalon } = useGet<Salon>("salons", {
     id: userSalon?.id,
     enabled: !!userSalon?.id,
-    refetchOnMount: "always",
-    refetchOnWindowFocus: "always",
+    staleTime: 1000 * 60 * 10,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
   });
 
   // Use latest salon settings when available
@@ -86,11 +87,15 @@ export function SalonSettingsPage() {
   // Settings are stored within the salon entity
   const settings = currentSalon?.settings as SalonSettingsExtended | undefined;
   const isLoading = !currentSalon;
-  const { data: servicesData } = useGet<PaginatedResponse<Service>>(
+  const { data: servicesData, isLoading: servicesLoading } =
+    useGet<PaginatedResponse<Service>>(
     "services",
     {
-      params: { salonId: currentSalon?.id, perPage: 200 },
-      enabled: !!currentSalon?.id,
+      params: { salonId: currentSalon?.id, perPage: 200, compact: true },
+      enabled: activeTab === "loyalty" && !!currentSalon?.id,
+      staleTime: 1000 * 60 * 30,
+      refetchOnMount: false,
+      refetchOnWindowFocus: false,
     }
   );
   const services = Array.isArray(servicesData?.data)
@@ -258,6 +263,7 @@ export function SalonSettingsPage() {
                   formData={formData}
                   updateField={updateField}
                   services={services}
+                  isLoading={servicesLoading}
                 />
               )}
             </>
