@@ -317,8 +317,12 @@ export function AgendaPage() {
     });
   }, [appointments, notificationsEnabled, t]);
 
-  type AppointmentPayload = Omit<AppointmentFormData, "price"> & {
-    price?: number;
+  type AppointmentPayload = Omit<
+    AppointmentFormData,
+    "price" | "discount" | "priceOverrideEnabled"
+  > & {
+    customPrice?: number;
+    discount?: number;
   };
 
   const { mutate: createAppointment, isPending: isCreating } = usePost<
@@ -492,7 +496,7 @@ export function AgendaPage() {
 
   const toAppointmentPayload = (
     data: AppointmentFormData,
-    finalPrice?: number,
+    pricing?: { customPrice?: number; discount?: number },
   ): AppointmentPayload => {
     return {
       clientId: data.clientId,
@@ -500,7 +504,8 @@ export function AgendaPage() {
       date: data.date,
       startTime: data.startTime,
       notes: data.notes,
-      price: Number.isFinite(finalPrice) ? finalPrice : undefined,
+      customPrice: pricing?.customPrice,
+      discount: pricing?.discount,
     };
   };
 
@@ -552,17 +557,32 @@ export function AgendaPage() {
     const selectedService = services.find(
       (service) => service.id === data.serviceId,
     );
-    const basePrice = usePriceOverride
-      ? parsedPrice ??
-        (parsedDiscount !== undefined ? selectedService?.price : undefined)
+    if (usePriceOverride) {
+      const basePrice =
+        parsedPrice ??
+        (parsedDiscount !== undefined ? selectedService?.price : undefined);
+      if (
+        parsedDiscount !== undefined &&
+        basePrice !== undefined &&
+        parsedDiscount > basePrice
+      ) {
+        toast.error(t("validation.number.max", {
+          field: t("sales.discount"),
+          max: basePrice,
+        }));
+        return;
+      }
+    }
+
+    const pricingPayload = usePriceOverride
+      ? {
+          customPrice: parsedPrice,
+          discount: parsedDiscount ?? 0,
+        }
       : undefined;
-    const finalPrice =
-      usePriceOverride && basePrice !== undefined
-        ? Math.max(0, basePrice - (parsedDiscount ?? 0))
-        : undefined;
 
     if (modalState?.mode === "edit" && !isCreateMode) {
-      updateAppointment(toAppointmentPayload(data, finalPrice));
+      updateAppointment(toAppointmentPayload(data, pricingPayload));
     } else {
       if (data.walkInEnabled) {
         try {
@@ -582,7 +602,7 @@ export function AgendaPage() {
             notes: t("agenda.walkInNote"),
           });
           createAppointment({
-            ...toAppointmentPayload(data, finalPrice),
+            ...toAppointmentPayload(data, pricingPayload),
             salonId,
             clientId: walkInClient.id,
           });
@@ -592,7 +612,7 @@ export function AgendaPage() {
         }
       } else {
         createAppointment({
-          ...toAppointmentPayload(data, finalPrice),
+          ...toAppointmentPayload(data, pricingPayload),
           salonId,
         });
       }

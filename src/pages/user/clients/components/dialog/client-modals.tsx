@@ -206,7 +206,8 @@ export function ClientModals({
         phone: selectedClient.phone || "",
       });
     }
-  }, [form, modalState, selectedClient]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [modalState, selectedClient]);
 
   if (!derived) return null;
 

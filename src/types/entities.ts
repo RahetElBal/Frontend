@@ -196,6 +196,9 @@ export interface Appointment extends BaseEntity {
   status: AppointmentStatus;
   paid?: boolean;
   notes?: string;
+  basePrice?: number;
+  customPrice?: number | null;
+  discount?: number;
   price: number;
   reminderSent: boolean;
 }
