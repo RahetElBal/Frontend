@@ -151,7 +151,27 @@ export async function get<T>(
 ): Promise<T> {
   const cacheKey = buildEtagCacheKey(url);
   const cached = etagCache.get(cacheKey);
-  const headers = new Headers(options?.headers);
+  const headers = new Headers();
+
+  if (options?.headers) {
+    if (options.headers instanceof Headers) {
+      options.headers.forEach((value, key) => {
+        headers.set(key, value);
+      });
+    } else if (Array.isArray(options.headers)) {
+      options.headers.forEach(([key, value]) => {
+        if (value !== undefined) {
+          headers.set(key, value);
+        }
+      });
+    } else {
+      Object.entries(options.headers).forEach(([key, value]) => {
+        if (value !== undefined) {
+          headers.set(key, value);
+        }
+      });
+    }
+  }
 
   if (cached?.etag) {
     headers.set('If-None-Match', cached.etag);
