@@ -46,6 +46,7 @@ export interface TranslationKeys {
     archive: string;
     success: string;
     total: string;
+    new: string;
     detectAddress: string;
   };
   auth: {
@@ -374,6 +375,7 @@ export const en = {
     unauthorized: "You are not authorized to perform this action",
     success: "Success",
     total: "Total",
+    new: "New",
   },
 
   // ============================================

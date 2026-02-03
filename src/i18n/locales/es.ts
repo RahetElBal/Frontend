@@ -56,6 +56,7 @@ export const es = {
     unauthorized: "No está autorizado para realizar esta acción",
     success: "Éxito",
     total: "Total",
+    new: "Nuevo",
   },
 
   // ============================================

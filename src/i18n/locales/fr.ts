@@ -62,6 +62,7 @@ export const fr = {
     unauthorized: "Vous n'êtes pas autorisé à effectuer cette action",
     success: "Succès",
     total: "Total",
+    new: "Nouveau",
   },
 
   // ============================================

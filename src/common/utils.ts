@@ -43,3 +43,26 @@ export function calculatePercentageChange(
   if (previous === 0) return 0;
   return ((current - previous) / previous) * 100;
 }
+
+export function getChangeDisplay(current: number, previous: number): {
+  value?: number;
+  text?: "new";
+  isPositive?: boolean;
+} {
+  if (!Number.isFinite(current) || !Number.isFinite(previous)) {
+    return {};
+  }
+  if (previous === 0) {
+    if (current === 0) {
+      return { value: 0, isPositive: true };
+    }
+    return { value: 100, text: "new", isPositive: true };
+  }
+
+  const rawChange = ((current - previous) / previous) * 100;
+  const cappedChange = Math.max(Math.min(rawChange, 100), -100);
+  return {
+    value: cappedChange,
+    isPositive: cappedChange >= 0,
+  };
+}

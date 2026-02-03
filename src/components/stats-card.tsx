@@ -6,6 +6,8 @@ interface StatsCardProps {
   title: string;
   value: string | number;
   change?: number;
+  changeText?: string;
+  changeIsPositive?: boolean;
   changeLabel?: string;
   icon: LucideIcon;
   iconColor?: string;
@@ -16,13 +18,19 @@ export function StatsCard({
   title,
   value,
   change,
+  changeText,
+  changeIsPositive,
   changeLabel,
   icon: Icon,
   iconColor = 'text-accent-pink',
   iconBgColor = 'bg-accent-pink/10',
 }: StatsCardProps) {
   const safeChange = Number.isFinite(change) ? change : undefined;
-  const isPositive = safeChange !== undefined && safeChange >= 0;
+  const hasChange = changeText !== undefined || safeChange !== undefined;
+  const isPositive =
+    changeIsPositive ?? (safeChange !== undefined && safeChange >= 0);
+  const formatPercent = (value: number) =>
+    Number.isInteger(value) ? value.toFixed(0) : value.toFixed(1);
 
   return (
     <Card className="p-6">
@@ -30,7 +38,7 @@ export function StatsCard({
         <div className="space-y-2">
           <p className="text-sm font-medium text-muted-foreground">{title}</p>
           <p className="text-2xl font-bold">{value}</p>
-          {safeChange !== undefined && (
+          {hasChange && (
             <div className="flex items-center gap-1 text-sm">
               {isPositive ? (
                 <TrendingUp className="h-4 w-4 text-green-500" />
@@ -38,7 +46,8 @@ export function StatsCard({
                 <TrendingDown className="h-4 w-4 text-red-500" />
               )}
               <span className={cn(isPositive ? 'text-green-500' : 'text-red-500')}>
-                {isPositive ? '+' : ''}{safeChange.toFixed(1)}%
+                {changeText ??
+                  `${isPositive ? '+' : ''}${formatPercent(safeChange ?? 0)}%`}
               </span>
               {changeLabel && (
                 <span className="text-muted-foreground">{changeLabel}</span>

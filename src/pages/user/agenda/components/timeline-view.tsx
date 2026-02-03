@@ -107,7 +107,7 @@ export function TimelineView({
 
   return (
     <Card className="p-0 overflow-hidden">
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto overflow-y-visible">
         <div className="min-w-150">
           <div className="relative">
             {timeSlots.map((time) => {

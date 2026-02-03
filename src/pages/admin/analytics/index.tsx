@@ -51,6 +51,10 @@ interface DashboardStatsResponse {
   appointmentsChange: number;
   clientsChange: number;
   ticketChange: number;
+  revenueChangeIsNew?: boolean;
+  appointmentsChangeIsNew?: boolean;
+  clientsChangeIsNew?: boolean;
+  ticketChangeIsNew?: boolean;
   totalClients?: number;
   totalAppointments?: number;
   totalServices?: number;
@@ -236,6 +240,8 @@ export function AnalyticsPage() {
         averageTicket: toNumber(dashboardStats.averageTicket),
         revenueChange: dashboardStats.revenueChange,
         appointmentsChange: dashboardStats.appointmentsChange,
+        revenueChangeIsNew: dashboardStats.revenueChangeIsNew,
+        appointmentsChangeIsNew: dashboardStats.appointmentsChangeIsNew,
         topServices: topServices.map((s) => ({
           name: s.name,
           count: toNumber(s.count),
@@ -283,6 +289,8 @@ export function AnalyticsPage() {
       averageTicket: toNumber(averageTicket),
       revenueChange: undefined,
       appointmentsChange: undefined,
+      revenueChangeIsNew: undefined,
+      appointmentsChangeIsNew: undefined,
       topServices: topServicesFromBookings,
       topProducts: topProductsFromSales,
     };
@@ -313,6 +321,8 @@ export function AnalyticsPage() {
           title={t("analytics.totalRevenue")}
           value={formatCurrency(toNumber(metrics.totalRevenue))}
           change={metrics.revenueChange}
+          changeText={metrics.revenueChangeIsNew ? t("common.new") : undefined}
+          changeIsPositive={metrics.revenueChangeIsNew ? true : undefined}
           changeLabel={metrics.revenueChange !== undefined ? t("analytics.vsLastPeriod") : undefined}
           icon={DollarSign}
           iconColor="text-green-600"
@@ -322,6 +332,8 @@ export function AnalyticsPage() {
           title={t("analytics.totalAppointments")}
           value={(metrics.totalAppointments ?? 0).toString()}
           change={metrics.appointmentsChange}
+          changeText={metrics.appointmentsChangeIsNew ? t("common.new") : undefined}
+          changeIsPositive={metrics.appointmentsChangeIsNew ? true : undefined}
           changeLabel={metrics.appointmentsChange !== undefined ? t("analytics.vsLastPeriod") : undefined}
           icon={Calendar}
           iconColor="text-blue-600"

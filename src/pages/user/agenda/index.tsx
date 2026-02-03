@@ -413,36 +413,6 @@ export function AgendaPage() {
     },
   });
 
-  // Cancel appointment - POST /appointments/{id}/cancel
-  const { mutate: cancelAppointment, isPending: isCancelling } = usePostAction<
-    Appointment,
-    string
-  >("appointments", {
-    id: (appointmentId) => appointmentId,
-    action: "cancel",
-    invalidateQueries: ["appointments"],
-    showSuccessToast: true,
-    successMessage: t("agenda.appointmentCancelled"),
-    onSuccess: () => {
-      setModalState(null);
-      refetch();
-    },
-  });
-
-  // Complete appointment - POST /appointments/{id}/complete
-  const { mutate: completeAppointment, isPending: isCompleting } =
-    usePostAction<Appointment, string>("appointments", {
-      id: (appointmentId) => appointmentId,
-      action: "complete",
-      invalidateQueries: ["appointments"],
-      showSuccessToast: true,
-      successMessage: t("agenda.appointmentCompleted"),
-      onSuccess: () => {
-        setModalState(null);
-        refetch();
-      },
-    });
-
   const { mutate: createSaleFromAppointment, isPending: isCreatingSale } =
     usePost<
       Sale,
@@ -888,8 +858,6 @@ export function AgendaPage() {
           }
           deleteAppointment(selectedAppointment.id);
         }}
-        onCancel={(id) => cancelAppointment(id)}
-        onComplete={(id) => completeAppointment(id)}
         onCreateSale={(appointment, options) => {
           if (!salonId || !appointment.serviceId) {
             toast.error(t("common.error"));
@@ -915,8 +883,6 @@ export function AgendaPage() {
           isCreating ||
           isUpdating ||
           isDeleting ||
-          isCancelling ||
-          isCompleting ||
           isCreatingSale ||
           isCreatingWalkIn
         }

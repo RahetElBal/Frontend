@@ -335,6 +335,10 @@ export interface DashboardResponse {
     appointmentsChange: number;
     clientsChange: number;
     ticketChange: number;
+    revenueChangeIsNew?: boolean;
+    appointmentsChangeIsNew?: boolean;
+    clientsChangeIsNew?: boolean;
+    ticketChangeIsNew?: boolean;
   };
   recentAppointments: Array<{
     id: string;

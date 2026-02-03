@@ -36,7 +36,6 @@ export function StatsGrid({
         <StatsCard
           title={t("admin.stats.totalSalons")}
           value={totalSalons}
-          change={0}
           icon={Building2}
           iconColor="text-accent-pink"
           iconBgColor="bg-accent-pink/10"
@@ -45,7 +44,6 @@ export function StatsGrid({
       <StatsCard
         title={t("admin.stats.totalUsers")}
         value={totalUsers}
-        change={0}
         icon={Users}
         iconColor="text-accent-blue"
         iconBgColor="bg-accent-blue/10"
@@ -53,7 +51,6 @@ export function StatsGrid({
       <StatsCard
         title={t("admin.stats.totalRevenue")}
         value={formatCurrency(totalRevenue)}
-        change={0}
         icon={DollarSign}
         iconColor="text-green-600"
         iconBgColor="bg-green-100"

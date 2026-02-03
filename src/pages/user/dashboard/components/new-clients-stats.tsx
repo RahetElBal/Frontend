@@ -3,7 +3,7 @@ import { Users } from "lucide-react";
 import { StatsCard } from "@/components/stats-card";
 import type { Client } from "@/types/entities";
 import { getTodaysNewClients, getLastWeekNewClients } from "../utils";
-import { calculatePercentageChange } from "@/common/utils";
+import { getChangeDisplay } from "@/common/utils";
 
 interface NewClientsStatsProps {
   clients: Client[];
@@ -17,13 +17,15 @@ export function NewClientsStats({ clients }: NewClientsStatsProps) {
 
   const todayCount = todaysNewClients.length;
   const lastWeekCount = lastWeekNewClients.length;
-  const change = calculatePercentageChange(todayCount, lastWeekCount);
+  const change = getChangeDisplay(todayCount, lastWeekCount);
 
   return (
     <StatsCard
       title={t("dashboard.newClients")}
       value={todayCount}
-      change={change}
+      change={change.value}
+      changeText={change.text ? t("common.new") : undefined}
+      changeIsPositive={change.isPositive}
       changeLabel={t("dashboard.vsLastWeek")}
       icon={Users}
       iconColor="text-accent-pink"

@@ -8,8 +8,6 @@ import {
   Calendar,
   Edit,
   Trash2,
-  XCircle,
-  CheckCircle,
   DollarSign,
   UserPlus,
 } from "lucide-react";
@@ -89,8 +87,6 @@ interface AppointmentModalsProps {
   form: UseFormReturn<AppointmentFormData>;
   onSubmit: (data: AppointmentFormData) => void;
   onDelete: () => void;
-  onCancel?: (id: string) => void;
-  onComplete?: (id: string) => void;
   onCreateSale?: (
     appointment: Appointment,
     options?: { redeemLoyalty?: boolean },
@@ -109,8 +105,6 @@ export function AppointmentModals({
   form,
   onSubmit,
   onDelete,
-  onCancel,
-  onComplete,
   onCreateSale,
   isCreatingSale = false,
   isPending,
@@ -347,7 +341,7 @@ export function AppointmentModals({
   if (derived.isViewMode) {
     return (
       <Dialog open={!!modalState} onOpenChange={handleClose}>
-        <DialogContent className="sm:max-w-125">
+        <DialogContent className="sm:max-w-4xl w-full overflow-x-hidden">
           <DialogHeader>
             <DialogTitle>{t("agenda.appointmentDetails")}</DialogTitle>
           </DialogHeader>
@@ -496,55 +490,26 @@ export function AppointmentModals({
             </div>
           )}
           <DialogFooter className="flex flex-col sm:flex-row gap-2">
-            {selectedAppointment && (
-              <div className="flex gap-2 w-full sm:w-auto">
-                {/* Cancel button - allow if not cancelled and not paid */}
-                {onCancel &&
-                  selectedAppointment.status !== "cancelled" &&
-                  !selectedAppointment.paid && (
-                    <Button
-                      variant="outline"
-                      className="text-orange-600 hover:text-orange-700"
-                      onClick={() => onCancel(selectedAppointment.id)}
-                      disabled={isPending}
-                    >
-                      <XCircle className="h-4 w-4 me-2" />
-                      {t("agenda.cancel")}
-                    </Button>
-                  )}
-                {/* Complete button - show for non-completed/cancelled appointments */}
-                {onComplete &&
-                  selectedAppointment.status !== "completed" &&
-                  selectedAppointment.status !== "cancelled" && (
-                    <Button
-                      variant="outline"
-                      className="text-green-600 hover:text-green-700"
-                      onClick={() => onComplete(selectedAppointment.id)}
-                      disabled={isPending}
-                    >
-                      <CheckCircle className="h-4 w-4 me-2" />
-                      {t("agenda.complete")}
-                    </Button>
-                  )}
-                {onCreateSale &&
-                  selectedAppointment.status === "completed" &&
-                  !selectedAppointment.paid && (
-                    <Button
-                      onClick={() =>
-                        onCreateSale(selectedAppointment, {
-                          redeemLoyalty,
-                        })
-                      }
-                      disabled={isPending || isCreatingSale}
-                    >
-                      <DollarSign className="h-4 w-4 me-2" />
-                      {isCreatingSale
-                        ? t("common.loading")
-                        : t("agenda.recordPayment")}
-                    </Button>
-                  )}
-              </div>
-            )}
+            {selectedAppointment &&
+              onCreateSale &&
+              selectedAppointment.status === "completed" &&
+              !selectedAppointment.paid && (
+                <div className="flex gap-2 w-full sm:w-auto">
+                  <Button
+                    onClick={() =>
+                      onCreateSale(selectedAppointment, {
+                        redeemLoyalty,
+                      })
+                    }
+                    disabled={isPending || isCreatingSale}
+                  >
+                    <DollarSign className="h-4 w-4 me-2" />
+                    {isCreatingSale
+                      ? t("common.loading")
+                      : t("agenda.recordPayment")}
+                  </Button>
+                </div>
+              )}
             <div className="flex gap-2 w-full sm:w-auto sm:ms-auto">
               <Button variant="outline" onClick={handleClose}>
                 {t("common.close")}
