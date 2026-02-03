@@ -44,6 +44,7 @@ export interface TranslationKeys {
     actions: string;
     create: string;
     update: string;
+    statusUpdated: string;
     view: string;
     archive: string;
     success: string;
@@ -358,6 +359,7 @@ export const en = {
     actions: "Actions",
     create: "Create",
     update: "Update",
+    statusUpdated: "Status updated",
     view: "View",
     archive: "Archive",
     viewAll: "View all",

@@ -43,6 +43,7 @@ export const fr = {
     actions: "Actions",
     create: "Créer",
     update: "Mettre à jour",
+    statusUpdated: "Statut mis à jour",
     view: "Voir",
     archive: "Archiver",
     viewAll: "Voir tout",
