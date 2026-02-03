@@ -258,8 +258,8 @@ export const fr = {
     pageErrorDescription:
       "Un problème est survenu lors du chargement de cette page.",
     db: {
-      foreignKey: "Impossible de supprimer : cet ?l?ment est utilis? ailleurs.",
-      unique: "Cette valeur existe d?j?.",
+      foreignKey: "Impossible de supprimer : cet élément est utilis? ailleurs.",
+      unique: "Cette valeur existe déjà.",
       notNull: "Un champ obligatoire est manquant.",
       check: "La valeur fournie est invalide.",
       invalidData: "Donn?es invalides.",
@@ -464,7 +464,8 @@ export const fr = {
     selectClient: "Sélectionner un client",
     selectService: "Sélectionner un service",
     adjustPrice: "Modifier le prix",
-    adjustPriceDescription: "Appliquer un prix personnalis? ou une remise pour ce service",
+    adjustPriceDescription:
+      "Appliquer un prix personnalis? ou une remise pour ce service",
     reminderTitle: "Rendez-vous imminent",
     upcomingAppointment: "Rendez-vous à venir",
     notificationsEnabled: "Notifications activées",

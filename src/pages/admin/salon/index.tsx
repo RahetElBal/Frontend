@@ -12,7 +12,6 @@ import { toast } from "@/lib/toast";
 import type {
   Salon,
   User,
-  Product,
   Service,
   Client,
   Sale,
@@ -46,17 +45,23 @@ export default function SalonsPage() {
     retry: 1,
   });
 
-  // Fix: These endpoints return paginated data
-  const { data: allUsersResponse } = useGet<{ data: User[] }>("users");
+  // Users endpoint returns paginated data
+  const { data: allUsersResponse } = useGet<{ data: User[] }>("users", {
+    params: userIsSuperadmin ? undefined : { salonId },
+    enabled: userIsSuperadmin || !!salonId,
+  });
   const allUsers = allUsersResponse?.data || [];
 
-  const { data: productsResponse } = useGet<{ data: Product[] }>("products");
-  const productsData = productsResponse?.data || [];
-
-  const { data: servicesResponse } = useGet<{ data: Service[] }>("services");
+  const { data: servicesResponse } = useGet<{ data: Service[] }>("services", {
+    params: { salonId },
+    enabled: !!salonId,
+  });
   const servicesData = servicesResponse?.data || [];
 
-  const { data: clientsResponse } = useGet<{ data: Client[] }>("clients");
+  const { data: clientsResponse } = useGet<{ data: Client[] }>("clients", {
+    params: { salonId, perPage: 100 },
+    enabled: !!salonId,
+  });
   const clientsData = clientsResponse?.data || [];
 
   const { data: salesResponse } = useGet<{ data: Sale[] }>("sales", {
@@ -87,8 +92,15 @@ export default function SalonsPage() {
     ? allUsers.length // Superadmin: all users in system
     : allUsers.filter((u) => u.salon?.id === currentSalon?.id).length; // Admin: users in their salon
 
+  const activeUsers = userIsSuperadmin
+    ? allUsers.filter((u) => u.isActive).length
+    : allUsers.filter(
+        (u) => u.salon?.id === currentSalon?.id && u.isActive,
+      ).length;
+
+  const totalAdmins = userIsSuperadmin ? admins.length : 0;
+
   // Stats calculations - ALL data for superadmin, filtered for admin
-  const totalProducts = productsData.length;
   const totalServices = servicesData.length;
   const totalClients = clientsData.length;
 
@@ -162,10 +174,11 @@ export default function SalonsPage() {
         totalSalons={totalSalons}
         activeSalons={activeSalons}
         totalUsers={totalUsers}
+        activeUsers={activeUsers}
+        totalAdmins={totalAdmins}
         isSuperadmin={userIsSuperadmin}
         totalRevenue={totalRevenue}
         monthlyRevenue={monthlyRevenue}
-        totalProducts={totalProducts}
         totalServices={totalServices}
         totalClients={totalClients}
       />
