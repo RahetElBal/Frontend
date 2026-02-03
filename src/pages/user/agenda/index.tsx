@@ -108,6 +108,7 @@ export function AgendaPage() {
       walkInPhone: "",
       price: "",
       discount: "",
+      priceOverrideEnabled: false,
     },
   });
 
@@ -522,12 +523,13 @@ export function AgendaPage() {
       }
     }
 
+    const usePriceOverride = !!data.priceOverrideEnabled;
     const rawPrice = data.price?.toString().trim();
     const rawDiscount = data.discount?.toString().trim();
     let parsedPrice: number | undefined;
     let parsedDiscount: number | undefined;
 
-    if (rawPrice) {
+    if (usePriceOverride && rawPrice) {
       parsedPrice = Number(rawPrice);
       if (!Number.isFinite(parsedPrice) || parsedPrice < 0) {
         toast.error(
@@ -536,7 +538,7 @@ export function AgendaPage() {
         return;
       }
     }
-    if (rawDiscount) {
+    if (usePriceOverride && rawDiscount) {
       parsedDiscount = Number(rawDiscount);
       if (!Number.isFinite(parsedDiscount) || parsedDiscount < 0) {
         toast.error(
@@ -549,11 +551,12 @@ export function AgendaPage() {
     const selectedService = services.find(
       (service) => service.id === data.serviceId,
     );
-    const basePrice =
-      parsedPrice ??
-      (parsedDiscount !== undefined ? selectedService?.price : undefined);
+    const basePrice = usePriceOverride
+      ? parsedPrice ??
+        (parsedDiscount !== undefined ? selectedService?.price : undefined)
+      : undefined;
     const finalPrice =
-      basePrice !== undefined
+      usePriceOverride && basePrice !== undefined
         ? Math.max(0, basePrice - (parsedDiscount ?? 0))
         : undefined;
 

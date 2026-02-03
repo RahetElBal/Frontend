@@ -183,6 +183,7 @@ export function AppointmentModals({
 
   // Selected service for display
   const selectedServiceId = watch("serviceId");
+  const priceOverrideEnabled = watch("priceOverrideEnabled");
   const customPriceInput = watch("price");
   const discountInput = watch("discount");
   const selectedService = useMemo(
@@ -210,6 +211,7 @@ export function AppointmentModals({
         walkInPhone: "",
         price: "",
         discount: "",
+        priceOverrideEnabled: false,
       });
     } else if (selectedAppointment && derived?.isEditMode) {
       reset({
@@ -223,6 +225,7 @@ export function AppointmentModals({
         walkInPhone: "",
         price: "",
         discount: "",
+        priceOverrideEnabled: false,
       });
     }
   }, [
@@ -649,57 +652,6 @@ export function AppointmentModals({
                 <FormErrorMessage message={getErrorMessage("serviceId")} />
               </div>
 
-              <div className="space-y-2">
-                <Label>{t("fields.price")}</Label>
-                <Input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  {...form.register("price")}
-                  placeholder={t("fields.price")}
-                />
-                <FormErrorMessage message={getErrorMessage("price")} />
-              </div>
-
-              <div className="space-y-2">
-                <Label>{t("sales.discount")}</Label>
-                <Input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  {...form.register("discount")}
-                  placeholder={t("sales.discount")}
-                />
-                <FormErrorMessage message={getErrorMessage("discount")} />
-              </div>
-
-              {(() => {
-                const trimmedPrice = customPriceInput?.toString().trim();
-                const trimmedDiscount = discountInput?.toString().trim();
-                const parsedPrice = trimmedPrice ? Number(trimmedPrice) : undefined;
-                const parsedDiscount = trimmedDiscount
-                  ? Number(trimmedDiscount)
-                  : undefined;
-                const basePrice =
-                  parsedPrice ??
-                  (parsedDiscount !== undefined ? selectedService?.price : undefined);
-                if (basePrice === undefined) return null;
-                const finalPrice = Math.max(
-                  0,
-                  basePrice - (parsedDiscount ?? 0),
-                );
-                return (
-                  <div className="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2 text-sm">
-                    <span className="text-muted-foreground">
-                      {t("fields.total")}
-                    </span>
-                    <span className="font-semibold text-foreground">
-                      {formatCurrency(finalPrice)}
-                    </span>
-                  </div>
-                );
-              })()}
-
               {selectedService && (
                 <Card className="p-3 bg-muted/50">
                   <div className="flex items-center justify-between">
@@ -711,8 +663,102 @@ export function AppointmentModals({
                         {t("fields.duration")}: {selectedService.duration} min
                       </p>
                     </div>
+                    <p className="text-lg font-bold text-accent-pink">
+                      {formatCurrency(selectedService.price)}
+                    </p>
                   </div>
                 </Card>
+              )}
+
+              <div className="space-y-2">
+                <Label>{t("fields.price")}</Label>
+                <div className="flex items-center justify-between rounded-lg border p-3">
+                  <div>
+                    <p className="text-sm font-medium">
+                      {t("agenda.adjustPrice")}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {t("agenda.adjustPriceDescription")}
+                    </p>
+                  </div>
+                  <Switch
+                    checked={!!priceOverrideEnabled}
+                    onCheckedChange={(value) => {
+                      form.setValue("priceOverrideEnabled", value);
+                      if (!value) {
+                        form.setValue("price", "");
+                        form.setValue("discount", "");
+                      }
+                    }}
+                    disabled={!selectedService}
+                  />
+                </div>
+              </div>
+
+              {priceOverrideEnabled && (
+                <div className="space-y-3">
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label>{t("fields.price")}</Label>
+                      <Input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        {...form.register("price")}
+                        placeholder={t("fields.price")}
+                      />
+                      <FormErrorMessage message={getErrorMessage("price")} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>{t("sales.discount")}</Label>
+                      <Input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        {...form.register("discount")}
+                        placeholder={t("sales.discount")}
+                      />
+                      <FormErrorMessage message={getErrorMessage("discount")} />
+                    </div>
+                  </div>
+                  {(() => {
+                    const trimmedPrice = customPriceInput?.toString().trim();
+                    const trimmedDiscount =
+                      discountInput?.toString().trim();
+                    const parsedPriceValue = trimmedPrice
+                      ? Number(trimmedPrice)
+                      : undefined;
+                    const parsedPrice = Number.isFinite(parsedPriceValue)
+                      ? parsedPriceValue
+                      : undefined;
+                    const parsedDiscountValue = trimmedDiscount
+                      ? Number(trimmedDiscount)
+                      : undefined;
+                    const parsedDiscount = Number.isFinite(parsedDiscountValue)
+                      ? parsedDiscountValue
+                      : undefined;
+                    const basePrice =
+                      parsedPrice ??
+                      (parsedDiscount !== undefined
+                        ? selectedService?.price
+                        : undefined);
+                    if (basePrice === undefined) return null;
+                    const finalPrice = Math.max(
+                      0,
+                      basePrice - (parsedDiscount ?? 0),
+                    );
+                    return (
+                      <div className="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2 text-sm">
+                        <span className="text-muted-foreground">
+                          {t("fields.total")}
+                        </span>
+                        <span className="font-semibold text-foreground">
+                          {formatCurrency(finalPrice)}
+                        </span>
+                      </div>
+                    );
+                  })()}
+                </div>
               )}
 
               <div className="grid grid-cols-2 gap-4">

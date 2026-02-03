@@ -463,6 +463,8 @@ export const fr = {
     addSlot: "Ajouter",
     selectClient: "Sélectionner un client",
     selectService: "Sélectionner un service",
+    adjustPrice: "Modifier le prix",
+    adjustPriceDescription: "Appliquer un prix personnalis? ou une remise pour ce service",
     reminderTitle: "Rendez-vous imminent",
     upcomingAppointment: "Rendez-vous à venir",
     notificationsEnabled: "Notifications activées",
