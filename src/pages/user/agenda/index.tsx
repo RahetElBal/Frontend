@@ -26,7 +26,11 @@ import { AppointmentStatus } from "@/types/entities";
 import type { AppointmentModalState } from "./types";
 import { appointmentFormSchema, type AppointmentFormData } from "./validation";
 import type { CalendarEvent } from "./utils";
-import { safeExtractArray, getLocalDateString } from "./utils";
+import {
+  safeExtractArray,
+  getLocalDateString,
+  isAppointmentOverdue,
+} from "./utils";
 import { timeToDate } from "./utils";
 
 import {
@@ -141,18 +145,10 @@ export function AgendaPage() {
     requestNotificationPermission().then(setNotificationsEnabled);
   }, []);
 
-  const isOverdue = useCallback((apt: Appointment) => {
-    if (apt.status === "cancelled" || apt.paid) return false;
-    const now = new Date();
-    const today = getLocalDateString(now);
-    const currentTime = `${now.getHours().toString().padStart(2, "0")}:${now
-      .getMinutes()
-      .toString()
-      .padStart(2, "0")}`;
-    const isPastDate = apt.date < today;
-    const isPastTime = apt.date === today && apt.endTime < currentTime;
-    return isPastDate || isPastTime;
-  }, []);
+  const isOverdue = useCallback(
+    (apt: Appointment) => isAppointmentOverdue(apt),
+    [],
+  );
 
   const unpaidAppointments = useMemo(
     () => appointments.filter((apt) => !apt.paid && apt.status !== "cancelled"),

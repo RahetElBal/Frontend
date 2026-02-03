@@ -100,3 +100,22 @@ export function getLocalDateString(date: Date = new Date()): string {
   const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
 }
+
+export function isAppointmentOverdue(
+  appointment: Appointment,
+  referenceDate: Date = new Date(),
+): boolean {
+  if (appointment.status === "cancelled" || appointment.paid) return false;
+  const today = getLocalDateString(referenceDate);
+  const currentTime = `${referenceDate
+    .getHours()
+    .toString()
+    .padStart(2, "0")}:${referenceDate
+    .getMinutes()
+    .toString()
+    .padStart(2, "0")}`;
+  const isPastDate = appointment.date < today;
+  const isPastTime =
+    appointment.date === today && appointment.endTime < currentTime;
+  return isPastDate || isPastTime;
+}

@@ -6,6 +6,9 @@ export interface AggregatedItem {
   revenue: number;
 }
 
+export const toNumber = (value?: number | null) =>
+  typeof value === "number" && Number.isFinite(value) ? value : 0;
+
 export const aggregateProductSales = (
   sales: Sale[],
   products: Product[],

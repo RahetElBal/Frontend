@@ -38,6 +38,7 @@ import {
   aggregateProductSales,
   aggregateServiceBookings,
   getTopItems,
+  toNumber,
 } from "./utils";
 
 // Analytics API response types
@@ -50,6 +51,14 @@ interface DashboardStatsResponse {
   appointmentsChange: number;
   clientsChange: number;
   ticketChange: number;
+  totalClients?: number;
+  totalAppointments?: number;
+  totalServices?: number;
+  totalProducts?: number;
+  retentionRate?: number;
+  noShowRate?: number;
+  totalSpent?: number;
+  totalLoyaltyPoints?: number;
 }
 
 interface RevenueAnalyticsResponse {
@@ -65,8 +74,6 @@ export function AnalyticsPage() {
   const [revenuePeriod, setRevenuePeriod] = useState<string>("weekly");
 
   const salonId = user?.salon?.id;
-  const toNumber = (value?: number | null) =>
-    typeof value === "number" && Number.isFinite(value) ? value : 0;
 
   // Fetch dashboard stats from dedicated analytics endpoint
   const { data: dashboardStats, isLoading: loadingDashboard } =
@@ -88,6 +95,10 @@ export function AnalyticsPage() {
   };
 
   const hasDashboardStats = isDashboardStatsResponse(dashboardStats);
+  const hasAggregates =
+    hasDashboardStats &&
+    typeof dashboardStats.totalClients === "number" &&
+    typeof dashboardStats.totalAppointments === "number";
 
   // Fetch revenue analytics (data available for future chart implementation)
   useGet<RevenueAnalyticsResponse>("analytics/revenue", {
@@ -108,7 +119,7 @@ export function AnalyticsPage() {
     "sales",
     {
       params: { salonId, perPage: 100 },
-      enabled: !!salonId && !hasDashboardStats,
+      enabled: !!salonId && !loadingDashboard && !hasDashboardStats,
     },
   );
   const sales = useMemo(() => salesResponse?.data || [], [salesResponse]);
@@ -117,51 +128,85 @@ export function AnalyticsPage() {
   const { data: appointmentsResponse, isLoading: loadingAppointments } =
     useGet<PaginatedResponse<Appointment>>("appointments", {
       params: { salonId, perPage: 100 },
-      enabled: !!salonId,
+      enabled: !!salonId && !loadingDashboard && !hasAggregates,
     });
   const appointments = useMemo(
     () => appointmentsResponse?.data || [],
     [appointmentsResponse],
   );
-  const totalAppointments =
-    appointmentsResponse?.meta?.total ?? appointments.length;
+  const totalAppointments = hasAggregates
+    ? dashboardStats.totalAppointments ?? 0
+    : appointmentsResponse?.meta?.total ?? appointments.length;
   
   const { data: clientsResponse, isLoading: loadingClients } =
     useGet<PaginatedResponse<Client>>("clients", {
       params: { salonId, perPage: 100 },
-      enabled: !!salonId,
+      enabled: !!salonId && !loadingDashboard && !hasAggregates,
     });
   const clients = useMemo(() => clientsResponse?.data || [], [clientsResponse]);
-  const totalClients = clientsResponse?.meta?.total ?? clients.length;
+  const totalClients = hasAggregates
+    ? dashboardStats.totalClients ?? 0
+    : clientsResponse?.meta?.total ?? clients.length;
   
   const { data: servicesResponse } = useGet<PaginatedResponse<Service>>(
     "services",
     {
       params: { salonId, perPage: 100 },
-      enabled: !!salonId,
+      enabled: !!salonId && !loadingDashboard && !hasAggregates,
     },
   );
   const services = useMemo(
     () => servicesResponse?.data || [],
     [servicesResponse],
   );
-  const totalServices = servicesResponse?.meta?.total ?? services.length;
+  const totalServices = hasAggregates
+    ? dashboardStats.totalServices ?? 0
+    : servicesResponse?.meta?.total ?? services.length;
   
   const { data: productsResponse } = useGet<PaginatedResponse<Product>>(
     "products",
     {
       params: { salonId, perPage: 100 },
-      enabled: !!salonId,
+      enabled: !!salonId && !loadingDashboard && !hasAggregates,
     },
   );
   const products = useMemo(
     () => productsResponse?.data || [],
     [productsResponse],
   );
-  const totalProducts = productsResponse?.meta?.total ?? products.length;
+  const totalProducts = hasAggregates
+    ? dashboardStats.totalProducts ?? 0
+    : productsResponse?.meta?.total ?? products.length;
 
   const isLoading =
     loadingDashboard || loadingSales || loadingAppointments || loadingClients;
+
+  const retentionRate = hasAggregates
+    ? dashboardStats.retentionRate ?? 0
+    : clients.length > 0
+      ? Math.round(
+          (clients.filter((c) => c.visitCount > 1).length / clients.length) *
+            100,
+        )
+      : 0;
+
+  const noShowRate = hasAggregates
+    ? dashboardStats.noShowRate ?? 0
+    : appointments.length > 0
+      ? Math.round(
+          (appointments.filter((a) => a.status === "no_show").length /
+            appointments.length) *
+            100,
+        )
+      : 0;
+
+  const totalSpent = hasAggregates
+    ? dashboardStats.totalSpent ?? 0
+    : clients.reduce((sum, c) => sum + c.totalSpent, 0);
+
+  const totalLoyaltyPoints = hasAggregates
+    ? dashboardStats.totalLoyaltyPoints ?? 0
+    : clients.reduce((sum, c) => sum + c.loyaltyPoints, 0);
 
   // Calculate metrics - use dashboard stats if available, otherwise calculate from raw data
   const metrics = useMemo(() => {
@@ -231,7 +276,17 @@ export function AnalyticsPage() {
       topServices: topServicesFromBookings,
       topProducts: topProductsFromSales,
     };
-  }, [dashboardStats, topServices, sales, appointments, clients, products]);
+  }, [
+    hasDashboardStats,
+    dashboardStats,
+    topServices,
+    sales,
+    appointments,
+    clients,
+    products,
+    totalAppointments,
+    totalClients,
+  ]);
 
   const hasData = totalSales > 0 || totalAppointments > 0 || totalClients > 0;
 
@@ -359,16 +414,9 @@ export function AnalyticsPage() {
                 </p>
                 <div className="flex items-center gap-2 mt-1">
                   <p className="text-2xl font-bold">
-                    {clients.length > 0
-                      ? Math.round(
-                          (clients.filter((c) => c.visitCount > 1).length /
-                            clients.length) *
-                            100,
-                        )
-                      : 0}
-                    %
+                    {retentionRate}%
                   </p>
-                  {clients.filter((c) => c.visitCount > 1).length > 0 && (
+                  {retentionRate > 0 && (
                     <TrendingUp className="h-4 w-4 text-green-600" />
                   )}
                 </div>
@@ -379,21 +427,11 @@ export function AnalyticsPage() {
                 </p>
                 <div className="flex items-center gap-2 mt-1">
                   <p className="text-2xl font-bold">
-                    {appointments.length > 0
-                      ? Math.round(
-                          (appointments.filter((a) => a.status === "no_show")
-                            .length /
-                            appointments.length) *
-                            100,
-                        )
-                      : 0}
-                    %
+                    {noShowRate}%
                   </p>
-                  {appointments.filter((a) => a.status === "no_show").length ===
-                    0 &&
-                    appointments.length > 0 && (
-                      <TrendingDown className="h-4 w-4 text-green-600" />
-                    )}
+                  {noShowRate === 0 && totalAppointments > 0 && (
+                    <TrendingDown className="h-4 w-4 text-green-600" />
+                  )}
                 </div>
               </div>
               <div className="p-4 bg-muted/50 rounded-lg">
@@ -402,9 +440,7 @@ export function AnalyticsPage() {
                 </p>
                 <div className="flex items-center gap-2 mt-1">
                   <p className="text-2xl font-bold">
-                    {formatCurrency(
-                      clients.reduce((sum, c) => sum + c.totalSpent, 0),
-                    )}
+                    {formatCurrency(totalSpent)}
                   </p>
                 </div>
               </div>
@@ -414,7 +450,7 @@ export function AnalyticsPage() {
                 </p>
                 <div className="flex items-center gap-2 mt-1">
                   <p className="text-2xl font-bold">
-                    {clients.reduce((sum, c) => sum + c.loyaltyPoints, 0)}
+                    {totalLoyaltyPoints}
                   </p>
                 </div>
               </div>
