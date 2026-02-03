@@ -13,6 +13,7 @@ export const appointmentFormSchema = z
     walkInName: optionalString(),
     walkInPhone: optionalString(),
     price: optionalString(),
+    discount: optionalString(),
   })
   .superRefine((values, ctx) => {
     if (values.walkInEnabled) {

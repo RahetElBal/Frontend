@@ -183,6 +183,8 @@ export function AppointmentModals({
 
   // Selected service for display
   const selectedServiceId = watch("serviceId");
+  const customPriceInput = watch("price");
+  const discountInput = watch("discount");
   const selectedService = useMemo(
     () => safeServices.find((s) => s.id === selectedServiceId) || null,
     [safeServices, selectedServiceId],
@@ -207,6 +209,7 @@ export function AppointmentModals({
         walkInName: "",
         walkInPhone: "",
         price: "",
+        discount: "",
       });
     } else if (selectedAppointment && derived?.isEditMode) {
       reset({
@@ -219,6 +222,7 @@ export function AppointmentModals({
         walkInName: "",
         walkInPhone: "",
         price: "",
+        discount: "",
       });
     }
   }, [
@@ -634,8 +638,7 @@ export function AppointmentModals({
                               {translateServiceName(t, service)}
                             </div>
                             <span className="text-muted-foreground text-sm">
-                              {service.duration}min -{" "}
-                              {formatCurrency(service.price)}
+                              {service.duration}min
                             </span>
                           </div>
                         </SelectItem>
@@ -658,6 +661,45 @@ export function AppointmentModals({
                 <FormErrorMessage message={getErrorMessage("price")} />
               </div>
 
+              <div className="space-y-2">
+                <Label>{t("sales.discount")}</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  {...form.register("discount")}
+                  placeholder={t("sales.discount")}
+                />
+                <FormErrorMessage message={getErrorMessage("discount")} />
+              </div>
+
+              {(() => {
+                const trimmedPrice = customPriceInput?.toString().trim();
+                const trimmedDiscount = discountInput?.toString().trim();
+                const parsedPrice = trimmedPrice ? Number(trimmedPrice) : undefined;
+                const parsedDiscount = trimmedDiscount
+                  ? Number(trimmedDiscount)
+                  : undefined;
+                const basePrice =
+                  parsedPrice ??
+                  (parsedDiscount !== undefined ? selectedService?.price : undefined);
+                if (basePrice === undefined) return null;
+                const finalPrice = Math.max(
+                  0,
+                  basePrice - (parsedDiscount ?? 0),
+                );
+                return (
+                  <div className="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2 text-sm">
+                    <span className="text-muted-foreground">
+                      {t("fields.total")}
+                    </span>
+                    <span className="font-semibold text-foreground">
+                      {formatCurrency(finalPrice)}
+                    </span>
+                  </div>
+                );
+              })()}
+
               {selectedService && (
                 <Card className="p-3 bg-muted/50">
                   <div className="flex items-center justify-between">
@@ -669,9 +711,6 @@ export function AppointmentModals({
                         {t("fields.duration")}: {selectedService.duration} min
                       </p>
                     </div>
-                    <p className="text-lg font-bold text-accent-pink">
-                      {formatCurrency(selectedService.price)}
-                    </p>
                   </div>
                 </Card>
               )}

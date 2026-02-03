@@ -107,6 +107,7 @@ export function AgendaPage() {
       walkInName: "",
       walkInPhone: "",
       price: "",
+      discount: "",
     },
   });
 
@@ -487,16 +488,17 @@ export function AgendaPage() {
     setModalState({ appointmentId: event.id, mode: "view" });
   }, []);
 
-  const toAppointmentPayload = (data: AppointmentFormData): AppointmentPayload => {
-    const rawPrice = data.price?.toString().trim();
-    const parsedPrice = rawPrice ? Number(rawPrice) : undefined;
+  const toAppointmentPayload = (
+    data: AppointmentFormData,
+    finalPrice?: number,
+  ): AppointmentPayload => {
     return {
       clientId: data.clientId,
       serviceId: data.serviceId,
       date: data.date,
       startTime: data.startTime,
       notes: data.notes,
-      price: Number.isFinite(parsedPrice) ? parsedPrice : undefined,
+      price: Number.isFinite(finalPrice) ? finalPrice : undefined,
     };
   };
 
@@ -521,8 +523,12 @@ export function AgendaPage() {
     }
 
     const rawPrice = data.price?.toString().trim();
+    const rawDiscount = data.discount?.toString().trim();
+    let parsedPrice: number | undefined;
+    let parsedDiscount: number | undefined;
+
     if (rawPrice) {
-      const parsedPrice = Number(rawPrice);
+      parsedPrice = Number(rawPrice);
       if (!Number.isFinite(parsedPrice) || parsedPrice < 0) {
         toast.error(
           t("validation.number.min", { field: t("fields.price"), min: 0 }),
@@ -530,9 +536,29 @@ export function AgendaPage() {
         return;
       }
     }
+    if (rawDiscount) {
+      parsedDiscount = Number(rawDiscount);
+      if (!Number.isFinite(parsedDiscount) || parsedDiscount < 0) {
+        toast.error(
+          t("validation.number.min", { field: t("sales.discount"), min: 0 }),
+        );
+        return;
+      }
+    }
+
+    const selectedService = services.find(
+      (service) => service.id === data.serviceId,
+    );
+    const basePrice =
+      parsedPrice ??
+      (parsedDiscount !== undefined ? selectedService?.price : undefined);
+    const finalPrice =
+      basePrice !== undefined
+        ? Math.max(0, basePrice - (parsedDiscount ?? 0))
+        : undefined;
 
     if (modalState?.mode === "edit" && !isCreateMode) {
-      updateAppointment(toAppointmentPayload(data));
+      updateAppointment(toAppointmentPayload(data, finalPrice));
     } else {
       if (data.walkInEnabled) {
         try {
@@ -552,7 +578,7 @@ export function AgendaPage() {
             notes: t("agenda.walkInNote"),
           });
           createAppointment({
-            ...toAppointmentPayload(data),
+            ...toAppointmentPayload(data, finalPrice),
             salonId,
             clientId: walkInClient.id,
           });
@@ -561,7 +587,10 @@ export function AgendaPage() {
           toast.error(t("common.error"));
         }
       } else {
-        createAppointment({ ...toAppointmentPayload(data), salonId });
+        createAppointment({
+          ...toAppointmentPayload(data, finalPrice),
+          salonId,
+        });
       }
     }
   };
