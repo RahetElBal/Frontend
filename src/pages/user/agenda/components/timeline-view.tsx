@@ -57,6 +57,28 @@ export function TimelineView({
   const currentHour = new Date().getHours();
   const currentMinutes = new Date().getMinutes();
   const currentTotalMinutes = currentHour * 60 + currentMinutes;
+  const slotHeight = 60;
+  const slotMinutes =
+    timeSlots.length >= 2
+      ? Math.max(
+          5,
+          timeToMinutes(timeSlots[1]) - timeToMinutes(timeSlots[0]),
+        )
+      : 30;
+  const firstSlotMinutes = timeSlots.length
+    ? timeToMinutes(timeSlots[0])
+    : 0;
+  const lastSlotMinutes =
+    timeSlots.length > 0
+      ? timeToMinutes(timeSlots[timeSlots.length - 1]) + slotMinutes
+      : 0;
+  const showCurrentLine =
+    timeSlots.length > 0 &&
+    currentTotalMinutes >= firstSlotMinutes &&
+    currentTotalMinutes <= lastSlotMinutes;
+  const currentLineTop = showCurrentLine
+    ? ((currentTotalMinutes - firstSlotMinutes) / slotMinutes) * slotHeight
+    : 0;
 
   // FIX: Use getLocalDateString instead of toISOString to avoid timezone shifts
   const selectedDateStr = getLocalDateString(selectedDate);
@@ -104,15 +126,31 @@ export function TimelineView({
               const isStartSlot =
                 appointment && normalizeTime(appointment.startTime) === time;
               const isOccupied = !!appointment && !isStartSlot;
+              const durationMinutes = appointment
+                ? Math.max(
+                    slotMinutes,
+                    timeToMinutes(normalizeTime(appointment.endTime)) -
+                      timeToMinutes(normalizeTime(appointment.startTime)),
+                  )
+                : slotMinutes;
+              const slotSpan = appointment
+                ? Math.max(1, Math.ceil(durationMinutes / slotMinutes))
+                : 1;
+              const cellPadding = 8;
+              const cardHeight = Math.max(
+                slotHeight - cellPadding * 2,
+                slotSpan * slotHeight - cellPadding * 2,
+              );
 
               return (
                 <div
                   key={time}
                   className={cn(
-                    "flex border-b relative",
+                    "flex border-b relative overflow-visible",
                     isCurrentTime && "bg-accent-pink/5",
                     isPastTime && "opacity-60",
                   )}
+                  style={{ minHeight: `${slotHeight}px` }}
                 >
                   <div
                     className={cn(
@@ -125,7 +163,7 @@ export function TimelineView({
 
                   <div
                     className={cn(
-                      "flex-1 min-h-15 p-2 hover:bg-muted/30 cursor-pointer transition-colors",
+                      "flex-1 min-h-15 p-2 hover:bg-muted/30 cursor-pointer transition-colors relative",
                       !appointment &&
                         !isBlocked &&
                         "border-l-4 border-l-transparent hover:border-l-accent-pink/30",
@@ -144,7 +182,7 @@ export function TimelineView({
                     {appointment && isStartSlot ? (
                       <div
                         className={cn(
-                          "rounded-lg p-3 h-full cursor-pointer hover:shadow-md transition-all",
+                          "rounded-lg p-3 cursor-pointer hover:shadow-md transition-all absolute left-2 right-2 z-10",
                           "border-l-4",
                           appointment.status === AppointmentStatus.CONFIRMED &&
                             "bg-green-50 border-l-green-500",
@@ -158,6 +196,10 @@ export function TimelineView({
                           appointment.status === AppointmentStatus.CANCELLED &&
                             "bg-red-50 border-l-red-500",
                         )}
+                        style={{
+                          top: `${cellPadding}px`,
+                          height: `${cardHeight}px`,
+                        }}
                       >
                         <div className="flex items-start justify-between gap-2">
                           <div className="space-y-1 flex-1">
@@ -258,15 +300,11 @@ export function TimelineView({
               );
             })}
 
-            {currentHour >= 9 && currentHour < 19 && (
+            {showCurrentLine && (
               <div
                 className="absolute left-0 right-0 h-0.5 bg-accent-pink z-10 pointer-events-none"
                 style={{
-                  top: `${
-                    ((currentHour - 9) * 2 + (currentMinutes >= 30 ? 1 : 0)) *
-                      60 +
-                    (currentMinutes % 30) * 2
-                  }px`,
+                  top: `${currentLineTop}px`,
                 }}
               >
                 <div className="absolute -left-1 -top-1.5 w-3 h-3 rounded-full bg-accent-pink" />
