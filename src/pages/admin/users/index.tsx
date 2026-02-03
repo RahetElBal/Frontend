@@ -111,6 +111,7 @@ export function AdminUsersPage() {
       id: (variables) => variables.id,
       action: "status",
       method: "PATCH",
+      body: ({ isActive }) => ({ isActive }),
       invalidateQueries: ["users"],
       showSuccessToast: true,
       successMessage: t("common.statusUpdated"),

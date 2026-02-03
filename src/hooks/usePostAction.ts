@@ -13,6 +13,7 @@ interface UsePostActionOptions<TData, TVariables> {
   action?: string;
   id?: string | ((variables: TVariables) => string);
   method?: ActionMethod;
+  body?: (variables: TVariables) => unknown;
   invalidateQueries?: string[];
   showSuccessToast?: boolean;
   showErrorToast?: boolean;
@@ -64,6 +65,7 @@ export function usePostAction<TData, TVariables = void>(
     action,
     id,
     method = 'POST',
+    body,
     invalidateQueries,
     showSuccessToast = false,
     showErrorToast = true,
@@ -81,14 +83,15 @@ export function usePostAction<TData, TVariables = void>(
       let url = endpoint;
       if (resolvedId) url += `/${resolvedId}`;
       if (action) url += `/${action}`;
+      const payload = body ? body(variables) : variables;
 
       switch (method) {
         case 'POST':
-          return post<TData, TVariables>(url, variables);
+          return post<TData, typeof payload>(url, payload);
         case 'PUT':
-          return put<TData, TVariables>(url, variables);
+          return put<TData, typeof payload>(url, payload);
         case 'PATCH':
-          return patch<TData, TVariables>(url, variables);
+          return patch<TData, typeof payload>(url, payload);
         case 'DELETE':
           return del<TData>(url);
         default:
