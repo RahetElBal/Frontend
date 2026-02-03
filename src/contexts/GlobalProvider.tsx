@@ -1,6 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useState, type ReactNode } from 'react';
-import type { SupportedLanguage } from '@/i18n';
+import { changeLanguage as loadAndChangeLanguage, type SupportedLanguage } from '@/i18n';
 import { useTranslation } from 'react-i18next';
 
 interface GlobalContextValue {
@@ -21,7 +21,7 @@ export function GlobalProvider({ children }: GlobalProviderProps) {
   );
 
   const setLanguage = (lang: SupportedLanguage) => {
-    i18n.changeLanguage(lang);
+    void loadAndChangeLanguage(lang);
     setLanguageState(lang);
   };
 

@@ -10,6 +10,7 @@ import {
   type SupportedLanguage,
   type CurrencyConfig,
 } from '@/constants/i18n';
+import { changeLanguage as loadAndChangeLanguage } from '@/i18n';
 import { useDirection, type Direction } from './useDirection';
 
 interface LanguageOption {
@@ -59,7 +60,7 @@ export function useLanguage(): UseLanguageReturn {
   const changeLanguage = useCallback(
     (language: SupportedLanguage) => {
       if (Object.values(SUPPORTED_LANGUAGES).includes(language)) {
-        i18n.changeLanguage(language);
+        void loadAndChangeLanguage(language);
       }
     },
     [i18n]

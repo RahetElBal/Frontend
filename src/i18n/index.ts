@@ -2,9 +2,6 @@ import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 
 import { en } from './locales/en';
-import { fr } from './locales/fr';
-import { es } from './locales/es';
-import { ar } from './locales/ar';
 
 import {
   SUPPORTED_LANGUAGES,
@@ -19,9 +16,25 @@ export { SUPPORTED_LANGUAGES, RTL_LANGUAGES, type SupportedLanguage };
 
 const resources = {
   en: { translation: en },
-  fr: { translation: fr },
-  es: { translation: es },
-  ar: { translation: ar },
+};
+
+const localeLoaders: Record<
+  SupportedLanguage,
+  () => Promise<{ translation: Record<string, unknown> }>
+> = {
+  en: async () => ({ translation: en }),
+  fr: async () => {
+    const module = await import('./locales/fr');
+    return { translation: module.fr };
+  },
+  es: async () => {
+    const module = await import('./locales/es');
+    return { translation: module.es };
+  },
+  ar: async () => {
+    const module = await import('./locales/ar');
+    return { translation: module.ar };
+  },
 };
 
 // Get saved or browser language
@@ -54,28 +67,52 @@ const updateDocumentDirection = (language: SupportedLanguage) => {
   document.body.classList.add(direction);
 };
 
-// Initialize i18next
-i18n.use(initReactI18next).init({
-  resources,
-  lng: initialLanguage,
-  fallbackLng: DEFAULT_LANGUAGE,
-  interpolation: {
-    escapeValue: false,
-  },
-  // Enable nested keys
-  keySeparator: '.',
-  // Return key if translation not found (useful for debugging)
-  returnNull: false,
-  returnEmptyString: false,
-});
+const ensureLanguageResources = async (language: SupportedLanguage) => {
+  if (i18n.hasResourceBundle(language, 'translation')) {
+    return;
+  }
 
-// Set initial direction
-updateDocumentDirection(initialLanguage);
+  const loader = localeLoaders[language];
+  if (!loader) return;
 
-// Listen for language changes
-i18n.on('languageChanged', (lng) => {
-  localStorage.setItem(LANGUAGE_STORAGE_KEY, lng);
-  updateDocumentDirection(lng as SupportedLanguage);
-});
+  const { translation } = await loader();
+  i18n.addResourceBundle(language, 'translation', translation, true, true);
+};
+
+export const changeLanguage = async (language: SupportedLanguage) => {
+  await ensureLanguageResources(language);
+  await i18n.changeLanguage(language);
+};
+
+export const initI18n = async () => {
+  // Initialize with default language only to keep the initial bundle small
+  await i18n.use(initReactI18next).init({
+    resources,
+    lng: DEFAULT_LANGUAGE,
+    fallbackLng: DEFAULT_LANGUAGE,
+    interpolation: {
+      escapeValue: false,
+    },
+    // Enable nested keys
+    keySeparator: '.',
+    // Return key if translation not found (useful for debugging)
+    returnNull: false,
+    returnEmptyString: false,
+  });
+
+  // Load initial language resources (if not default) before switching
+  await changeLanguage(initialLanguage);
+
+  // Set initial direction
+  updateDocumentDirection(initialLanguage);
+
+  // Listen for language changes
+  i18n.on('languageChanged', (lng) => {
+    const language = lng as SupportedLanguage;
+    localStorage.setItem(LANGUAGE_STORAGE_KEY, language);
+    updateDocumentDirection(language);
+    void ensureLanguageResources(language);
+  });
+};
 
 export default i18n;
