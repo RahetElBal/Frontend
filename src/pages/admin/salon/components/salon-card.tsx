@@ -1,6 +1,5 @@
 import { useTranslation } from "react-i18next";
 import {
-  Building2,
   MoreHorizontal,
   Eye,
   Edit,
