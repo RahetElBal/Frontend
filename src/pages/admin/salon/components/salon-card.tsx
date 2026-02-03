@@ -20,6 +20,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import type { Salon } from "@/types/entities";
 
+const DEFAULT_SALON_IMAGE = "/salon-placeholder.svg";
+
 interface SalonCardProps {
   salon: Salon;
   canModify: boolean;
@@ -42,6 +44,7 @@ export function SalonCard({
   const { t } = useTranslation();
   const ownerName =
     salon.owner?.name || salon.owner?.email || t("common.unknown");
+  const logoUrl = salon.logo || DEFAULT_SALON_IMAGE;
 
   return (
     <Card className="overflow-hidden">
@@ -49,16 +52,17 @@ export function SalonCard({
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
             <div className="h-12 w-12 rounded-lg bg-accent-pink/10 flex items-center justify-center overflow-hidden">
-              {salon.logo ? (
-                <img
-                  src={salon.logo}
-                  alt={salon.name}
-                  className="h-full w-full object-cover"
-                  loading="lazy"
-                />
-              ) : (
-                <Building2 className="h-6 w-6 text-accent-pink" />
-              )}
+              <img
+                src={logoUrl}
+                alt={salon.name}
+                className="h-full w-full object-cover"
+                loading="lazy"
+                onError={(event) => {
+                  if (event.currentTarget.src !== DEFAULT_SALON_IMAGE) {
+                    event.currentTarget.src = DEFAULT_SALON_IMAGE;
+                  }
+                }}
+              />
             </div>
             <div>
               <h3 className="font-semibold">{salon.name}</h3>

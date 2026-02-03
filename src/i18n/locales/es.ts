@@ -783,6 +783,7 @@ export const es = {
       phone: "Número de teléfono",
       email: "Correo electrónico",
       logo: "URL de la imagen del salón",
+      defaultImage: "Imagen predeterminada del salón",
       cropImage: "Recortar imagen",
       cropImageDescription: "Arrastra para recolocar y ajustar el zoom",
       zoom: "Zoom",

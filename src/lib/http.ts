@@ -95,9 +95,7 @@ const createHttpClient = (): KyInstance => {
   return ky.create({
     prefixUrl: API_BASE_URL,
     timeout: API_TIMEOUT,
-    headers: {
-      'Content-Type': 'application/json',
-    },
+    headers: {},
     hooks: {
       beforeRequest: [
         (request) => {

@@ -777,6 +777,7 @@ export const ar = {
       phone: "رقم الهاتف",
       email: "البريد الإلكتروني",
       logo: "رابط صورة الصالون",
+      defaultImage: "صورة افتراضية للصالون",
       cropImage: "قص الصورة",
       cropImageDescription: "اسحب لإعادة التموضع واضبط التكبير",
       zoom: "تكبير",

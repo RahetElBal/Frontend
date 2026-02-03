@@ -1019,6 +1019,7 @@ export const fr = {
       phone: "Numéro de téléphone",
       email: "Email",
       logo: "URL de l'image du salon",
+      defaultImage: "Image par défaut du salon",
       cropImage: "Recadrer l'image",
       cropImageDescription: "Faites glisser pour repositionner et ajuster le zoom",
       zoom: "Zoom",

@@ -20,7 +20,10 @@ export const createSalonFormSchema = (
       .string()
       .optional()
       .refine(
-        (val) => !val || z.string().url().safeParse(val).success,
+        (val) =>
+          !val ||
+          z.string().url().safeParse(val).success ||
+          val.startsWith("/"),
         t("validation.url"),
       ),
   });

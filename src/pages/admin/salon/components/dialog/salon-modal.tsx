@@ -40,6 +40,8 @@ import { parseValidationMsg } from "@/common/validator/zodI18n";
 import { normalizePhone } from "@/common/phone";
 import { detectAddress } from "@/common/geo";
 
+const DEFAULT_SALON_IMAGE = "/salon-placeholder.svg";
+
 interface SalonModalProps {
   modalState: SalonModalState;
   setModalState: (state: SalonModalState) => void;
@@ -175,7 +177,8 @@ export function SalonModals({
   }, [modalState, selectedSalon, user, isCreating, isUpdating, isDeleting]);
 
   const logoValue = form.watch("logo");
-  const displayLogo = logoPreview || logoValue || selectedSalon?.logo || "";
+  const displayLogo =
+    logoPreview || logoValue || selectedSalon?.logo || DEFAULT_SALON_IMAGE;
 
   const [isDetectingAddress, setIsDetectingAddress] = useState(false);
 
@@ -482,22 +485,25 @@ export function SalonModals({
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            {selectedSalon?.logo && (
-              <div className="flex items-center gap-3">
-                <img
-                  src={selectedSalon.logo}
-                  alt={selectedSalon.name}
-                  className="h-16 w-16 rounded-lg object-cover"
-                  loading="lazy"
-                />
-                <div>
-                  <Label>{t("admin.salons.logo")}</Label>
-                  <p className="text-sm text-muted-foreground break-all">
-                    {selectedSalon.logo}
-                  </p>
-                </div>
+            <div className="flex items-center gap-3">
+              <img
+                src={selectedSalon?.logo || DEFAULT_SALON_IMAGE}
+                alt={selectedSalon?.name || t("admin.salons.logo")}
+                className="h-16 w-16 rounded-lg object-cover"
+                loading="lazy"
+                onError={(event) => {
+                  if (event.currentTarget.src !== DEFAULT_SALON_IMAGE) {
+                    event.currentTarget.src = DEFAULT_SALON_IMAGE;
+                  }
+                }}
+              />
+              <div>
+                <Label>{t("admin.salons.logo")}</Label>
+                <p className="text-sm text-muted-foreground break-all">
+                  {selectedSalon?.logo || t("admin.salons.defaultImage")}
+                </p>
               </div>
-            )}
+            </div>
             <div>
               <Label>{t("admin.salons.address")}</Label>
               <p className="text-sm text-muted-foreground">
@@ -623,18 +629,17 @@ export function SalonModals({
               <Label>{t("admin.salons.logo")}</Label>
               <div className="flex items-center gap-3">
                 <div className="h-16 w-16 rounded-lg bg-muted flex items-center justify-center overflow-hidden">
-                  {displayLogo ? (
-                    <img
-                      src={displayLogo}
-                      alt={form.getValues("name") || "Salon"}
-                      className="h-full w-full object-cover"
-                      loading="lazy"
-                    />
-                  ) : (
-                    <span className="text-xs text-muted-foreground">
-                      {t("common.noResults")}
-                    </span>
-                  )}
+                  <img
+                    src={displayLogo}
+                    alt={form.getValues("name") || "Salon"}
+                    className="h-full w-full object-cover"
+                    loading="lazy"
+                    onError={(event) => {
+                      if (event.currentTarget.src !== DEFAULT_SALON_IMAGE) {
+                        event.currentTarget.src = DEFAULT_SALON_IMAGE;
+                      }
+                    }}
+                  />
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <Button

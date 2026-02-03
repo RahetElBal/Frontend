@@ -1383,6 +1383,7 @@ export const en = {
       phone: "Phone Number",
       email: "Email",
       logo: "Salon image URL",
+      defaultImage: "Default salon image",
       cropImage: "Crop image",
       cropImageDescription: "Drag to reposition and adjust zoom",
       zoom: "Zoom",
