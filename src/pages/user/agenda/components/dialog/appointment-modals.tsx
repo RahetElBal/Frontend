@@ -540,13 +540,18 @@ export function AppointmentModals({
           <DialogFooter className="flex flex-col sm:flex-row gap-2">
             {selectedAppointment &&
               onCreateSale &&
-              selectedAppointment.status === "completed" &&
-              !selectedAppointment.paid && (
+              !selectedAppointment.paid &&
+              selectedAppointment.status !== "cancelled" && (
                 <div className="flex gap-2 w-full sm:w-auto">
                   <Button
+                    className="w-full sm:w-auto"
                     onClick={() =>
                       onCreateSale(selectedAppointment, {
-                        redeemLoyalty: canRedeemLoyalty ? redeemLoyalty : false,
+                        redeemLoyalty:
+                          selectedAppointment.status === "completed" &&
+                          canRedeemLoyalty
+                            ? redeemLoyalty
+                            : false,
                       })
                     }
                     disabled={isPending || isCreatingSale}
@@ -554,7 +559,9 @@ export function AppointmentModals({
                     <DollarSign className="h-4 w-4 me-2" />
                     {isCreatingSale
                       ? t("common.loading")
-                      : t("agenda.recordPayment")}
+                      : selectedAppointment.status === "completed"
+                      ? t("agenda.recordPayment")
+                      : t("agenda.completeAndPay")}
                   </Button>
                 </div>
               )}
