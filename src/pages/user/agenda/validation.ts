@@ -12,15 +12,14 @@ export const appointmentFormSchema = z
     walkInEnabled: z.boolean().optional(),
     walkInName: optionalString(),
     walkInPhone: optionalString(),
-    walkInEmail: optionalString(),
   })
   .superRefine((values, ctx) => {
     if (values.walkInEnabled) {
-      if (!values.walkInName?.trim()) {
+      if (!values.walkInPhone?.trim()) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: "agenda.walkInNameRequired",
-          path: ["walkInName"],
+          message: "validation.requiredField",
+          path: ["walkInPhone"],
         });
       }
     } else if (!values.clientId?.trim()) {

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Plus } from "lucide-react";
 
@@ -16,6 +16,9 @@ import { getClientColumns } from "./components/list/columns";
 import { useUser } from "@/hooks/useUser";
 import type { PaginatedResponse } from "@/types";
 import { useGet } from "@/hooks/useGet";
+
+const isWalkInClient = (client: Client) =>
+  (client.email || "").toLowerCase().startsWith("walkin+");
 
 export function ClientsPage() {
   const { t } = useTranslation();
@@ -36,6 +39,14 @@ export function ClientsPage() {
   });
 
   const clients = clientsResponse?.data || [];
+  const regularClients = useMemo(
+    () => clients.filter((client) => !isWalkInClient(client)),
+    [clients],
+  );
+  const walkInClients = useMemo(
+    () => clients.filter((client) => isWalkInClient(client)),
+    [clients],
+  );
 
   const form = useForm<ClientFormData>({
     schema: clientFormSchema,
@@ -47,9 +58,14 @@ export function ClientsPage() {
     },
   });
 
-  const table = useTable<Client>({
-    data: clients,
-    searchKeys: ["firstName", "lastName", "email", "phone"],
+  const searchKeys = ["firstName", "lastName", "email", "phone"] as const;
+  const regularTable = useTable<Client>({
+    data: regularClients,
+    searchKeys: [...searchKeys],
+  });
+  const walkInTable = useTable<Client>({
+    data: walkInClients,
+    searchKeys: [...searchKeys],
   });
 
   const handleView = (client: Client) => {
@@ -92,13 +108,37 @@ export function ClientsPage() {
         }
       />
 
-      <DataTable
-        table={table}
-        columns={columns}
-        selectable
-        searchPlaceholder={t("clients.searchPlaceholder")}
-        emptyMessage={isLoading ? t("common.loading") : t("clients.noClients")}
-      />
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold">{t("nav.clients")}</h2>
+          <span className="text-sm text-muted-foreground">
+            {regularClients.length}
+          </span>
+        </div>
+        <DataTable
+          table={regularTable}
+          columns={columns}
+          selectable
+          searchPlaceholder={t("clients.searchPlaceholder")}
+          emptyMessage={isLoading ? t("common.loading") : t("clients.noClients")}
+        />
+      </div>
+
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold">{t("agenda.walkIn")}</h2>
+          <span className="text-sm text-muted-foreground">
+            {walkInClients.length}
+          </span>
+        </div>
+        <DataTable
+          table={walkInTable}
+          columns={columns}
+          selectable
+          searchPlaceholder={t("clients.searchPlaceholder")}
+          emptyMessage={isLoading ? t("common.loading") : t("clients.noClients")}
+        />
+      </div>
 
       <ClientModals
         modalState={modalState}

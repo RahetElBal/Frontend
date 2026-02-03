@@ -106,7 +106,6 @@ export function AgendaPage() {
       walkInEnabled: false,
       walkInName: "",
       walkInPhone: "",
-      walkInEmail: "",
     },
   });
 
@@ -517,18 +516,12 @@ export function AgendaPage() {
       if (data.walkInEnabled) {
         try {
           const name = data.walkInName?.trim() || "";
-          if (!name) {
-            toast.error(t("agenda.walkInNameRequired"));
-            return;
-          }
           const nameParts = name.split(/\s+/).filter(Boolean);
-          const firstName = nameParts[0];
+          const firstName = nameParts[0] || t("agenda.walkIn");
           const lastName =
             nameParts.slice(1).join(" ") || t("agenda.walkInLastNameFallback");
-          const email =
-            data.walkInEmail?.trim() ||
-            `walkin+${salonId}+${Date.now()}@salon.local`;
-          const phone = data.walkInPhone?.trim() || "0000000000";
+          const email = `walkin+${salonId}+${Date.now()}@salon.local`;
+          const phone = data.walkInPhone?.trim() || "";
           const walkInClient = await createWalkInClient({
             salonId,
             firstName,

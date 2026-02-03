@@ -60,6 +60,9 @@ import {
   translateServiceName,
 } from "@/common/service-translations";
 
+const isWalkInClient = (client: Client) =>
+  (client.email || "").toLowerCase().startsWith("walkin+");
+
 interface AppointmentModalsProps {
   modalState: AppointmentModalState;
   setModalState: (state: AppointmentModalState) => void;
@@ -155,12 +158,28 @@ export function AppointmentModals({
     () => (Array.isArray(clients) ? clients : []),
     [clients],
   );
+  const regularClients = useMemo(
+    () => safeClients.filter((client) => !isWalkInClient(client)),
+    [safeClients],
+  );
   const safeServices = useMemo(
     () => (Array.isArray(services) ? services : []),
     [services],
   );
 
   const { reset, watch } = form;
+  const selectedClientId = watch("clientId");
+
+  const selectableClients = useMemo(() => {
+    if (!selectedClientId) return regularClients;
+    const selectedClient = safeClients.find(
+      (client) => client.id === selectedClientId,
+    );
+    if (selectedClient && isWalkInClient(selectedClient)) {
+      return [selectedClient, ...regularClients];
+    }
+    return regularClients;
+  }, [regularClients, safeClients, selectedClientId]);
 
   // Selected service for display
   const selectedServiceId = watch("serviceId");
@@ -174,6 +193,7 @@ export function AppointmentModals({
   // Reset form when modal state changes
   useEffect(() => {
     if (!modalState) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setRedeemLoyalty(false);
 
     if (derived?.isCreateMode) {
@@ -186,7 +206,6 @@ export function AppointmentModals({
         walkInEnabled: false,
         walkInName: "",
         walkInPhone: "",
-        walkInEmail: "",
       });
     } else if (selectedAppointment && derived?.isEditMode) {
       reset({
@@ -198,7 +217,6 @@ export function AppointmentModals({
         walkInEnabled: false,
         walkInName: "",
         walkInPhone: "",
-        walkInEmail: "",
       });
     }
   }, [
@@ -537,15 +555,15 @@ export function AppointmentModals({
                   disabled={!!walkInEnabled}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder={t("agenda.selectClient")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {safeClients.length === 0 ? (
+                  <SelectValue placeholder={t("agenda.selectClient")} />
+                </SelectTrigger>
+                <SelectContent>
+                    {selectableClients.length === 0 ? (
                       <div className="p-2 text-center text-muted-foreground text-sm">
                         {t("clients.noClients")}
                       </div>
                     ) : (
-                      safeClients.map((client) => (
+                      selectableClients.map((client) => (
                         <SelectItem key={client.id} value={client.id}>
                           <div className="flex items-center gap-2">
                             <User className="h-4 w-4 text-muted-foreground" />
@@ -575,33 +593,18 @@ export function AppointmentModals({
                     <FormErrorMessage message={getErrorMessage("walkInName")} />
                   </div>
                   <div className="space-y-2">
-                    <p className="text-xs text-muted-foreground">
-                      {t("agenda.walkInOptionalDetails")}
-                    </p>
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      <div className="space-y-2">
-                        <Label>{t("agenda.walkInPhone")}</Label>
-                        <Input
-                          {...form.register("walkInPhone")}
-                          placeholder={t("agenda.walkInPhonePlaceholder")}
-                          onBlur={(event) => {
-                            const normalized = normalizePhone(
-                              event.target.value,
-                            );
-                            if (normalized) {
-                              form.setValue("walkInPhone", normalized);
-                            }
-                          }}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>{t("agenda.walkInEmail")}</Label>
-                        <Input
-                          {...form.register("walkInEmail")}
-                          placeholder={t("agenda.walkInEmailPlaceholder")}
-                        />
-                      </div>
-                    </div>
+                    <Label>{t("agenda.walkInPhone")} *</Label>
+                    <Input
+                      {...form.register("walkInPhone")}
+                      placeholder={t("fields.placeholders.phone")}
+                      onBlur={(event) => {
+                        const normalized = normalizePhone(event.target.value);
+                        if (normalized) {
+                          form.setValue("walkInPhone", normalized);
+                        }
+                      }}
+                    />
+                    <FormErrorMessage message={getErrorMessage("walkInPhone")} />
                   </div>
                 </div>
               )}
