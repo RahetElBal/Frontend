@@ -75,6 +75,20 @@ export function AnalyticsPage() {
       enabled: !!salonId,
     });
 
+  const isDashboardStatsResponse = (
+    value: unknown,
+  ): value is DashboardStatsResponse => {
+    if (!value || typeof value !== "object") return false;
+    return (
+      "todayRevenue" in value &&
+      "todayAppointments" in value &&
+      "newClients" in value &&
+      "averageTicket" in value
+    );
+  };
+
+  const hasDashboardStats = isDashboardStatsResponse(dashboardStats);
+
   // Fetch revenue analytics (data available for future chart implementation)
   useGet<RevenueAnalyticsResponse>("analytics/revenue", {
     params: { salonId, period: revenuePeriod },
@@ -94,10 +108,11 @@ export function AnalyticsPage() {
     "sales",
     {
       params: { salonId, perPage: 100 },
-      enabled: !!salonId && !dashboardStats,
+      enabled: !!salonId && !hasDashboardStats,
     },
   );
   const sales = useMemo(() => salesResponse?.data || [], [salesResponse]);
+  const totalSales = salesResponse?.meta?.total ?? sales.length;
 
   const { data: appointmentsResponse, isLoading: loadingAppointments } =
     useGet<PaginatedResponse<Appointment>>("appointments", {
@@ -108,6 +123,8 @@ export function AnalyticsPage() {
     () => appointmentsResponse?.data || [],
     [appointmentsResponse],
   );
+  const totalAppointments =
+    appointmentsResponse?.meta?.total ?? appointments.length;
   
   const { data: clientsResponse, isLoading: loadingClients } =
     useGet<PaginatedResponse<Client>>("clients", {
@@ -115,6 +132,7 @@ export function AnalyticsPage() {
       enabled: !!salonId,
     });
   const clients = useMemo(() => clientsResponse?.data || [], [clientsResponse]);
+  const totalClients = clientsResponse?.meta?.total ?? clients.length;
   
   const { data: servicesResponse } = useGet<PaginatedResponse<Service>>(
     "services",
@@ -127,6 +145,7 @@ export function AnalyticsPage() {
     () => servicesResponse?.data || [],
     [servicesResponse],
   );
+  const totalServices = servicesResponse?.meta?.total ?? services.length;
   
   const { data: productsResponse } = useGet<PaginatedResponse<Product>>(
     "products",
@@ -139,6 +158,7 @@ export function AnalyticsPage() {
     () => productsResponse?.data || [],
     [productsResponse],
   );
+  const totalProducts = productsResponse?.meta?.total ?? products.length;
 
   const isLoading =
     loadingDashboard || loadingSales || loadingAppointments || loadingClients;
@@ -146,7 +166,7 @@ export function AnalyticsPage() {
   // Calculate metrics - use dashboard stats if available, otherwise calculate from raw data
   const metrics = useMemo(() => {
     // If we have dashboard stats from the API, use those
-    if (dashboardStats) {
+    if (hasDashboardStats) {
       // Still need to calculate top products from sales data
       const topProductsFromSales = getTopItems(
         aggregateProductSales(sales, products),
@@ -155,8 +175,8 @@ export function AnalyticsPage() {
 
       return {
         totalRevenue: toNumber(dashboardStats.todayRevenue),
-        totalAppointments: toNumber(dashboardStats.todayAppointments),
-        totalClients: clients.length,
+        totalAppointments,
+        totalClients,
         newClientsThisMonth: toNumber(dashboardStats.newClients),
         averageTicket: toNumber(dashboardStats.averageTicket),
         revenueChange: dashboardStats.revenueChange,
@@ -175,8 +195,6 @@ export function AnalyticsPage() {
       (sum, sale) => sum + toNumber(sale?.total),
       0,
     );
-    const totalAppointments = appointments.length;
-    const totalClients = clients.length;
     const averageTicket =
       sales.length > 0 ? totalRevenue / sales.length : 0;
 
@@ -215,8 +233,7 @@ export function AnalyticsPage() {
     };
   }, [dashboardStats, topServices, sales, appointments, clients, products]);
 
-  const hasData =
-    sales.length > 0 || appointments.length > 0 || clients.length > 0;
+  const hasData = totalSales > 0 || totalAppointments > 0 || totalClients > 0;
 
   return (
     <div className="space-y-6">
@@ -412,7 +429,7 @@ export function AnalyticsPage() {
             <div className="grid gap-4 sm:grid-cols-3">
               <div className="text-center p-4 bg-muted/50 rounded-lg">
                 <p className="text-3xl font-bold text-accent-pink">
-                  {clients.length}
+                  {totalClients}
                 </p>
                 <p className="text-sm text-muted-foreground">
                   {t("nav.clients")}
@@ -420,7 +437,7 @@ export function AnalyticsPage() {
               </div>
               <div className="text-center p-4 bg-muted/50 rounded-lg">
                 <p className="text-3xl font-bold text-blue-500">
-                  {services.length}
+                  {totalServices}
                 </p>
                 <p className="text-sm text-muted-foreground">
                   {t("nav.services")}
@@ -428,7 +445,7 @@ export function AnalyticsPage() {
               </div>
               <div className="text-center p-4 bg-muted/50 rounded-lg">
                 <p className="text-3xl font-bold text-green-600">
-                  {products.length}
+                  {totalProducts}
                 </p>
                 <p className="text-sm text-muted-foreground">
                   {t("nav.products")}
