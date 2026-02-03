@@ -10,6 +10,24 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 const API_TIMEOUT = 30000; // 30 seconds
 
 // ============================================
+// ETAG CACHE (IN-MEMORY)
+// ============================================
+
+type EtagEntry = {
+  etag: string;
+  body: unknown;
+  timestamp: number;
+};
+
+const etagCache = new Map<string, EtagEntry>();
+
+const buildEtagCacheKey = (url: string): string => {
+  const base = API_BASE_URL.replace(/\/$/, '');
+  const path = url.replace(/^\//, '');
+  return `${base}/${path}`;
+};
+
+// ============================================
 // ERROR PARSING
 // ============================================
 
@@ -64,6 +82,7 @@ function getAuthToken(): string | null {
 function clearAuth(): void {
   localStorage.removeItem(AUTH_STORAGE_KEY);
   localStorage.removeItem('user');
+  etagCache.clear();
   // Redirect to login
   window.location.href = '/login';
 }
@@ -130,9 +149,36 @@ export async function get<T>(
   url: string,
   options?: Options
 ): Promise<T> {
+  const cacheKey = buildEtagCacheKey(url);
+  const cached = etagCache.get(cacheKey);
+  const headers = new Headers(options?.headers);
+
+  if (cached?.etag) {
+    headers.set('If-None-Match', cached.etag);
+  }
+
   try {
-    return await http.get(url, options).json<T>();
+    const response = await http.get(url, { ...options, headers });
+    const data = await response.json<T>();
+    const etag = response.headers.get('ETag');
+
+    if (etag) {
+      etagCache.set(cacheKey, {
+        etag,
+        body: data,
+        timestamp: Date.now(),
+      });
+    }
+
+    return data;
   } catch (error) {
+    if (
+      error instanceof HTTPError &&
+      error.response?.status === 304 &&
+      cached
+    ) {
+      return cached.body as T;
+    }
     throw await parseError(error);
   }
 }

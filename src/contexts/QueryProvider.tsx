@@ -19,8 +19,8 @@ const createQueryClient = () =>
   new QueryClient({
     defaultOptions: {
       queries: {
-        staleTime: 1000 * 60 * 5, // 5 minutes
-        gcTime: 1000 * 60 * 30, // 30 minutes (formerly cacheTime)
+        staleTime: 1000 * 60 * 10, // 10 minutes
+        gcTime: 1000 * 60 * 120, // 2 hours (formerly cacheTime)
         retry: (failureCount, error) => {
           const apiError = error as ApiError;
           
@@ -42,8 +42,9 @@ const createQueryClient = () =>
           return false;
         },
         retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
+        refetchOnMount: false,
         refetchOnWindowFocus: false,
-        refetchOnReconnect: true,
+        refetchOnReconnect: false,
         networkMode: 'offlineFirst',
       },
       mutations: {
