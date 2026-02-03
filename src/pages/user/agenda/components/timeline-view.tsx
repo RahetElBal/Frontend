@@ -201,7 +201,7 @@ export function TimelineView({
                           height: `${cardHeight}px`,
                         }}
                       >
-                        <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-start justify-between gap-3">
                           <div className="space-y-1 flex-1">
                             <div className="flex items-center gap-2">
                               <User className="h-4 w-4 text-muted-foreground" />
@@ -248,39 +248,39 @@ export function TimelineView({
                                 {normalizeTime(appointment.endTime)}
                               </span>
                             </div>
+                          </div>
+                          <div className="flex flex-col items-end gap-2 shrink-0">
+                            <Badge
+                              variant={statusColors[appointment.status]}
+                              className="text-xs"
+                            >
+                              {t(`agenda.statuses.${appointment.status}`, {
+                                defaultValue: appointment.status,
+                              })}
+                            </Badge>
                             {!appointment.paid &&
                               appointment.status !==
                                 AppointmentStatus.CANCELLED &&
                               onRecordPayment && (
-                                <div className="pt-1">
-                                  <Button
-                                    size="sm"
-                                    className="h-8 px-3 text-xs whitespace-nowrap"
-                                    onClick={(event) => {
-                                      event.stopPropagation();
-                                      onRecordPayment(appointment);
-                                    }}
-                                    disabled={isRecordingPayment}
-                                  >
-                                    <DollarSign className="h-3 w-3 me-1" />
-                                    {isRecordingPayment
-                                      ? t("common.loading")
-                                      : appointment.status ===
-                                          AppointmentStatus.COMPLETED
-                                        ? t("agenda.recordPayment")
-                                        : t("agenda.completeAndPay")}
-                                  </Button>
-                                </div>
+                                <Button
+                                  size="sm"
+                                  className="h-9 px-4 text-sm font-semibold whitespace-nowrap shadow-sm bg-accent-pink text-white hover:bg-accent-pink/90"
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    onRecordPayment(appointment);
+                                  }}
+                                  disabled={isRecordingPayment}
+                                >
+                                  <DollarSign className="h-3 w-3 me-1" />
+                                  {isRecordingPayment
+                                    ? t("common.loading")
+                                    : appointment.status ===
+                                        AppointmentStatus.COMPLETED
+                                      ? t("agenda.recordPayment")
+                                      : t("agenda.completeAndPay")}
+                                </Button>
                               )}
                           </div>
-                          <Badge
-                            variant={statusColors[appointment.status]}
-                            className="text-xs shrink-0"
-                          >
-                            {t(`agenda.statuses.${appointment.status}`, {
-                              defaultValue: appointment.status,
-                            })}
-                          </Badge>
                         </div>
                       </div>
                     ) : isBlocked ? (
