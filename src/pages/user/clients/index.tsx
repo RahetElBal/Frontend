@@ -38,7 +38,7 @@ export function ClientsPage() {
     enabled: !!salonId,
   });
 
-  const clients = clientsResponse?.data || [];
+  const clients = useMemo(() => clientsResponse?.data || [], [clientsResponse]);
   const regularClients = useMemo(
     () => clients.filter((client) => !isWalkInClient(client)),
     [clients],

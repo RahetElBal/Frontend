@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Building2, Clock, Save, Calendar, Heart } from "lucide-react";
 
@@ -18,6 +18,53 @@ import { BookingSettings } from "./components/booking-settings";
 import { LoyaltySettings } from "./components/loyalty-settings";
 
 type SettingsTab = "general" | "booking" | "hours" | "loyalty";
+
+const defaultSettings: Partial<SalonSettingsExtended> = {
+  currency: "EUR",
+  timezone: "Europe/Paris",
+  language: "fr",
+  dateFormat: "DD/MM/YYYY",
+  timeFormat: "24h",
+  bookingSlotDuration: 15,
+  bookingLeadTime: 0,
+  bookingWindowDays: 30,
+  cancellationDeadline: 24,
+  allowOnlineBooking: true,
+  requireDeposit: false,
+  depositAmount: undefined,
+  depositPercentage: undefined,
+  sendAppointmentConfirmation: true,
+  sendAppointmentReminder: true,
+  reminderHoursBefore: 24,
+  sendBirthdayGreeting: false,
+  sendReviewRequest: false,
+  reviewRequestHoursAfter: 24,
+  taxEnabled: true,
+  taxRate: 20,
+  pricesIncludeTax: true,
+  taxNumber: "",
+  loyaltyEnabled: false,
+  loyaltyPointsPerCurrency: 1,
+  loyaltyPointValue: 0.01,
+  loyaltyMinimumRedemption: 100,
+  loyaltyRewardServiceId: "",
+  loyaltyRewardDiscountType: "percent",
+  loyaltyRewardDiscountValue: 10,
+  receiptHeader: "",
+  receiptFooter: "",
+  showStaffOnReceipt: true,
+  invoicePrefix: "INV-",
+  invoiceNextNumber: 1,
+  workingHours: {
+    monday: { isOpen: true, openTime: "09:00", closeTime: "18:00" },
+    tuesday: { isOpen: true, openTime: "09:00", closeTime: "18:00" },
+    wednesday: { isOpen: true, openTime: "09:00", closeTime: "18:00" },
+    thursday: { isOpen: true, openTime: "09:00", closeTime: "18:00" },
+    friday: { isOpen: true, openTime: "09:00", closeTime: "18:00" },
+    saturday: { isOpen: true, openTime: "09:00", closeTime: "17:00" },
+    sunday: { isOpen: false, openTime: "09:00", closeTime: "18:00" },
+  },
+};
 
 export function SalonSettingsPage() {
   const { t } = useTranslation();
@@ -51,60 +98,30 @@ export function SalonSettingsPage() {
     ? servicesData
     : [];
 
-  // Default settings state
-  const [formData, setFormData] = useState<Partial<SalonSettingsExtended>>({
-    currency: "EUR",
-    timezone: "Europe/Paris",
-    language: "fr",
-    dateFormat: "DD/MM/YYYY",
-    timeFormat: "24h",
-    bookingSlotDuration: 15,
-    bookingLeadTime: 0,
-    bookingWindowDays: 30,
-    cancellationDeadline: 24,
-    allowOnlineBooking: true,
-    requireDeposit: false,
-    depositAmount: undefined,
-    depositPercentage: undefined,
-    sendAppointmentConfirmation: true,
-    sendAppointmentReminder: true,
-    reminderHoursBefore: 24,
-    sendBirthdayGreeting: false,
-    sendReviewRequest: false,
-    reviewRequestHoursAfter: 24,
-    taxEnabled: true,
-    taxRate: 20,
-    pricesIncludeTax: true,
-    taxNumber: "",
-    loyaltyEnabled: false,
-    loyaltyPointsPerCurrency: 1,
-    loyaltyPointValue: 0.01,
-    loyaltyMinimumRedemption: 100,
-    loyaltyRewardServiceId: "",
-    loyaltyRewardDiscountType: "percent",
-    loyaltyRewardDiscountValue: 10,
-    receiptHeader: "",
-    receiptFooter: "",
-    showStaffOnReceipt: true,
-    invoicePrefix: "INV-",
-    invoiceNextNumber: 1,
-    workingHours: {
-      monday: { isOpen: true, openTime: "09:00", closeTime: "18:00" },
-      tuesday: { isOpen: true, openTime: "09:00", closeTime: "18:00" },
-      wednesday: { isOpen: true, openTime: "09:00", closeTime: "18:00" },
-      thursday: { isOpen: true, openTime: "09:00", closeTime: "18:00" },
-      friday: { isOpen: true, openTime: "09:00", closeTime: "18:00" },
-      saturday: { isOpen: true, openTime: "09:00", closeTime: "17:00" },
-      sunday: { isOpen: false, openTime: "09:00", closeTime: "18:00" },
-    },
-  });
-
-  // Update form when settings load
-  useEffect(() => {
-    if (settings) {
-      setFormData(settings);
-    }
+  const baseSettings = useMemo(() => {
+    const mergedWorkingHours = {
+      ...defaultSettings.workingHours,
+      ...(settings?.workingHours ?? {}),
+    };
+    return {
+      ...defaultSettings,
+      ...(settings ?? {}),
+      workingHours: mergedWorkingHours,
+    };
   }, [settings]);
+  const [draftSettings, setDraftSettings] =
+    useState<Partial<SalonSettingsExtended>>({});
+  const formData = useMemo(
+    () => ({
+      ...baseSettings,
+      ...draftSettings,
+      workingHours: {
+        ...baseSettings.workingHours,
+        ...(draftSettings.workingHours ?? {}),
+      },
+    }),
+    [baseSettings, draftSettings],
+  );
 
   // Save mutation - update salon settings via PATCH /salons/{id}
   const saveSettings = usePost<
@@ -117,6 +134,7 @@ export function SalonSettingsPage() {
     onSuccess: () => {
       toast.success(t("salonSettings.saved"));
       setHasChanges(false);
+      setDraftSettings({});
     },
     onError: (error) => toast.error(error.message || t("common.error")),
   });
@@ -125,7 +143,7 @@ export function SalonSettingsPage() {
     field: K,
     value: SalonSettingsExtended[K]
   ) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+    setDraftSettings((prev) => ({ ...prev, [field]: value }));
     setHasChanges(true);
   };
 
@@ -134,27 +152,26 @@ export function SalonSettingsPage() {
     field: string,
     value: string | boolean
   ) => {
-    setFormData((prev) => {
-      const currentDayHours = prev.workingHours?.[day] || {
+    const currentDayHours = formData.workingHours?.[day] || {
         isOpen: false,
         openTime: "09:00",
         closeTime: "18:00",
       };
-      return {
-        ...prev,
-        workingHours: {
-          ...prev.workingHours,
-          [day]: {
-            isOpen: currentDayHours.isOpen,
-            openTime: currentDayHours.openTime,
-            closeTime: currentDayHours.closeTime,
-            breakStart: currentDayHours.breakStart,
-            breakEnd: currentDayHours.breakEnd,
-            [field]: value,
-          },
+    setDraftSettings((prev) => ({
+      ...prev,
+      workingHours: {
+        ...baseSettings.workingHours,
+        ...(prev.workingHours ?? {}),
+        [day]: {
+          isOpen: currentDayHours.isOpen,
+          openTime: currentDayHours.openTime,
+          closeTime: currentDayHours.closeTime,
+          breakStart: currentDayHours.breakStart,
+          breakEnd: currentDayHours.breakEnd,
+          [field]: value,
         },
-      };
-    });
+      },
+    }));
     setHasChanges(true);
   };
 

@@ -75,13 +75,10 @@ export function AnalyticsPage() {
     });
 
   // Fetch revenue analytics (data available for future chart implementation)
-  const { data: _revenueAnalytics } = useGet<RevenueAnalyticsResponse>(
-    "analytics/revenue",
-    {
-      params: { salonId, period: revenuePeriod },
-      enabled: !!salonId,
-    },
-  );
+  useGet<RevenueAnalyticsResponse>("analytics/revenue", {
+    params: { salonId, period: revenuePeriod },
+    enabled: !!salonId,
+  });
 
   // Fetch top services
   const { data: topServices = [] } = useGet<TopService[]>("services/top", {
@@ -99,21 +96,24 @@ export function AnalyticsPage() {
       enabled: !!salonId && !dashboardStats,
     },
   );
-  const sales = salesResponse?.data || [];
+  const sales = useMemo(() => salesResponse?.data || [], [salesResponse]);
 
   const { data: appointmentsResponse, isLoading: loadingAppointments } =
     useGet<PaginatedResponse<Appointment>>("appointments", {
       params: { salonId, perPage: 100 },
       enabled: !!salonId,
     });
-  const appointments = appointmentsResponse?.data || [];
+  const appointments = useMemo(
+    () => appointmentsResponse?.data || [],
+    [appointmentsResponse],
+  );
   
   const { data: clientsResponse, isLoading: loadingClients } =
     useGet<PaginatedResponse<Client>>("clients", {
       params: { salonId, perPage: 100 },
       enabled: !!salonId,
     });
-  const clients = clientsResponse?.data || [];
+  const clients = useMemo(() => clientsResponse?.data || [], [clientsResponse]);
   
   const { data: servicesResponse } = useGet<PaginatedResponse<Service>>(
     "services",
@@ -122,7 +122,10 @@ export function AnalyticsPage() {
       enabled: !!salonId,
     },
   );
-  const services = servicesResponse?.data || [];
+  const services = useMemo(
+    () => servicesResponse?.data || [],
+    [servicesResponse],
+  );
   
   const { data: productsResponse } = useGet<PaginatedResponse<Product>>(
     "products",
@@ -131,9 +134,13 @@ export function AnalyticsPage() {
       enabled: !!salonId,
     },
   );
-  const products = productsResponse?.data || [];
+  const products = useMemo(
+    () => productsResponse?.data || [],
+    [productsResponse],
+  );
 
-  const isLoading = loadingDashboard || loadingSales || loadingAppointments || loadingClients;
+  const isLoading =
+    loadingDashboard || loadingSales || loadingAppointments || loadingClients;
 
   // Calculate metrics - use dashboard stats if available, otherwise calculate from raw data
   const metrics = useMemo(() => {

@@ -163,7 +163,7 @@ export function SalonModals({
       if (result.displayAddress) {
         form.setValue("address", result.displayAddress);
       }
-    } catch (error) {
+    } catch {
       toast.error(t("common.error"));
     } finally {
       setIsDetectingAddress(false);

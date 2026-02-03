@@ -45,6 +45,16 @@ import {
 import type { Category, PaginatedResponse, Salon, Service } from "@/types";
 
 type ServiceModalMode = "create" | "edit";
+type ServicePayload = {
+  salonId?: string;
+  name: string;
+  category: string;
+  duration: number;
+  price: number;
+  description?: string;
+  image?: string;
+  isActive: boolean;
+};
 
 export default function AdminServicesPage() {
   const { t } = useTranslation();
@@ -253,7 +263,7 @@ export default function AdminServicesPage() {
     setIsSavingService(true);
     try {
       if (modalMode === "create") {
-        await post<Service, any>("services", {
+        await post<Service, ServicePayload>("services", {
           salonId: selectedSalonId,
           name: formValues.name.trim(),
           category: formValues.category.trim(),
@@ -265,7 +275,7 @@ export default function AdminServicesPage() {
         });
         toast.success(t("admin.services.created"));
       } else if (editingServiceId) {
-        await patch<Service, any>(`services/${editingServiceId}`, {
+        await patch<Service, ServicePayload>(`services/${editingServiceId}`, {
           name: formValues.name.trim(),
           category: formValues.category.trim(),
           duration,

@@ -554,10 +554,10 @@ export function AppointmentModals({
                   onValueChange={(value) => form.setValue("clientId", value)}
                   disabled={!!walkInEnabled}
                 >
-                  <SelectTrigger>
+                <SelectTrigger className="bg-white text-black">
                   <SelectValue placeholder={t("agenda.selectClient")} />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-white text-black">
                     {selectableClients.length === 0 ? (
                       <div className="p-2 text-center text-muted-foreground text-sm">
                         {t("clients.noClients")}
@@ -615,10 +615,10 @@ export function AppointmentModals({
                   value={form.watch("serviceId")}
                   onValueChange={(value) => form.setValue("serviceId", value)}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="bg-white text-black">
                     <SelectValue placeholder={t("agenda.selectService")} />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-white text-black">
                     {safeServices.length === 0 ? (
                       <div className="p-2 text-center text-muted-foreground text-sm">
                         {t("services.services")} - {t("common.noResults")}
@@ -674,10 +674,10 @@ export function AppointmentModals({
                     value={form.watch("startTime")}
                     onValueChange={(value) => form.setValue("startTime", value)}
                   >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
+                  <SelectTrigger className="bg-white text-black">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white text-black">
                       {timeSlots.map((time) => (
                         <SelectItem key={time} value={time}>
                           <div className="flex items-center gap-2">

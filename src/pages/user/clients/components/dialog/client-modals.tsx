@@ -206,7 +206,7 @@ export function ClientModals({
         phone: selectedClient.phone || "",
       });
     }
-  }, [modalState?.clientId, modalState?.mode, selectedClient?.id]);
+  }, [form, modalState, selectedClient]);
 
   if (!derived) return null;
 
