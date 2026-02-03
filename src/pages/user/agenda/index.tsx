@@ -106,6 +106,7 @@ export function AgendaPage() {
       walkInEnabled: false,
       walkInName: "",
       walkInPhone: "",
+      price: "",
     },
   });
 
@@ -482,13 +483,18 @@ export function AgendaPage() {
     setModalState({ appointmentId: event.id, mode: "view" });
   }, []);
 
-  const toAppointmentPayload = (data: AppointmentFormData) => ({
-    clientId: data.clientId,
-    serviceId: data.serviceId,
-    date: data.date,
-    startTime: data.startTime,
-    notes: data.notes,
-  });
+  const toAppointmentPayload = (data: AppointmentFormData) => {
+    const rawPrice = data.price?.toString().trim();
+    const parsedPrice = rawPrice ? Number(rawPrice) : undefined;
+    return {
+      clientId: data.clientId,
+      serviceId: data.serviceId,
+      date: data.date,
+      startTime: data.startTime,
+      notes: data.notes,
+      price: Number.isFinite(parsedPrice) ? parsedPrice : undefined,
+    };
+  };
 
   const handleSubmit = async (data: AppointmentFormData) => {
     if (!salonId) {
@@ -506,6 +512,17 @@ export function AgendaPage() {
 
       if (conflictingAppointment) {
         toast.error(t("agenda.timeSlotOccupied"));
+        return;
+      }
+    }
+
+    const rawPrice = data.price?.toString().trim();
+    if (rawPrice) {
+      const parsedPrice = Number(rawPrice);
+      if (!Number.isFinite(parsedPrice) || parsedPrice < 0) {
+        toast.error(
+          t("validation.number.min", { field: t("fields.price"), min: 0 }),
+        );
         return;
       }
     }
