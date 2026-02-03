@@ -60,7 +60,7 @@ export default function SalonsPage() {
   const clientsData = clientsResponse?.data || [];
 
   const { data: salesResponse } = useGet<{ data: Sale[] }>("sales", {
-    params: { salonId, perPage: 200 },
+    params: { salonId, perPage: 100 },
     enabled: !!salonId,
   });
   const salesData = salesResponse?.data || [];
