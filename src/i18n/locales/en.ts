@@ -176,6 +176,14 @@ export interface TranslationKeys {
     unexpectedError: string;
     pageError: string;
     pageErrorDescription: string;
+    db: {
+      foreignKey: string;
+      unique: string;
+      notNull: string;
+      check: string;
+      invalidData: string;
+      unknown: string;
+    };
   };
   confirm: {
     title: string;
@@ -558,6 +566,15 @@ export const en = {
     unexpectedError: "An unexpected error occurred. Please try again.",
     pageError: "Page Error",
     pageErrorDescription: "There was a problem loading this page.",
+    db: {
+      foreignKey:
+        "Cannot delete: this item is used or referenced by other records.",
+      unique: "This value already exists.",
+      notNull: "A required field is missing.",
+      check: "The provided value is invalid.",
+      invalidData: "Invalid data provided.",
+      unknown: "Database error. Please try again.",
+    },
   },
 
   confirm: {

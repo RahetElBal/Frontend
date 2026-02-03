@@ -248,6 +248,14 @@ export const es = {
       "Ocurrió un error inesperado. Por favor, inténtalo de nuevo.",
     pageError: "Error de página",
     pageErrorDescription: "Hubo un problema al cargar esta página.",
+    db: {
+      foreignKey: "No se puede eliminar: este elemento est? usado en otro lugar.",
+      unique: "Este valor ya existe.",
+      notNull: "Falta un campo obligatorio.",
+      check: "El valor proporcionado no es v?lido.",
+      invalidData: "Datos no v?lidos.",
+      unknown: "Error de base de datos. Int?ntelo de nuevo.",
+    },
   },
 
   confirm: {

@@ -13,12 +13,23 @@ const API_TIMEOUT = 30000; // 30 seconds
 // ERROR PARSING
 // ============================================
 
+const ERROR_CODE_MESSAGES: Record<string, string> = {
+  FOREIGN_KEY_CONSTRAINT: 'errors.db.foreignKey',
+  UNIQUE_CONSTRAINT: 'errors.db.unique',
+  NOT_NULL_CONSTRAINT: 'errors.db.notNull',
+  CHECK_CONSTRAINT: 'errors.db.check',
+  INVALID_DATA: 'errors.db.invalidData',
+  UNKNOWN_DB_ERROR: 'errors.db.unknown',
+};
+
 export async function parseError(error: unknown): Promise<ApiError> {
   if (error instanceof HTTPError) {
     try {
       const errorBody = await error.response.json();
+      const mappedMessage =
+        errorBody?.code && ERROR_CODE_MESSAGES[errorBody.code];
       return {
-        message: errorBody.message || error.message,
+        message: mappedMessage || errorBody.message || error.message,
         code: errorBody.code,
         status: error.response.status,
         errors: errorBody.errors,

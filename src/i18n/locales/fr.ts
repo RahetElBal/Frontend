@@ -257,6 +257,14 @@ export const fr = {
     pageError: "Erreur de page",
     pageErrorDescription:
       "Un problème est survenu lors du chargement de cette page.",
+    db: {
+      foreignKey: "Impossible de supprimer : cet ?l?ment est utilis? ailleurs.",
+      unique: "Cette valeur existe d?j?.",
+      notNull: "Un champ obligatoire est manquant.",
+      check: "La valeur fournie est invalide.",
+      invalidData: "Donn?es invalides.",
+      unknown: "Erreur de base de donn?es. Veuillez r?essayer.",
+    },
   },
 
   confirm: {
