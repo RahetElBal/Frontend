@@ -4,7 +4,7 @@ import {
   optionalString,
   optionalEmailField,
 } from "@/common/validator/zodI18n";
-import { PHONE_INPUT_REGEX } from "@/common/phone";
+import { isValidPhoneForAllowedCountries } from "@/common/phone";
 
 export const appointmentFormSchema = z
   .object({
@@ -17,7 +17,7 @@ export const appointmentFormSchema = z
     walkInEnabled: z.boolean().optional(),
     walkInName: optionalString(),
     walkInPhone: optionalString().refine(
-      (val) => !val || PHONE_INPUT_REGEX.test(val),
+      (val) => !val || isValidPhoneForAllowedCountries(val),
       {
         message: "validation.custom.phoneInvalid",
       }

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { PHONE_INPUT_REGEX } from "@/common/phone";
+import { isValidPhoneForAllowedCountries } from "@/common/phone";
 
 export const createSalonFormSchema = (
   t: (key: string, options?: Record<string, string>) => string,
@@ -12,7 +12,7 @@ export const createSalonFormSchema = (
     phone: z
       .string()
       .optional()
-      .refine((val) => !val || PHONE_INPUT_REGEX.test(val), {
+      .refine((val) => !val || isValidPhoneForAllowedCountries(val), {
         message: t("validation.custom.phoneInvalid"),
       }),
     email: z
