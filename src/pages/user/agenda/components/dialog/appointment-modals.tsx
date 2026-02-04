@@ -65,7 +65,7 @@ import {
 } from "../../utils";
 import { getValidationErrorMessage } from "@/pages/user/utils";
 import { FormErrorMessage } from "@/pages/user/components/form-error-message";
-import { normalizePhone } from "@/common/phone";
+import { normalizePhone, sanitizePhoneInput } from "@/common/phone";
 import {
   getServiceImage,
   getServiceImageFallback,
@@ -352,7 +352,11 @@ export function AppointmentModals({
       });
       return;
     }
-    onSubmit(data);
+    const normalizedWalkInPhone = normalizePhone(data.walkInPhone);
+    onSubmit({
+      ...data,
+      walkInPhone: normalizedWalkInPhone || data.walkInPhone,
+    });
   };
 
   // DELETE MODE
@@ -694,14 +698,31 @@ export function AppointmentModals({
                   <div className="space-y-2">
                     <Label>{t("agenda.walkInPhone")} *</Label>
                     <Input
-                      {...form.register("walkInPhone")}
+                      {...form.register("walkInPhone", {
+                        setValueAs: sanitizePhoneInput,
+                        onChange: (event) => {
+                          const sanitized = sanitizePhoneInput(
+                            event.target.value,
+                          );
+                          if (sanitized !== event.target.value) {
+                            event.target.value = sanitized;
+                          }
+                        },
+                        onBlur: (event) => {
+                          const normalized = normalizePhone(
+                            event.target.value,
+                          );
+                          form.setValue("walkInPhone", normalized, {
+                            shouldDirty: true,
+                            shouldValidate: true,
+                          });
+                        },
+                      })}
                       placeholder={t("fields.placeholders.phone")}
-                      onBlur={(event) => {
-                        const normalized = normalizePhone(event.target.value);
-                        if (normalized) {
-                          form.setValue("walkInPhone", normalized);
-                        }
-                      }}
+                      type="tel"
+                      inputMode="tel"
+                      autoComplete="tel"
+                      pattern="\\+?\\d*"
                     />
                     <FormErrorMessage message={getErrorMessage("walkInPhone")} />
                   </div>

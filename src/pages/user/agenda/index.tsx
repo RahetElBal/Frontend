@@ -14,6 +14,7 @@ import { usePostAction } from "@/hooks/usePostAction";
 import { useForm } from "@/hooks/useForm";
 import { useUser } from "@/hooks/useUser";
 import { useLanguage } from "@/hooks/useLanguage";
+import { normalizePhone } from "@/common/phone";
 
 import type {
   Appointment,
@@ -640,7 +641,7 @@ export function AgendaPage() {
           const email =
             data.walkInEmail?.trim() ||
             `walkin+${salonId}+${Date.now()}@salon.local`;
-          const phone = data.walkInPhone?.trim() || "";
+          const phone = normalizePhone(data.walkInPhone);
           const walkInClient = await createWalkInClient({
             salonId,
             firstName,

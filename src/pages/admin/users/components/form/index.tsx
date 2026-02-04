@@ -16,7 +16,7 @@ import { DialogFooter } from "@/components/ui/dialog";
 import type { User, Salon } from "@/types/entities";
 import type { UserFormData } from "./validation";
 import { parseValidationMsg } from "@/common/validator/zodI18n";
-import { normalizePhone } from "@/common/phone";
+import { normalizePhone, sanitizePhoneInput } from "@/common/phone";
 
 interface UserFormProps {
   form: UseFormReturn<UserFormData>;
@@ -92,15 +92,26 @@ export function UserForm({
               id="phone"
               type="tel"
               {...form.register("phone", {
+                setValueAs: sanitizePhoneInput,
+                onChange: (event) => {
+                  const sanitized = sanitizePhoneInput(event.target.value);
+                  if (sanitized !== event.target.value) {
+                    event.target.value = sanitized;
+                  }
+                },
                 onBlur: (event) => {
                   const normalized = normalizePhone(event.target.value);
-                  if (normalized) {
-                    form.setValue("phone", normalized);
-                  }
+                  form.setValue("phone", normalized, {
+                    shouldDirty: true,
+                    shouldValidate: true,
+                  });
                 },
               })}
               placeholder="+213 XXX XXX XXX"
               className="pl-10"
+              inputMode="tel"
+              autoComplete="tel"
+              pattern="\\+?\\d*"
             />
           </div>
           {form.formState.errors.phone && (

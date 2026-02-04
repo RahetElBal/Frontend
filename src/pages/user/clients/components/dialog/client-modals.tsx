@@ -41,7 +41,7 @@ import type { ClientModalState } from "@/pages/user/clients/types";
 import type { ClientFormData } from "@/pages/user/clients/validation";
 import { getValidationErrorMessage } from "@/pages/user/utils";
 import { FormErrorMessage } from "@/pages/user/components/form-error-message";
-import { normalizePhone } from "@/common/phone";
+import { normalizePhone, sanitizePhoneInput } from "@/common/phone";
 
 interface ClientModalsProps {
   modalState: ClientModalState;
@@ -215,15 +215,20 @@ export function ClientModals({
   const handleClose = () => setModalState(null);
 
   const handleSubmit = (data: ClientFormData) => {
+    const normalizedPhone = normalizePhone(data.phone);
+    const payload = {
+      ...data,
+      phone: normalizedPhone || data.phone,
+    };
     if (derived.isCreateMode) {
       const salonId = user?.salon?.id;
       if (!salonId) {
         toast.error("No salon assigned to user");
         return;
       }
-      createClientMutate({ ...data, salonId });
+      createClientMutate({ ...payload, salonId });
     } else {
-      updateClientMutate(data);
+      updateClientMutate(payload);
     }
   };
 
@@ -460,13 +465,24 @@ export function ClientModals({
                 id="phone"
                 type="tel"
                 {...form.register("phone", {
-                  onBlur: (event) => {
-                    const normalized = normalizePhone(event.target.value);
-                    if (normalized) {
-                      form.setValue("phone", normalized);
+                  setValueAs: sanitizePhoneInput,
+                  onChange: (event) => {
+                    const sanitized = sanitizePhoneInput(event.target.value);
+                    if (sanitized !== event.target.value) {
+                      event.target.value = sanitized;
                     }
                   },
+                  onBlur: (event) => {
+                    const normalized = normalizePhone(event.target.value);
+                    form.setValue("phone", normalized, {
+                      shouldDirty: true,
+                      shouldValidate: true,
+                    });
+                  },
                 })}
+                inputMode="tel"
+                autoComplete="tel"
+                pattern="\\+?\\d*"
               />
             </div>
             <DialogFooter>

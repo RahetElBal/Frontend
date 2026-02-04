@@ -38,6 +38,7 @@ import { getDisplayName, getInitials } from "@/common/utils";
 import { useUser } from "@/hooks/useUser";
 import { UserForm } from "../form";
 import { createUserFormSchema, type UserFormData } from "../form/validation";
+import { normalizePhone } from "@/common/phone";
 
 type UserDialogMode = "view" | "edit" | "create" | "delete";
 
@@ -200,10 +201,11 @@ export function UserDialog({
         : "user"
       : data.role;
 
+    const normalizedPhone = normalizePhone(data.phone);
     const cleanedData: Record<string, unknown> = {
       name: data.name,
       email: data.email,
-      phone: data.phone,
+      phone: normalizedPhone || data.phone,
       role,
     };
 

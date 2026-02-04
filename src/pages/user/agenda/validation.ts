@@ -4,6 +4,7 @@ import {
   optionalString,
   optionalEmailField,
 } from "@/common/validator/zodI18n";
+import { PHONE_INPUT_REGEX } from "@/common/phone";
 
 export const appointmentFormSchema = z
   .object({
@@ -15,7 +16,12 @@ export const appointmentFormSchema = z
     salonId: z.string().uuid().optional(),
     walkInEnabled: z.boolean().optional(),
     walkInName: optionalString(),
-    walkInPhone: optionalString(),
+    walkInPhone: optionalString().refine(
+      (val) => !val || PHONE_INPUT_REGEX.test(val),
+      {
+        message: "validation.custom.phoneInvalid",
+      }
+    ),
     walkInEmail: optionalEmailField(),
     price: optionalString(),
     discount: optionalString(),

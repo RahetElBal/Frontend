@@ -38,7 +38,7 @@ import { canModifySalon, type SalonModalState } from "../../utils";
 import { createSalonFormSchema, type SalonFormData } from "../../validation";
 import React from "react";
 import { parseValidationMsg } from "@/common/validator/zodI18n";
-import { normalizePhone } from "@/common/phone";
+import { normalizePhone, sanitizePhoneInput } from "@/common/phone";
 import { detectAddress } from "@/common/geo";
 import { MediaImage } from "@/components/media-image";
 
@@ -439,8 +439,10 @@ export function SalonModals({
       return;
     }
 
+    const normalizedPhone = normalizePhone(data.phone);
     const payload = {
       ...data,
+      phone: normalizedPhone || data.phone,
       logo: data.logo?.trim() || undefined,
       ...(derived.isSuperadmin && { ownerId: selectedOwnerId }),
     };
@@ -630,13 +632,25 @@ export function SalonModals({
                 <Input
                   id="phone"
                   {...form.register("phone", {
-                    onBlur: (event) => {
-                      const normalized = normalizePhone(event.target.value);
-                      if (normalized) {
-                        form.setValue("phone", normalized);
+                    setValueAs: sanitizePhoneInput,
+                    onChange: (event) => {
+                      const sanitized = sanitizePhoneInput(event.target.value);
+                      if (sanitized !== event.target.value) {
+                        event.target.value = sanitized;
                       }
                     },
+                    onBlur: (event) => {
+                      const normalized = normalizePhone(event.target.value);
+                      form.setValue("phone", normalized, {
+                        shouldDirty: true,
+                        shouldValidate: true,
+                      });
+                    },
                   })}
+                  type="tel"
+                  inputMode="tel"
+                  autoComplete="tel"
+                  pattern="\\+?\\d*"
                 />
               </div>
               <div>

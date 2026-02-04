@@ -21,30 +21,46 @@ const getDefaultCountry = (): DefaultCountry => {
   return supportedCountries.includes(region) ? region : "DZ";
 };
 
-const stripToDigits = (value: string) => value.replace(/[^\d]/g, "");
+export const PHONE_INPUT_REGEX = /^\+?\d+$/;
+
+export const sanitizePhoneInput = (value?: string): string => {
+  if (!value) return "";
+  const trimmed = value.trim();
+  if (!trimmed) return "";
+
+  let result = "";
+  for (const char of trimmed) {
+    if (char >= "0" && char <= "9") {
+      result += char;
+      continue;
+    }
+    if (char === "+" && result.length === 0) {
+      result = "+";
+    }
+  }
+
+  return result;
+};
+
+const normalizeInternationalPrefix = (value: string) =>
+  value.startsWith("00") ? `+${value.slice(2)}` : value;
 
 export const normalizePhone = (
   value?: string,
   defaultCountry: DefaultCountry = getDefaultCountry()
 ): string => {
-  if (!value) return "";
-  const trimmed = value.trim();
-  if (!trimmed) return "";
+  const sanitized = sanitizePhoneInput(value);
+  if (!sanitized || !/\d/.test(sanitized)) return "";
 
-  const parsed = parsePhoneNumberFromString(trimmed, defaultCountry);
+  const normalizedInput = normalizeInternationalPrefix(sanitized);
+  const parsed = parsePhoneNumberFromString(
+    normalizedInput,
+    normalizedInput.startsWith("+") ? undefined : defaultCountry
+  );
+
   if (parsed && parsed.isValid()) {
-    if (parsed.country === "DZ") {
-      const national = parsed.nationalNumber;
-      return national.startsWith("0") ? national : `0${national}`;
-    }
-    return parsed.number; // E.164 for non-DZ
+    return parsed.number; // E.164
   }
 
-  const digits = stripToDigits(trimmed);
-  if (defaultCountry === "DZ") {
-    if (digits.length === 9) return `0${digits}`;
-    if (digits.length === 10 && digits.startsWith("0")) return digits;
-  }
-
-  return digits || trimmed;
+  return normalizedInput;
 };
