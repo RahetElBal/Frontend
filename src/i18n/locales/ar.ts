@@ -752,6 +752,7 @@ export const ar = {
     salons: {
       description: "إدارة جميع الصالونات في النظام",
       addSalon: "إضافة صالون",
+      editSalon: "تعديل الصالون",
       totalSalons: "إجمالي الصالونات",
       activeSalons: "الصالونات النشطة",
       totalUsers: "إجمالي المستخدمين",
@@ -777,6 +778,7 @@ export const ar = {
       staffCount: "الطاقم",
       name: "اسم الصالون",
       addSalonDescription: "إضافة صالون",
+      editSalonDescription: "تعديل معلومات الصالون",
       address: "العنوان",
       phone: "رقم الهاتف",
       email: "البريد الإلكتروني",

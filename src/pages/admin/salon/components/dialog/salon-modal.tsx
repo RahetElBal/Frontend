@@ -642,6 +642,13 @@ export function SalonModals({
                     />
                   )}
                 />
+                {form.formState.errors.phone && (
+                  <p className="text-sm text-destructive mt-1">
+                    {getErrorMessage(
+                      form.formState.errors.phone.message as string,
+                    )}
+                  </p>
+                )}
               </div>
               <div>
                 <Label htmlFor="email">{t("admin.salons.email")}</Label>

@@ -992,6 +992,7 @@ export const fr = {
     salons: {
       description: "Gérer tous les salons du système",
       addSalon: "Ajouter un salon",
+      editSalon: "Modifier le salon",
       totalSalons: "Total salons",
       activeSalons: "Salons actifs",
       totalUsers: "Total utilisateurs",
@@ -1019,6 +1020,7 @@ export const fr = {
       staffCount: "Staff",
       name: "Nom du salon",
       addSalonDescription: "Ajouter un salon",
+      editSalonDescription: "Modifier les informations du salon",
       address: "Adresse",
       phone: "Numéro de téléphone",
       email: "Email",
@@ -1073,3 +1075,4 @@ export const fr = {
     },
   },
 } as const;
+

@@ -1358,6 +1358,7 @@ export const en = {
     salons: {
       description: "Manage all salons in the system",
       addSalon: "Add Salon",
+      editSalon: "Edit Salon",
       totalSalons: "Total Salons",
       activeSalons: "Active Salons",
       totalUsers: "Total Users",
@@ -1384,6 +1385,7 @@ export const en = {
       staffCount: "Staff",
       name: "Salon Name",
       addSalonDescription: "Add a salon",
+      editSalonDescription: "Edit salon details",
       address: "Address",
       phone: "Phone Number",
       email: "Email",

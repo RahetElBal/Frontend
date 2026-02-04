@@ -756,6 +756,7 @@ export const es = {
     salons: {
       description: "Gestionar todos los salones del sistema",
       addSalon: "Añadir salón",
+      editSalon: "Editar salón",
       totalSalons: "Total salones",
       activeSalons: "Salones activos",
       totalUsers: "Total usuarios",
@@ -783,6 +784,7 @@ export const es = {
       staffCount: "Personal",
       name: "Nombre del salón",
       addSalonDescription: "Añadir un salón",
+      editSalonDescription: "Editar la información del salón",
       address: "Dirección",
       phone: "Número de teléfono",
       email: "Correo electrónico",

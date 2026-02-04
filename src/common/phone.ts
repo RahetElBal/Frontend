@@ -64,13 +64,27 @@ export const normalizePhone = (
   if (!sanitized || !/\d/.test(sanitized)) return "";
 
   const normalizedInput = normalizeInternationalPrefix(sanitized);
-  const parsed = parsePhoneNumberFromString(
-    normalizedInput,
-    normalizedInput.startsWith("+") ? undefined : defaultCountry
-  );
+  const tryParse = (country?: AllowedPhoneCountry) =>
+    parsePhoneNumberFromString(
+      normalizedInput,
+      normalizedInput.startsWith("+") ? undefined : country
+    );
 
-  if (parsed && parsed.isValid()) {
-    return parsed.number; // E.164
+  if (normalizedInput.startsWith("+")) {
+    const parsed = tryParse();
+    if (parsed && parsed.isValid()) {
+      return parsed.number;
+    }
+  } else {
+    const candidates = defaultCountry
+      ? [defaultCountry, ...ALLOWED_PHONE_COUNTRIES.filter((c) => c !== defaultCountry)]
+      : [...ALLOWED_PHONE_COUNTRIES];
+    for (const country of candidates) {
+      const parsed = tryParse(country);
+      if (parsed && parsed.isValid()) {
+        return parsed.number;
+      }
+    }
   }
 
   return normalizedInput;
@@ -161,7 +175,19 @@ export const getNationalMaxLength = (country: AllowedPhoneCountry) => {
 export const isValidPhoneForAllowedCountries = (value?: string) => {
   const sanitized = sanitizePhoneInput(value);
   if (!sanitized) return false;
-  const parsed = parsePhoneNumberFromString(sanitized);
-  if (!parsed || !parsed.isValid()) return false;
-  return !!getAllowedPhoneCountry(parsed.country);
+  const normalized = normalizeInternationalPrefix(sanitized);
+  if (normalized.startsWith("+")) {
+    const parsed = parsePhoneNumberFromString(normalized);
+    if (!parsed || !parsed.isValid()) return false;
+    return !!getAllowedPhoneCountry(parsed.country);
+  }
+
+  for (const country of ALLOWED_PHONE_COUNTRIES) {
+    const parsed = parsePhoneNumberFromString(normalized, country);
+    if (parsed && parsed.isValid()) {
+      return true;
+    }
+  }
+
+  return false;
 };

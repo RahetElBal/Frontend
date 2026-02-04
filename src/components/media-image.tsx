@@ -21,6 +21,27 @@ const getOrigin = (value: string) => {
   }
 };
 
+const getBaseDomain = (hostname: string) => {
+  const parts = hostname.split(".").filter(Boolean);
+  if (parts.length <= 2) return hostname;
+  return parts.slice(-2).join(".");
+};
+
+const isOriginTrusted = (
+  origin: string,
+  trustedOrigins: Set<string>,
+  baseDomain?: string | null,
+) => {
+  if (trustedOrigins.has(origin)) return true;
+  if (!baseDomain) return false;
+  try {
+    const host = new URL(origin).hostname;
+    return host === baseDomain || host.endsWith(`.${baseDomain}`);
+  } catch {
+    return false;
+  }
+};
+
 const getAuthToken = (): string | null => {
   if (typeof window === "undefined") return null;
   const token = localStorage.getItem(AUTH_STORAGE_KEY);
@@ -67,11 +88,20 @@ export function MediaImage({
     return origins;
   }, []);
 
+  const baseDomain =
+    typeof window !== "undefined"
+      ? getBaseDomain(window.location.hostname)
+      : null;
+
   const tryAuthFetch = React.useCallback(async () => {
     if (!resolvedSrc) return false;
     if (isSkippableScheme(resolvedSrc)) return false;
     const resolvedOrigin = getOrigin(resolvedSrc);
-    if (!resolvedOrigin || !trustedOrigins.has(resolvedOrigin)) return false;
+    if (
+      !resolvedOrigin ||
+      !isOriginTrusted(resolvedOrigin, trustedOrigins, baseDomain)
+    )
+      return false;
 
     try {
       const token = getAuthToken();
@@ -88,7 +118,7 @@ export function MediaImage({
     } catch {
       return false;
     }
-  }, [resolvedSrc]);
+  }, [resolvedSrc, trustedOrigins, baseDomain]);
 
   return (
     <img
