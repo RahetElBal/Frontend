@@ -50,9 +50,12 @@ export function AdminUsersPage() {
     enabled: isSuperadmin,
   });
 
+  const adminSalon = !isSuperadmin ? (currentUser?.salon as Salon | null) : null;
   const salons = isSuperadmin
     ? allSalons
-    : (currentUser?.salon as unknown as Salon[]) || [];
+    : adminSalon
+      ? [adminSalon]
+      : [];
 
   // Only superadmin can fetch list of admins (for assigning salon ownership)
   const { data: admins = [] } = useGet<User[]>("users/admins", {
@@ -134,8 +137,8 @@ export function AdminUsersPage() {
       <PageHeader
         title={t("nav.admin.users")}
         description={
-          !isSuperadmin && (currentUser?.salon as unknown as Salon[])?.[0]
-            ? `Utilisateurs de ${(currentUser?.salon as unknown as Salon[])[0].name} (${users.length})`
+          !isSuperadmin && adminSalon
+            ? `Utilisateurs de ${adminSalon.name} (${users.length})`
             : undefined
         }
         actions={

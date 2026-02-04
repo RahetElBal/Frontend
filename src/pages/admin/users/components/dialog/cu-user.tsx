@@ -218,10 +218,16 @@ export function UserDialog({
         }
       } else {
         // Admin creating user: auto-assign to their own salon
-        const adminSalon = salons.find((s) => s.ownerId === currentUser?.id);
-        if (adminSalon) {
-          cleanedData.salonId = adminSalon.id;
+        const adminSalonId =
+          currentUser?.salon?.id ||
+          salons.find((s) => s.ownerId === currentUser?.id)?.id;
+        if (!adminSalonId) {
+          toast.error(
+            t("validation.custom.salonRequired") || "Salon requis",
+          );
+          return;
         }
+        cleanedData.salonId = adminSalonId;
         // Auto-assign managedById to current admin
         cleanedData.managedById = currentUser?.id;
       }
