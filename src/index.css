@@ -99,13 +99,17 @@
   }
 
   .PhoneInputCountry {
-    @apply flex items-center;
+    @apply flex items-center flex-shrink-0;
   }
 
   .PhoneInputCountrySelect {
     @apply h-10 rounded-md border border-input bg-background px-2 text-sm text-foreground outline-none;
     @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
     @apply disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .PhoneInputInput {
+    @apply flex-1 min-w-0;
   }
 }
 

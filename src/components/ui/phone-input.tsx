@@ -30,7 +30,7 @@ const PhoneNumberTextInput = React.forwardRef<
       inputMode="tel"
       autoComplete="tel"
       pattern="\\+?\\d*"
-      className={className}
+      className={cn("PhoneInputInput", className)}
       value={sanitizedValue}
       onChange={(event) => {
         const sanitized = sanitizePhoneInput(event.target.value);
@@ -56,6 +56,8 @@ export function PhoneNumberInput({
     <PhoneInput
       {...props}
       international
+      countryCallingCodeEditable={false}
+      focusInputOnCountrySelection
       defaultCountry={defaultCountry ?? "DZ"}
       className={cn("phone-input", className)}
       value={value || ""}
