@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import type { Salon, User } from "@/types/entities";
 import { toast } from "@/lib/toast";
 import { uploadFile } from "@/lib/http";
+import { resolveMediaUrl } from "@/lib/media";
 import { usePost } from "@/hooks/usePost";
 import {
   Dialog,
@@ -39,6 +40,7 @@ import React from "react";
 import { parseValidationMsg } from "@/common/validator/zodI18n";
 import { normalizePhone } from "@/common/phone";
 import { detectAddress } from "@/common/geo";
+import { MediaImage } from "@/components/media-image";
 
 const DEFAULT_SALON_IMAGE = "/salon-placeholder.svg";
 
@@ -177,8 +179,9 @@ export function SalonModals({
   }, [modalState, selectedSalon, user, isCreating, isUpdating, isDeleting]);
 
   const logoValue = form.watch("logo");
-  const displayLogo =
-    logoPreview || logoValue || selectedSalon?.logo || DEFAULT_SALON_IMAGE;
+  const rawLogo = logoPreview || logoValue || selectedSalon?.logo || "";
+  const hasCustomLogo = Boolean(rawLogo);
+  const selectedSalonLogoUrl = resolveMediaUrl(selectedSalon?.logo);
 
   const [isDetectingAddress, setIsDetectingAddress] = useState(false);
 
@@ -486,21 +489,19 @@ export function SalonModals({
           </DialogHeader>
           <div className="space-y-4">
             <div className="flex items-center gap-3">
-              <img
-                src={selectedSalon?.logo || DEFAULT_SALON_IMAGE}
+              <MediaImage
+                src={selectedSalon?.logo}
+                fallbackSrc={DEFAULT_SALON_IMAGE}
                 alt={selectedSalon?.name || t("admin.salons.logo")}
                 className="h-16 w-16 rounded-lg object-cover"
                 loading="lazy"
-                onError={(event) => {
-                  if (event.currentTarget.src !== DEFAULT_SALON_IMAGE) {
-                    event.currentTarget.src = DEFAULT_SALON_IMAGE;
-                  }
-                }}
               />
               <div>
                 <Label>{t("admin.salons.logo")}</Label>
                 <p className="text-sm text-muted-foreground break-all">
-                  {selectedSalon?.logo || t("admin.salons.defaultImage")}
+                  {selectedSalonLogoUrl ||
+                    selectedSalon?.logo ||
+                    t("admin.salons.defaultImage")}
                 </p>
               </div>
             </div>
@@ -629,16 +630,12 @@ export function SalonModals({
               <Label>{t("admin.salons.logo")}</Label>
               <div className="flex items-center gap-3">
                 <div className="h-16 w-16 rounded-lg bg-muted flex items-center justify-center overflow-hidden">
-                  <img
-                    src={displayLogo}
+                  <MediaImage
+                    src={rawLogo}
+                    fallbackSrc={DEFAULT_SALON_IMAGE}
                     alt={form.getValues("name") || "Salon"}
                     className="h-full w-full object-cover"
                     loading="lazy"
-                    onError={(event) => {
-                      if (event.currentTarget.src !== DEFAULT_SALON_IMAGE) {
-                        event.currentTarget.src = DEFAULT_SALON_IMAGE;
-                      }
-                    }}
                   />
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -649,7 +646,7 @@ export function SalonModals({
                   >
                     {t("common.upload")}
                   </Button>
-                  {displayLogo && (
+                  {hasCustomLogo && (
                     <Button
                       type="button"
                       variant="ghost"
