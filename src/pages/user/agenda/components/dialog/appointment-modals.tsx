@@ -708,7 +708,6 @@ export function AppointmentModals({
                           value={field.value}
                           onChange={field.onChange}
                           onBlur={field.onBlur}
-                          placeholder={t("fields.placeholders.phone")}
                         />
                       )}
                     />

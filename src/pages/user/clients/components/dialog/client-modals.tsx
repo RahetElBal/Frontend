@@ -472,7 +472,6 @@ export function ClientModals({
                     value={field.value}
                     onChange={field.onChange}
                     onBlur={field.onBlur}
-                    placeholder="+213"
                   />
                 )}
               />

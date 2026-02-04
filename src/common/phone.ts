@@ -7,28 +7,28 @@ export const PHONE_COUNTRY_CONFIG: Record<
   AllowedPhoneCountry,
   {
     label: string;
-    displayLength: number;
-    addLeadingZeroOnDisplay: boolean;
-    dropLeadingZeroOnE164: boolean;
+    nationalLength: number;
+    format: number[];
+    stripLeadingZero: boolean;
   }
 > = {
   DZ: {
     label: "Algeria",
-    displayLength: 10,
-    addLeadingZeroOnDisplay: true,
-    dropLeadingZeroOnE164: true,
+    nationalLength: 9,
+    format: [1, 2, 2, 2, 2],
+    stripLeadingZero: true,
   },
   FR: {
     label: "France",
-    displayLength: 10,
-    addLeadingZeroOnDisplay: true,
-    dropLeadingZeroOnE164: true,
+    nationalLength: 9,
+    format: [1, 2, 2, 2, 2],
+    stripLeadingZero: true,
   },
   ES: {
     label: "Spain",
-    displayLength: 9,
-    addLeadingZeroOnDisplay: false,
-    dropLeadingZeroOnE164: false,
+    nationalLength: 9,
+    format: [3, 3, 3],
+    stripLeadingZero: false,
   },
 };
 
@@ -88,7 +88,19 @@ export const clampNationalNumber = (
   digits: string
 ) => {
   const config = PHONE_COUNTRY_CONFIG[country];
-  return digits.slice(0, config.displayLength);
+  return digits.slice(0, config.nationalLength);
+};
+
+export const normalizeNationalDigits = (
+  country: AllowedPhoneCountry,
+  digits: string
+) => {
+  const config = PHONE_COUNTRY_CONFIG[country];
+  let normalized = digits.replace(/\D/g, "");
+  if (config.stripLeadingZero) {
+    normalized = normalized.replace(/^0+/, "");
+  }
+  return normalized.slice(0, config.nationalLength);
 };
 
 export const getCountryCallingCodeFor = (country: AllowedPhoneCountry) =>
@@ -98,16 +110,8 @@ export const toE164FromNational = (
   country: AllowedPhoneCountry,
   nationalDigits: string
 ) => {
-  if (!nationalDigits) return "";
-  const config = PHONE_COUNTRY_CONFIG[country];
-  let normalized = nationalDigits;
-  if (
-    config.dropLeadingZeroOnE164 &&
-    normalized.length === config.displayLength &&
-    normalized.startsWith("0")
-  ) {
-    normalized = normalized.slice(1);
-  }
+  const normalized = normalizeNationalDigits(country, nationalDigits);
+  if (!normalized) return "";
   const callingCode = getCountryCallingCode(country);
   return `+${callingCode}${normalized}`;
 };
@@ -119,15 +123,39 @@ export const toDisplayNationalFromE164 = (
   if (!e164) return "";
   const parsed = parsePhoneNumberFromString(e164);
   if (!parsed) return "";
-  let national = parsed.nationalNumber.toString();
+  return clampNationalNumber(country, parsed.nationalNumber.toString());
+};
+
+export const formatNationalNumber = (
+  country: AllowedPhoneCountry,
+  digits: string
+) => {
   const config = PHONE_COUNTRY_CONFIG[country];
-  if (
-    config.addLeadingZeroOnDisplay &&
-    national.length === config.displayLength - 1
-  ) {
-    national = `0${national}`;
+  const clean = digits.replace(/\D/g, "").slice(0, config.nationalLength);
+  if (!clean) return "";
+
+  const parts: string[] = [];
+  let index = 0;
+  for (const size of config.format) {
+    if (index >= clean.length) break;
+    parts.push(clean.slice(index, index + size));
+    index += size;
   }
-  return national;
+  if (index < clean.length) {
+    parts.push(clean.slice(index));
+  }
+  return parts.join(" ");
+};
+
+export const getNationalPlaceholder = (country: AllowedPhoneCountry) => {
+  const config = PHONE_COUNTRY_CONFIG[country];
+  return config.format.map((size) => "X".repeat(size)).join(" ");
+};
+
+export const getNationalMaxLength = (country: AllowedPhoneCountry) => {
+  const config = PHONE_COUNTRY_CONFIG[country];
+  const spaceCount = Math.max(0, config.format.length - 1);
+  return config.nationalLength + spaceCount;
 };
 
 export const isValidPhoneForAllowedCountries = (value?: string) => {

@@ -6,8 +6,12 @@ import {
   ALLOWED_PHONE_COUNTRIES,
   PHONE_COUNTRY_CONFIG,
   clampNationalNumber,
+  formatNationalNumber,
   getAllowedPhoneCountry,
   getCountryCallingCodeFor,
+  getNationalMaxLength,
+  getNationalPlaceholder,
+  normalizeNationalDigits,
   sanitizePhoneInput,
   toDisplayNationalFromE164,
   toE164FromNational,
@@ -40,11 +44,11 @@ export function PhoneNumberInput({
 }: PhoneNumberInputProps) {
   const [country, setCountry] =
     React.useState<AllowedPhoneCountry>(defaultCountry);
-  const [national, setNational] = React.useState("");
+  const [nationalDigits, setNationalDigits] = React.useState("");
 
   React.useEffect(() => {
     if (!value) {
-      setNational("");
+      setNationalDigits("");
       return;
     }
 
@@ -55,18 +59,18 @@ export function PhoneNumberInput({
 
     if (parsed && parsedCountry) {
       setCountry(parsedCountry);
-      setNational(
+      setNationalDigits(
         clampNationalNumber(
           parsedCountry,
           toDisplayNationalFromE164(parsedCountry, parsed.number),
-        ),
+        )
       );
       return;
     }
 
     const sanitized = sanitizePhoneInput(value);
     if (!sanitized) {
-      setNational("");
+      setNationalDigits("");
       return;
     }
 
@@ -78,14 +82,14 @@ export function PhoneNumberInput({
         : undefined;
       if (parsedInternational && parsedInternationalCountry) {
         setCountry(parsedInternationalCountry);
-        setNational(
+        setNationalDigits(
           clampNationalNumber(
             parsedInternationalCountry,
             toDisplayNationalFromE164(
               parsedInternationalCountry,
               parsedInternational.number,
-            ),
-          ),
+            )
+          )
         );
         return;
       }
@@ -96,20 +100,20 @@ export function PhoneNumberInput({
     const nationalDigits = digitsOnly.startsWith(callingCode)
       ? digitsOnly.slice(callingCode.length)
       : digitsOnly;
-    setNational(clampNationalNumber(country, nationalDigits));
+    setNationalDigits(normalizeNationalDigits(country, nationalDigits));
   }, [value]);
 
   const handleCountryChange = (next: AllowedPhoneCountry) => {
     setCountry(next);
-    const clamped = clampNationalNumber(next, national);
-    setNational(clamped);
+    const clamped = normalizeNationalDigits(next, nationalDigits);
+    setNationalDigits(clamped);
     onChange?.(clamped ? toE164FromNational(next, clamped) : "");
   };
 
   const handleNationalChange = (rawValue: string) => {
     const sanitized = sanitizePhoneInput(rawValue);
     if (!sanitized) {
-      setNational("");
+      setNationalDigits("");
       onChange?.("");
       return;
     }
@@ -122,34 +126,36 @@ export function PhoneNumberInput({
         : undefined;
       if (parsed && parsedCountry) {
         setCountry(parsedCountry);
-        const display = clampNationalNumber(
+        const digits = clampNationalNumber(
           parsedCountry,
-          toDisplayNationalFromE164(parsedCountry, parsed.number),
+          toDisplayNationalFromE164(parsedCountry, parsed.number)
         );
-        setNational(display);
+        setNationalDigits(digits);
         onChange?.(parsed.number);
         return;
       }
     }
 
     const digitsOnly = normalized.replace(/\D/g, "");
-    const clamped = clampNationalNumber(country, digitsOnly);
-    setNational(clamped);
+    const clamped = normalizeNationalDigits(country, digitsOnly);
+    setNationalDigits(clamped);
     onChange?.(clamped ? toE164FromNational(country, clamped) : "");
   };
 
   const handleBlur = (event: React.FocusEvent<HTMLInputElement>) => {
-    if (national) {
-      const e164 = toE164FromNational(country, national);
-      const display = clampNationalNumber(
-        country,
-        toDisplayNationalFromE164(country, e164),
-      );
-      setNational(display);
-      onChange?.(display ? toE164FromNational(country, display) : "");
+    if (nationalDigits) {
+      const normalized = normalizeNationalDigits(country, nationalDigits);
+      if (normalized !== nationalDigits) {
+        setNationalDigits(normalized);
+      }
+      onChange?.(normalized ? toE164FromNational(country, normalized) : "");
     }
     onBlur?.(event);
   };
+
+  const formattedValue = formatNationalNumber(country, nationalDigits);
+  const effectivePlaceholder =
+    placeholder ?? getNationalPlaceholder(country);
 
   return (
     <div className={cn("phone-input w-full", className)}>
@@ -182,16 +188,16 @@ export function PhoneNumberInput({
 
       <Input
         id={id}
-        value={national}
+        value={formattedValue}
         onChange={(event) => handleNationalChange(event.target.value)}
         onBlur={handleBlur}
-        placeholder={placeholder}
+        placeholder={effectivePlaceholder}
         disabled={disabled}
         type="tel"
         inputMode="numeric"
         autoComplete="tel"
-        pattern="\\d*"
-        maxLength={PHONE_COUNTRY_CONFIG[country].displayLength}
+        pattern="[0-9 ]*"
+        maxLength={getNationalMaxLength(country)}
         className="flex-1 min-w-0"
       />
     </div>

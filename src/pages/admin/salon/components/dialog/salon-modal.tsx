@@ -639,7 +639,6 @@ export function SalonModals({
                       value={field.value}
                       onChange={field.onChange}
                       onBlur={field.onBlur}
-                      placeholder="+213"
                     />
                   )}
                 />

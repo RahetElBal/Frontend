@@ -97,7 +97,6 @@ export function UserForm({
                   value={field.value}
                   onChange={field.onChange}
                   onBlur={field.onBlur}
-                  placeholder="+213"
                   className="flex-1"
                 />
               )}
