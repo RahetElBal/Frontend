@@ -767,6 +767,8 @@ export const ar = {
       salonOwner: "مالك الصالون",
       selectOwner: "اختر مديراً كمالك",
       selectOwnerRequired: "الرجاء اختيار مالك الصالون",
+      noAdmins: "لا يوجد مديرون متاحون",
+      createAdmin: "إنشاء مدير",
       searchSalons: "ابحث عن الصالونات...",
       ownerHelp: "اختر المدير الذي سيمتلك ويدير هذا الصالون",
       ownerAutoAssigned: "سيتم تعيينك تلقائياً كمالك لهذا الصالون",

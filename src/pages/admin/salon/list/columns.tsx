@@ -5,6 +5,9 @@ import type { Salon, User } from "@/types/entities";
 import { canModifySalon } from "../utils";
 import type { Column } from "@/components/table";
 import { Badge } from "@/components/badge";
+import { MediaImage } from "@/components/media-image";
+
+const DEFAULT_SALON_IMAGE = "/salon-placeholder.svg";
 
 interface UseSalonsColumnsProps {
   currentUser: User | null;
@@ -28,7 +31,18 @@ export function useSalonsColumns({
       key: "name",
       header: t("fields.name"),
       sortable: true,
-      render: (salon) => <div className="font-medium">{salon.name}</div>,
+      render: (salon) => (
+        <div className="flex items-center gap-3">
+          <MediaImage
+            src={salon.logo}
+            fallbackSrc={DEFAULT_SALON_IMAGE}
+            alt={salon.name}
+            className="h-8 w-8 rounded-md object-cover border border-border/60 shrink-0"
+            loading="lazy"
+          />
+          <div className="font-medium">{salon.name}</div>
+        </div>
+      ),
     },
     {
       key: "address",

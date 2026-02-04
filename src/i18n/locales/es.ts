@@ -771,6 +771,8 @@ export const es = {
       salonOwner: "Propietario del salón",
       selectOwner: "Seleccionar un administrador como propietario",
       selectOwnerRequired: "Por favor selecciona un propietario",
+      noAdmins: "No hay administradores disponibles",
+      createAdmin: "Crear un administrador",
       searchSalons: "Busca salones...",
       ownerHelp:
         "Elige qué administrador será propietario y gestionará este salón",

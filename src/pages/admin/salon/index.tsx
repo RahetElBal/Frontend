@@ -43,7 +43,11 @@ export default function SalonsPage() {
     staleTime: adminStatsStaleTime,
   });
 
-  const { data: admins = [] } = useGet<User[]>("users/admins", {
+  const {
+    data: admins = [],
+    isLoading: isAdminsLoading,
+    isError: isAdminsError,
+  } = useGet<User[]>("users/admins", {
     enabled: userIsSuperadmin,
     retry: 1,
     staleTime: adminStatsStaleTime,
@@ -108,6 +112,7 @@ export default function SalonsPage() {
       ).length;
 
   const totalAdmins = userIsSuperadmin ? admins.length : 0;
+  const adminsLoaded = userIsSuperadmin && !isAdminsLoading && !isAdminsError;
 
   // Stats calculations - ALL data for superadmin, filtered for admin
   const totalServices = servicesData.length;
@@ -211,6 +216,7 @@ export default function SalonsPage() {
           salons={salons}
           user={user as User | null}
           admins={admins}
+          adminsLoaded={adminsLoaded}
           onSuccess={refetch}
         />
       )}

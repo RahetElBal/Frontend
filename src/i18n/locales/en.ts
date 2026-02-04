@@ -1370,10 +1370,12 @@ export const en = {
       deleteSalonConfirm:
         "Are you sure you want to delete {{name}}? This action cannot be undone.",
       owner: "Owner",
-      salonOwner: "Salon Owner",
-      selectOwner: "Select an admin as owner",
-      selectOwnerRequired: "Please select a salon owner",
-      searchSalons: "Look for salons...",
+        salonOwner: "Salon Owner",
+        selectOwner: "Select an admin as owner",
+        selectOwnerRequired: "Please select a salon owner",
+        noAdmins: "No admins available",
+        createAdmin: "Create an admin",
+        searchSalons: "Look for salons...",
       ownerHelp: "Choose which admin will own and manage this salon",
       ownerAutoAssigned:
         "You will be automatically assigned as the owner of this salon",

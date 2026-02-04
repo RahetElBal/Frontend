@@ -4,6 +4,9 @@ import { useUser } from "@/hooks/useUser";
 import type { Salon } from "@/types";
 import { formatDate } from "@/common/utils";
 import { RecentCard } from "./recent-card";
+import { MediaImage } from "@/components/media-image";
+
+const DEFAULT_SALON_IMAGE = "/salon-placeholder.svg";
 
 interface RecentSalonsCardProps {
   salons: Salon[];
@@ -29,6 +32,13 @@ export function RecentSalonsCard({ salons }: RecentSalonsCardProps) {
             key={salon.id}
             className="flex items-start gap-3 p-3 rounded-lg border hover:bg-accent/50 transition-colors"
           >
+            <MediaImage
+              src={salon.logo}
+              fallbackSrc={DEFAULT_SALON_IMAGE}
+              alt={salon.name}
+              className="h-10 w-10 rounded-lg object-cover border border-border/60 shrink-0"
+              loading="lazy"
+            />
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
                 <p className="font-medium truncate">{salon.name}</p>

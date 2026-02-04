@@ -50,6 +50,7 @@ interface SalonModalProps {
   salons: Salon[];
   user: User | null;
   admins: User[];
+  adminsLoaded: boolean;
   onSuccess: () => void;
 }
 
@@ -59,6 +60,7 @@ export function SalonModals({
   salons,
   user,
   admins,
+  adminsLoaded,
   onSuccess,
 }: SalonModalProps) {
   const { t } = useTranslation();
@@ -185,10 +187,7 @@ export function SalonModals({
 
   const [isDetectingAddress, setIsDetectingAddress] = useState(false);
 
-  const clampCropOffset = (
-    offset: { x: number; y: number },
-    zoom: number,
-  ) => {
+  const clampCropOffset = (offset: { x: number; y: number }, zoom: number) => {
     if (!cropMeta) return offset;
     const displayWidth = cropMeta.width * cropMeta.baseScale * zoom;
     const displayHeight = cropMeta.height * cropMeta.baseScale * zoom;
@@ -211,7 +210,9 @@ export function SalonModals({
     setIsCropOpen(true);
   };
 
-  const handleCropImageLoad = (event: React.SyntheticEvent<HTMLImageElement>) => {
+  const handleCropImageLoad = (
+    event: React.SyntheticEvent<HTMLImageElement>,
+  ) => {
     const image = event.currentTarget;
     const baseScale = Math.max(
       cropPreviewSize / image.naturalWidth,
@@ -226,9 +227,7 @@ export function SalonModals({
     setCropOffset({ x: 0, y: 0 });
   };
 
-  const handleCropPointerDown = (
-    event: React.PointerEvent<HTMLDivElement>,
-  ) => {
+  const handleCropPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
     event.currentTarget.setPointerCapture(event.pointerId);
     dragRef.current = {
       x: event.clientX,
@@ -238,9 +237,7 @@ export function SalonModals({
     };
   };
 
-  const handleCropPointerMove = (
-    event: React.PointerEvent<HTMLDivElement>,
-  ) => {
+  const handleCropPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
     if (!dragRef.current) return;
     const dx = event.clientX - dragRef.current.x;
     const dy = event.clientY - dragRef.current.y;
@@ -273,10 +270,7 @@ export function SalonModals({
     const displayHeight = cropMeta.height * scale;
     const imgX = cropPreviewSize / 2 - displayWidth / 2 + cropOffset.x;
     const imgY = cropPreviewSize / 2 - displayHeight / 2 + cropOffset.y;
-    const sourceSize = Math.min(
-      cropMeta.width,
-      cropPreviewSize / scale,
-    );
+    const sourceSize = Math.min(cropMeta.width, cropPreviewSize / scale);
 
     const rawSourceX = (0 - imgX) / scale;
     const rawSourceY = (0 - imgY) / scale;
@@ -370,7 +364,7 @@ export function SalonModals({
             keepDirty: false,
             keepTouched: false,
             keepIsSubmitted: false,
-          }
+          },
         );
         setSelectedOwnerId("");
         setLogoPreview(null);
@@ -390,7 +384,7 @@ export function SalonModals({
             keepDirty: false,
             keepTouched: false,
             keepIsSubmitted: false,
-          }
+          },
         );
         setSelectedOwnerId(selectedSalon.ownerId || "");
         setLogoPreview(selectedSalon.logo || null);
@@ -407,7 +401,32 @@ export function SalonModals({
     };
   }, [logoPreview]);
 
+  useEffect(() => {
+    if (!modalState || modalState.salonId !== "create") return;
+    if (user?.isSuperadmin !== true) return;
+    if (!selectedOwnerId) return;
+
+    const selectedAdmin = admins.find((admin) => admin.id === selectedOwnerId);
+    if (!selectedAdmin?.email) return;
+
+    const currentEmail = form.getValues("email");
+    if (currentEmail === selectedAdmin.email) return;
+
+    form.setValue("email", selectedAdmin.email, {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+  }, [
+    modalState?.salonId,
+    user?.isSuperadmin,
+    selectedOwnerId,
+    admins,
+    form,
+  ]);
+
   if (!derived) return null;
+
+  const showNoAdmins = adminsLoaded && admins.length === 0;
 
   const handleClose = () => {
     setIsCropOpen(false);
@@ -478,7 +497,16 @@ export function SalonModals({
       <Dialog open={!!modalState} onOpenChange={handleClose}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{selectedSalon?.name}</DialogTitle>
+            <DialogTitle className="flex items-center gap-3">
+              <MediaImage
+                src={selectedSalon?.logo}
+                fallbackSrc={DEFAULT_SALON_IMAGE}
+                alt={selectedSalon?.name || t("admin.salons.logo")}
+                className="h-10 w-10 rounded-lg object-cover border border-border/60"
+                loading="lazy"
+              />
+              <span>{selectedSalon?.name}</span>
+            </DialogTitle>
             <DialogDescription>
               {t("admin.salons.viewSalonDetails")}
             </DialogDescription>
@@ -569,148 +597,150 @@ export function SalonModals({
               onSubmit={form.handleSubmit(handleSubmit)}
               className="space-y-4"
             >
-            <div>
-              <Label htmlFor="name">{t("admin.salons.name")} *</Label>
-              <Input id="name" {...form.register("name")} />
-              {form.formState.errors.name && (
-                <p className="text-sm text-destructive mt-1">
-                  {getErrorMessage(
-                    form.formState.errors.name.message as string
-                  )}
-                </p>
-              )}
-            </div>
-            <div>
-              <div className="flex items-center justify-between gap-2">
-                <Label htmlFor="address">{t("admin.salons.address")}</Label>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleDetectAddress}
-                  disabled={isDetectingAddress}
-                >
-                  {isDetectingAddress
-                    ? t("common.loading")
-                    : t("common.detectAddress")}
-                </Button>
+              <div>
+                <Label htmlFor="name">{t("admin.salons.name")} *</Label>
+                <Input id="name" {...form.register("name")} />
+                {form.formState.errors.name && (
+                  <p className="text-sm text-destructive mt-1">
+                    {getErrorMessage(
+                      form.formState.errors.name.message as string,
+                    )}
+                  </p>
+                )}
               </div>
-              <Input id="address" {...form.register("address")} />
-            </div>
-            <div>
-              <Label htmlFor="phone">{t("admin.salons.phone")}</Label>
-              <Input
-                id="phone"
-                {...form.register("phone", {
-                  onBlur: (event) => {
-                    const normalized = normalizePhone(event.target.value);
-                    if (normalized) {
-                      form.setValue("phone", normalized);
-                    }
-                  },
-                })}
-              />
-            </div>
-            <div>
-              <Label htmlFor="email">{t("admin.salons.email")}</Label>
-              <Input id="email" type="email" {...form.register("email")} />
-              {form.formState.errors.email && (
-                <p className="text-sm text-destructive mt-1">
-                  {getErrorMessage(
-                    form.formState.errors.email.message as string
-                  )}
-                </p>
-              )}
-            </div>
-            <div>
-              <Label>{t("admin.salons.logo")}</Label>
-              <div className="flex items-center gap-3">
-                <div className="h-16 w-16 rounded-lg bg-muted flex items-center justify-center overflow-hidden">
-                  <MediaImage
-                    src={rawLogo}
-                    fallbackSrc={DEFAULT_SALON_IMAGE}
-                    alt={form.getValues("name") || "Salon"}
-                    className="h-full w-full object-cover"
-                    loading="lazy"
-                  />
-                </div>
-                <div className="flex flex-wrap gap-2">
+              <div>
+                <div className="flex items-center justify-between gap-2">
+                  <Label htmlFor="address">{t("admin.salons.address")}</Label>
                   <Button
                     type="button"
-                    variant="outline"
-                    onClick={() => fileInputRef.current?.click()}
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleDetectAddress}
+                    disabled={isDetectingAddress}
                   >
-                    {t("common.upload")}
+                    {isDetectingAddress
+                      ? t("common.loading")
+                      : t("common.detectAddress")}
                   </Button>
-                  {hasCustomLogo && (
+                </div>
+                <Input id="address" {...form.register("address")} />
+              </div>
+              <div>
+                <Label htmlFor="phone">{t("admin.salons.phone")}</Label>
+                <Input
+                  id="phone"
+                  {...form.register("phone", {
+                    onBlur: (event) => {
+                      const normalized = normalizePhone(event.target.value);
+                      if (normalized) {
+                        form.setValue("phone", normalized);
+                      }
+                    },
+                  })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="email">{t("admin.salons.email")}</Label>
+                <Input id="email" type="email" {...form.register("email")} />
+                {form.formState.errors.email && (
+                  <p className="text-sm text-destructive mt-1">
+                    {getErrorMessage(
+                      form.formState.errors.email.message as string,
+                    )}
+                  </p>
+                )}
+              </div>
+              <div>
+                <Label>{t("admin.salons.logo")}</Label>
+                <div className="flex items-center gap-3">
+                  <div className="h-16 w-16 rounded-lg bg-muted flex items-center justify-center overflow-hidden">
+                    <MediaImage
+                      src={rawLogo}
+                      fallbackSrc={DEFAULT_SALON_IMAGE}
+                      alt={form.getValues("name") || "Salon"}
+                      className="h-full w-full object-cover"
+                      loading="lazy"
+                    />
+                  </div>
+                  <div className="flex flex-wrap gap-2">
                     <Button
                       type="button"
-                      variant="ghost"
+                      variant="outline"
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      {t("common.upload")}
+                    </Button>
+                    {hasCustomLogo && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={() => {
+                          form.setValue("logo", "", { shouldDirty: true });
+                          setLogoPreview(null);
+                        }}
+                      >
+                        {t("common.remove")}
+                      </Button>
+                    )}
+                  </div>
+                </div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleLogoFileChange}
+                />
+                <input type="hidden" {...form.register("logo")} />
+                {form.formState.errors.logo && (
+                  <p className="text-sm text-destructive mt-1">
+                    {getErrorMessage(
+                      form.formState.errors.logo.message as string,
+                    )}
+                  </p>
+                )}
+              </div>
+              {derived.isSuperadmin && (
+                <div>
+                  <Label htmlFor="owner">{t("admin.salons.owner")} *</Label>
+                  <Select
+                    value={selectedOwnerId}
+                    onValueChange={setSelectedOwnerId}
+                  >
+                    <SelectTrigger>
+                      <SelectValue
+                        placeholder={t("admin.salons.selectOwner")}
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {showNoAdmins ? (
+                        <div className="p-2 text-sm text-muted-foreground">
+                          {t("admin.salons.noAdmins")}
+                        </div>
+                      ) : (
+                        admins.map((admin) => (
+                          <SelectItem key={admin.id} value={admin.id}>
+                            {admin.email}
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
+                  {showNoAdmins && (
+                    <Button
+                      type="button"
+                      variant="link"
+                      className="mt-2 p-0"
                       onClick={() => {
-                        form.setValue("logo", "", { shouldDirty: true });
-                        setLogoPreview(null);
+                        setModalState(null);
+                        window.location.href = "/admin/users";
                       }}
                     >
-                      {t("common.remove")}
+                      {t("admin.salons.createAdmin")}
                     </Button>
                   )}
                 </div>
-              </div>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handleLogoFileChange}
-              />
-              <input type="hidden" {...form.register("logo")} />
-              {form.formState.errors.logo && (
-                <p className="text-sm text-destructive mt-1">
-                  {getErrorMessage(
-                    form.formState.errors.logo.message as string
-                  )}
-                </p>
               )}
-            </div>
-            {derived.isSuperadmin && (
-              <div>
-                <Label htmlFor="owner">{t("admin.salons.owner")} *</Label>
-                <Select
-                  value={selectedOwnerId}
-                  onValueChange={setSelectedOwnerId}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder={t("admin.salons.selectOwner")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {admins.length === 0 ? (
-                      <div className="p-2 text-sm text-muted-foreground">
-                        {t("admin.salons.noAdmins")}
-                      </div>
-                    ) : (
-                      admins.map((admin) => (
-                        <SelectItem key={admin.id} value={admin.id}>
-                          {admin.email}
-                        </SelectItem>
-                      ))
-                    )}
-                  </SelectContent>
-                </Select>
-                {admins.length === 0 && (
-                  <Button
-                    type="button"
-                    variant="link"
-                    className="mt-2 p-0"
-                    onClick={() => {
-                      setModalState(null);
-                      window.location.href = "/admin/users";
-                    }}
-                  >
-                    {t("admin.salons.createAdmin")}
-                  </Button>
-                )}
-              </div>
-            )}
               <DialogFooter>
                 <Button type="button" variant="outline" onClick={handleClose}>
                   {t("common.cancel")}
@@ -719,8 +749,8 @@ export function SalonModals({
                   {derived.isPending
                     ? t("common.saving")
                     : derived.isCreateMode
-                    ? t("common.create")
-                    : t("common.save")}
+                      ? t("common.create")
+                      : t("common.save")}
                 </Button>
               </DialogFooter>
             </form>
