@@ -319,10 +319,6 @@ export function SalonModals({
         file,
       );
       form.setValue("logo", response.url, { shouldDirty: true });
-      if (logoPreview?.startsWith("blob:")) {
-        URL.revokeObjectURL(logoPreview);
-      }
-      setLogoPreview(response.url);
       setIsCropOpen(false);
       toast.success(t("success.saved"));
     } catch (error) {
