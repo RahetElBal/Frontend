@@ -1,6 +1,7 @@
 import { useMemo, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { UseFormReturn } from "react-hook-form";
+import { Controller } from "react-hook-form";
 import {
   User,
   Scissors,
@@ -34,6 +35,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { PhoneNumberInput } from "@/components/ui/phone-input";
 import {
   Select,
   SelectContent,
@@ -65,7 +67,7 @@ import {
 } from "../../utils";
 import { getValidationErrorMessage } from "@/pages/user/utils";
 import { FormErrorMessage } from "@/pages/user/components/form-error-message";
-import { normalizePhone, sanitizePhoneInput } from "@/common/phone";
+import { normalizePhone } from "@/common/phone";
 import {
   getServiceImage,
   getServiceImageFallback,
@@ -697,32 +699,18 @@ export function AppointmentModals({
                   </div>
                   <div className="space-y-2">
                     <Label>{t("agenda.walkInPhone")} *</Label>
-                    <Input
-                      {...form.register("walkInPhone", {
-                        setValueAs: sanitizePhoneInput,
-                        onChange: (event) => {
-                          const sanitized = sanitizePhoneInput(
-                            event.target.value,
-                          );
-                          if (sanitized !== event.target.value) {
-                            event.target.value = sanitized;
-                          }
-                        },
-                        onBlur: (event) => {
-                          const normalized = normalizePhone(
-                            event.target.value,
-                          );
-                          form.setValue("walkInPhone", normalized, {
-                            shouldDirty: true,
-                            shouldValidate: true,
-                          });
-                        },
-                      })}
-                      placeholder={t("fields.placeholders.phone")}
-                      type="tel"
-                      inputMode="tel"
-                      autoComplete="tel"
-                      pattern="\\+?\\d*"
+                    <Controller
+                      name="walkInPhone"
+                      control={form.control}
+                      render={({ field }) => (
+                        <PhoneNumberInput
+                          id="walkInPhone"
+                          value={field.value}
+                          onChange={field.onChange}
+                          onBlur={field.onBlur}
+                          placeholder={t("fields.placeholders.phone")}
+                        />
+                      )}
                     />
                     <FormErrorMessage message={getErrorMessage("walkInPhone")} />
                   </div>

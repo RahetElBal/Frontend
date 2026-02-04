@@ -2,7 +2,7 @@
 import { useMemo, useEffect, useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import type { Salon, User } from "@/types/entities";
 import { toast } from "@/lib/toast";
 import { uploadFile } from "@/lib/http";
@@ -38,9 +38,10 @@ import { canModifySalon, type SalonModalState } from "../../utils";
 import { createSalonFormSchema, type SalonFormData } from "../../validation";
 import React from "react";
 import { parseValidationMsg } from "@/common/validator/zodI18n";
-import { normalizePhone, sanitizePhoneInput } from "@/common/phone";
+import { normalizePhone } from "@/common/phone";
 import { detectAddress } from "@/common/geo";
 import { MediaImage } from "@/components/media-image";
+import { PhoneNumberInput } from "@/components/ui/phone-input";
 
 const DEFAULT_SALON_IMAGE = "/salon-placeholder.svg";
 
@@ -629,28 +630,18 @@ export function SalonModals({
               </div>
               <div>
                 <Label htmlFor="phone">{t("admin.salons.phone")}</Label>
-                <Input
-                  id="phone"
-                  {...form.register("phone", {
-                    setValueAs: sanitizePhoneInput,
-                    onChange: (event) => {
-                      const sanitized = sanitizePhoneInput(event.target.value);
-                      if (sanitized !== event.target.value) {
-                        event.target.value = sanitized;
-                      }
-                    },
-                    onBlur: (event) => {
-                      const normalized = normalizePhone(event.target.value);
-                      form.setValue("phone", normalized, {
-                        shouldDirty: true,
-                        shouldValidate: true,
-                      });
-                    },
-                  })}
-                  type="tel"
-                  inputMode="tel"
-                  autoComplete="tel"
-                  pattern="\\+?\\d*"
+                <Controller
+                  name="phone"
+                  control={form.control}
+                  render={({ field }) => (
+                    <PhoneNumberInput
+                      id="phone"
+                      value={field.value}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                      placeholder="+213"
+                    />
+                  )}
                 />
               </div>
               <div>

@@ -1,6 +1,7 @@
 import { useMemo, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import type { UseFormReturn } from "react-hook-form";
+import { Controller } from "react-hook-form";
 import {
   Phone,
   Award,
@@ -36,12 +37,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PhoneNumberInput } from "@/components/ui/phone-input";
 import { Badge } from "@/components/badge";
 import type { ClientModalState } from "@/pages/user/clients/types";
 import type { ClientFormData } from "@/pages/user/clients/validation";
 import { getValidationErrorMessage } from "@/pages/user/utils";
 import { FormErrorMessage } from "@/pages/user/components/form-error-message";
-import { normalizePhone, sanitizePhoneInput } from "@/common/phone";
+import { normalizePhone } from "@/common/phone";
 
 interface ClientModalsProps {
   modalState: ClientModalState;
@@ -461,28 +463,18 @@ export function ClientModals({
             </div>
             <div className="space-y-2">
               <Label htmlFor="phone">{t("fields.phone")}</Label>
-              <Input
-                id="phone"
-                type="tel"
-                {...form.register("phone", {
-                  setValueAs: sanitizePhoneInput,
-                  onChange: (event) => {
-                    const sanitized = sanitizePhoneInput(event.target.value);
-                    if (sanitized !== event.target.value) {
-                      event.target.value = sanitized;
-                    }
-                  },
-                  onBlur: (event) => {
-                    const normalized = normalizePhone(event.target.value);
-                    form.setValue("phone", normalized, {
-                      shouldDirty: true,
-                      shouldValidate: true,
-                    });
-                  },
-                })}
-                inputMode="tel"
-                autoComplete="tel"
-                pattern="\\+?\\d*"
+              <Controller
+                name="phone"
+                control={form.control}
+                render={({ field }) => (
+                  <PhoneNumberInput
+                    id="phone"
+                    value={field.value}
+                    onChange={field.onChange}
+                    onBlur={field.onBlur}
+                    placeholder="+213"
+                  />
+                )}
               />
             </div>
             <DialogFooter>

@@ -5,6 +5,7 @@ import { Controller } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PhoneNumberInput } from "@/components/ui/phone-input";
 import {
   Select,
   SelectContent,
@@ -16,7 +17,6 @@ import { DialogFooter } from "@/components/ui/dialog";
 import type { User, Salon } from "@/types/entities";
 import type { UserFormData } from "./validation";
 import { parseValidationMsg } from "@/common/validator/zodI18n";
-import { normalizePhone, sanitizePhoneInput } from "@/common/phone";
 
 interface UserFormProps {
   form: UseFormReturn<UserFormData>;
@@ -86,32 +86,21 @@ export function UserForm({
         {/* Phone Field */}
         <div className="space-y-2">
           <Label htmlFor="phone">{t("fields.phone")} *</Label>
-          <div className="relative">
-            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              id="phone"
-              type="tel"
-              {...form.register("phone", {
-                setValueAs: sanitizePhoneInput,
-                onChange: (event) => {
-                  const sanitized = sanitizePhoneInput(event.target.value);
-                  if (sanitized !== event.target.value) {
-                    event.target.value = sanitized;
-                  }
-                },
-                onBlur: (event) => {
-                  const normalized = normalizePhone(event.target.value);
-                  form.setValue("phone", normalized, {
-                    shouldDirty: true,
-                    shouldValidate: true,
-                  });
-                },
-              })}
-              placeholder="+213 XXX XXX XXX"
-              className="pl-10"
-              inputMode="tel"
-              autoComplete="tel"
-              pattern="\\+?\\d*"
+          <div className="flex items-center gap-2">
+            <Phone className="h-4 w-4 text-muted-foreground" />
+            <Controller
+              name="phone"
+              control={form.control}
+              render={({ field }) => (
+                <PhoneNumberInput
+                  id="phone"
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  placeholder="+213"
+                  className="flex-1"
+                />
+              )}
             />
           </div>
           {form.formState.errors.phone && (

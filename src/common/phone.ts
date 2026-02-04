@@ -1,25 +1,6 @@
 import { parsePhoneNumberFromString } from "libphonenumber-js";
 
-type DefaultCountry = "DZ" | "FR" | "ES" | "US" | "GB" | "DE" | "IT";
-
-const supportedCountries: DefaultCountry[] = [
-  "DZ",
-  "FR",
-  "ES",
-  "US",
-  "GB",
-  "DE",
-  "IT",
-];
-
-const getDefaultCountry = (): DefaultCountry => {
-  if (typeof navigator === "undefined") return "DZ";
-  const locale =
-    Intl.DateTimeFormat().resolvedOptions().locale || navigator.language;
-  const parts = locale.split("-");
-  const region = (parts[1] || "DZ").toUpperCase() as DefaultCountry;
-  return supportedCountries.includes(region) ? region : "DZ";
-};
+export type DefaultCountry = "DZ" | "FR" | "ES" | "US" | "GB" | "DE" | "IT";
 
 export const PHONE_INPUT_REGEX = /^\+?\d+$/;
 
@@ -47,7 +28,7 @@ const normalizeInternationalPrefix = (value: string) =>
 
 export const normalizePhone = (
   value?: string,
-  defaultCountry: DefaultCountry = getDefaultCountry()
+  defaultCountry?: DefaultCountry
 ): string => {
   const sanitized = sanitizePhoneInput(value);
   if (!sanitized || !/\d/.test(sanitized)) return "";
