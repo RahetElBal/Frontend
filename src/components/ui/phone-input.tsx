@@ -1,12 +1,12 @@
 import * as React from "react";
 import PhoneInput from "react-phone-number-input";
-import type { PhoneInputProps } from "react-phone-number-input";
+import type { Props as PhoneInputProps } from "react-phone-number-input";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { sanitizePhoneInput } from "@/common/phone";
 
 type PhoneNumberInputProps = Omit<
-  PhoneInputProps,
+  PhoneInputProps<React.InputHTMLAttributes<HTMLInputElement>>,
   "value" | "onChange" | "inputComponent"
 > & {
   value?: string;
