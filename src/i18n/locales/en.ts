@@ -1366,6 +1366,7 @@ export const en = {
       noSalons: "No salons",
       addFirstSalon: "Add your first salon to get started",
       salonDetails: "Salon Details",
+      viewSalonDetails: "View salon details",
       deleteSalon: "Delete Salon",
       deleteSalonConfirm:
         "Are you sure you want to delete {{name}}? This action cannot be undone.",

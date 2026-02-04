@@ -760,6 +760,7 @@ export const ar = {
       noSalons: "لا توجد صالونات",
       addFirstSalon: "أضف أول صالون للبدء",
       salonDetails: "تفاصيل الصالون",
+      viewSalonDetails: "عرض تفاصيل الصالون",
       deleteSalon: "حذف الصالون",
       deleteSalonConfirm:
         "هل أنت متأكد من حذف {{name}}؟ لا يمكن التراجع عن هذا الإجراء.",

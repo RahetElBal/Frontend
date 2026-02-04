@@ -764,6 +764,7 @@ export const es = {
       noSalons: "No hay salones",
       addFirstSalon: "Añade tu primer salón para comenzar",
       salonDetails: "Detalles del salón",
+      viewSalonDetails: "Ver los detalles del salón",
       deleteSalon: "Eliminar salón",
       deleteSalonConfirm:
         "¿Estás seguro de que deseas eliminar {{name}}? Esta acción no se puede deshacer.",

@@ -13,11 +13,11 @@ type MediaImageProps = Omit<
 const isSkippableScheme = (value: string) =>
   value.startsWith("blob:") || value.startsWith("data:");
 
-const isSameOrigin = (first: string, second: string) => {
+const getOrigin = (value: string) => {
   try {
-    return new URL(first).origin === new URL(second).origin;
+    return new URL(value).origin;
   } catch {
-    return false;
+    return null;
   }
 };
 
@@ -53,10 +53,25 @@ export function MediaImage({
     };
   }, [blobSrc]);
 
+  const trustedOrigins = React.useMemo(() => {
+    const origins = new Set<string>();
+    const mediaOrigin = getOrigin(getMediaBaseUrl());
+    if (mediaOrigin) origins.add(mediaOrigin);
+    const apiBase = import.meta.env.VITE_API_URL;
+    if (apiBase) {
+      const apiOrigin = getOrigin(
+        new URL(apiBase, window.location.origin).toString(),
+      );
+      if (apiOrigin) origins.add(apiOrigin);
+    }
+    return origins;
+  }, []);
+
   const tryAuthFetch = React.useCallback(async () => {
     if (!resolvedSrc) return false;
     if (isSkippableScheme(resolvedSrc)) return false;
-    if (!isSameOrigin(resolvedSrc, getMediaBaseUrl())) return false;
+    const resolvedOrigin = getOrigin(resolvedSrc);
+    if (!resolvedOrigin || !trustedOrigins.has(resolvedOrigin)) return false;
 
     try {
       const token = getAuthToken();

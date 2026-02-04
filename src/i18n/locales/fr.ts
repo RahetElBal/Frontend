@@ -1000,6 +1000,7 @@ export const fr = {
       noSalons: "Aucun salon",
       addFirstSalon: "Ajoutez votre premier salon pour commencer",
       salonDetails: "Détails du salon",
+      viewSalonDetails: "Voir les détails du salon",
       deleteSalon: "Supprimer le salon",
       deleteSalonConfirm:
         "Êtes-vous sûr de vouloir supprimer {{name}} ? Cette action est irréversible.",
