@@ -59,10 +59,13 @@ type ServicePayload = {
 
 export default function AdminServicesPage() {
   const { t } = useTranslation();
-  const { isSuperadmin, isLoading } = useUser();
+  const { isSuperadmin, isAdmin, isLoading, user } = useUser();
   const salonsStaleTime = 1000 * 60 * 10;
   const servicesStaleTime = 1000 * 60 * 5;
-  const [selectedSalonId, setSelectedSalonId] = useState<string>("");
+  const adminSalonId = !isSuperadmin ? user?.salon?.id ?? "" : "";
+  const [selectedSalonId, setSelectedSalonId] = useState<string>(
+    adminSalonId
+  );
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [groupByCategory, setGroupByCategory] = useState(true);
@@ -97,6 +100,12 @@ export default function AdminServicesPage() {
     staleTime: salonsStaleTime,
   });
 
+  const availableSalons = isSuperadmin
+    ? salons
+    : user?.salon
+      ? [user.salon]
+      : [];
+
   const {
     data: servicesResponse,
     isLoading: servicesLoading,
@@ -122,10 +131,16 @@ export default function AdminServicesPage() {
   }, [services]);
 
   useEffect(() => {
+    if (!isSuperadmin) {
+      if (adminSalonId && adminSalonId !== selectedSalonId) {
+        setSelectedSalonId(adminSalonId);
+      }
+      return;
+    }
     if (!selectedSalonId && salons.length === 1) {
       setSelectedSalonId(salons[0].id);
     }
-  }, [salons, selectedSalonId]);
+  }, [adminSalonId, isSuperadmin, salons, selectedSalonId]);
 
   useEffect(() => {
     if (services.length === 0) return;
@@ -330,7 +345,7 @@ export default function AdminServicesPage() {
     );
   }, [filteredServices, groupByCategory, t]);
 
-  if (!isLoading && !isSuperadmin) {
+  if (!isLoading && !isAdmin) {
     return <Navigate to={ROUTES.ADMIN} replace />;
   }
 
@@ -371,20 +386,26 @@ export default function AdminServicesPage() {
             <div className="text-sm font-medium">
               {t("admin.services.selectSalon")}
             </div>
-            <Select value={selectedSalonId} onValueChange={setSelectedSalonId}>
-              <SelectTrigger className="w-full sm:w-80">
-                <SelectValue
-                  placeholder={t("admin.services.selectSalonPlaceholder")}
-                />
-              </SelectTrigger>
-              <SelectContent>
-                {salons.map((salon) => (
-                  <SelectItem key={salon.id} value={salon.id}>
-                    {salon.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {isSuperadmin ? (
+              <Select value={selectedSalonId} onValueChange={setSelectedSalonId}>
+                <SelectTrigger className="w-full sm:w-80">
+                  <SelectValue
+                    placeholder={t("admin.services.selectSalonPlaceholder")}
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableSalons.map((salon) => (
+                    <SelectItem key={salon.id} value={salon.id}>
+                      {salon.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <div className="text-sm text-muted-foreground">
+                {availableSalons[0]?.name || t("admin.services.noSalonSelected")}
+              </div>
+            )}
           </div>
           <div className="flex flex-wrap gap-3">
             <Input

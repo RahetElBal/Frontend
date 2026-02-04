@@ -311,12 +311,6 @@ export function getNavigationForRole(
   if (isInAdminPanel) {
     // Admin panel is only for superadmin and admin
     if (role === "superadmin" || role === "admin") {
-      if (role === "admin") {
-        return ADMIN_NAVIGATION.map((section) => ({
-          ...section,
-          items: section.items.filter((item) => item.id !== "admin-services"),
-        }));
-      }
       return ADMIN_NAVIGATION;
     }
     return [];
