@@ -1450,7 +1450,8 @@ export const en = {
       packServicesLabel: "Included services",
       packServicesEmpty: "No services available to include yet.",
       packServicesRequired: "Select at least one service for the pack",
-      packSummary: "{{count}} services | {{duration}} min | {{price}}",
+      packSummary:
+        "{{count}} services | Total duration: {{duration}} min | Total price: {{price}}",
       packItems: "{{count}} services in pack",
       descriptionLabel: "Description",
       imageLabel: "Image URL",

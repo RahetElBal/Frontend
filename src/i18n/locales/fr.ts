@@ -705,7 +705,7 @@ export const fr = {
     topPacks: "Packs populaires",
     bestSeller: "Meilleure vente",
     topCategories: "CatÃ©gories principales",
-    revenueMix: "RÃ©partition du chiffre d'affaires",
+    revenueMix: "Répartition du chiffre d'affaires",
     bookings: "réservations",
     sold: "vendus",
     kpis: "Indicateurs clés",
@@ -1084,7 +1084,8 @@ export const fr = {
       packServicesLabel: "Services inclus",
       packServicesEmpty: "Aucun service disponible pour le pack.",
       packServicesRequired: "Sélectionnez au moins un service pour le pack",
-      packSummary: "{{count}} services | {{duration}} min | {{price}}",
+      packSummary:
+        "{{count}} services | Durée totale : {{duration}} min | Prix total : {{price}}",
       packItems: "{{count}} services dans le pack",
       descriptionLabel: "Description",
       imageLabel: "URL de l'image",

@@ -828,6 +828,15 @@ export const es = {
       categoryLabel: "Categoría",
       durationLabel: "Duración (minutos)",
       priceLabel: "Precio",
+      packLabel: "Pack (combo)",
+      packDescription:
+        "Combina varios servicios con un precio especial para clientas casadas.",
+      packServicesLabel: "Servicios incluidos",
+      packServicesEmpty: "No hay servicios disponibles para incluir.",
+      packServicesRequired: "Selecciona al menos un servicio para el pack",
+      packSummary:
+        "{{count}} servicios | Duración total: {{duration}} min | Precio total: {{price}}",
+      packItems: "{{count}} servicios en el pack",
       descriptionLabel: "Descripción",
       imageLabel: "URL de la imagen",
       activeLabel: "Activo",

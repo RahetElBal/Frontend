@@ -44,6 +44,7 @@ import {
   getServiceImage,
   getServiceImageFallback,
   translateServiceCategory,
+  translateServiceName,
 } from "@/common/service-translations";
 import type { Category, PaginatedResponse, Salon, Service } from "@/types";
 import { Badge } from "@/components/badge";
@@ -61,6 +62,8 @@ type ServicePayload = {
   isPack?: boolean;
   packServiceIds?: string[];
 };
+
+const PACK_CATEGORY = "PACK";
 
 export default function AdminServicesPage() {
   const { t } = useTranslation();
@@ -94,6 +97,7 @@ export default function AdminServicesPage() {
     isPack: false,
     packServiceIds: [] as string[],
   });
+  const [lastNonPackCategory, setLastNonPackCategory] = useState("");
 
   const getCategoryName = (category?: string | Category): string => {
     if (!category) return "";
@@ -136,6 +140,16 @@ export default function AdminServicesPage() {
     return Array.from(unique).sort((a, b) => a.localeCompare(b));
   }, [services]);
 
+  const categoryOptions = useMemo(() => {
+    const baseCategories = categories.filter(
+      (category) => category !== PACK_CATEGORY,
+    );
+    if (formValues.isPack || formValues.category === PACK_CATEGORY) {
+      return [PACK_CATEGORY, ...baseCategories];
+    }
+    return baseCategories;
+  }, [categories, formValues.isPack, formValues.category]);
+
   const packServiceOptions = useMemo(
     () =>
       services.filter(
@@ -161,14 +175,6 @@ export default function AdminServicesPage() {
     );
     return { totalDuration, totalPrice };
   }, [selectedPackServices]);
-
-  useEffect(() => {
-    if (!formValues.isPack) return;
-    const nextDuration = packTotals.totalDuration;
-    if (nextDuration > 0 && String(nextDuration) !== formValues.duration) {
-      setFormValues((prev) => ({ ...prev, duration: String(nextDuration) }));
-    }
-  }, [formValues.isPack, formValues.duration, packTotals.totalDuration]);
 
   useEffect(() => {
     if (!isSuperadmin) {
@@ -266,6 +272,7 @@ export default function AdminServicesPage() {
     }
     setModalMode("create");
     setEditingServiceId(null);
+    setLastNonPackCategory("");
     setFormValues({
       name: "",
       category: "",
@@ -283,9 +290,11 @@ export default function AdminServicesPage() {
   const openEditModal = (service: Service) => {
     setModalMode("edit");
     setEditingServiceId(service.id);
+    const categoryName = getCategoryName(service.category);
+    setLastNonPackCategory(service.isPack ? "" : categoryName);
     setFormValues({
       name: service.name ?? "",
-      category: getCategoryName(service.category),
+      category: service.isPack ? PACK_CATEGORY : categoryName,
       duration: String(service.duration ?? ""),
       price: String(service.price ?? ""),
       description: service.description ?? "",
@@ -302,8 +311,30 @@ export default function AdminServicesPage() {
     value: string | boolean,
   ) => {
     setFormValues((prev) => {
-      if (field === "isPack" && value === false) {
-        return { ...prev, isPack: false, packServiceIds: [] };
+      if (field === "isPack") {
+        const nextIsPack = Boolean(value);
+        if (nextIsPack) {
+          if (prev.category && prev.category !== PACK_CATEGORY) {
+            setLastNonPackCategory(prev.category);
+          }
+          return { ...prev, isPack: true, category: PACK_CATEGORY };
+        }
+        const restoredCategory =
+          prev.category === PACK_CATEGORY ? lastNonPackCategory : prev.category;
+        return {
+          ...prev,
+          isPack: false,
+          category: restoredCategory || "",
+          packServiceIds: [],
+        };
+      }
+      if (field === "category") {
+        if (prev.isPack) {
+          return { ...prev, category: PACK_CATEGORY };
+        }
+        const nextCategory = String(value);
+        setLastNonPackCategory(nextCategory);
+        return { ...prev, category: nextCategory };
       }
       return { ...prev, [field]: value };
     });
@@ -347,16 +378,15 @@ export default function AdminServicesPage() {
 
     setIsSavingService(true);
     try {
-      const resolvedDuration =
-        formValues.isPack && packTotals.totalDuration > 0
-          ? packTotals.totalDuration
-          : duration;
+      const resolvedCategory = formValues.isPack
+        ? PACK_CATEGORY
+        : formValues.category.trim();
       if (modalMode === "create") {
         await post<Service, ServicePayload>("services", {
           salonId: selectedSalonId,
           name: formValues.name.trim(),
-          category: formValues.category.trim(),
-          duration: resolvedDuration,
+          category: resolvedCategory,
+          duration,
           price,
           description: formValues.description.trim() || undefined,
           image: formValues.image.trim() || undefined,
@@ -370,8 +400,8 @@ export default function AdminServicesPage() {
       } else if (editingServiceId) {
         await patch<Service, ServicePayload>(`services/${editingServiceId}`, {
           name: formValues.name.trim(),
-          category: formValues.category.trim(),
-          duration: resolvedDuration,
+          category: resolvedCategory,
+          duration,
           price,
           description: formValues.description.trim() || undefined,
           image: formValues.image.trim() || undefined,
@@ -590,7 +620,7 @@ export default function AdminServicesPage() {
                             {getServiceImage(service) && (
                               <img
                                 src={getServiceImage(service)}
-                                alt={service.name}
+                                alt={translateServiceName(t, service)}
                                 className="h-8 w-8 rounded-md object-cover"
                                 loading="lazy"
                                 onError={(event) => {
@@ -605,7 +635,7 @@ export default function AdminServicesPage() {
                                 }}
                               />
                             )}
-                            <span>{service.name}</span>
+                            <span>{translateServiceName(t, service)}</span>
                             {service.isPack && (
                               <Badge variant="info">
                                 {t("services.pack")}
@@ -694,18 +724,28 @@ export default function AdminServicesPage() {
             </div>
             <div>
               <Label>{t("admin.services.categoryLabel")}</Label>
-              <Input
+              <Select
                 value={formValues.category}
-                list="admin-service-categories"
-                onChange={(event) =>
-                  handleFormChange("category", event.target.value)
-                }
-              />
-              <datalist id="admin-service-categories">
-                {categories.map((category) => (
-                  <option key={category} value={category} />
-                ))}
-              </datalist>
+                onValueChange={(value) => handleFormChange("category", value)}
+                disabled={formValues.isPack}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={t("services.selectCategory")} />
+                </SelectTrigger>
+                <SelectContent>
+                  {categoryOptions.length === 0 ? (
+                    <SelectItem value="__empty" disabled>
+                      {t("common.noResults")}
+                    </SelectItem>
+                  ) : (
+                    categoryOptions.map((category) => (
+                      <SelectItem key={category} value={category}>
+                        {translateServiceCategory(t, category)}
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
             </div>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
@@ -717,7 +757,6 @@ export default function AdminServicesPage() {
                   onChange={(event) =>
                     handleFormChange("duration", event.target.value)
                   }
-                  disabled={formValues.isPack}
                 />
               </div>
               <div>
@@ -779,7 +818,8 @@ export default function AdminServicesPage() {
                                 }
                               />
                               <span className="flex-1">
-                                {service.name} ({service.duration} min)
+                                {translateServiceName(t, service)} (
+                                {service.duration} min)
                               </span>
                               <span className="text-muted-foreground">
                                 {formatCurrency(Number(service.price) || 0)}
@@ -810,13 +850,6 @@ export default function AdminServicesPage() {
                   handleFormChange("image", event.target.value)
                 }
               />
-            </div>
-            <div className="flex items-center gap-2">
-              <Switch
-                checked={formValues.isActive}
-                onCheckedChange={(value) => handleFormChange("isActive", value)}
-              />
-              <span className="text-sm">{t("admin.services.activeLabel")}</span>
             </div>
           </div>
           <DialogFooter>

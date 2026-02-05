@@ -11,6 +11,8 @@ export interface AggregatedItem {
   name: string;
   count: number;
   revenue: number;
+  itemId?: string;
+  type?: "service" | "product";
 }
 
 export type AnalyticsPeriod = "daily" | "weekly" | "monthly";
@@ -153,6 +155,8 @@ export const aggregateSalesItems = (
           name: item.name || "Item",
           count: 0,
           revenue: 0,
+          itemId: item.itemId,
+          type: item.type,
         };
       }
       const { quantity, lineTotal } = getSaleItemTotals(item);
@@ -168,6 +172,7 @@ export const aggregateCategorySales = (
   services: Service[],
   products: Product[],
   fallbackLabel: string,
+  type?: "service" | "product",
 ): AggregatedItem[] => {
   const serviceCategories = new Map(
     services.map((service) => [
@@ -186,6 +191,7 @@ export const aggregateCategorySales = (
   sales.forEach((sale) => {
     const items = Array.isArray(sale.items) ? sale.items : [];
     items.forEach((item) => {
+      if (type && item.type !== type) return;
       const categoryName =
         item.type === "service"
           ? serviceCategories.get(item.itemId)

@@ -821,6 +821,15 @@ export const ar = {
       categoryLabel: "الفئة",
       durationLabel: "المدة (دقائق)",
       priceLabel: "السعر",
+      packLabel: "حزمة (باقة)",
+      packDescription:
+        "اجمع عدة خدمات بسعر خاص للعميلات المتزوجات.",
+      packServicesLabel: "الخدمات المشمولة",
+      packServicesEmpty: "لا توجد خدمات متاحة للإضافة.",
+      packServicesRequired: "اختر خدمة واحدة على الأقل للباقة",
+      packSummary:
+        "{{count}} خدمة | المدة الإجمالية: {{duration}} دقيقة | السعر الإجمالي: {{price}}",
+      packItems: "{{count}} خدمة ضمن الباقة",
       descriptionLabel: "الوصف",
       imageLabel: "رابط الصورة",
       activeLabel: "نشط",

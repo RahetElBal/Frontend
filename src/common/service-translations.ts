@@ -27,6 +27,7 @@ const defaultCategoryKeyMap: Record<string, string> = {
   makeup: "services.categories.makeup",
   hair: "services.categories.hair",
   skincare: "services.categories.skincare",
+  pack: "services.pack",
 };
 
 const getServiceCategoryValue = (service: Service) => {

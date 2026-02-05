@@ -27,6 +27,10 @@ import {
 import { useLanguage } from "@/hooks/useLanguage";
 import { useUser } from "@/hooks/useUser";
 import { useGet } from "@/hooks/useGet";
+import {
+  translateServiceCategory,
+  translateServiceName,
+} from "@/common/service-translations";
 import type { Appointment, Client, Sale, Service } from "@/types/entities";
 import type { PaginatedResponse } from "@/types/api";
 import { normalizeSalesResponse } from "@/utils/normalize-sales";
@@ -40,6 +44,7 @@ import {
   getPeriodRange,
   getTopItemsBy,
   toNumber,
+  type AggregatedItem,
   type AnalyticsPeriod,
 } from "./utils";
 
@@ -121,6 +126,10 @@ export function AnalyticsPage() {
     () => servicesResponse?.data ?? [],
     [servicesResponse?.data],
   );
+  const serviceLookup = useMemo(
+    () => new Map(services.map((service) => [service.id, service])),
+    [services],
+  );
   const packServices = useMemo(
     () => services.filter((service) => service.isPack),
     [services],
@@ -150,8 +159,10 @@ export function AnalyticsPage() {
   );
   const packItems = useMemo(() => {
     if (packServiceIds.size === 0) return [];
-    const totals: Record<string, { name: string; count: number; revenue: number }> =
-      {};
+    const totals: Record<
+      string,
+      { name: string; count: number; revenue: number; itemId: string; type: "service" }
+    > = {};
     salesInRange.forEach((sale) => {
       const items = Array.isArray(sale.items) ? sale.items : [];
       items.forEach((item) => {
@@ -169,7 +180,13 @@ export function AnalyticsPage() {
             item.name ||
             packServices.find((service) => service.id === item.itemId)?.name ||
             t("services.pack");
-          totals[item.itemId] = { name: packName, count: 0, revenue: 0 };
+          totals[item.itemId] = {
+            name: packName,
+            count: 0,
+            revenue: 0,
+            itemId: item.itemId,
+            type: "service",
+          };
         }
         totals[item.itemId].count += quantity;
         totals[item.itemId].revenue += lineTotal;
@@ -177,6 +194,12 @@ export function AnalyticsPage() {
     });
     return Object.values(totals);
   }, [packServiceIds, packServices, salesInRange, t]);
+
+  const getServiceDisplayName = (item: AggregatedItem) => {
+    if (item.type !== "service" || !item.itemId) return item.name;
+    const service = serviceLookup.get(item.itemId);
+    return service ? translateServiceName(t, service) : item.name;
+  };
 
   if (userLoading) {
     return (
@@ -200,21 +223,19 @@ export function AnalyticsPage() {
   const totalAppointments = appointmentsInRange.length;
   const newClients = clientsInRange.length;
 
-  const bestSeller = getTopItemsBy(
-    aggregateSalesItems(salesInRange),
-    "count",
-    1,
-  )[0];
-
   const allServiceItems = aggregateSalesItems(salesInRange, "service");
-  const allProductItems = aggregateSalesItems(salesInRange, "product");
+  const bestSeller = getTopItemsBy(allServiceItems, "count", 1)[0];
 
   const topServices = getTopItemsBy(allServiceItems, "count", 5);
 
-  const topProducts = getTopItemsBy(allProductItems, "count", 5);
-
   const topCategories = getTopItemsBy(
-    aggregateCategorySales(salesInRange, services, [], t("common.other")),
+    aggregateCategorySales(
+      salesInRange,
+      services,
+      [],
+      t("common.other"),
+      "service",
+    ),
     "revenue",
     5,
   );
@@ -223,15 +244,7 @@ export function AnalyticsPage() {
     (sum, item) => sum + item.revenue,
     0,
   );
-  const productRevenue = allProductItems.reduce(
-    (sum, item) => sum + item.revenue,
-    0,
-  );
-  const totalItemRevenue = serviceRevenue + productRevenue;
-  const serviceShare =
-    totalItemRevenue > 0 ? (serviceRevenue / totalItemRevenue) * 100 : 0;
-  const productShare =
-    totalItemRevenue > 0 ? (productRevenue / totalItemRevenue) * 100 : 0;
+  const serviceShare = serviceRevenue > 0 ? 100 : 0;
   const packRevenue = packItems.reduce(
     (sum, item) => sum + item.revenue,
     0,
@@ -364,7 +377,9 @@ export function AnalyticsPage() {
               </h3>
               {bestSeller ? (
                 <div className="space-y-2">
-                  <p className="text-2xl font-bold">{bestSeller.name}</p>
+                  <p className="text-2xl font-bold">
+                    {getServiceDisplayName(bestSeller)}
+                  </p>
                   <div className="flex items-center gap-3 text-sm text-muted-foreground">
                     <span>
                       {bestSeller.count} {t("analytics.sold")}
@@ -390,13 +405,15 @@ export function AnalyticsPage() {
                 ) : (
                   topCategories.map((category) => {
                     const percent =
-                      totalItemRevenue > 0
-                        ? (category.revenue / totalItemRevenue) * 100
+                      serviceRevenue > 0
+                        ? (category.revenue / serviceRevenue) * 100
                         : 0;
                     return (
                       <div key={category.name} className="space-y-2">
                         <div className="flex items-center justify-between text-sm">
-                          <span className="font-medium">{category.name}</span>
+                          <span className="font-medium">
+                            {translateServiceCategory(t, category.name)}
+                          </span>
                           <span>{formatCurrency(category.revenue)}</span>
                         </div>
                         <div className="h-2 rounded-full bg-muted">
@@ -429,23 +446,11 @@ export function AnalyticsPage() {
                     />
                   </div>
                 </div>
-                <div>
-                  <div className="flex items-center justify-between text-sm mb-1">
-                    <span>{t("nav.products")}</span>
-                    <span>{formatCurrency(productRevenue)}</span>
-                  </div>
-                  <div className="h-2 rounded-full bg-muted">
-                    <div
-                      className="h-2 rounded-full bg-blue-500"
-                      style={{ width: `${Math.min(productShare, 100)}%` }}
-                    />
-                  </div>
-                </div>
               </div>
             </Card>
           </div>
 
-          <div className="grid gap-6 lg:grid-cols-3">
+          <div className="grid gap-6 lg:grid-cols-2">
             <Card className="p-6">
               <h3 className="text-lg font-semibold mb-4">
                 {t("analytics.topPacks")}
@@ -460,7 +465,9 @@ export function AnalyticsPage() {
                       className="flex items-center justify-between"
                     >
                       <div>
-                        <p className="font-medium">{pack.name}</p>
+                        <p className="font-medium">
+                          {getServiceDisplayName(pack)}
+                        </p>
                         <p className="text-sm text-muted-foreground">
                           {pack.count} {t("analytics.sold")}
                         </p>
@@ -487,41 +494,15 @@ export function AnalyticsPage() {
                       className="flex items-center justify-between"
                     >
                       <div>
-                        <p className="font-medium">{service.name}</p>
+                        <p className="font-medium">
+                          {getServiceDisplayName(service)}
+                        </p>
                         <p className="text-sm text-muted-foreground">
                           {service.count} {t("analytics.sold")}
                         </p>
                       </div>
                       <p className="font-semibold text-emerald-600">
                         {formatCurrency(service.revenue)}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </Card>
-
-            <Card className="p-6">
-              <h3 className="text-lg font-semibold mb-4">
-                {t("analytics.topProducts")}
-              </h3>
-              {topProducts.length === 0 ? (
-                <p className="text-muted-foreground">{t("common.noResults")}</p>
-              ) : (
-                <div className="space-y-4">
-                  {topProducts.map((product, index) => (
-                    <div
-                      key={`${product.name}-${index}`}
-                      className="flex items-center justify-between"
-                    >
-                      <div>
-                        <p className="font-medium">{product.name}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {product.count} {t("analytics.sold")}
-                        </p>
-                      </div>
-                      <p className="font-semibold text-blue-600">
-                        {formatCurrency(product.revenue)}
                       </p>
                     </div>
                   ))}

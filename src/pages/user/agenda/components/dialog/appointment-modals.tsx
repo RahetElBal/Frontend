@@ -235,10 +235,6 @@ export function AppointmentModals({
       safeClients.find((client) => client.id === selectedClientId) || null,
     [safeClients, selectedClientId],
   );
-  const canUsePacks = walkInEnabled
-    ? !!walkInIsMarried
-    : !!selectedClient?.isMarried;
-
   const selectableClients = useMemo(() => {
     if (!selectedClientId) return regularClients;
     const selectedClient = safeClients.find(
@@ -258,19 +254,7 @@ export function AppointmentModals({
   const walkInEmail = watch("walkInEmail");
   const selectedDate = watch("date") || getLocalDateString();
   const selectedStartTime = watch("startTime");
-  const visibleServices = useMemo(() => {
-    const baseServices = canUsePacks
-      ? allServices
-      : allServices.filter((service) => !service.isPack);
-    if (!selectedServiceId) {
-      return baseServices;
-    }
-    const selected = allServices.find((service) => service.id === selectedServiceId);
-    if (selected && !baseServices.some((service) => service.id === selected.id)) {
-      return [selected, ...baseServices];
-    }
-    return baseServices;
-  }, [allServices, canUsePacks, selectedServiceId]);
+  const visibleServices = useMemo(() => allServices, [allServices]);
   const selectedService = useMemo(
     () => allServices.find((service) => service.id === selectedServiceId) || null,
     [allServices, selectedServiceId],
