@@ -109,7 +109,7 @@ export default function AdminServicesPage() {
     isLoading: servicesLoading,
     refetch,
   } = useGet<PaginatedResponse<Service>>("services", {
-    params: selectedSalonId ? { salonId: selectedSalonId, perPage: 100 } : {},
+    params: selectedSalonId ? { salonId: selectedSalonId } : {},
     enabled: !!selectedSalonId,
     staleTime: servicesStaleTime,
   });
@@ -381,27 +381,29 @@ export default function AdminServicesPage() {
       <Card className="p-4">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <div className="text-sm font-medium">
-              {t("admin.services.selectSalon")}
-            </div>
             {isSuperadmin ? (
-              <Select
-                value={selectedSalonId}
-                onValueChange={setSelectedSalonId}
-              >
-                <SelectTrigger className="w-full sm:w-80">
-                  <SelectValue
-                    placeholder={t("admin.services.selectSalonPlaceholder")}
-                  />
-                </SelectTrigger>
-                <SelectContent>
-                  {availableSalons.map((salon) => (
-                    <SelectItem key={salon.id} value={salon.id}>
-                      {salon.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <>
+                <div className="text-sm font-medium">
+                  {t("admin.services.selectSalon")}
+                </div>
+                <Select
+                  value={selectedSalonId}
+                  onValueChange={setSelectedSalonId}
+                >
+                  <SelectTrigger className="w-full sm:w-80">
+                    <SelectValue
+                      placeholder={t("admin.services.selectSalonPlaceholder")}
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableSalons.map((salon) => (
+                      <SelectItem key={salon.id} value={salon.id}>
+                        {salon.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </>
             ) : (
               <div className="text-sm text-muted-foreground">
                 {availableSalons[0]?.name ||
