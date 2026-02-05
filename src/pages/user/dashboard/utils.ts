@@ -1,6 +1,17 @@
 import { type Appointment, type Client } from "@/types/entities";
 import { dashboardStatusColors } from "../utils";
 
+/**
+ * Gets the local date string in YYYY-MM-DD format without timezone conversion.
+ * This prevents issues with toISOString() shifting dates based on timezone.
+ */
+export function getLocalDateString(date: Date = new Date()): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 export function getTodayRange() {
   const today = new Date();
   today.setHours(0, 0, 0, 0);

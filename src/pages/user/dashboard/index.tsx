@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useUser } from "@/hooks/useUser";
 import { Spinner } from "@/components/spinner";
@@ -12,12 +13,23 @@ import type {
   RevenueData,
 } from "@/types";
 import { useGet } from "@/hooks/useGet";
+import { getLocalDateString } from "./utils";
 
 export function DashboardPage() {
   const { t } = useTranslation();
-  const { user, isLoading } = useUser();
+  const { user, isLoading, isUser } = useUser();
 
   const salonId = user?.salon?.id;
+  const today = useMemo(() => getLocalDateString(), []);
+  const appointmentsParams = useMemo(
+    () => ({
+      salonId,
+      perPage: 100,
+      date: today,
+      staffId: isUser ? user?.id : undefined,
+    }),
+    [salonId, today, isUser, user?.id],
+  );
 
   const { data: todaysRevenue } = useGet<RevenueData>("sales/today/revenue", {
     params: { salonId },
@@ -35,8 +47,8 @@ export function DashboardPage() {
   const { data: appointmentsData } = useGet<PaginatedResponse<Appointment>>(
     "appointments",
     {
-      params: { salonId, perPage: 100 },
-      enabled: !!salonId,
+      params: appointmentsParams,
+      enabled: !!salonId && !!today,
     },
   );
 

@@ -121,12 +121,6 @@ export const USER_NAVIGATION: NavSection[] = [
         href: ROUTES.SERVICES,
         icon: Scissors,
       },
-      {
-        id: "loyalty",
-        titleKey: "nav.loyalty",
-        href: ROUTES.LOYALTY,
-        icon: Heart,
-      },
     ],
   },
   {
@@ -138,6 +132,18 @@ export const USER_NAVIGATION: NavSection[] = [
         titleKey: "nav.sales",
         href: ROUTES.SALES,
         icon: ShoppingCart,
+      },
+    ],
+  },
+  {
+    id: "insights",
+    titleKey: "nav.sections.insights",
+    items: [
+      {
+        id: "analytics",
+        titleKey: "nav.analytics",
+        href: ROUTES.ANALYTICS,
+        icon: BarChart3,
       },
     ],
   },
@@ -211,18 +217,6 @@ export const ADMIN_SALON_NAVIGATION: NavSection[] = [
         titleKey: "nav.sales",
         href: ROUTES.SALES,
         icon: ShoppingCart,
-      },
-    ],
-  },
-  {
-    id: "insights",
-    titleKey: "nav.sections.insights",
-    items: [
-      {
-        id: "analytics",
-        titleKey: "nav.analytics",
-        href: ROUTES.ANALYTICS,
-        icon: BarChart3,
       },
     ],
   },
