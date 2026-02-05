@@ -9,13 +9,8 @@ import { useGet } from "@/hooks/useGet";
 import { useUser } from "@/hooks/useUser";
 import { useTable } from "@/hooks/useTable";
 import { toast } from "@/lib/toast";
-import type {
-  Salon,
-  User,
-  Service,
-  Client,
-  Sale,
-} from "@/types/entities";
+import type { PaginatedResponse } from "@/types";
+import type { Salon, User, Service, Client, Sale } from "@/types/entities";
 import { normalizeSalesResponse } from "@/utils/normalize-sales";
 import { canModifySalon, type SalonModalState } from "./utils";
 import { StatsGrid } from "./components/stats-grid";
@@ -61,11 +56,14 @@ export default function SalonsPage() {
   });
   const allUsers = allUsersResponse?.data || [];
 
-  const { data: servicesResponse } = useGet<{ data: Service[] }>("services", {
-    params: { salonId },
-    enabled: !!salonId,
-    staleTime: adminStatsStaleTime,
-  });
+  const { data: servicesResponse } = useGet<PaginatedResponse<Service>>(
+    "services",
+    {
+      params: { salonId, perPage: 1 },
+      enabled: !!salonId,
+      staleTime: adminStatsStaleTime,
+    },
+  );
   const servicesData = servicesResponse?.data || [];
 
   const { data: clientsResponse } = useGet<{ data: Client[] }>("clients", {
@@ -115,7 +113,7 @@ export default function SalonsPage() {
   const adminsLoaded = userIsSuperadmin && !isAdminsLoading && !isAdminsError;
 
   // Stats calculations - ALL data for superadmin, filtered for admin
-  const totalServices = servicesData.length;
+  const totalServices = servicesResponse?.meta?.total ?? servicesData.length;
   const totalClients = clientsData.length;
 
   const totalRevenue = salesData.reduce((sum, sale) => sum + sale.total, 0);

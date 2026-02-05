@@ -59,10 +59,10 @@ export function UserLayout() {
 
       {/* Main Content Area */}
       <main
-        className={cn("min-h-screen transition-all duration-300")}
+        className={cn("min-h-screen w-full transition-all duration-300")}
         style={{ paddingInlineStart: "var(--app-sidebar-width, 256px)" }}
       >
-        <div className="p-6">
+        <div className="w-full p-6">
           <Suspense fallback={<LoadingPanel className="min-h-[60vh]" />}>
             <Outlet />
           </Suspense>
