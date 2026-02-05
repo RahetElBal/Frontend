@@ -135,7 +135,7 @@ export function AgendaPage() {
   );
 
   const { data: staffResponse } = useGet<PaginatedResponse<User>>("users", {
-    params: { salonId, role: "user", perPage: 200 },
+    params: { salonId, role: "user", perPage: 100 },
     enabled: !!salonId && canSelectStaff,
     staleTime: 1000 * 60 * 5,
   });
@@ -168,8 +168,9 @@ export function AgendaPage() {
     return options;
   }, [staffMembers, user]);
   type SalonSettingsLike = SalonSettings & Partial<SalonSettingsExtended>;
-  const salonSettings = (salonData?.settings ??
-    user?.salon?.settings) as SalonSettingsLike | undefined;
+  const salonSettings = (salonData?.settings ?? user?.salon?.settings) as
+    | SalonSettingsLike
+    | undefined;
   const bookingSlotMinutes = Number(
     salonSettings?.bookingSlotDuration || DEFAULT_SLOT_MINUTES,
   );
@@ -667,10 +668,12 @@ export function AgendaPage() {
         basePrice !== undefined &&
         parsedDiscount > basePrice
       ) {
-        toast.error(t("validation.number.max", {
-          field: t("sales.discount"),
-          max: basePrice,
-        }));
+        toast.error(
+          t("validation.number.max", {
+            field: t("sales.discount"),
+            max: basePrice,
+          }),
+        );
         return;
       }
     }
