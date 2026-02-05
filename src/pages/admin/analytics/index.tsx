@@ -1,0 +1,520 @@
+import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
+import {
+  TrendingUp,
+  TrendingDown,
+  Users,
+  Calendar,
+  DollarSign,
+  ShoppingCart,
+  BarChart3,
+} from "lucide-react";
+
+import { PageHeader } from "@/components/page-header";
+import { Card } from "@/components/ui/card";
+import { StatsCard } from "@/components/stats-card";
+import { LoadingPanel } from "@/components/loading-panel";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useLanguage } from "@/hooks/useLanguage";
+import { useUser } from "@/hooks/useUser";
+import type {
+  Sale,
+  Appointment,
+  Client,
+  Service,
+  Product,
+  RevenueData,
+  TopService,
+} from "@/types/entities";
+import type { PaginatedResponse } from "@/types";
+import { useGet } from "@/hooks/useGet";
+import {
+  aggregateProductSales,
+  aggregateServiceBookings,
+  getTopItems,
+  toNumber,
+} from "./utils";
+import { normalizeSalesResponse } from "@/utils/normalize-sales";
+
+// Analytics API response types
+interface DashboardStatsResponse {
+  todayRevenue: number;
+  todayAppointments: number;
+  newClients: number;
+  averageTicket: number;
+  revenueChange: number;
+  appointmentsChange: number;
+  clientsChange: number;
+  ticketChange: number;
+  revenueChangeIsNew?: boolean;
+  appointmentsChangeIsNew?: boolean;
+  clientsChangeIsNew?: boolean;
+  ticketChangeIsNew?: boolean;
+  totalClients?: number;
+  totalAppointments?: number;
+  totalServices?: number;
+  totalProducts?: number;
+  retentionRate?: number;
+  noShowRate?: number;
+  totalSpent?: number;
+  totalLoyaltyPoints?: number;
+}
+
+interface RevenueAnalyticsResponse {
+  data: RevenueData[];
+  total: number;
+  period: string;
+}
+
+export function AnalyticsPage() {
+  const { t } = useTranslation();
+  const { formatCurrency } = useLanguage();
+  const { user } = useUser();
+  const [revenuePeriod, setRevenuePeriod] = useState<string>("weekly");
+
+  const salonId = user?.salon?.id;
+  const analyticsStaleTime = 1000 * 60; // 1m
+  const listStaleTime = 1000 * 60 * 10; // 10m
+
+  // Fetch dashboard stats from dedicated analytics endpoint
+  const { data: dashboardStats, isLoading: loadingDashboard } =
+    useGet<DashboardStatsResponse>("analytics/dashboard", {
+      params: { salonId },
+      enabled: !!salonId,
+      staleTime: analyticsStaleTime,
+    });
+
+  const isDashboardStatsResponse = (
+    value: unknown,
+  ): value is DashboardStatsResponse => {
+    if (!value || typeof value !== "object") return false;
+    return (
+      "todayRevenue" in value &&
+      "todayAppointments" in value &&
+      "newClients" in value &&
+      "averageTicket" in value
+    );
+  };
+
+  const hasDashboardStats = isDashboardStatsResponse(dashboardStats);
+  const hasAggregates =
+    hasDashboardStats &&
+    typeof dashboardStats.totalClients === "number" &&
+    typeof dashboardStats.totalAppointments === "number";
+
+  // Fetch revenue analytics (data available for future chart implementation)
+  useGet<RevenueAnalyticsResponse>("analytics/revenue", {
+    params: { salonId, period: revenuePeriod },
+    enabled: !!salonId,
+    staleTime: analyticsStaleTime,
+  });
+
+  // Fetch top services
+  const { data: topServices = [] } = useGet<TopService[]>("services/top", {
+    params: { salonId, limit: 5 },
+    enabled: !!salonId,
+    staleTime: listStaleTime,
+  });
+
+  // Fallback: Fetch raw data if analytics endpoints fail
+  const { data: salesResponse, isLoading: loadingSales } = useGet<
+    PaginatedResponse<Sale>
+  >(
+    "sales",
+    {
+      params: { salonId, perPage: 100 },
+      enabled: !!salonId && !loadingDashboard && !hasDashboardStats,
+      staleTime: listStaleTime,
+      select: normalizeSalesResponse,
+    },
+  );
+  const sales = useMemo(() => salesResponse?.data || [], [salesResponse]);
+  const totalSales = salesResponse?.meta?.total ?? sales.length;
+
+  const { data: appointmentsResponse, isLoading: loadingAppointments } =
+    useGet<PaginatedResponse<Appointment>>("appointments", {
+      params: { salonId, perPage: 100 },
+      enabled: !!salonId && !loadingDashboard && !hasAggregates,
+      staleTime: listStaleTime,
+    });
+  const appointments = useMemo(
+    () => appointmentsResponse?.data || [],
+    [appointmentsResponse],
+  );
+  const totalAppointments = hasAggregates
+    ? dashboardStats.totalAppointments ?? 0
+    : appointmentsResponse?.meta?.total ?? appointments.length;
+  
+  const { data: clientsResponse, isLoading: loadingClients } =
+    useGet<PaginatedResponse<Client>>("clients", {
+      params: { salonId, perPage: 100 },
+      enabled: !!salonId && !loadingDashboard && !hasAggregates,
+      staleTime: listStaleTime,
+    });
+  const clients = useMemo(() => clientsResponse?.data || [], [clientsResponse]);
+  const totalClients = hasAggregates
+    ? dashboardStats.totalClients ?? 0
+    : clientsResponse?.meta?.total ?? clients.length;
+  
+  const { data: servicesResponse } = useGet<PaginatedResponse<Service>>(
+    "services",
+    {
+      params: { salonId, perPage: 100 },
+      enabled: !!salonId && !loadingDashboard && !hasAggregates,
+      staleTime: listStaleTime,
+    },
+  );
+  const services = useMemo(
+    () => servicesResponse?.data || [],
+    [servicesResponse],
+  );
+  const totalServices = hasAggregates
+    ? dashboardStats.totalServices ?? 0
+    : servicesResponse?.meta?.total ?? services.length;
+  
+  const { data: productsResponse } = useGet<PaginatedResponse<Product>>(
+    "products",
+    {
+      params: { salonId, perPage: 100 },
+      enabled: !!salonId && !loadingDashboard && !hasAggregates,
+      staleTime: listStaleTime,
+    },
+  );
+  const products = useMemo(
+    () => productsResponse?.data || [],
+    [productsResponse],
+  );
+  const totalProducts = hasAggregates
+    ? dashboardStats.totalProducts ?? 0
+    : productsResponse?.meta?.total ?? products.length;
+
+  const isLoading =
+    loadingDashboard || loadingSales || loadingAppointments || loadingClients;
+
+  const retentionRate = hasAggregates
+    ? dashboardStats.retentionRate ?? 0
+    : clients.length > 0
+      ? Math.round(
+          (clients.filter((c) => c.visitCount > 1).length / clients.length) *
+            100,
+        )
+      : 0;
+
+  const noShowRate = hasAggregates
+    ? dashboardStats.noShowRate ?? 0
+    : appointments.length > 0
+      ? Math.round(
+          (appointments.filter((a) => a.status === "no_show").length /
+            appointments.length) *
+            100,
+        )
+      : 0;
+
+  const totalSpent = hasAggregates
+    ? dashboardStats.totalSpent ?? 0
+    : clients.reduce((sum, c) => sum + c.totalSpent, 0);
+
+  const totalLoyaltyPoints = hasAggregates
+    ? dashboardStats.totalLoyaltyPoints ?? 0
+    : clients.reduce((sum, c) => sum + c.loyaltyPoints, 0);
+
+  // Calculate metrics - use dashboard stats if available, otherwise calculate from raw data
+  const metrics = useMemo(() => {
+    // If we have dashboard stats from the API, use those
+    if (hasDashboardStats) {
+      // Still need to calculate top products from sales data
+      const topProductsFromSales = getTopItems(
+        aggregateProductSales(sales, products),
+        5,
+      );
+
+      return {
+        totalRevenue: toNumber(dashboardStats.todayRevenue),
+        totalAppointments,
+        totalClients,
+        newClientsThisMonth: toNumber(dashboardStats.newClients),
+        averageTicket: toNumber(dashboardStats.averageTicket),
+        revenueChange: dashboardStats.revenueChange,
+        appointmentsChange: dashboardStats.appointmentsChange,
+        revenueChangeIsNew: dashboardStats.revenueChangeIsNew,
+        appointmentsChangeIsNew: dashboardStats.appointmentsChangeIsNew,
+        topServices: topServices.map((s) => ({
+          name: s.name,
+          count: toNumber(s.count),
+          revenue: toNumber(s.revenue),
+        })),
+        topProducts: topProductsFromSales,
+      };
+    }
+
+    // Fallback: Calculate from raw data
+    const totalRevenue = (sales ?? []).reduce(
+      (sum, sale) => sum + toNumber(sale?.total),
+      0,
+    );
+    const averageTicket =
+      sales.length > 0 ? totalRevenue / sales.length : 0;
+
+    // Count new clients this month
+    const thisMonth = new Date().getMonth();
+    const thisYear = new Date().getFullYear();
+    const newClientsThisMonth = clients.filter((c) => {
+      const createdAt = new Date(c.createdAt);
+      return (
+        createdAt.getMonth() === thisMonth &&
+        createdAt.getFullYear() === thisYear
+      );
+    }).length;
+
+    // Calculate service popularity from appointments
+    const topServicesFromBookings = getTopItems(
+      aggregateServiceBookings(appointments),
+      5,
+    );
+
+    const topProductsFromSales = getTopItems(
+      aggregateProductSales(sales, products),
+      5,
+    );
+
+    return {
+      totalRevenue,
+      totalAppointments,
+      totalClients,
+      newClientsThisMonth,
+      averageTicket: toNumber(averageTicket),
+      revenueChange: undefined,
+      appointmentsChange: undefined,
+      revenueChangeIsNew: undefined,
+      appointmentsChangeIsNew: undefined,
+      topServices: topServicesFromBookings,
+      topProducts: topProductsFromSales,
+    };
+  }, [
+    hasDashboardStats,
+    dashboardStats,
+    topServices,
+    sales,
+    appointments,
+    clients,
+    products,
+    totalAppointments,
+    totalClients,
+  ]);
+
+  const hasData = totalSales > 0 || totalAppointments > 0 || totalClients > 0;
+
+  return (
+    <div className="space-y-6">
+      <PageHeader
+        title={t("nav.analytics")}
+        description={t("analytics.description")}
+      />
+
+      {/* Stats Cards */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <StatsCard
+          title={t("analytics.totalRevenue")}
+          value={formatCurrency(toNumber(metrics.totalRevenue))}
+          change={metrics.revenueChange}
+          changeText={metrics.revenueChangeIsNew ? t("common.new") : undefined}
+          changeIsPositive={metrics.revenueChangeIsNew ? true : undefined}
+          changeLabel={metrics.revenueChange !== undefined ? t("analytics.vsLastPeriod") : undefined}
+          icon={DollarSign}
+          iconColor="text-green-600"
+          iconBgColor="bg-green-100"
+        />
+        <StatsCard
+          title={t("analytics.totalAppointments")}
+          value={(metrics.totalAppointments ?? 0).toString()}
+          change={metrics.appointmentsChange}
+          changeText={metrics.appointmentsChangeIsNew ? t("common.new") : undefined}
+          changeIsPositive={metrics.appointmentsChangeIsNew ? true : undefined}
+          changeLabel={metrics.appointmentsChange !== undefined ? t("analytics.vsLastPeriod") : undefined}
+          icon={Calendar}
+          iconColor="text-blue-600"
+          iconBgColor="bg-blue-100"
+        />
+        <StatsCard
+          title={t("analytics.newClients")}
+          value={(metrics.newClientsThisMonth ?? 0).toString()}
+          changeLabel={t("analytics.thisMonth")}
+          icon={Users}
+          iconColor="text-purple-600"
+          iconBgColor="bg-purple-100"
+        />
+        <StatsCard
+          title={t("analytics.averageTicket")}
+          value={formatCurrency(toNumber(metrics.averageTicket))}
+          icon={ShoppingCart}
+        />
+      </div>
+
+      {/* Period Selector */}
+      <div className="flex items-center gap-4">
+        <span className="text-sm text-muted-foreground">{t("analytics.period")}:</span>
+        <Select value={revenuePeriod} onValueChange={setRevenuePeriod}>
+          <SelectTrigger className="w-40">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="daily">{t("analytics.daily")}</SelectItem>
+            <SelectItem value="weekly">{t("analytics.weekly")}</SelectItem>
+            <SelectItem value="monthly">{t("analytics.monthly")}</SelectItem>
+            <SelectItem value="yearly">{t("analytics.yearly")}</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Main Content */}
+      {isLoading ? (
+        <Card className="p-6">
+          <LoadingPanel label={t("common.loading")} />
+        </Card>
+      ) : !hasData ? (
+        <Card className="p-12 text-center">
+          <BarChart3 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+          <h3 className="text-lg font-semibold mb-2">
+            {t("analytics.noData")}
+          </h3>
+          <p className="text-muted-foreground">
+            {t("analytics.noDataDescription")}
+          </p>
+        </Card>
+      ) : (
+        <div className="grid gap-6 lg:grid-cols-2">
+          {/* Top Services */}
+          <Card className="p-6">
+            <h3 className="text-lg font-semibold mb-4">
+              {t("analytics.topServices")}
+            </h3>
+            {metrics.topServices.length === 0 ? (
+              <p className="text-muted-foreground text-center py-8">
+                {t("common.noResults")}
+              </p>
+            ) : (
+              <div className="space-y-4">
+                {metrics.topServices.map((service, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-accent-pink/10 flex items-center justify-center text-accent-pink font-bold text-sm">
+                        {index + 1}
+                      </div>
+                      <div>
+                        <p className="font-medium">{service.name}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {service.count} {t("analytics.bookings")}
+                        </p>
+                      </div>
+                    </div>
+                    <p className="font-semibold text-green-600">
+                      {formatCurrency(toNumber(service.revenue))}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Card>
+
+
+          {/* KPIs */}
+          <Card className="p-6 lg:col-span-2">
+            <h3 className="text-lg font-semibold mb-4">
+              {t("analytics.kpis")}
+            </h3>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="p-4 bg-muted/50 rounded-lg">
+                <p className="text-sm text-muted-foreground">
+                  {t("analytics.clientRetention")}
+                </p>
+                <div className="flex items-center gap-2 mt-1">
+                  <p className="text-2xl font-bold">
+                    {retentionRate}%
+                  </p>
+                  {retentionRate > 0 && (
+                    <TrendingUp className="h-4 w-4 text-green-600" />
+                  )}
+                </div>
+              </div>
+              <div className="p-4 bg-muted/50 rounded-lg">
+                <p className="text-sm text-muted-foreground">
+                  {t("analytics.noShowRate")}
+                </p>
+                <div className="flex items-center gap-2 mt-1">
+                  <p className="text-2xl font-bold">
+                    {noShowRate}%
+                  </p>
+                  {noShowRate === 0 && totalAppointments > 0 && (
+                    <TrendingDown className="h-4 w-4 text-green-600" />
+                  )}
+                </div>
+              </div>
+              <div className="p-4 bg-muted/50 rounded-lg">
+                <p className="text-sm text-muted-foreground">
+                  {t("fields.totalSpent")}
+                </p>
+                <div className="flex items-center gap-2 mt-1">
+                  <p className="text-2xl font-bold">
+                    {formatCurrency(totalSpent)}
+                  </p>
+                </div>
+              </div>
+              <div className="p-4 bg-muted/50 rounded-lg">
+                <p className="text-sm text-muted-foreground">
+                  {t("fields.loyaltyPoints")}
+                </p>
+                <div className="flex items-center gap-2 mt-1">
+                  <p className="text-2xl font-bold">
+                    {totalLoyaltyPoints}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </Card>
+
+          {/* Summary Stats */}
+          <Card className="p-6 lg:col-span-2">
+            <h3 className="text-lg font-semibold mb-4">
+              {t("common.viewAll")}
+            </h3>
+            <div className="grid gap-4 sm:grid-cols-3">
+              <div className="text-center p-4 bg-muted/50 rounded-lg">
+                <p className="text-3xl font-bold text-accent-pink">
+                  {totalClients}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {t("nav.clients")}
+                </p>
+              </div>
+              <div className="text-center p-4 bg-muted/50 rounded-lg">
+                <p className="text-3xl font-bold text-blue-500">
+                  {totalServices}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {t("nav.services")}
+                </p>
+              </div>
+              <div className="text-center p-4 bg-muted/50 rounded-lg">
+                <p className="text-3xl font-bold text-green-600">
+                  {totalProducts}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {t("nav.products")}
+                </p>
+              </div>
+            </div>
+          </Card>
+        </div>
+      )}
+    </div>
+  );
+}

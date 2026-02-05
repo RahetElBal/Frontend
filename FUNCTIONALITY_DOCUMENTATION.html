@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BeautiQ - Functionality Documentation</title>
+    <style>
+        @media print {
+            body { font-size: 11pt; }
+            .page-break { page-break-before: always; }
+            h1, h2, h3 { page-break-after: avoid; }
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            background: #fff;
+        }
+        
+        h1 {
+            color: #1a1a2e;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            border-bottom: 3px solid #e94560;
+            padding-bottom: 15px;
+        }
+        
+        h2 {
+            color: #16213e;
+            font-size: 1.8em;
+            margin: 30px 0 15px;
+            padding: 10px 0;
+            border-bottom: 2px solid #eee;
+        }
+        
+        h3 {
+            color: #0f3460;
+            font-size: 1.3em;
+            margin: 25px 0 10px;
+        }
+        
+        h4 {
+            color: #e94560;
+            font-size: 1.1em;
+            margin: 15px 0 8px;
+        }
+        
+        p, li {
+            margin-bottom: 8px;
+        }
+        
+        ul, ol {
+            padding-left: 25px;
+            margin-bottom: 15px;
+        }
+        
+        .subtitle {
+            color: #666;
+            font-size: 1.2em;
+            margin-bottom: 30px;
+        }
+        
+        .toc {
+            background: #f8f9fa;
+            padding: 20px 30px;
+            border-radius: 8px;
+            margin: 30px 0;
+        }
+        
+        .toc h3 {
+            margin-top: 0;
+        }
+        
+        .toc ol {
+            list-style-type: decimal;
+        }
+        
+        .section {
+            margin: 30px 0;
+        }
+        
+        .feature-box {
+            background: #f8f9fa;
+            border-left: 4px solid #e94560;
+            padding: 15px 20px;
+            margin: 15px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .feature-box strong {
+            color: #16213e;
+        }
+        
+        .status-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 15px 0;
+        }
+        
+        .status-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 500;
+        }
+        
+        .status-confirmed { background: #d4edda; color: #155724; }
+        .status-pending { background: #fff3cd; color: #856404; }
+        .status-progress { background: #cce5ff; color: #004085; }
+        .status-completed { background: #c3e6cb; color: #155724; }
+        .status-cancelled { background: #f8d7da; color: #721c24; }
+        .status-noshow { background: #e2e3e5; color: #383d41; }
+        
+        .flow-diagram {
+            background: #1a1a2e;
+            color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            white-space: pre-wrap;
+            margin: 20px 0;
+            overflow-x: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 0.95em;
+        }
+        
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+        
+        th {
+            background: #16213e;
+            color: #fff;
+        }
+        
+        tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+        
+        .check { color: #28a745; font-weight: bold; }
+        .cross { color: #dc3545; font-weight: bold; }
+        
+        .key-rule {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        
+        .key-rule strong {
+            color: #856404;
+        }
+        
+        .footer {
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 2px solid #eee;
+            color: #666;
+            font-size: 0.9em;
+            text-align: center;
+        }
+        
+        .language-list {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin: 15px 0;
+        }
+        
+        .lang-item {
+            background: #e8f4f8;
+            padding: 10px 15px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>BeautiQ</h1>
+    <p class="subtitle">Salon Management System - Functionality Documentation</p>
+    
+    <div class="toc">
+        <h3>Table of Contents</h3>
+        <ol>
+            <li>Overview</li>
+            <li>User Roles</li>
+            <li>Admin Functionalities</li>
+            <li>User (Salon Staff) Functionalities</li>
+            <li>Appointment Lifecycle</li>
+            <li>Payment Flow</li>
+            <li>Notifications System</li>
+            <li>Feature Access Matrix</li>
+        </ol>
+    </div>
+    
+    <div class="section">
+        <h2>1. Overview</h2>
+        <p>BeautiQ is a comprehensive salon management system that enables salon owners and staff to manage appointments, clients, services, and payments. The system supports multiple languages (English, French, Spanish, Arabic) and provides role-based access control.</p>
+    </div>
+    
+    <div class="section">
+        <h2>2. User Roles</h2>
+        
+        <h3>Superadmin</h3>
+        <ul>
+            <li>Full access to all system features</li>
+            <li>Can manage salons, users, services, products, and promotions</li>
+            <li>Access to analytics and reporting</li>
+            <li>Can create and modify default services</li>
+        </ul>
+        
+        <h3>Admin (Salon Owner)</h3>
+        <ul>
+            <li>Manages their own salon</li>
+            <li>Access to dashboard, agenda, clients, sales, and settings</li>
+            <li><strong>Cannot access:</strong> Services management, Products, Promotions, Staff management</li>
+        </ul>
+        
+        <h3>User (Salon Staff)</h3>
+        <ul>
+            <li>Access to operational features for their assigned salon</li>
+            <li>Can manage appointments, clients, and process payments</li>
+        </ul>
+    </div>
+    
+    <div class="section page-break">
+        <h2>3. Admin Functionalities</h2>
+        
+        <div class="feature-box">
+            <h4>Dashboard</h4>
+            <p><strong>Location:</strong> /admin/dashboard</p>
+            <ul>
+                <li><strong>Overview Statistics:</strong> View total salons, active users, revenue metrics</li>
+                <li><strong>Recent Activity:</strong> See latest salon registrations and user sign-ups</li>
+                <li><strong>Quick Actions:</strong> Access frequently used features</li>
+            </ul>
+        </div>
+        
+        <div class="feature-box">
+            <h4>Salons Management</h4>
+            <p><strong>Location:</strong> /admin/salon</p>
+            <ul>
+                <li><strong>View Salons:</strong> List all registered salons with their status</li>
+                <li><strong>Create Salon:</strong> Add new salons with name, address, contact information</li>
+                <li><strong>Edit Salon:</strong> Update salon details and settings</li>
+                <li><strong>Salon Statistics:</strong> View individual salon performance metrics</li>
+            </ul>
+        </div>
+        
+        <div class="feature-box">
+            <h4>Users Management</h4>
+            <p><strong>Location:</strong> /admin/users</p>
+            <ul>
+                <li><strong>User List:</strong> View all registered users across salons</li>
+                <li><strong>Create User:</strong> Add new users with role assignment</li>
+                <li><strong>Edit User:</strong> Update user information and permissions</li>
+                <li><strong>User Statistics:</strong> Track user activity and engagement</li>
+            </ul>
+        </div>
+        
+        <div class="feature-box">
+            <h4>Analytics</h4>
+            <p><strong>Location:</strong> /admin/analytics</p>
+            <ul>
+                <li><strong>Revenue Overview:</strong> View total revenue with period comparison</li>
+                <li><strong>Appointment Metrics:</strong> Track appointment counts and completion rates</li>
+                <li><strong>Average Ticket:</strong> Monitor average transaction value</li>
+                <li><strong>Period Selection:</strong> Filter by daily, weekly, monthly, yearly</li>
+                <li><strong>Top Services:</strong> View most booked services</li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="section page-break">
+        <h2>4. User (Salon Staff) Functionalities</h2>
+        
+        <div class="feature-box">
+            <h4>Agenda (Appointment Calendar)</h4>
+            <p><strong>Location:</strong> /user/agenda</p>
+            <ul>
+                <li><strong>Calendar Views:</strong> Month, Week, Day, and Agenda views</li>
+                <li><strong>Create Appointment:</strong> Select client, service, date/time, add notes</li>
+                <li><strong>View Appointment:</strong> Click to see full details</li>
+                <li><strong>Edit Appointment:</strong> Modify existing appointments</li>
+                <li><strong>Cancel Appointment:</strong> Cancel unpaid appointments only</li>
+                <li><strong>Complete Appointment:</strong> Mark service as delivered</li>
+                <li><strong>Record Payment:</strong> Process payment for completed appointments</li>
+            </ul>
+            
+            <p><strong>Status Indicators:</strong></p>
+            <div class="status-list">
+                <span class="status-badge status-confirmed">Confirmed</span>
+                <span class="status-badge status-pending">Pending</span>
+                <span class="status-badge status-progress">In Progress</span>
+                <span class="status-badge status-completed">Completed</span>
+                <span class="status-badge status-cancelled">Cancelled</span>
+                <span class="status-badge status-noshow">No Show</span>
+            </div>
+        </div>
+        
+        <div class="feature-box">
+            <h4>Clients Management</h4>
+            <p><strong>Location:</strong> /user/clients</p>
+            <ul>
+                <li><strong>Client List:</strong> View all salon clients</li>
+                <li><strong>Add Client:</strong> Register new clients with contact info</li>
+                <li><strong>Edit Client:</strong> Update client information</li>
+                <li><strong>Client History:</strong> View past appointments and purchases</li>
+                <li><strong>Search & Filter:</strong> Find clients by name, email, or phone</li>
+            </ul>
+        </div>
+        
+        <div class="feature-box">
+            <h4>Sales / Payments</h4>
+            <p><strong>Location:</strong> /user/sales</p>
+            <ul>
+                <li><strong>Sales List:</strong> View all completed transactions</li>
+                <li><strong>Sale Details:</strong> Client info, services/products, total, payment status</li>
+                <li><strong>Linked Appointments:</strong> Sales are automatically linked to appointments</li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="section page-break">
+        <h2>5. Appointment Lifecycle</h2>
+        
+        <div class="flow-diagram">
+┌─────────────────────────────────────────────────────────────────┐
+│                    APPOINTMENT LIFECYCLE                        │
+└─────────────────────────────────────────────────────────────────┘
+
+1. CREATION
+   └─► Admin/User creates appointment
+       ├─ Selects client
+       ├─ Chooses service
+       ├─ Sets date/time
+       └─ Status: PENDING or CONFIRMED
+
+2. CONFIRMATION (Optional)
+   └─► Admin confirms appointment
+       └─ Status: CONFIRMED
+
+3. SERVICE DELIVERY
+   └─► When appointment time arrives
+       ├─ Client arrives → Status: IN_PROGRESS
+       └─ Client doesn't show → Status: NO_SHOW
+
+4. COMPLETION
+   └─► Service is completed
+       └─ Status: COMPLETED
+           ├─ Payment Required
+           └─ Payment Status: UNPAID
+
+5. PAYMENT
+   └─► Admin records payment
+       ├─ Sale is created automatically
+       ├─ Sale links to appointment
+       ├─ Appointment marked as PAID
+       └─ Status remains: COMPLETED
+
+6. CANCELLATION (Alternative Path)
+   └─► Before payment only
+       ├─ Paid appointments cannot be cancelled
+       └─ Status: CANCELLED
+        </div>
+        
+        <div class="key-rule">
+            <h4>Key Rules:</h4>
+            <ul>
+                <li><strong>Cancellation is blocked for paid appointments</strong> - Once payment is recorded, the appointment cannot be cancelled</li>
+                <li><strong>Auto-completion on payment</strong> - Recording payment automatically marks the appointment as completed</li>
+                <li><strong>Sale-Appointment linking</strong> - Each sale is linked to its source appointment for traceability</li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2>6. Payment Flow</h2>
+        
+        <div class="flow-diagram">
+OPTION 1: Payment via Appointment Modal
+────────────────────────────────────────
+1. Open completed appointment in Agenda
+2. Click "Record Payment" button
+3. System automatically:
+   ├─ Creates sale with appointment service
+   ├─ Sets sale as COMPLETED
+   ├─ Links sale to appointment
+   ├─ Marks appointment as PAID
+   └─ Updates appointment status to COMPLETED
+
+OPTION 2: Direct Sale Entry
+───────────────────────────
+1. Navigate to Sales page
+2. Create new sale
+3. Select client and items
+4. Complete transaction
+   └─ Note: Can optionally link to existing appointment
+        </div>
+        
+        <h3>Sale Generation from Appointment:</h3>
+        <ul>
+            <li><strong>Sale Items:</strong> Auto-generated from appointment service</li>
+            <li><strong>Price:</strong> Uses canonical service price from database</li>
+            <li><strong>Client:</strong> Copied from appointment</li>
+            <li><strong>Status:</strong> Set to COMPLETED</li>
+            <li><strong>Payment Status:</strong> Set to PAID</li>
+        </ul>
+    </div>
+    
+    <div class="section page-break">
+        <h2>7. Notifications System</h2>
+        
+        <div class="feature-box">
+            <h4>Upcoming Appointment Reminders</h4>
+            <p><strong>Trigger:</strong> 15 minutes before appointment start time</p>
+            <ul>
+                <li>Browser notification with client name and service</li>
+                <li>Toast notification in the app</li>
+                <li>Only for today's appointments that aren't cancelled/completed</li>
+            </ul>
+        </div>
+        
+        <div class="feature-box">
+            <h4>Overdue Unpaid Notifications</h4>
+            <p><strong>Trigger:</strong> When viewing agenda with past unpaid appointments</p>
+            <ul>
+                <li>Checks for appointments where date is before today OR end time has passed</li>
+                <li>Only shows for unpaid, non-cancelled appointments</li>
+                <li>Shows warning toast with client name, service, date and time</li>
+                <li>Browser notification if permissions granted</li>
+                <li>One notification per appointment per session (prevents spam)</li>
+            </ul>
+        </div>
+        
+        <div class="feature-box">
+            <h4>Operation Confirmations</h4>
+            <p>Events that trigger notifications:</p>
+            <ul>
+                <li>Appointment created/updated/deleted</li>
+                <li>Appointment cancelled</li>
+                <li>Payment recorded</li>
+                <li>Client added/updated</li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2>8. Feature Access Matrix</h2>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>Feature</th>
+                    <th>Superadmin</th>
+                    <th>Admin</th>
+                    <th>User</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Dashboard</td>
+                    <td class="check">✓</td>
+                    <td class="check">✓</td>
+                    <td class="check">✓</td>
+                </tr>
+                <tr>
+                    <td>Agenda</td>
+                    <td class="check">✓</td>
+                    <td class="check">✓</td>
+                    <td class="check">✓</td>
+                </tr>
+                <tr>
+                    <td>Clients</td>
+                    <td class="check">✓</td>
+                    <td class="check">✓</td>
+                    <td class="check">✓</td>
+                </tr>
+                <tr>
+                    <td>Services</td>
+                    <td class="check">✓ (Full)</td>
+                    <td>View Only</td>
+                    <td>View Only</td>
+                </tr>
+                <tr>
+                    <td>Products</td>
+                    <td class="check">✓</td>
+                    <td class="cross">✗</td>
+                    <td class="cross">✗</td>
+                </tr>
+                <tr>
+                    <td>Promotions</td>
+                    <td class="check">✓</td>
+                    <td class="cross">✗</td>
+                    <td class="cross">✗</td>
+                </tr>
+                <tr>
+                    <td>Staff</td>
+                    <td class="check">✓</td>
+                    <td class="cross">✗</td>
+                    <td class="cross">✗</td>
+                </tr>
+                <tr>
+                    <td>Sales</td>
+                    <td class="check">✓</td>
+                    <td class="check">✓</td>
+                    <td class="check">✓</td>
+                </tr>
+                <tr>
+                    <td>Analytics</td>
+                    <td class="check">✓</td>
+                    <td class="check">✓</td>
+                    <td class="check">✓</td>
+                </tr>
+                <tr>
+                    <td>Settings</td>
+                    <td class="check">✓</td>
+                    <td class="check">✓</td>
+                    <td>Limited</td>
+                </tr>
+                <tr>
+                    <td>Salon Management</td>
+                    <td class="check">✓</td>
+                    <td class="cross">✗</td>
+                    <td class="cross">✗</td>
+                </tr>
+                <tr>
+                    <td>User Management</td>
+                    <td class="check">✓</td>
+                    <td class="cross">✗</td>
+                    <td class="cross">✗</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="section">
+        <h2>9. Multi-Language Support</h2>
+        
+        <p>The application supports 4 languages:</p>
+        <div class="language-list">
+            <div class="lang-item"><strong>English (en)</strong> - Default</div>
+            <div class="lang-item"><strong>French (fr)</strong></div>
+            <div class="lang-item"><strong>Spanish (es)</strong></div>
+            <div class="lang-item"><strong>Arabic (ar)</strong> - RTL layout support</div>
+        </div>
+        
+        <p>All UI elements, form labels, validation messages, and notifications are fully translated.</p>
+        
+        <h3>Changing Language:</h3>
+        <ol>
+            <li>Click on the language selector in the header</li>
+            <li>Select desired language</li>
+            <li>Application reloads with new language</li>
+        </ol>
+    </div>
+    
+    <div class="footer">
+        <p><strong>BeautiQ Salon Management System</strong></p>
+        <p>Document generated: February 2026 | Version: 1.0</p>
+        <p><em>To save as PDF: Press Ctrl+P (or Cmd+P on Mac) and select "Save as PDF"</em></p>
+    </div>
+</body>
+</html>
