@@ -62,16 +62,14 @@ export default function AdminServicesPage() {
   const { isSuperadmin, isAdmin, isLoading, user } = useUser();
   const salonsStaleTime = 1000 * 60 * 10;
   const servicesStaleTime = 1000 * 60 * 5;
-  const adminSalonId = !isSuperadmin ? user?.salon?.id ?? "" : "";
-  const [selectedSalonId, setSelectedSalonId] = useState<string>(
-    adminSalonId
-  );
+  const adminSalonId = !isSuperadmin ? (user?.salon?.id ?? "") : "";
+  const [selectedSalonId, setSelectedSalonId] = useState<string>(adminSalonId);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [groupByCategory, setGroupByCategory] = useState(true);
   const [priceEdits, setPriceEdits] = useState<Record<string, string>>({});
   const [initialPrices, setInitialPrices] = useState<Record<string, string>>(
-    {}
+    {},
   );
   const [isSavingAll, setIsSavingAll] = useState(false);
   const [isUpdatingId, setIsUpdatingId] = useState<string | null>(null);
@@ -111,14 +109,14 @@ export default function AdminServicesPage() {
     isLoading: servicesLoading,
     refetch,
   } = useGet<PaginatedResponse<Service>>("services", {
-    params: selectedSalonId ? { salonId: selectedSalonId, perPage: 200 } : {},
+    params: selectedSalonId ? { salonId: selectedSalonId, perPage: 100 } : {},
     enabled: !!selectedSalonId,
     staleTime: servicesStaleTime,
   });
 
   const services = useMemo(
     () => servicesResponse?.data ?? [],
-    [servicesResponse]
+    [servicesResponse],
   );
 
   const categories = useMemo(() => {
@@ -149,7 +147,7 @@ export default function AdminServicesPage() {
         acc[service.id] = String(service.price ?? 0);
         return acc;
       },
-      {}
+      {},
     );
     setPriceEdits(nextPrices);
     setInitialPrices(nextPrices);
@@ -206,7 +204,7 @@ export default function AdminServicesPage() {
           return patch<Service, { price: number }>(`services/${serviceId}`, {
             price,
           });
-        })
+        }),
       );
       toast.success(t("admin.services.bulkUpdated"));
       refetch();
@@ -255,7 +253,7 @@ export default function AdminServicesPage() {
 
   const handleFormChange = (
     field: keyof typeof formValues,
-    value: string | boolean
+    value: string | boolean,
   ) => {
     setFormValues((prev) => ({ ...prev, [field]: value }));
   };
@@ -341,7 +339,7 @@ export default function AdminServicesPage() {
         acc[categoryName].push(service);
         return acc;
       },
-      {}
+      {},
     );
   }, [filteredServices, groupByCategory, t]);
 
@@ -387,7 +385,10 @@ export default function AdminServicesPage() {
               {t("admin.services.selectSalon")}
             </div>
             {isSuperadmin ? (
-              <Select value={selectedSalonId} onValueChange={setSelectedSalonId}>
+              <Select
+                value={selectedSalonId}
+                onValueChange={setSelectedSalonId}
+              >
                 <SelectTrigger className="w-full sm:w-80">
                   <SelectValue
                     placeholder={t("admin.services.selectSalonPlaceholder")}
@@ -403,7 +404,8 @@ export default function AdminServicesPage() {
               </Select>
             ) : (
               <div className="text-sm text-muted-foreground">
-                {availableSalons[0]?.name || t("admin.services.noSalonSelected")}
+                {availableSalons[0]?.name ||
+                  t("admin.services.noSalonSelected")}
               </div>
             )}
           </div>
@@ -528,7 +530,7 @@ export default function AdminServicesPage() {
                         <TableCell>
                           {translateServiceCategory(
                             t,
-                            getCategoryName(service.category)
+                            getCategoryName(service.category),
                           ).toUpperCase()}
                         </TableCell>
                         <TableCell>{service.duration} min</TableCell>
@@ -669,8 +671,8 @@ export default function AdminServicesPage() {
               {isSavingService
                 ? t("admin.services.savingService")
                 : modalMode === "create"
-                ? t("common.create")
-                : t("common.save")}
+                  ? t("common.create")
+                  : t("common.save")}
             </Button>
           </DialogFooter>
         </DialogContent>
