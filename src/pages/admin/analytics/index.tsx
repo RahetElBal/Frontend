@@ -50,7 +50,7 @@ import {
 export function AnalyticsPage() {
   const { t } = useTranslation();
   const { formatCurrency } = useLanguage();
-  const { user, isAdmin, isSuperadmin } = useUser();
+  const { user, isAdmin, isSuperadmin, isLoading: userLoading } = useUser();
   const [period, setPeriod] = useState<AnalyticsPeriod>("weekly");
 
   const canViewAnalytics = isAdmin || isSuperadmin;
@@ -103,6 +103,14 @@ export function AnalyticsPage() {
     enabled: !!salonId && canViewAnalytics,
     staleTime: listStaleTime,
   });
+
+  if (userLoading) {
+    return (
+      <Card className="p-6">
+        <LoadingPanel label={t("common.loading")} />
+      </Card>
+    );
+  }
 
   if (!canViewAnalytics) {
     return <Navigate to={ROUTES.DASHBOARD} replace />;

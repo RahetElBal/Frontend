@@ -105,6 +105,7 @@ export function AgendaPage() {
   const {
     data: appointmentsData,
     isLoading,
+    isFetching,
     refetch,
   } = useGet<PaginatedResponse<Appointment>>("appointments", {
     params: appointmentsParams,
@@ -140,7 +141,18 @@ export function AgendaPage() {
     staleTime: 1000 * 60 * 5,
   });
 
-  const appointments = safeExtractArray<Appointment>(appointmentsData);
+  const [visibleAppointments, setVisibleAppointments] = useState<
+    Appointment[]
+  >([]);
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
+  const rawAppointments = safeExtractArray<Appointment>(appointmentsData);
+  useEffect(() => {
+    if (appointmentsData) {
+      setVisibleAppointments(rawAppointments);
+      setHasLoadedOnce(true);
+    }
+  }, [appointmentsData, rawAppointments]);
+  const appointments = visibleAppointments;
   const clients = safeExtractArray<Client>(clientsData);
   const services = safeExtractArray<Service>(servicesData);
   const staffMembers = safeExtractArray<User>(staffResponse);
@@ -741,7 +753,9 @@ export function AgendaPage() {
     }
   };
 
-  if (isLoading) {
+  const showPageLoading = isLoading && !hasLoadedOnce;
+
+  if (showPageLoading) {
     return (
       <div className="space-y-6">
         <PageHeader
@@ -888,7 +902,7 @@ export function AgendaPage() {
         <TimelineView
           appointments={filteredAppointments}
           selectedDate={new Date(`${selectedDate}T00:00:00`)}
-          isLoading={isLoading}
+          isLoading={isFetching}
           timeSlots={timelineSlots.slots}
           blockedSlots={timelineSlots.blocked}
           isClosed={!workingHoursForSelectedDate.isOpen}

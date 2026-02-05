@@ -66,7 +66,7 @@ export function SalesPage() {
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
 
   const salonId = user?.salon?.id;
-  const salesStaleTime = 1000 * 60;
+  const salesStaleTime = 0;
 
   // Fetch data from API (scoped to current salon)
   const { data: salesResponse, isLoading } = useGet<SalesResponse>("sales", {
@@ -78,6 +78,8 @@ export function SalesPage() {
     },
     enabled: !!salonId,
     staleTime: salesStaleTime,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: "always",
     select: normalizeSalesResponse,
   });
   const sales = salesResponse?.data || [];
