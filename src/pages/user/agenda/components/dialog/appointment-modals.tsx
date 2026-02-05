@@ -230,11 +230,6 @@ export function AppointmentModals({
   const selectedClientId = watch("clientId");
   const walkInEnabled = watch("walkInEnabled");
   const walkInIsMarried = watch("walkInIsMarried");
-  const selectedClient = useMemo(
-    () =>
-      safeClients.find((client) => client.id === selectedClientId) || null,
-    [safeClients, selectedClientId],
-  );
   const selectableClients = useMemo(() => {
     if (!selectedClientId) return regularClients;
     const selectedClient = safeClients.find(
