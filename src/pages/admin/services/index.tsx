@@ -109,7 +109,7 @@ export default function AdminServicesPage() {
     isLoading: servicesLoading,
     refetch,
   } = useGet<PaginatedResponse<Service>>("services", {
-    params: selectedSalonId ? { salonId: selectedSalonId } : {},
+    params: selectedSalonId ? { salonId: selectedSalonId, perPage: 100 } : {},
     enabled: !!selectedSalonId,
     staleTime: servicesStaleTime,
   });
