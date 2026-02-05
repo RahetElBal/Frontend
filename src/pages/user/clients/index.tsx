@@ -48,7 +48,7 @@ export function ClientsPage() {
   const { data: salesResponse } = useGet<PaginatedResponse<Sale>>("sales", {
     params: {
       salonId,
-      perPage: 500,
+      perPage: 100,
       sortBy: "createdAt",
       sortOrder: "desc",
     },
