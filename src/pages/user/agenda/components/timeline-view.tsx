@@ -137,6 +137,7 @@ export function TimelineView({
                 ? Math.max(1, Math.ceil(durationMinutes / slotMinutes))
                 : 1;
               const cellPadding = 8;
+              const isCompact = slotSpan === 1;
               const cardHeight = Math.max(
                 slotHeight - cellPadding * 2,
                 slotSpan * slotHeight - cellPadding * 2,
@@ -182,7 +183,8 @@ export function TimelineView({
                     {appointment && isStartSlot ? (
                       <div
                         className={cn(
-                          "rounded-lg p-3 cursor-pointer hover:shadow-md transition-all absolute left-2 right-2 z-10",
+                          "rounded-lg cursor-pointer hover:shadow-md transition-all absolute left-2 right-2 z-10",
+                          isCompact ? "p-1.5" : "p-3",
                           "border-l-4",
                           appointment.status === AppointmentStatus.CONFIRMED &&
                             "bg-green-50 border-l-green-500",
@@ -201,87 +203,156 @@ export function TimelineView({
                           height: `${cardHeight}px`,
                         }}
                       >
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="space-y-1 flex-1">
-                            <div className="flex items-center gap-2">
-                              <User className="h-4 w-4 text-muted-foreground" />
-                              <span className="font-medium">
-                                {appointment.client?.firstName}{" "}
-                                {appointment.client?.lastName}
-                              </span>
+                        {isCompact ? (
+                          <div className="flex items-center justify-between gap-2 h-full">
+                            <div className="min-w-0 flex-1 space-y-0.5">
+                              <div className="flex items-center gap-1.5 min-w-0">
+                                <User className="h-3.5 w-3.5 text-muted-foreground" />
+                                <span className="font-medium text-xs leading-4 truncate flex-1 min-w-0">
+                                  {appointment.client?.firstName}{" "}
+                                  {appointment.client?.lastName}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-1.5 text-[11px] leading-4 text-muted-foreground min-w-0">
+                                <Clock className="h-3 w-3 shrink-0" />
+                                <span className="truncate flex-1 min-w-0">
+                                  {normalizeTime(appointment.startTime)} -{" "}
+                                  {normalizeTime(appointment.endTime)}
+                                  {appointment.service
+                                    ? ` | ${translateServiceName(
+                                        t,
+                                        appointment.service,
+                                      )}`
+                                    : ""}
+                                </span>
+                              </div>
                             </div>
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                              <Scissors className="h-3 w-3" />
-                              {appointment.service &&
-                                getServiceImage(appointment.service) && (
-                                  <img
-                                    src={getServiceImage(appointment.service)}
-                                    alt={translateServiceName(
-                                      t,
-                                      appointment.service,
-                                    )}
-                                    className="h-5 w-5 rounded object-cover"
-                                    loading="lazy"
-                                    onError={(event) => {
-                                      const fallback = getServiceImageFallback(
-                                        appointment.service!,
-                                      );
-                                      if (
-                                        fallback &&
-                                        event.currentTarget.src !== fallback
-                                      ) {
-                                        event.currentTarget.src = fallback;
-                                      }
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              <Badge
+                                variant={statusColors[appointment.status]}
+                                className="text-[10px] leading-4 px-1.5 py-0.5 whitespace-nowrap"
+                              >
+                                {t(`agenda.statuses.${appointment.status}`, {
+                                  defaultValue: appointment.status,
+                                })}
+                              </Badge>
+                              {!appointment.paid &&
+                                appointment.status !==
+                                  AppointmentStatus.CANCELLED &&
+                                onRecordPayment && (
+                                  <Button
+                                    size="icon"
+                                    className="h-7 w-7 shadow-sm bg-red-600 text-white hover:bg-red-500"
+                                    onClick={(event) => {
+                                      event.stopPropagation();
+                                      onRecordPayment(appointment);
                                     }}
-                                  />
+                                    disabled={isRecordingPayment}
+                                    title={
+                                      appointment.status ===
+                                      AppointmentStatus.COMPLETED
+                                        ? t("agenda.recordPayment")
+                                        : t("agenda.completeAndPay")
+                                    }
+                                    aria-label={
+                                      appointment.status ===
+                                      AppointmentStatus.COMPLETED
+                                        ? t("agenda.recordPayment")
+                                        : t("agenda.completeAndPay")
+                                    }
+                                  >
+                                    <DollarSign className="h-3.5 w-3.5" />
+                                  </Button>
                                 )}
-                              <span>
-                                {appointment.service
-                                  ? translateServiceName(t, appointment.service)
-                                  : t("common.unknown")}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                              <Clock className="h-3 w-3" />
-                              <span>
-                                {normalizeTime(appointment.startTime)} -{" "}
-                                {normalizeTime(appointment.endTime)}
-                              </span>
                             </div>
                           </div>
-                          <div className="flex flex-col items-end gap-2 shrink-0">
-                            <Badge
-                              variant={statusColors[appointment.status]}
-                              className="text-xs"
-                            >
-                              {t(`agenda.statuses.${appointment.status}`, {
-                                defaultValue: appointment.status,
-                              })}
-                            </Badge>
-                            {!appointment.paid &&
-                              appointment.status !==
-                                AppointmentStatus.CANCELLED &&
-                              onRecordPayment && (
-                                <Button
-                                  size="sm"
-                                  className="h-9 px-4 text-sm font-semibold whitespace-nowrap shadow-sm bg-red-600 text-white hover:bg-red-500"
-                                  onClick={(event) => {
-                                    event.stopPropagation();
-                                    onRecordPayment(appointment);
-                                  }}
-                                  disabled={isRecordingPayment}
-                                >
-                                  <DollarSign className="h-3 w-3 me-1" />
-                                  {isRecordingPayment
-                                    ? t("common.loading")
-                                    : appointment.status ===
-                                        AppointmentStatus.COMPLETED
-                                      ? t("agenda.recordPayment")
-                                      : t("agenda.completeAndPay")}
-                                </Button>
-                              )}
+                        ) : (
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="space-y-1 flex-1">
+                              <div className="flex items-center gap-2">
+                                <User className="h-4 w-4 text-muted-foreground" />
+                                <span className="font-medium">
+                                  {appointment.client?.firstName}{" "}
+                                  {appointment.client?.lastName}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                <Scissors className="h-3 w-3" />
+                                {appointment.service &&
+                                  getServiceImage(appointment.service) && (
+                                    <img
+                                      src={getServiceImage(appointment.service)}
+                                      alt={translateServiceName(
+                                        t,
+                                        appointment.service,
+                                      )}
+                                      className="h-5 w-5 rounded object-cover"
+                                      loading="lazy"
+                                      onError={(event) => {
+                                        const fallback =
+                                          getServiceImageFallback(
+                                            appointment.service!,
+                                          );
+                                        if (
+                                          fallback &&
+                                          event.currentTarget.src !== fallback
+                                        ) {
+                                          event.currentTarget.src = fallback;
+                                        }
+                                      }}
+                                    />
+                                  )}
+                                <span>
+                                  {appointment.service
+                                    ? translateServiceName(
+                                        t,
+                                        appointment.service,
+                                      )
+                                    : t("common.unknown")}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                <Clock className="h-3 w-3" />
+                                <span>
+                                  {normalizeTime(appointment.startTime)} -{" "}
+                                  {normalizeTime(appointment.endTime)}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="flex flex-col items-end gap-2 shrink-0">
+                              <Badge
+                                variant={statusColors[appointment.status]}
+                                className="text-xs"
+                              >
+                                {t(`agenda.statuses.${appointment.status}`, {
+                                  defaultValue: appointment.status,
+                                })}
+                              </Badge>
+                              {!appointment.paid &&
+                                appointment.status !==
+                                  AppointmentStatus.CANCELLED &&
+                                onRecordPayment && (
+                                  <Button
+                                    size="sm"
+                                    className="h-9 px-4 text-sm font-semibold whitespace-nowrap shadow-sm bg-red-600 text-white hover:bg-red-500"
+                                    onClick={(event) => {
+                                      event.stopPropagation();
+                                      onRecordPayment(appointment);
+                                    }}
+                                    disabled={isRecordingPayment}
+                                  >
+                                    <DollarSign className="h-3 w-3 me-1" />
+                                    {isRecordingPayment
+                                      ? t("common.loading")
+                                      : appointment.status ===
+                                          AppointmentStatus.COMPLETED
+                                        ? t("agenda.recordPayment")
+                                        : t("agenda.completeAndPay")}
+                                  </Button>
+                                )}
+                            </div>
                           </div>
-                        </div>
+                        )}
                       </div>
                     ) : isBlocked ? (
                       <div className="h-full flex items-center justify-center text-muted-foreground text-sm">
