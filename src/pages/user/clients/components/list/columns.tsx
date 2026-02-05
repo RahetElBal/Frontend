@@ -19,6 +19,9 @@ interface ClientColumnsProps {
   onDelete: (client: Client) => void;
 }
 
+const isWalkInClient = (client: Client) =>
+  (client.email || "").toLowerCase().startsWith("walkin+");
+
 export const getClientColumns = ({
   t,
   formatCurrency,
@@ -79,16 +82,21 @@ export const getClientColumns = ({
     key: "visitCount",
     header: t("fields.visits"),
     sortable: true,
-    render: (client) => (
-      <span className="text-muted-foreground">{client.visitCount}</span>
-    ),
+    render: (client) =>
+      isWalkInClient(client) ? (
+        <span className="text-muted-foreground">-</span>
+      ) : (
+        <span className="text-muted-foreground">{client.visitCount}</span>
+      ),
   },
   {
     key: "lastVisit",
     header: t("fields.lastVisit"),
     sortable: true,
     render: (client) =>
-      client.lastVisit ? (
+      isWalkInClient(client) ? (
+        <span className="text-muted-foreground">-</span>
+      ) : client.lastVisit ? (
         new Date(client.lastVisit).toLocaleDateString()
       ) : (
         <span className="text-muted-foreground">-</span>
