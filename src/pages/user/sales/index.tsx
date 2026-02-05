@@ -14,7 +14,7 @@ import { DataTable } from "@/components/table/data-table";
 import { useTable } from "@/hooks/useTable";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useUser } from "@/hooks/useUser";
-import type { Sale } from "@/types/entities";
+import type { Sale, SaleItem } from "@/types/entities";
 import { useGet } from "@/hooks/useGet";
 import { getSalesColumns } from "./list/columns";
 import { saleStatusColors, formatSaleTime, toNumber } from "./utils";
@@ -27,6 +27,27 @@ interface SalesResponse {
   page: number;
   perPage: number;
 }
+
+const getSaleItemPricing = (item: SaleItem) => {
+  const quantity = Math.max(1, toNumber(item.quantity, 1));
+  const baseUnitPrice = toNumber(item.unitPrice ?? item.price ?? item.total);
+  const fallbackLineTotal = baseUnitPrice * quantity;
+  const lineTotal = toNumber(
+    item.total ??
+      (item.price !== undefined ? toNumber(item.price) * quantity : undefined),
+    fallbackLineTotal,
+  );
+  const finalUnitPrice = lineTotal / quantity;
+  const discount = Math.max(0, baseUnitPrice * quantity - lineTotal);
+
+  return {
+    quantity,
+    baseUnitPrice,
+    finalUnitPrice,
+    lineTotal,
+    discount,
+  };
+};
 
 export function SalesPage() {
   const { t } = useTranslation();
@@ -78,6 +99,19 @@ export function SalesPage() {
         return t("sales.cash");
     }
   };
+
+  const selectedSaleItemDiscountTotal = selectedSale
+    ? (selectedSale.items ?? []).reduce(
+        (sum, item) => sum + getSaleItemPricing(item).discount,
+        0,
+      )
+    : 0;
+  const selectedSaleDiscount = toNumber(selectedSale?.discount ?? 0);
+  const displayDiscount =
+    selectedSaleDiscount > 0
+      ? selectedSaleDiscount
+      : selectedSaleItemDiscountTotal;
+  const showDiscount = displayDiscount > 0.009;
 
   return (
     <div className="space-y-6">
@@ -195,18 +229,41 @@ export function SalesPage() {
                 </div>
                 <div className="divide-y">
                   {(selectedSale.items ?? []).map((item) => {
-                    const unitPrice = toNumber(
-                      item.unitPrice ?? item.price ?? item.total,
-                    );
+                    const {
+                      quantity,
+                      baseUnitPrice,
+                      finalUnitPrice,
+                      discount,
+                    } = getSaleItemPricing(item);
+                    const hasDiscount = discount > 0.009;
                     return (
                       <div
                         key={item.id}
                         className="grid grid-cols-[1fr_auto_auto] gap-3 px-4 py-2 text-sm"
                       >
-                        <span className="truncate">{item.name}</span>
-                        <span className="text-right">{item.quantity}</span>
+                        <div className="min-w-0">
+                          <span className="truncate">{item.name}</span>
+                          {hasDiscount && (
+                            <p className="text-xs text-rose-600">
+                              {t("sales.discount")}: -
+                              {formatCurrency(discount)}
+                            </p>
+                          )}
+                        </div>
+                        <span className="text-right">{quantity}</span>
                         <span className="text-right">
-                          {formatCurrency(unitPrice)}
+                          {hasDiscount ? (
+                            <span className="flex flex-col items-end">
+                              <span className="text-xs text-muted-foreground line-through">
+                                {formatCurrency(baseUnitPrice)}
+                              </span>
+                              <span className="font-medium">
+                                {formatCurrency(finalUnitPrice)}
+                              </span>
+                            </span>
+                          ) : (
+                            formatCurrency(baseUnitPrice)
+                          )}
                         </span>
                       </div>
                     );
@@ -221,14 +278,14 @@ export function SalesPage() {
                   </span>
                   <span>{formatCurrency(toNumber(selectedSale.subtotal))}</span>
                 </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">
-                    {t("sales.discount")}
-                  </span>
-                  <span>
-                    -{formatCurrency(toNumber(selectedSale.discount || 0))}
-                  </span>
-                </div>
+                {showDiscount && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">
+                      {t("sales.discount")}
+                    </span>
+                    <span>-{formatCurrency(displayDiscount)}</span>
+                  </div>
+                )}
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">{t("fields.tax")}</span>
                   <span>{formatCurrency(toNumber(selectedSale.tax || 0))}</span>

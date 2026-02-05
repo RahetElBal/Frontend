@@ -77,6 +77,17 @@ import {
 const isWalkInClient = (client: Client) =>
   (client.email || "").toLowerCase().startsWith("walkin+");
 
+const toNumber = (value: unknown, fallback = 0): number => {
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? value : fallback;
+  }
+  if (typeof value === "string") {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : fallback;
+  }
+  return fallback;
+};
+
 type SalonSettingsLike = SalonSettings & Partial<SalonSettingsExtended>;
 
 interface AppointmentModalsProps {
@@ -210,6 +221,51 @@ export function AppointmentModals({
     () => safeServices.find((s) => s.id === selectedServiceId) || null,
     [safeServices, selectedServiceId],
   );
+  const selectedServiceBasePrice = useMemo(
+    () => toNumber(selectedService?.price),
+    [selectedService?.price],
+  );
+  const priceOverridePreview = useMemo(() => {
+    if (!selectedService) return null;
+    const trimmedPrice = customPriceInput?.toString().trim();
+    const trimmedDiscount = discountInput?.toString().trim();
+    const parsedPriceValue = trimmedPrice ? Number(trimmedPrice) : undefined;
+    const parsedPrice = Number.isFinite(parsedPriceValue)
+      ? parsedPriceValue
+      : undefined;
+    const parsedDiscountValue = trimmedDiscount
+      ? Number(trimmedDiscount)
+      : undefined;
+    const parsedDiscount = Number.isFinite(parsedDiscountValue)
+      ? parsedDiscountValue
+      : undefined;
+
+    if (parsedPrice === undefined && parsedDiscount === undefined) {
+      return {
+        basePrice: selectedServiceBasePrice,
+        finalPrice: selectedServiceBasePrice,
+        hasOverrideInput: false,
+      };
+    }
+
+    const basePrice = parsedPrice ?? selectedServiceBasePrice;
+    const finalPrice = Math.max(0, basePrice - (parsedDiscount ?? 0));
+
+    return {
+      basePrice,
+      finalPrice,
+      hasOverrideInput: true,
+    };
+  }, [
+    selectedService,
+    selectedServiceBasePrice,
+    customPriceInput,
+    discountInput,
+  ]);
+  const displayServicePrice =
+    priceOverrideEnabled && priceOverridePreview
+      ? priceOverridePreview.finalPrice
+      : selectedServiceBasePrice;
 
   const bookingSlotMinutes = Number(
     effectiveSalonSettings?.bookingSlotDuration || DEFAULT_SLOT_MINUTES,
@@ -392,6 +448,12 @@ export function AppointmentModals({
 
   // VIEW MODE
   if (derived.isViewMode) {
+    const appointmentPrice = toNumber(
+      selectedAppointment?.price ??
+        selectedAppointment?.customPrice ??
+        selectedAppointment?.basePrice ??
+        selectedAppointment?.service?.price,
+    );
     return (
       <Dialog open={!!modalState} onOpenChange={handleClose}>
         <DialogContent className="sm:max-w-4xl w-full overflow-x-hidden">
@@ -499,11 +561,7 @@ export function AppointmentModals({
                       />
                     )}
                   <p className="font-bold text-accent-pink">
-                    {formatCurrency(
-                      selectedAppointment.service?.price ??
-                        selectedAppointment.price ??
-                        0,
-                    )}
+                    {formatCurrency(appointmentPrice)}
                   </p>
                 </div>
 
@@ -770,7 +828,7 @@ export function AppointmentModals({
                       </p>
                     </div>
                     <p className="text-lg font-bold text-accent-pink">
-                      {formatCurrency(selectedService.price)}
+                      {formatCurrency(displayServicePrice)}
                     </p>
                   </div>
                 </Card>
@@ -827,43 +885,16 @@ export function AppointmentModals({
                       <FormErrorMessage message={getErrorMessage("discount")} />
                     </div>
                   </div>
-                  {(() => {
-                    const trimmedPrice = customPriceInput?.toString().trim();
-                    const trimmedDiscount =
-                      discountInput?.toString().trim();
-                    const parsedPriceValue = trimmedPrice
-                      ? Number(trimmedPrice)
-                      : undefined;
-                    const parsedPrice = Number.isFinite(parsedPriceValue)
-                      ? parsedPriceValue
-                      : undefined;
-                    const parsedDiscountValue = trimmedDiscount
-                      ? Number(trimmedDiscount)
-                      : undefined;
-                    const parsedDiscount = Number.isFinite(parsedDiscountValue)
-                      ? parsedDiscountValue
-                      : undefined;
-                    const basePrice =
-                      parsedPrice ??
-                      (parsedDiscount !== undefined
-                        ? selectedService?.price
-                        : undefined);
-                    if (basePrice === undefined) return null;
-                    const finalPrice = Math.max(
-                      0,
-                      basePrice - (parsedDiscount ?? 0),
-                    );
-                    return (
-                      <div className="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2 text-sm">
-                        <span className="text-muted-foreground">
-                          {t("fields.total")}
-                        </span>
-                        <span className="font-semibold text-foreground">
-                          {formatCurrency(finalPrice)}
-                        </span>
-                      </div>
-                    );
-                  })()}
+                  {priceOverridePreview?.hasOverrideInput && (
+                    <div className="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2 text-sm">
+                      <span className="text-muted-foreground">
+                        {t("fields.total")}
+                      </span>
+                      <span className="font-semibold text-foreground">
+                        {formatCurrency(priceOverridePreview.finalPrice)}
+                      </span>
+                    </div>
+                  )}
                 </div>
               )}
 
