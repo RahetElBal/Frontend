@@ -38,13 +38,13 @@ import {
   aggregateCategorySales,
   aggregateProductSales,
   aggregateSalesItems,
-  AnalyticsPeriod,
   filterAppointmentsByRange,
   filterClientsByRange,
   filterSalesByRange,
   getPeriodRange,
   getTopItemsBy,
   toNumber,
+  type AnalyticsPeriod,
 } from "./utils";
 
 export function AnalyticsPage() {
@@ -58,54 +58,51 @@ export function AnalyticsPage() {
 
   const listStaleTime = 1000 * 60 * 5;
 
-  const { data: salesResponse, isLoading: loadingSales } =
-    useGet<PaginatedResponse<Sale>>("sales", {
-      params: {
-        salonId,
-        perPage: 500,
-        sortBy: "createdAt",
-        sortOrder: "desc",
-      },
-      enabled: !!salonId && canViewAnalytics,
-      staleTime: listStaleTime,
-      select: normalizeSalesResponse,
-    });
+  const { data: salesResponse, isLoading: loadingSales } = useGet<
+    PaginatedResponse<Sale>
+  >("sales", {
+    params: {
+      salonId,
+      perPage: 500,
+      sortBy: "createdAt",
+      sortOrder: "desc",
+    },
+    enabled: !!salonId && canViewAnalytics,
+    staleTime: listStaleTime,
+    select: normalizeSalesResponse,
+  });
 
-  const { data: appointmentsResponse, isLoading: loadingAppointments } =
-    useGet<PaginatedResponse<Appointment>>("appointments", {
-      params: { salonId, perPage: 500 },
-      enabled: !!salonId && canViewAnalytics,
-      staleTime: listStaleTime,
-    });
+  const { data: appointmentsResponse, isLoading: loadingAppointments } = useGet<
+    PaginatedResponse<Appointment>
+  >("appointments", {
+    params: { salonId, perPage: 500 },
+    enabled: !!salonId && canViewAnalytics,
+    staleTime: listStaleTime,
+  });
 
-  const { data: clientsResponse, isLoading: loadingClients } =
-    useGet<PaginatedResponse<Client>>("clients", {
-      params: { salonId, perPage: 500 },
-      enabled: !!salonId && canViewAnalytics,
-      staleTime: listStaleTime,
-    });
+  const { data: clientsResponse, isLoading: loadingClients } = useGet<
+    PaginatedResponse<Client>
+  >("clients", {
+    params: { salonId, perPage: 500 },
+    enabled: !!salonId && canViewAnalytics,
+    staleTime: listStaleTime,
+  });
 
   const { data: servicesResponse, isLoading: loadingServices } = useGet<
     PaginatedResponse<Service>
-  >(
-    "services",
-    {
-      params: { salonId, perPage: 500 },
-      enabled: !!salonId && canViewAnalytics,
-      staleTime: listStaleTime,
-    },
-  );
+  >("services", {
+    params: { salonId, perPage: 500 },
+    enabled: !!salonId && canViewAnalytics,
+    staleTime: listStaleTime,
+  });
 
   const { data: productsResponse, isLoading: loadingProducts } = useGet<
     PaginatedResponse<Product>
-  >(
-    "products",
-    {
-      params: { salonId, perPage: 500 },
-      enabled: !!salonId && canViewAnalytics,
-      staleTime: listStaleTime,
-    },
-  );
+  >("products", {
+    params: { salonId, perPage: 500 },
+    enabled: !!salonId && canViewAnalytics,
+    staleTime: listStaleTime,
+  });
 
   if (!canViewAnalytics) {
     return <Navigate to={ROUTES.DASHBOARD} replace />;
