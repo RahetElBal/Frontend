@@ -222,13 +222,9 @@ export function ClientModals({
     const payload: ClientFormData = {
       firstName: data.firstName.trim(),
       lastName: data.lastName.trim(),
+      email: normalizedEmail || data.email.trim(),
+      phone: normalizedPhone || data.phone.trim(),
     };
-    if (normalizedEmail) {
-      payload.email = normalizedEmail;
-    }
-    if (normalizedPhone) {
-      payload.phone = normalizedPhone;
-    }
     if (derived.isCreateMode) {
       const salonId = user?.salon?.id;
       if (!salonId) {
@@ -464,12 +460,12 @@ export function ClientModals({
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">{t("fields.email")}</Label>
+              <Label htmlFor="email">{t("fields.email")} *</Label>
               <Input id="email" type="email" {...form.register("email")} />
               <FormErrorMessage message={getErrorMessage("email")} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="phone">{t("fields.phone")}</Label>
+              <Label htmlFor="phone">{t("fields.phone")} *</Label>
               <Controller
                 name="phone"
                 control={form.control}
