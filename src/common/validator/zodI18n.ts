@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import * as validator from 'validator';
 
 // Export configured zod
 export { z };
@@ -160,18 +161,43 @@ export function emailError(): string {
   return 'validation.string.email';
 }
 
+const trimString = (value: unknown): unknown => {
+  if (typeof value !== 'string') return value;
+  return value.trim();
+};
+
+const trimOptionalString = (value: unknown): unknown => {
+  if (value === null || value === undefined) return undefined;
+  if (typeof value !== 'string') return value;
+  const trimmed = value.trim();
+  return trimmed.length ? trimmed : undefined;
+};
+
+const isValidEmail = (value: string): boolean => validator.isEmail(value);
+
 /**
  * Creates an email field (required).
  */
 export function emailField(fieldLabel = 'Email') {
-  return requiredString(fieldLabel).email({ message: emailError() });
+  return z.preprocess(
+    trimString,
+    requiredString(fieldLabel).refine((value) => isValidEmail(value), {
+      message: emailError(),
+    })
+  );
 }
 
 /**
  * Creates an optional email field.
  */
 export function optionalEmailField() {
-  return z.string().email({ message: emailError() }).optional().or(z.literal(''));
+  return z.preprocess(
+    trimOptionalString,
+    z
+      .string()
+      .refine((value) => isValidEmail(value), { message: emailError() })
+      .optional()
+  );
 }
 
 /**
