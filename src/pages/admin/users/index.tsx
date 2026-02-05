@@ -14,13 +14,14 @@ import { useUser } from "@/hooks/useUser";
 import type { PaginatedResponse } from "@/types";
 import { useUsersColumns } from "./list/columns";
 import { UserDialog } from "./components/dialog/cu-user";
-
-type UserModalState = {
-  userId: string | "create";
-  mode: "view" | "edit" | "delete";
-  initialRole?: "user" | "admin";
-  user?: User;
-} | null;
+import {
+  createUserModalHandlers,
+  filterUsersByPermission,
+  getPageDescription,
+  getSalonsByPermission,
+  getSelectedUser,
+  type UserModalState,
+} from "./utils";
 
 export function AdminUsersPage() {
   const { t } = useTranslation();
@@ -40,9 +41,11 @@ export function AdminUsersPage() {
 
   // Filter users based on role
   const allUsers = usersResponse?.data || [];
-  const users = isSuperadmin
-    ? allUsers
-    : allUsers.filter((user) => user.managedById === currentUser?.id);
+  const users = filterUsersByPermission(
+    allUsers,
+    isSuperadmin,
+    currentUser?.id,
+  );
 
   // Salons - superadmin fetches all, admin uses their own from useUser
   const { data: allSalons = [] } = useGet<Salon[]>("salons", {
@@ -50,12 +53,10 @@ export function AdminUsersPage() {
     enabled: isSuperadmin,
   });
 
-  const adminSalon = !isSuperadmin ? (currentUser?.salon as Salon | null) : null;
-  const salons = isSuperadmin
-    ? allSalons
-    : adminSalon
-      ? [adminSalon]
-      : [];
+  const adminSalon = !isSuperadmin
+    ? (currentUser?.salon as Salon | null)
+    : null;
+  const salons = getSalonsByPermission(isSuperadmin, allSalons, adminSalon);
 
   // Only superadmin can fetch list of admins (for assigning salon ownership)
   const { data: admins = [] } = useGet<User[]>("users/admins", {
@@ -63,47 +64,22 @@ export function AdminUsersPage() {
     enabled: isSuperadmin,
   });
 
-  const getSelectedUser = (): User | null => {
-    if (!modalState || modalState.userId === "create") return null;
-    if (modalState.user) return modalState.user;
-    return users.find((u) => u.id === modalState.userId) || null;
-  };
-
-  const selectedUser = getSelectedUser();
+  const selectedUser = getSelectedUser(modalState, users);
 
   const table = useTable<User>({
     data: users,
     searchKeys: ["name", "email"],
   });
 
-  // Handlers
-  const handleView = (user: User) => {
-    setModalState({ userId: user.id, mode: "view", user });
-  };
-
-  const handleEdit = (user: User) => {
-    setModalState({ userId: user.id, mode: "edit", user });
-  };
-
-  const handleDelete = (user: User) => {
-    setModalState({ userId: user.id, mode: "delete", user });
-  };
-
-  const handleCreateAdmin = () => {
-    setModalState({
-      userId: "create",
-      mode: "edit",
-      initialRole: "admin",
-    });
-  };
-
-  const handleCreateUser = () => {
-    setModalState({
-      userId: "create",
-      mode: "edit",
-      initialRole: "user",
-    });
-  };
+  // Create modal handlers
+  const {
+    handleView,
+    handleEdit,
+    handleDelete,
+    handleCreateAdmin,
+    handleCreateUser,
+    handleClose,
+  } = createUserModalHandlers(setModalState);
 
   const handleSuccess = () => {
     refetch();
@@ -136,11 +112,7 @@ export function AdminUsersPage() {
     <div className="space-y-6">
       <PageHeader
         title={t("nav.admin.users")}
-        description={
-          !isSuperadmin && adminSalon
-            ? `Utilisateurs de ${adminSalon.name} (${users.length})`
-            : undefined
-        }
+        description={getPageDescription(isSuperadmin, adminSalon, users.length)}
         actions={
           isSuperadmin ? (
             <div className="flex gap-2">
@@ -177,7 +149,7 @@ export function AdminUsersPage() {
 
       <UserDialog
         open={!!modalState}
-        onOpenChange={(open) => !open && setModalState(null)}
+        onOpenChange={(open) => !open && handleClose()}
         mode={
           modalState?.userId === "create"
             ? "create"

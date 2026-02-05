@@ -43,10 +43,12 @@ import {
 export function AnalyticsPage() {
   const { t } = useTranslation();
   const { formatCurrency } = useLanguage();
+  /* cSpell:disable */
   const { user, isAdmin, isSuperadmin, isLoading: userLoading } = useUser();
   const [period, setPeriod] = useState<AnalyticsPeriod>("weekly");
 
   const canViewAnalytics = isAdmin || isSuperadmin;
+  /* cSpell:enable */
   const salonId = user?.salon?.id;
 
   const listStaleTime = 1000 * 60 * 5;
@@ -98,28 +100,24 @@ export function AnalyticsPage() {
     refetchOnWindowFocus: false,
   });
 
-  if (userLoading) {
-    return (
-      <Card className="p-6">
-        <LoadingPanel label={t("common.loading")} />
-      </Card>
-    );
-  }
-
-  if (!canViewAnalytics) {
-    return <Navigate to={ROUTES.DASHBOARD} replace />;
-  }
-
+  // Move all data extraction and useMemo hooks before early returns
   const isLoading =
-    loadingSales ||
-    loadingAppointments ||
-    loadingClients ||
-    loadingServices;
+    loadingSales || loadingAppointments || loadingClients || loadingServices;
 
-  const sales = salesResponse?.data ?? [];
-  const appointments = appointmentsResponse?.data ?? [];
-  const clients = clientsResponse?.data ?? [];
-  const services = servicesResponse?.data ?? [];
+  // Wrap data arrays in useMemo to ensure stable references
+  const sales = useMemo(() => salesResponse?.data ?? [], [salesResponse?.data]);
+  const appointments = useMemo(
+    () => appointmentsResponse?.data ?? [],
+    [appointmentsResponse?.data],
+  );
+  const clients = useMemo(
+    () => clientsResponse?.data ?? [],
+    [clientsResponse?.data],
+  );
+  const services = useMemo(
+    () => servicesResponse?.data ?? [],
+    [servicesResponse?.data],
+  );
 
   const { start, end } = useMemo(() => getPeriodRange(period), [period]);
 
@@ -135,6 +133,18 @@ export function AnalyticsPage() {
     () => filterClientsByRange(clients, start, end),
     [clients, start, end],
   );
+
+  if (userLoading) {
+    return (
+      <Card className="p-6">
+        <LoadingPanel label={t("common.loading")} />
+      </Card>
+    );
+  }
+
+  if (!canViewAnalytics) {
+    return <Navigate to={ROUTES.DASHBOARD} replace />;
+  }
 
   const totalRevenue = salesInRange.reduce(
     (sum, sale) => sum + toNumber(sale.total),

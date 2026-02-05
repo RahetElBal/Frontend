@@ -1,5 +1,5 @@
 // src/pages/admin/salons/index.tsx
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Plus } from "lucide-react";
 
@@ -12,7 +12,16 @@ import { toast } from "@/lib/toast";
 import type { PaginatedResponse } from "@/types";
 import type { Salon, User, Service, Client, Sale } from "@/types/entities";
 import { normalizeSalesResponse } from "@/utils/normalize-sales";
-import { canModifySalon, type SalonModalState } from "./utils";
+import {
+  canModifySalon,
+  getSalonsList,
+  getCurrentSalon,
+  extractDataArray,
+  areAdminsLoaded,
+  calculateAllStats,
+  getDashboardDescription,
+  type SalonModalState,
+} from "./utils";
 import { StatsGrid } from "./components/stats-grid";
 import { useSalonsColumns } from "./list/columns";
 import { DataTable } from "@/components/table";
@@ -20,12 +29,16 @@ import { SalonModals } from "./components/dialog/salon-modal";
 
 export default function SalonsPage() {
   const { t } = useTranslation();
+  /* cSpell:ignore Superadmin */
   const { user, isSuperadmin: userIsSuperadmin, salon: adminSalon } = useUser();
   const adminStatsStaleTime = 1000 * 60 * 5;
 
   // State
   const [modalState, setModalState] = useState<SalonModalState>(null);
-  const currentSalon = userIsSuperadmin ? null : adminSalon;
+  const currentSalon = useMemo(
+    () => getCurrentSalon(userIsSuperadmin, adminSalon),
+    [userIsSuperadmin, adminSalon],
+  );
   const salonId = currentSalon?.id;
 
   // Fetch data - only superadmin needs to fetch all salons
@@ -55,7 +68,6 @@ export default function SalonsPage() {
     enabled: userIsSuperadmin || !!salonId,
     staleTime: adminStatsStaleTime,
   });
-  const allUsers = allUsersResponse?.data || [];
 
   const { data: servicesResponse } = useGet<PaginatedResponse<Service>>(
     "services",
@@ -65,14 +77,12 @@ export default function SalonsPage() {
       staleTime: adminStatsStaleTime,
     },
   );
-  const servicesData = servicesResponse?.data || [];
 
   const { data: clientsResponse } = useGet<{ data: Client[] }>("clients", {
     params: { salonId, perPage: 100 },
     enabled: !!salonId,
     staleTime: adminStatsStaleTime,
   });
-  const clientsData = clientsResponse?.data || [];
 
   const { data: salesResponse } = useGet<{ data: Sale[] }>("sales", {
     params: { salonId, perPage: 100 },
@@ -80,10 +90,30 @@ export default function SalonsPage() {
     staleTime: adminStatsStaleTime,
     select: normalizeSalesResponse,
   });
-  const salesData = salesResponse?.data || [];
 
-  // Salons - superadmin sees all, admin sees only their own from useUser
-  const salons = userIsSuperadmin ? allSalons : adminSalon ? [adminSalon] : [];
+  // Extract data arrays using utility function
+  const allUsers = useMemo(
+    () => extractDataArray(allUsersResponse),
+    [allUsersResponse],
+  );
+  const servicesData = useMemo(
+    () => extractDataArray(servicesResponse),
+    [servicesResponse],
+  );
+  const clientsData = useMemo(
+    () => extractDataArray(clientsResponse),
+    [clientsResponse],
+  );
+  const salesData = useMemo(
+    () => extractDataArray(salesResponse),
+    [salesResponse],
+  );
+
+  // Salons - superadmin sees all, admin sees only their own
+  const salons = useMemo(
+    () => getSalonsList(userIsSuperadmin, allSalons, adminSalon),
+    [userIsSuperadmin, allSalons, adminSalon],
+  );
 
   // Table setup (only for superadmin)
   const table = useTable({
@@ -92,42 +122,38 @@ export default function SalonsPage() {
     searchKeys: ["name", "address", "phone", "email"],
   });
 
-  // Get current admin's salon - use from useUser hook
-  // currentSalon defined above
+  // Check if admins are loaded
+  const adminsLoaded = useMemo(
+    () => areAdminsLoaded(userIsSuperadmin, isAdminsLoading, isAdminsError),
+    [userIsSuperadmin, isAdminsLoading, isAdminsError],
+  );
 
-  // Stats - calculated based on role
-  const totalSalons = salons.length;
-  const activeSalons = salons.filter((s) => s.isActive).length;
-
-  // Count users properly
-  const totalUsers = userIsSuperadmin
-    ? allUsers.length // Superadmin: all users in system
-    : allUsers.filter((u) => u.salon?.id === currentSalon?.id).length; // Admin: users in their salon
-
-  const activeUsers = userIsSuperadmin
-    ? allUsers.filter((u) => u.isActive).length
-    : allUsers.filter(
-        (u) => u.salon?.id === currentSalon?.id && u.isActive,
-      ).length;
-
-  const totalAdmins = userIsSuperadmin ? admins.length : 0;
-  const adminsLoaded = userIsSuperadmin && !isAdminsLoading && !isAdminsError;
-
-  // Stats calculations - ALL data for superadmin, filtered for admin
-  const totalServices = servicesResponse?.meta?.total ?? servicesData.length;
-  const totalClients = clientsData.length;
-
-  const totalRevenue = salesData.reduce((sum, sale) => sum + sale.total, 0);
-  const now = new Date();
-  const monthlyRevenue = salesData
-    .filter((sale) => {
-      const saleDate = new Date(sale.createdAt);
-      return (
-        saleDate.getMonth() === now.getMonth() &&
-        saleDate.getFullYear() === now.getFullYear()
-      );
-    })
-    .reduce((sum, sale) => sum + sale.total, 0);
+  // Calculate all stats
+  const stats = useMemo(
+    () =>
+      calculateAllStats(
+        userIsSuperadmin,
+        salons,
+        allUsers,
+        admins,
+        currentSalon,
+        servicesResponse,
+        servicesData,
+        clientsData,
+        salesData,
+      ),
+    [
+      userIsSuperadmin,
+      salons,
+      allUsers,
+      admins,
+      currentSalon,
+      servicesResponse,
+      servicesData,
+      clientsData,
+      salesData,
+    ],
+  );
 
   // Handlers
   const handleView = (salon: Salon) => {
@@ -163,13 +189,11 @@ export default function SalonsPage() {
     <div className="space-y-6">
       <PageHeader
         title={t("nav.admin.salon")}
-        description={
-          userIsSuperadmin
-            ? t("admin.salons.description")
-            : currentSalon
-              ? `Tableau de bord - ${currentSalon.name}`
-              : "Gérez votre salon"
-        }
+        description={getDashboardDescription(
+          userIsSuperadmin,
+          currentSalon,
+          t("admin.salons.description"),
+        )}
         actions={
           userIsSuperadmin && (
             <Button
@@ -184,16 +208,16 @@ export default function SalonsPage() {
       />
 
       <StatsGrid
-        totalSalons={totalSalons}
-        activeSalons={activeSalons}
-        totalUsers={totalUsers}
-        activeUsers={activeUsers}
-        totalAdmins={totalAdmins}
+        totalSalons={stats.totalSalons}
+        activeSalons={stats.activeSalons}
+        totalUsers={stats.totalUsers}
+        activeUsers={stats.activeUsers}
+        totalAdmins={stats.totalAdmins}
         isSuperadmin={userIsSuperadmin}
-        totalRevenue={totalRevenue}
-        monthlyRevenue={monthlyRevenue}
-        totalServices={totalServices}
-        totalClients={totalClients}
+        totalRevenue={stats.totalRevenue}
+        monthlyRevenue={stats.monthlyRevenue}
+        totalServices={stats.totalServices}
+        totalClients={stats.totalClients}
       />
 
       {/* Only show table for superadmin */}

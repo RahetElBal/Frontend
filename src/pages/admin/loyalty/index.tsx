@@ -49,27 +49,26 @@ import type { PaginatedResponse } from "@/types";
 import { LoyaltySettings } from "../salon-settings/components/loyalty-settings";
 import type { SettingsSectionProps } from "../salon-settings/types";
 import { normalizeSalesResponse } from "@/utils/normalize-sales";
-
-const defaultSettings = {
-  loyaltyEnabled: false,
-  loyaltyPointsPerCurrency: 1,
-  loyaltyPointValue: 0.01,
-  loyaltyMinimumRedemption: 100,
-  loyaltyRewardServiceId: "",
-  loyaltyRewardDiscountType: "percent" as const,
-  loyaltyRewardDiscountValue: 10,
-};
-
-const extractArray = <T,>(
-  data: PaginatedResponse<T> | T[] | undefined,
-): T[] => {
-  if (!data) return [];
-  if (Array.isArray(data)) return data;
-  return Array.isArray(data.data) ? data.data : [];
-};
+import {
+  defaultLoyaltySettings,
+  extractArray,
+  deriveLoyaltySettings,
+  calculateTotalPointsIssued,
+  calculateTotalPointsRedeemed,
+  getTopLoyaltyClients,
+  countActiveMembers,
+  getRedeemableClients,
+  getRedeemableServices,
+  findClientById,
+  findServiceById,
+  canClientRedeem,
+  validateRedemption,
+  createRedemptionPayload,
+} from "./utils";
 
 export function LoyaltyPage() {
   const { t } = useTranslation();
+  /* cSpell:ignore Superadmin */
   const { salon, isAdmin, isSuperadmin } = useUser();
   const { formatCurrency } = useLanguage();
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
@@ -77,7 +76,7 @@ export function LoyaltyPage() {
   const [redeemClientId, setRedeemClientId] = useState("");
   const [redeemServiceId, setRedeemServiceId] = useState("");
   const [settings, setSettings] = useState<Partial<SalonSettingsExtended>>({
-    ...defaultSettings,
+    ...defaultLoyaltySettings,
   });
   const salonId = salon?.id;
   const canRedeem = isAdmin || isSuperadmin;
@@ -102,104 +101,67 @@ export function LoyaltyPage() {
     },
   );
 
-  const clients = extractArray<Client>(clientsData);
-  const salesStats = extractArray<Sale>(salesData);
-  const sales = salesStats.slice(0, 10);
-  const services = extractArray<Service>(servicesData);
-
-  const derivedSettings = useMemo<Partial<SalonSettingsExtended>>(
-    () => ({
-      ...defaultSettings,
-      loyaltyEnabled: !!salon?.settings?.loyaltyEnabled,
-      loyaltyPointsPerCurrency:
-        salon?.settings?.loyaltyPointsPerCurrency ??
-        defaultSettings.loyaltyPointsPerCurrency,
-      loyaltyPointValue:
-        salon?.settings?.loyaltyPointValue ?? defaultSettings.loyaltyPointValue,
-      loyaltyMinimumRedemption:
-        salon?.settings?.loyaltyMinimumRedemption ??
-        defaultSettings.loyaltyMinimumRedemption,
-      loyaltyRewardServiceId: salon?.settings?.loyaltyRewardServiceId || "",
-      loyaltyRewardDiscountType:
-        salon?.settings?.loyaltyRewardDiscountType ??
-        defaultSettings.loyaltyRewardDiscountType,
-      loyaltyRewardDiscountValue:
-        salon?.settings?.loyaltyRewardDiscountValue ??
-        defaultSettings.loyaltyRewardDiscountValue,
-    }),
-    [salon],
+  const clients = useMemo(
+    () => extractArray<Client>(clientsData),
+    [clientsData],
   );
+  const salesStats = useMemo(() => extractArray<Sale>(salesData), [salesData]);
+  const sales = useMemo(() => salesStats.slice(0, 10), [salesStats]);
+  const services = useMemo(
+    () => extractArray<Service>(servicesData),
+    [servicesData],
+  );
+
+  const derivedSettings = useMemo(() => deriveLoyaltySettings(salon), [salon]);
 
   const totalPointsIssued = useMemo(
-    () => clients.reduce((sum, client) => sum + (client.loyaltyPoints || 0), 0),
+    () => calculateTotalPointsIssued(clients),
     [clients],
   );
 
-  const totalPointsRedeemed = useMemo(() => {
-    const hasRedeemedPointsField = salesStats.some(
-      (sale) =>
-        sale.redeemedPoints !== undefined && sale.redeemedPoints !== null,
-    );
-    if (hasRedeemedPointsField) {
-      return salesStats.reduce(
-        (sum, sale) => sum + Number(sale.redeemedPoints || 0),
-        0,
-      );
-    }
-    const pointValue = Number(derivedSettings.loyaltyPointValue || 0);
-    if (pointValue <= 0) return 0;
-    const totalDiscount = salesStats.reduce(
-      (sum, sale) => sum + Number(sale.discount || 0),
-      0,
-    );
-    return Math.round(totalDiscount / pointValue);
-  }, [salesStats, derivedSettings.loyaltyPointValue]);
-
-  const topClients = useMemo(
+  const totalPointsRedeemed = useMemo(
     () =>
-      [...clients]
-        .sort((a, b) => (b.loyaltyPoints || 0) - (a.loyaltyPoints || 0))
-        .slice(0, 5),
-    [clients],
+      calculateTotalPointsRedeemed(
+        salesStats,
+        Number(derivedSettings.loyaltyPointValue || 0),
+      ),
+    [salesStats, derivedSettings.loyaltyPointValue],
   );
 
-  const activeMembers = useMemo(
-    () => clients.filter((client) => (client.loyaltyPoints || 0) > 0).length,
-    [clients],
-  );
+  const topClients = useMemo(() => getTopLoyaltyClients(clients, 5), [clients]);
+
+  const activeMembers = useMemo(() => countActiveMembers(clients), [clients]);
 
   const redeemableClients = useMemo(
-    () => clients.filter((client) => (client.loyaltyPoints || 0) > 0),
+    () => getRedeemableClients(clients),
     [clients],
   );
 
   const selectedRedeemClient = useMemo(
-    () =>
-      redeemableClients.find((client) => client.id === redeemClientId) || null,
+    () => findClientById(redeemableClients, redeemClientId),
     [redeemableClients, redeemClientId],
   );
 
   const redeemableServices = useMemo(
-    () => services.filter((service) => service.isActive !== false),
+    () => getRedeemableServices(services),
     [services],
   );
 
   const selectedRedeemService = useMemo(
-    () =>
-      redeemableServices.find((service) => service.id === redeemServiceId) ||
-      null,
+    () => findServiceById(redeemableServices, redeemServiceId),
     [redeemableServices, redeemServiceId],
   );
 
   const requiredRedeemPoints = Number(
     derivedSettings.loyaltyMinimumRedemption || 0,
   );
-  const canSubmitRedeem =
-    !!selectedRedeemClient &&
-    !!selectedRedeemService &&
-    !!derivedSettings.loyaltyEnabled &&
-    requiredRedeemPoints > 0 &&
-    (selectedRedeemClient?.loyaltyPoints || 0) >= requiredRedeemPoints;
+
+  const canSubmitRedeem = canClientRedeem(
+    selectedRedeemClient,
+    selectedRedeemService,
+    !!derivedSettings.loyaltyEnabled,
+    requiredRedeemPoints,
+  );
 
   const { mutate: createRedeemSale, isPending: isRedeeming } = usePost<
     Sale,
@@ -270,44 +232,34 @@ export function LoyaltyPage() {
       toast.error(t("common.error"));
       return;
     }
-    if (!selectedRedeemClient) {
-      toast.error(
-        t("validation.required", { field: t("loyalty.paymentClient") }),
-      );
-      return;
-    }
-    if (!derivedSettings.loyaltyEnabled || requiredRedeemPoints <= 0) {
-      toast.error(t("loyalty.redeemConfigMissing"));
-      return;
-    }
-    if (!selectedRedeemService) {
-      toast.error(
-        t("validation.required", {
-          field: t("salonSettings.loyaltyRewardService"),
-        }),
-      );
-      return;
-    }
-    const availablePoints = selectedRedeemClient.loyaltyPoints || 0;
-    if (availablePoints < requiredRedeemPoints) {
-      toast.error(t("loyalty.redeemNotEligible"));
+
+    const validation = validateRedemption(
+      selectedRedeemClient,
+      selectedRedeemService,
+      !!derivedSettings.loyaltyEnabled,
+      requiredRedeemPoints,
+    );
+
+    if (!validation.isValid) {
+      if (validation.errorParams) {
+        toast.error(
+          t(validation.errorKey!, {
+            field: t(validation.errorParams.field),
+          }),
+        );
+      } else {
+        toast.error(t(validation.errorKey!));
+      }
       return;
     }
 
-    createRedeemSale({
-      salonId,
-      clientId: selectedRedeemClient.id,
-      redeemLoyalty: true,
-      redeemServiceId: selectedRedeemService.id,
-      items: [
-        {
-          type: "service",
-          itemId: selectedRedeemService.id,
-          quantity: 1,
-          price: Number(selectedRedeemService.price || 0),
-        },
-      ],
-    });
+    createRedeemSale(
+      createRedemptionPayload(
+        salonId,
+        selectedRedeemClient!,
+        selectedRedeemService!,
+      ),
+    );
   };
 
   return (

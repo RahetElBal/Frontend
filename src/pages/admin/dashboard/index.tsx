@@ -7,7 +7,14 @@ import type { PaginatedResponse, Salon, User } from "@/types";
 import { StatsGrid } from "./components/stats-grid";
 import { RecentSalonsCard } from "./components/recent-salons";
 import { RecentUsersCard } from "./components/recent-users";
-import { getRecentItems } from "./utils";
+import {
+  getRecentItems,
+  getUserDisplayName,
+  getAdminSalons,
+  getSalonsToDisplay,
+  getFilteredUsers,
+  getDashboardDescription,
+} from "./utils";
 
 export default function AdminDashboardPage() {
   const { t } = useTranslation();
@@ -37,48 +44,35 @@ export default function AdminDashboardPage() {
     );
   }
 
-  const displayName = user
-    ? [user.firstName, user.lastName].filter(Boolean).join(" ") || user.email
-    : "";
-
-  // Get admin's salons (typed as Salon | null but actually Salon[] at runtime)
-  const adminSalons = (user?.salon as unknown as Salon[]) || [];
+  const displayName = getUserDisplayName(user as User | null);
+  const adminSalons = getAdminSalons(user as User | null);
   const adminSalon = adminSalons[0];
-
-  // For admin: use their salon from useUser, for superadmin: use all salons
-  const salonsToDisplay = isSuperadmin
-    ? salonsData
-    : adminSalons.length > 0
-      ? adminSalons
-      : undefined;
-
+  const salonsToDisplay = getSalonsToDisplay(
+    isSuperadmin,
+    salonsData,
+    adminSalons,
+  );
   const recentSalons = salonsToDisplay
     ? getRecentItems(salonsToDisplay, 5)
     : [];
-
-  // Filter users based on role
-  const filteredUsers = usersData?.data
-    ? isSuperadmin
-      ? // Superadmin: show all admins and users
-        usersData.data.filter((u) => u.role === "admin" || u.role === "user")
-      : // Admin: show only users managed by them
-        usersData.data.filter((u) => u.managedById === user?.id)
-    : [];
-
-  const recentUsers = filteredUsers ? getRecentItems(filteredUsers, 5) : [];
+  const filteredUsers = getFilteredUsers(
+    usersData?.data,
+    isSuperadmin,
+    user?.id,
+  );
+  const recentUsers = getRecentItems(filteredUsers, 5);
 
   return (
     <div className="space-y-8">
       {/* Header */}
       <PageHeader
         title={t("admin.dashboard.title")}
-        description={
-          isSuperadmin
-            ? t("admin.dashboard.welcome", { name: displayName })
-            : adminSalon
-              ? `Tableau de bord - ${adminSalon.name}`
-              : t("admin.dashboard.welcome", { name: displayName })
-        }
+        description={getDashboardDescription(
+          isSuperadmin,
+          displayName,
+          adminSalon,
+          t("admin.dashboard.welcome"),
+        )}
       />
 
       <StatsGrid salonsData={salonsToDisplay} usersData={usersData} />

@@ -14,15 +14,6 @@ import { SchedulesView } from "./components/schedules-view";
 import { ScheduleModal } from "./components/dialog/schedule-modal";
 import type { CreateScheduleDto } from "./types";
 
-// TODO: Backend needs to implement these endpoints:
-// - GET /staff-schedules?salonId={salonId}
-// - POST /staff-schedules
-// - PATCH /staff-schedules/{id}
-// - DELETE /staff-schedules/{id}
-// - GET /staff-time-off?salonId={salonId}
-// - POST /staff-time-off
-// - PATCH /staff-time-off/{id}
-
 export function StaffPage() {
   const { t } = useTranslation();
   const { user } = useUser();
@@ -38,18 +29,21 @@ export function StaffPage() {
   const { data: staffMembersResponse } = useGet<PaginatedResponse<UserType>>(
     "users",
     {
-    params: { salonId, role: "user" },
-    enabled: !!salonId,
-  },
+      params: { salonId, role: "user" },
+      enabled: !!salonId,
+    },
   );
   const staffMembers = staffMembersResponse?.data ?? [];
 
   // NOTE: These endpoints are not yet implemented in the backend API
   // For now, we'll use empty arrays as fallback
-  const { data: schedulesResponse } = useGet<StaffSchedule[]>("staff-schedules", {
-    params: { salonId },
-    enabled: !!salonId,
-  });
+  const { data: schedulesResponse } = useGet<StaffSchedule[]>(
+    "staff-schedules",
+    {
+      params: { salonId },
+      enabled: !!salonId,
+    },
+  );
   const schedules = Array.isArray(schedulesResponse) ? schedulesResponse : [];
 
   // Mutations - NOTE: These endpoints need to be implemented in backend
@@ -143,7 +137,6 @@ export function StaffPage() {
         isLoading={createSchedule.isPending}
         editingSchedule={editingSchedule}
       />
-
     </div>
   );
 }

@@ -49,11 +49,7 @@ export const getPeriodRange = (
 export const isWithinRange = (value: Date, start: Date, end: Date) =>
   value >= start && value < end;
 
-export const filterSalesByRange = (
-  sales: Sale[],
-  start: Date,
-  end: Date,
-) =>
+export const filterSalesByRange = (sales: Sale[], start: Date, end: Date) =>
   sales.filter((sale) => {
     const createdAt = new Date(sale.createdAt);
     return isWithinRange(createdAt, start, end);
@@ -214,7 +210,4 @@ export const getTopItemsBy = (
   items: AggregatedItem[],
   metric: "count" | "revenue",
   limit = 5,
-) =>
-  [...items]
-    .sort((a, b) => b[metric] - a[metric])
-    .slice(0, limit);
+) => [...items].sort((a, b) => b[metric] - a[metric]).slice(0, limit);

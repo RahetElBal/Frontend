@@ -17,8 +17,7 @@ const normalizeSaleItem = (item: SaleItem): SaleItem => ({
   price: toNumber(item.price),
   unitPrice:
     item.unitPrice !== undefined ? toNumber(item.unitPrice) : undefined,
-  discount:
-    item.discount !== undefined ? toNumber(item.discount) : undefined,
+  discount: item.discount !== undefined ? toNumber(item.discount) : undefined,
   total: toNumber(item.total),
 });
 
