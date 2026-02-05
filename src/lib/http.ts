@@ -20,11 +20,45 @@ type EtagEntry = {
 };
 
 const etagCache = new Map<string, EtagEntry>();
+const inflightGetRequests = new Map<string, Promise<unknown>>();
 
 const buildEtagCacheKey = (url: string): string => {
   const base = API_BASE_URL.replace(/\/$/, '');
   const path = url.replace(/^\//, '');
   return `${base}/${path}`;
+};
+
+const buildHeadersKey = (headers?: Options['headers']): string => {
+  if (!headers) return '';
+  const entries: Array<[string, string]> = [];
+
+  if (headers instanceof Headers) {
+    headers.forEach((value, key) => {
+      entries.push([key, value]);
+    });
+  } else if (Array.isArray(headers)) {
+    headers.forEach(([key, value]) => {
+      if (value !== undefined) {
+        entries.push([key, String(value)]);
+      }
+    });
+  } else {
+    Object.entries(headers).forEach(([key, value]) => {
+      if (value !== undefined) {
+        entries.push([key, String(value)]);
+      }
+    });
+  }
+
+  entries.sort(([a], [b]) => a.localeCompare(b));
+  return entries.map(([key, value]) => `${key}:${value}`).join('|');
+};
+
+const buildInflightKey = (url: string, options?: Options): string => {
+  const cacheKey = buildEtagCacheKey(url);
+  const token = getAuthToken() || '';
+  const headersKey = buildHeadersKey(options?.headers);
+  return `${cacheKey}|token:${token}|headers:${headersKey}`;
 };
 
 // ============================================
@@ -147,6 +181,13 @@ export async function get<T>(
   url: string,
   options?: Options
 ): Promise<T> {
+  const inflightKey = buildInflightKey(url, options);
+  const existingRequest = inflightGetRequests.get(inflightKey);
+  if (existingRequest) {
+    return existingRequest as Promise<T>;
+  }
+
+  const requestPromise = (async () => {
   const cacheKey = buildEtagCacheKey(url);
   const cached = etagCache.get(cacheKey);
   const headers = new Headers();
@@ -198,6 +239,14 @@ export async function get<T>(
       return cached.body as T;
     }
     throw await parseError(error);
+  }
+  })();
+
+  inflightGetRequests.set(inflightKey, requestPromise);
+  try {
+    return await requestPromise;
+  } finally {
+    inflightGetRequests.delete(inflightKey);
   }
 }
 

@@ -88,12 +88,6 @@ export function LoyaltyPage() {
   });
 
   const { data: salesData } = useGet<PaginatedResponse<Sale>>("sales", {
-    params: { salonId, perPage: 10, sortBy: "createdAt", sortOrder: "desc" },
-    enabled: !!salonId,
-    select: normalizeSalesResponse,
-  });
-
-  const { data: salesStatsData } = useGet<PaginatedResponse<Sale>>("sales", {
     params: { salonId, perPage: 100, sortBy: "createdAt", sortOrder: "desc" },
     enabled: !!salonId,
     staleTime: 1000 * 60,
@@ -109,8 +103,8 @@ export function LoyaltyPage() {
   );
 
   const clients = extractArray<Client>(clientsData);
-  const sales = extractArray<Sale>(salesData);
-  const salesStats = extractArray<Sale>(salesStatsData);
+  const salesStats = extractArray<Sale>(salesData);
+  const sales = salesStats.slice(0, 10);
   const services = extractArray<Service>(servicesData);
 
   const derivedSettings = useMemo<Partial<SalonSettingsExtended>>(

@@ -29,7 +29,6 @@ import type {
   Client,
   Service,
   Product,
-  RevenueData,
   TopService,
 } from "@/types/entities";
 import type { PaginatedResponse } from "@/types";
@@ -64,12 +63,6 @@ interface DashboardStatsResponse {
   noShowRate?: number;
   totalSpent?: number;
   totalLoyaltyPoints?: number;
-}
-
-interface RevenueAnalyticsResponse {
-  data: RevenueData[];
-  total: number;
-  period: string;
 }
 
 export function AnalyticsPage() {
@@ -107,13 +100,6 @@ export function AnalyticsPage() {
     hasDashboardStats &&
     typeof dashboardStats.totalClients === "number" &&
     typeof dashboardStats.totalAppointments === "number";
-
-  // Fetch revenue analytics (data available for future chart implementation)
-  useGet<RevenueAnalyticsResponse>("analytics/revenue", {
-    params: { salonId, period: revenuePeriod },
-    enabled: !!salonId,
-    staleTime: analyticsStaleTime,
-  });
 
   // Fetch top services
   const { data: topServices = [] } = useGet<TopService[]>("services/top", {
