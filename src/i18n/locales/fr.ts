@@ -480,11 +480,11 @@ export const fr = {
     deleteAppointmentConfirm:
       "Êtes-vous sûr de vouloir supprimer le rendez-vous avec {{client}} ?",
     notesPlaceholder: "Notes supplémentaires...",
-      breakTime: "Pause",
-      closedDay: "Ce jour est marqué comme fermé dans les paramètres du salon.",
-      timeOutsideWorkingHours:
-        "L'horaire sélectionné est en dehors des horaires du salon.",
-      timeSlotOccupied: "Ce créneau est déjà réservé.",
+    breakTime: "Pause",
+    closedDay: "Ce jour est marqué comme fermé dans les paramètres du salon.",
+    timeOutsideWorkingHours:
+      "L'horaire sélectionné est en dehors des horaires du salon.",
+    timeSlotOccupied: "Ce créneau est déjà réservé.",
     timeSlotOccupiedDetails: "Conflit avec {{client}} ({{start}}-{{end}}).",
     recordPayment: "Enregistrer le paiement",
     paymentRecorded: "Paiement enregistré",
@@ -505,10 +505,10 @@ export const fr = {
     walkInOptionalDetails: "Détails optionnels (ajoutés plus tard)",
     walkInPhone: "Téléphone client de passage",
     walkInPhonePlaceholder: "Rempli automatiquement si vide",
-      walkInEmail: "Email client de passage",
-      walkInEmailPlaceholder: "Rempli automatiquement si vide",
-      walkInEmailExists:
-        "Ce client est déjà enregistré. Sélectionnez-le dans la liste.",
+    walkInEmail: "Email client de passage",
+    walkInEmailPlaceholder: "Rempli automatiquement si vide",
+    walkInEmailExists:
+      "Ce client est déjà enregistré. Sélectionnez-le dans la liste.",
     walkInNameRequired: "Le nom complet est requis",
     walkInLastNameFallback: "Client de passage",
     autoArchiveWalkIns: "Archiver automatiquement après paiement",
@@ -603,10 +603,10 @@ export const fr = {
     todayTotal: "Total du jour",
     transactions: "Transactions",
     averageTicket: "Ticket moyen",
-      printReceipt: "Imprimer le reçu",
-      viewPayment: "Voir le paiement",
-      paymentStatus: "Statut du paiement",
-      paidBy: "Payé par",
+    printReceipt: "Imprimer le reçu",
+    viewPayment: "Voir le paiement",
+    paymentStatus: "Statut du paiement",
+    paidBy: "Encaissé par",
     selectClient: "Sélectionner un client",
     selectProduct: "Ajouter un produit ou service",
     addItem: "Ajouter un article",
@@ -1030,7 +1030,8 @@ export const fr = {
       logo: "URL de l'image du salon",
       defaultImage: "Image par défaut du salon",
       cropImage: "Recadrer l'image",
-      cropImageDescription: "Faites glisser pour repositionner et ajuster le zoom",
+      cropImageDescription:
+        "Faites glisser pour repositionner et ajuster le zoom",
       zoom: "Zoom",
     },
     services: {
@@ -1078,4 +1079,3 @@ export const fr = {
     },
   },
 } as const;
-

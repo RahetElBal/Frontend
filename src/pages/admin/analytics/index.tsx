@@ -24,19 +24,12 @@ import {
 import { useLanguage } from "@/hooks/useLanguage";
 import { useUser } from "@/hooks/useUser";
 import { useGet } from "@/hooks/useGet";
-import type {
-  Appointment,
-  Client,
-  Product,
-  Sale,
-  Service,
-} from "@/types/entities";
+import type { Appointment, Client, Sale, Service } from "@/types/entities";
 import type { PaginatedResponse } from "@/types/api";
 import { normalizeSalesResponse } from "@/utils/normalize-sales";
 import { ROUTES } from "@/constants/navigation";
 import {
   aggregateCategorySales,
-  aggregateProductSales,
   aggregateSalesItems,
   filterAppointmentsByRange,
   filterClientsByRange,
@@ -57,51 +50,52 @@ export function AnalyticsPage() {
   const salonId = user?.salon?.id;
 
   const listStaleTime = 1000 * 60 * 5;
+  const listCacheTime = 1000 * 60 * 30;
 
   const { data: salesResponse, isLoading: loadingSales } = useGet<
     PaginatedResponse<Sale>
   >("sales", {
     params: {
       salonId,
-      perPage: 500,
+      perPage: 100,
       sortBy: "createdAt",
       sortOrder: "desc",
     },
     enabled: !!salonId && canViewAnalytics,
     staleTime: listStaleTime,
+    cacheTime: listCacheTime,
+    refetchOnWindowFocus: false,
     select: normalizeSalesResponse,
   });
 
   const { data: appointmentsResponse, isLoading: loadingAppointments } = useGet<
     PaginatedResponse<Appointment>
   >("appointments", {
-    params: { salonId, perPage: 500 },
+    params: { salonId, perPage: 100 },
     enabled: !!salonId && canViewAnalytics,
     staleTime: listStaleTime,
+    cacheTime: listCacheTime,
+    refetchOnWindowFocus: false,
   });
 
   const { data: clientsResponse, isLoading: loadingClients } = useGet<
     PaginatedResponse<Client>
   >("clients", {
-    params: { salonId, perPage: 500 },
+    params: { salonId, perPage: 100 },
     enabled: !!salonId && canViewAnalytics,
     staleTime: listStaleTime,
+    cacheTime: listCacheTime,
+    refetchOnWindowFocus: false,
   });
 
   const { data: servicesResponse, isLoading: loadingServices } = useGet<
     PaginatedResponse<Service>
   >("services", {
-    params: { salonId, perPage: 500 },
+    params: { salonId, perPage: 100 },
     enabled: !!salonId && canViewAnalytics,
     staleTime: listStaleTime,
-  });
-
-  const { data: productsResponse, isLoading: loadingProducts } = useGet<
-    PaginatedResponse<Product>
-  >("products", {
-    params: { salonId, perPage: 500 },
-    enabled: !!salonId && canViewAnalytics,
-    staleTime: listStaleTime,
+    cacheTime: listCacheTime,
+    refetchOnWindowFocus: false,
   });
 
   if (userLoading) {
@@ -120,14 +114,12 @@ export function AnalyticsPage() {
     loadingSales ||
     loadingAppointments ||
     loadingClients ||
-    loadingServices ||
-    loadingProducts;
+    loadingServices;
 
   const sales = salesResponse?.data ?? [];
   const appointments = appointmentsResponse?.data ?? [];
   const clients = clientsResponse?.data ?? [];
   const services = servicesResponse?.data ?? [];
-  const products = productsResponse?.data ?? [];
 
   const { start, end } = useMemo(() => getPeriodRange(period), [period]);
 
@@ -165,14 +157,10 @@ export function AnalyticsPage() {
 
   const topServices = getTopItemsBy(allServiceItems, "count", 5);
 
-  const topProducts = getTopItemsBy(
-    aggregateProductSales(salesInRange, products),
-    "count",
-    5,
-  );
+  const topProducts = getTopItemsBy(allProductItems, "count", 5);
 
   const topCategories = getTopItemsBy(
-    aggregateCategorySales(salesInRange, services, products, t("common.other")),
+    aggregateCategorySales(salesInRange, services, [], t("common.other")),
     "revenue",
     5,
   );
