@@ -106,8 +106,8 @@ export function TimelineView({
   }
 
   return (
-    <Card className="p-0 overflow-hidden">
-      <div className="overflow-x-auto overflow-y-visible">
+    <Card className="w-full p-0 overflow-hidden">
+      <div className="w-full overflow-x-auto overflow-y-visible">
         <div className="w-full min-w-full">
           <div className="relative w-full">
             {timeSlots.map((time) => {
@@ -146,7 +146,7 @@ export function TimelineView({
                 <div
                   key={time}
                   className={cn(
-                    "flex w-full border-b relative overflow-visible",
+                    "flex w-full min-w-full border-b relative overflow-visible",
                     isCurrentTime && "bg-accent-pink/5",
                     isPastTime && "opacity-60",
                   )}

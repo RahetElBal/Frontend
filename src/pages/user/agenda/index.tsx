@@ -692,7 +692,7 @@ export function AgendaPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full">
       <PageHeader
         title={t("nav.agenda")}
         description={t("agenda.description")}
@@ -800,52 +800,54 @@ export function AgendaPage() {
         </div>
       </div>
 
-      <TimelineView
-        appointments={filteredAppointments}
-        selectedDate={new Date(`${selectedDate}T00:00:00`)}
-        isLoading={isLoading}
-        timeSlots={timelineSlots.slots}
-        blockedSlots={timelineSlots.blocked}
-        isClosed={!workingHoursForSelectedDate.isOpen}
-        onTimeSlotClick={(time) =>
-          handleSelectSlot({
-            start: timeToDate(time, selectedDate),
-            end: timeToDate(time, selectedDate),
-          })
-        }
-        onAppointmentClick={(appointment) =>
-          handleSelectEvent({
-            id: appointment.id,
-            title: appointment.client
-              ? `${appointment.client.firstName} ${appointment.client.lastName}`
-              : appointment.service?.name || t("agenda.appointmentDetails"),
-            start: new Date(`${appointment.date}T${appointment.startTime}`),
-            end: new Date(`${appointment.date}T${appointment.endTime}`),
-            resource: appointment,
-          })
-        }
-        onRecordPayment={(appointment) => {
-          if (!salonId || !appointment.serviceId) {
-            toast.error(t("common.error"));
-            return;
+      <div className="w-full">
+        <TimelineView
+          appointments={filteredAppointments}
+          selectedDate={new Date(`${selectedDate}T00:00:00`)}
+          isLoading={isLoading}
+          timeSlots={timelineSlots.slots}
+          blockedSlots={timelineSlots.blocked}
+          isClosed={!workingHoursForSelectedDate.isOpen}
+          onTimeSlotClick={(time) =>
+            handleSelectSlot({
+              start: timeToDate(time, selectedDate),
+              end: timeToDate(time, selectedDate),
+            })
           }
-          createSaleFromAppointment({
-            salonId,
-            appointmentId: appointment.id,
-            clientId: appointment.clientId,
-            redeemLoyalty: false,
-            items: [
-              {
-                type: "service",
-                itemId: appointment.serviceId,
-                quantity: 1,
-                price: appointment.price,
-              },
-            ],
-          });
-        }}
-        isRecordingPayment={isCreatingSale}
-      />
+          onAppointmentClick={(appointment) =>
+            handleSelectEvent({
+              id: appointment.id,
+              title: appointment.client
+                ? `${appointment.client.firstName} ${appointment.client.lastName}`
+                : appointment.service?.name || t("agenda.appointmentDetails"),
+              start: new Date(`${appointment.date}T${appointment.startTime}`),
+              end: new Date(`${appointment.date}T${appointment.endTime}`),
+              resource: appointment,
+            })
+          }
+          onRecordPayment={(appointment) => {
+            if (!salonId || !appointment.serviceId) {
+              toast.error(t("common.error"));
+              return;
+            }
+            createSaleFromAppointment({
+              salonId,
+              appointmentId: appointment.id,
+              clientId: appointment.clientId,
+              redeemLoyalty: false,
+              items: [
+                {
+                  type: "service",
+                  itemId: appointment.serviceId,
+                  quantity: 1,
+                  price: appointment.price,
+                },
+              ],
+            });
+          }}
+          isRecordingPayment={isCreatingSale}
+        />
+      </div>
 
       <AppointmentModals
         modalState={modalState}
