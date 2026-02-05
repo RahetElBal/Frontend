@@ -52,6 +52,7 @@ interface SalonModalProps {
   user: User | null;
   admins: User[];
   adminsLoaded: boolean;
+  onRefreshAdmins?: () => void;
   onSuccess: () => void;
 }
 
@@ -62,6 +63,7 @@ export function SalonModals({
   user,
   admins,
   adminsLoaded,
+  onRefreshAdmins,
   onSuccess,
 }: SalonModalProps) {
   const { t } = useTranslation();
@@ -401,6 +403,12 @@ export function SalonModals({
       }
     };
   }, [logoPreview]);
+
+  useEffect(() => {
+    if (!modalState || modalState.salonId !== "create") return;
+    if (user?.isSuperadmin !== true) return;
+    onRefreshAdmins?.();
+  }, [modalState?.salonId, user?.isSuperadmin, onRefreshAdmins]);
 
   useEffect(() => {
     if (!modalState || modalState.salonId !== "create") return;

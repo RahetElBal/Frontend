@@ -42,6 +42,7 @@ export default function SalonsPage() {
     data: admins = [],
     isLoading: isAdminsLoading,
     isError: isAdminsError,
+    refetch: refetchAdmins,
   } = useGet<User[]>("users/admins", {
     enabled: userIsSuperadmin,
     retry: 1,
@@ -215,6 +216,7 @@ export default function SalonsPage() {
           user={user as User | null}
           admins={admins}
           adminsLoaded={adminsLoaded}
+          onRefreshAdmins={refetchAdmins}
           onSuccess={refetch}
         />
       )}

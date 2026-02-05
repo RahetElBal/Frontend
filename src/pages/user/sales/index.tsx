@@ -30,21 +30,31 @@ interface SalesResponse {
 
 const getSaleItemPricing = (item: SaleItem) => {
   const quantity = Math.max(1, toNumber(item.quantity, 1));
-  const baseUnitPrice = toNumber(item.unitPrice ?? item.price ?? item.total);
-  const fallbackLineTotal = baseUnitPrice * quantity;
-  const lineTotal = toNumber(
-    item.total ??
-      (item.price !== undefined ? toNumber(item.price) * quantity : undefined),
-    fallbackLineTotal,
+  const baseUnitPrice = toNumber(
+    item.unitPrice ??
+      item.price ??
+      (item.total !== undefined ? toNumber(item.total) / quantity : undefined),
   );
-  const finalUnitPrice = lineTotal / quantity;
-  const discount = Math.max(0, baseUnitPrice * quantity - lineTotal);
+  const baseLineTotal = baseUnitPrice * quantity;
+  const lineTotal = toNumber(item.total ?? baseLineTotal);
+  const discountFromLine = Math.max(0, baseLineTotal - lineTotal);
+  const discountFromField = Math.max(0, toNumber(item.discount, 0));
+  const shouldUseDiscountField =
+    discountFromField > 0 && discountFromLine < 0.01;
+  const discount = shouldUseDiscountField
+    ? discountFromField
+    : Math.max(discountFromLine, discountFromField);
+  const finalLineTotal = Math.max(
+    0,
+    shouldUseDiscountField ? baseLineTotal - discount : lineTotal,
+  );
+  const finalUnitPrice = finalLineTotal / quantity;
 
   return {
     quantity,
     baseUnitPrice,
     finalUnitPrice,
-    lineTotal,
+    lineTotal: finalLineTotal,
     discount,
   };
 };
@@ -286,10 +296,6 @@ export function SalesPage() {
                     <span>-{formatCurrency(displayDiscount)}</span>
                   </div>
                 )}
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">{t("fields.tax")}</span>
-                  <span>{formatCurrency(toNumber(selectedSale.tax || 0))}</span>
-                </div>
                 <div className="flex items-center justify-between text-base font-semibold">
                   <span>{t("fields.total")}</span>
                   <span>{formatCurrency(toNumber(selectedSale.total))}</span>

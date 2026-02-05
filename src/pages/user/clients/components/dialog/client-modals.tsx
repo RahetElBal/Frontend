@@ -217,10 +217,12 @@ export function ClientModals({
   const handleClose = () => setModalState(null);
 
   const handleSubmit = (data: ClientFormData) => {
+    const normalizedEmail = data.email?.trim() || undefined;
     const normalizedPhone = normalizePhone(data.phone);
     const payload = {
       ...data,
       phone: normalizedPhone || data.phone,
+      email: normalizedEmail,
     };
     if (derived.isCreateMode) {
       const salonId = user?.salon?.id;
