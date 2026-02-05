@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Building2, Clock, Save, Calendar, Heart } from "lucide-react";
+import { Building2, Clock, Save, Calendar, Heart, Bell } from "lucide-react";
 
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
@@ -17,8 +17,9 @@ import { GeneralSettings } from "./components/general-settings";
 import { WorkingHoursSettings } from "./components/working-hours-settings";
 import { BookingSettings } from "./components/booking-settings";
 import { LoyaltySettings } from "./components/loyalty-settings";
+import { NotificationSettings } from "./components/notification-settings";
 
-type SettingsTab = "general" | "booking" | "hours" | "loyalty";
+type SettingsTab = "general" | "booking" | "hours" | "loyalty" | "notifications";
 
 const defaultSettings: Partial<SalonSettingsExtended> = {
   currency: "EUR",
@@ -36,7 +37,7 @@ const defaultSettings: Partial<SalonSettingsExtended> = {
   depositPercentage: undefined,
   sendAppointmentConfirmation: true,
   sendAppointmentReminder: true,
-  reminderHoursBefore: 24,
+  reminderHoursBefore: 2,
   sendBirthdayGreeting: false,
   sendReviewRequest: false,
   reviewRequestHoursAfter: 24,
@@ -188,6 +189,7 @@ export function SalonSettingsPage() {
     { id: "general", label: t("salonSettings.tabs.general"), icon: Building2 },
     { id: "hours", label: t("salonSettings.tabs.hours"), icon: Clock },
     { id: "booking", label: t("salonSettings.tabs.booking"), icon: Calendar },
+    { id: "notifications", label: t("salonSettings.tabs.notifications"), icon: Bell },
     { id: "loyalty", label: t("salonSettings.tabs.loyalty"), icon: Heart },
   ];
 
@@ -253,6 +255,12 @@ export function SalonSettingsPage() {
               )}
               {activeTab === "booking" && (
                 <BookingSettings
+                  formData={formData}
+                  updateField={updateField}
+                />
+              )}
+              {activeTab === "notifications" && (
+                <NotificationSettings
                   formData={formData}
                   updateField={updateField}
                 />
