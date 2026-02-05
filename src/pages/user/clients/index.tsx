@@ -16,6 +16,8 @@ import { getClientColumns } from "./components/list/columns";
 import { useUser } from "@/hooks/useUser";
 import type { PaginatedResponse } from "@/types";
 import { useGet } from "@/hooks/useGet";
+import type { Sale } from "@/types/entities";
+import { normalizeSalesResponse } from "@/utils/normalize-sales";
 
 const isWalkInClient = (client: Client) =>
   (client.email || "").toLowerCase().startsWith("walkin+");
@@ -29,6 +31,8 @@ export function ClientsPage() {
 
   const salonId = user?.salon?.id;
   const clientsStaleTime = 1000 * 60 * 10;
+  const salesStaleTime = 1000 * 60;
+  const salesCacheTime = 1000 * 60 * 10;
 
   const {
     data: clientsResponse,
@@ -38,16 +42,51 @@ export function ClientsPage() {
     params: { salonId, perPage: 100 },
     enabled: !!salonId,
     staleTime: clientsStaleTime,
+    refetchOnWindowFocus: "always",
+  });
+
+  const { data: salesResponse } = useGet<PaginatedResponse<Sale>>("sales", {
+    params: {
+      salonId,
+      perPage: 500,
+      sortBy: "createdAt",
+      sortOrder: "desc",
+    },
+    enabled: !!salonId,
+    staleTime: salesStaleTime,
+    cacheTime: salesCacheTime,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: "always",
+    select: normalizeSalesResponse,
   });
 
   const clients = useMemo(() => clientsResponse?.data || [], [clientsResponse]);
+  const sales = useMemo(() => salesResponse?.data || [], [salesResponse]);
+  const totalSpentByClient = useMemo(() => {
+    const totals = new Map<string, number>();
+    sales.forEach((sale) => {
+      if (!sale.clientId) return;
+      const current = totals.get(sale.clientId) ?? 0;
+      const total = Number(sale.total ?? 0);
+      totals.set(sale.clientId, current + (Number.isFinite(total) ? total : 0));
+    });
+    return totals;
+  }, [sales]);
+  const clientsWithSales = useMemo(
+    () =>
+      clients.map((client) => ({
+        ...client,
+        totalSpent: totalSpentByClient.get(client.id) ?? 0,
+      })),
+    [clients, totalSpentByClient],
+  );
   const regularClients = useMemo(
-    () => clients.filter((client) => !isWalkInClient(client)),
-    [clients],
+    () => clientsWithSales.filter((client) => !isWalkInClient(client)),
+    [clientsWithSales],
   );
   const walkInClients = useMemo(
-    () => clients.filter((client) => isWalkInClient(client)),
-    [clients],
+    () => clientsWithSales.filter((client) => isWalkInClient(client)),
+    [clientsWithSales],
   );
 
   const form = useForm<ClientFormData>({
@@ -147,7 +186,7 @@ export function ClientsPage() {
       <ClientModals
         modalState={modalState}
         setModalState={setModalState}
-        clients={clients}
+        clients={clientsWithSales}
         form={form}
         onSuccess={refetch}
       />

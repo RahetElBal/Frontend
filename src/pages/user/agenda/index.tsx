@@ -492,7 +492,7 @@ export function AgendaPage() {
         }[];
       }
     >("sales", {
-      invalidateQueries: ["sales", "appointments"],
+      invalidateQueries: ["sales", "appointments", "clients"],
       onSuccess: (_sale, variables) => {
         toast.success(
           t("agenda.paymentRecorded") + " - " + t("common.success"),
