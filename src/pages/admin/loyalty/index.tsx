@@ -61,7 +61,7 @@ const defaultSettings = {
 };
 
 const extractArray = <T,>(
-  data: PaginatedResponse<T> | T[] | undefined
+  data: PaginatedResponse<T> | T[] | undefined,
 ): T[] => {
   if (!data) return [];
   if (Array.isArray(data)) return data;
@@ -83,7 +83,7 @@ export function LoyaltyPage() {
   const canRedeem = isAdmin || isSuperadmin;
 
   const { data: clientsData } = useGet<PaginatedResponse<Client>>("clients", {
-    params: { salonId, perPage: 200 },
+    params: { salonId, perPage: 100 },
     enabled: !!salonId,
   });
 
@@ -94,7 +94,7 @@ export function LoyaltyPage() {
   });
 
   const { data: salesStatsData } = useGet<PaginatedResponse<Sale>>("sales", {
-    params: { salonId, perPage: 200, sortBy: "createdAt", sortOrder: "desc" },
+    params: { salonId, perPage: 100, sortBy: "createdAt", sortOrder: "desc" },
     enabled: !!salonId,
     staleTime: 1000 * 60,
     select: normalizeSalesResponse,
@@ -103,9 +103,9 @@ export function LoyaltyPage() {
   const { data: servicesData } = useGet<PaginatedResponse<Service>>(
     "services",
     {
-      params: { salonId, perPage: 200 },
+      params: { salonId, perPage: 100 },
       enabled: !!salonId,
-    }
+    },
   );
 
   const clients = extractArray<Client>(clientsData);
@@ -133,17 +133,18 @@ export function LoyaltyPage() {
         salon?.settings?.loyaltyRewardDiscountValue ??
         defaultSettings.loyaltyRewardDiscountValue,
     }),
-    [salon]
+    [salon],
   );
 
   const totalPointsIssued = useMemo(
     () => clients.reduce((sum, client) => sum + (client.loyaltyPoints || 0), 0),
-    [clients]
+    [clients],
   );
 
   const totalPointsRedeemed = useMemo(() => {
     const hasRedeemedPointsField = salesStats.some(
-      (sale) => sale.redeemedPoints !== undefined && sale.redeemedPoints !== null,
+      (sale) =>
+        sale.redeemedPoints !== undefined && sale.redeemedPoints !== null,
     );
     if (hasRedeemedPointsField) {
       return salesStats.reduce(
@@ -165,12 +166,12 @@ export function LoyaltyPage() {
       [...clients]
         .sort((a, b) => (b.loyaltyPoints || 0) - (a.loyaltyPoints || 0))
         .slice(0, 5),
-    [clients]
+    [clients],
   );
 
   const activeMembers = useMemo(
     () => clients.filter((client) => (client.loyaltyPoints || 0) > 0).length,
-    [clients]
+    [clients],
   );
 
   const redeemableClients = useMemo(
@@ -179,7 +180,8 @@ export function LoyaltyPage() {
   );
 
   const selectedRedeemClient = useMemo(
-    () => redeemableClients.find((client) => client.id === redeemClientId) || null,
+    () =>
+      redeemableClients.find((client) => client.id === redeemClientId) || null,
     [redeemableClients, redeemClientId],
   );
 
@@ -189,7 +191,9 @@ export function LoyaltyPage() {
   );
 
   const selectedRedeemService = useMemo(
-    () => redeemableServices.find((service) => service.id === redeemServiceId) || null,
+    () =>
+      redeemableServices.find((service) => service.id === redeemServiceId) ||
+      null,
     [redeemableServices, redeemServiceId],
   );
 
@@ -243,7 +247,7 @@ export function LoyaltyPage() {
         setIsSettingsModalOpen(false);
       },
       onError: (error) => toast.error(error.message || t("common.error")),
-    }
+    },
   );
 
   const handleSaveSettings = async (e: React.FormEvent) => {
@@ -284,7 +288,9 @@ export function LoyaltyPage() {
     }
     if (!selectedRedeemService) {
       toast.error(
-        t("validation.required", { field: t("salonSettings.loyaltyRewardService") }),
+        t("validation.required", {
+          field: t("salonSettings.loyaltyRewardService"),
+        }),
       );
       return;
     }
@@ -323,7 +329,9 @@ export function LoyaltyPage() {
                 className="gap-2"
                 onClick={() => {
                   setRedeemClientId("");
-                  setRedeemServiceId(derivedSettings.loyaltyRewardServiceId || "");
+                  setRedeemServiceId(
+                    derivedSettings.loyaltyRewardServiceId || "",
+                  );
                   setIsRedeemModalOpen(true);
                 }}
               >
@@ -402,7 +410,8 @@ export function LoyaltyPage() {
               </p>
               <p className="text-xl font-bold">
                 {formatCurrency(
-                  totalPointsRedeemed * (derivedSettings.loyaltyPointValue || 0)
+                  totalPointsRedeemed *
+                    (derivedSettings.loyaltyPointValue || 0),
                 )}
               </p>
             </div>
@@ -430,10 +439,10 @@ export function LoyaltyPage() {
                         index === 0
                           ? "bg-yellow-100 text-yellow-700"
                           : index === 1
-                          ? "bg-gray-200 text-gray-700"
-                          : index === 2
-                          ? "bg-orange-100 text-orange-700"
-                          : "bg-muted text-muted-foreground"
+                            ? "bg-gray-200 text-gray-700"
+                            : index === 2
+                              ? "bg-orange-100 text-orange-700"
+                              : "bg-muted text-muted-foreground",
                       )}
                     >
                       {index + 1}
@@ -550,7 +559,9 @@ export function LoyaltyPage() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>{t("loyalty.redeemPoints")}</DialogTitle>
-            <DialogDescription>{t("loyalty.redeemPointsDescription")}</DialogDescription>
+            <DialogDescription>
+              {t("loyalty.redeemPointsDescription")}
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-2">
@@ -583,7 +594,9 @@ export function LoyaltyPage() {
               >
                 <SelectTrigger>
                   <SelectValue
-                    placeholder={t("salonSettings.loyaltyRewardServicePlaceholder")}
+                    placeholder={t(
+                      "salonSettings.loyaltyRewardServicePlaceholder",
+                    )}
                   />
                 </SelectTrigger>
                 <SelectContent>
@@ -612,13 +625,17 @@ export function LoyaltyPage() {
               />
               {selectedRedeemClient && (
                 <p className="text-xs text-muted-foreground">
-                  {t("loyalty.availablePoints")}: {selectedRedeemClient.loyaltyPoints}
+                  {t("loyalty.availablePoints")}:{" "}
+                  {selectedRedeemClient.loyaltyPoints}
                 </p>
               )}
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsRedeemModalOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setIsRedeemModalOpen(false)}
+            >
               {t("common.cancel")}
             </Button>
             <Button

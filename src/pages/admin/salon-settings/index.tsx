@@ -87,22 +87,20 @@ export function SalonSettingsPage() {
   // Settings are stored within the salon entity
   const settings = currentSalon?.settings as SalonSettingsExtended | undefined;
   const isLoading = !currentSalon;
-  const { data: servicesData, isLoading: servicesLoading } =
-    useGet<PaginatedResponse<Service>>(
-    "services",
-    {
-      params: { salonId: currentSalon?.id, perPage: 200, compact: true },
-      enabled: activeTab === "loyalty" && !!currentSalon?.id,
-      staleTime: 1000 * 60 * 30,
-      refetchOnMount: false,
-      refetchOnWindowFocus: false,
-    }
-  );
+  const { data: servicesData, isLoading: servicesLoading } = useGet<
+    PaginatedResponse<Service>
+  >("services", {
+    params: { salonId: currentSalon?.id, perPage: 100, compact: true },
+    enabled: activeTab === "loyalty" && !!currentSalon?.id,
+    staleTime: 1000 * 60 * 30,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+  });
   const services = Array.isArray(servicesData?.data)
     ? servicesData.data
     : Array.isArray(servicesData)
-    ? servicesData
-    : [];
+      ? servicesData
+      : [];
 
   const baseSettings = useMemo(() => {
     const mergedWorkingHours = {
@@ -115,8 +113,9 @@ export function SalonSettingsPage() {
       workingHours: mergedWorkingHours,
     };
   }, [settings]);
-  const [draftSettings, setDraftSettings] =
-    useState<Partial<SalonSettingsExtended>>({});
+  const [draftSettings, setDraftSettings] = useState<
+    Partial<SalonSettingsExtended>
+  >({});
   const formData = useMemo(
     () => ({
       ...baseSettings,
@@ -147,7 +146,7 @@ export function SalonSettingsPage() {
 
   const updateField = <K extends keyof SalonSettingsExtended>(
     field: K,
-    value: SalonSettingsExtended[K]
+    value: SalonSettingsExtended[K],
   ) => {
     setDraftSettings((prev) => ({ ...prev, [field]: value }));
     setHasChanges(true);
@@ -156,13 +155,13 @@ export function SalonSettingsPage() {
   const updateWorkingHours = (
     day: string,
     field: string,
-    value: string | boolean
+    value: string | boolean,
   ) => {
     const currentDayHours = formData.workingHours?.[day] || {
-        isOpen: false,
-        openTime: "09:00",
-        closeTime: "18:00",
-      };
+      isOpen: false,
+      openTime: "09:00",
+      closeTime: "18:00",
+    };
     setDraftSettings((prev) => ({
       ...prev,
       workingHours: {
@@ -223,7 +222,7 @@ export function SalonSettingsPage() {
                 "w-full flex items-center gap-3 px-4 py-3 rounded-lg text-start transition-colors",
                 activeTab === tab.id
                   ? "bg-accent-pink/10 text-accent-pink"
-                  : "hover:bg-muted text-muted-foreground hover:text-foreground"
+                  : "hover:bg-muted text-muted-foreground hover:text-foreground",
               )}
             >
               <tab.icon className="h-5 w-5" />
