@@ -12,6 +12,7 @@ export const clientFormSchema = z.object({
       message: "validation.custom.phoneInvalid",
     },
   ),
+  isMarried: z.boolean().optional(),
   salonId: z.string().uuid().optional(),
 });
 

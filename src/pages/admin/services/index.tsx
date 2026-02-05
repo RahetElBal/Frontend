@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/spinner";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
@@ -35,6 +36,7 @@ import {
 } from "@/components/ui/table";
 import { toast } from "@/lib/toast";
 import { useGet } from "@/hooks/useGet";
+import { useLanguage } from "@/hooks/useLanguage";
 import { useUser } from "@/hooks/useUser";
 import { ROUTES } from "@/constants/navigation";
 import { patch, post } from "@/lib/http";
@@ -44,6 +46,7 @@ import {
   translateServiceCategory,
 } from "@/common/service-translations";
 import type { Category, PaginatedResponse, Salon, Service } from "@/types";
+import { Badge } from "@/components/badge";
 
 type ServiceModalMode = "create" | "edit";
 type ServicePayload = {
@@ -55,10 +58,13 @@ type ServicePayload = {
   description?: string;
   image?: string;
   isActive: boolean;
+  isPack?: boolean;
+  packServiceIds?: string[];
 };
 
 export default function AdminServicesPage() {
   const { t } = useTranslation();
+  const { formatCurrency } = useLanguage();
   const { isSuperadmin, isAdmin, isLoading, user } = useUser();
   const salonsStaleTime = 1000 * 60 * 10;
   const servicesStaleTime = 1000 * 60 * 5;
@@ -85,6 +91,8 @@ export default function AdminServicesPage() {
     description: "",
     image: "",
     isActive: true,
+    isPack: false,
+    packServiceIds: [] as string[],
   });
 
   const getCategoryName = (category?: string | Category): string => {
@@ -127,6 +135,40 @@ export default function AdminServicesPage() {
     });
     return Array.from(unique).sort((a, b) => a.localeCompare(b));
   }, [services]);
+
+  const packServiceOptions = useMemo(
+    () =>
+      services.filter(
+        (service) => !service.isPack && service.id !== editingServiceId,
+      ),
+    [services, editingServiceId],
+  );
+
+  const selectedPackServices = useMemo(() => {
+    if (!formValues.isPack) return [];
+    const selectedIds = new Set(formValues.packServiceIds);
+    return packServiceOptions.filter((service) => selectedIds.has(service.id));
+  }, [formValues.isPack, formValues.packServiceIds, packServiceOptions]);
+
+  const packTotals = useMemo(() => {
+    const totalDuration = selectedPackServices.reduce(
+      (sum, service) => sum + (Number(service.duration) || 0),
+      0,
+    );
+    const totalPrice = selectedPackServices.reduce(
+      (sum, service) => sum + (Number(service.price) || 0),
+      0,
+    );
+    return { totalDuration, totalPrice };
+  }, [selectedPackServices]);
+
+  useEffect(() => {
+    if (!formValues.isPack) return;
+    const nextDuration = packTotals.totalDuration;
+    if (nextDuration > 0 && String(nextDuration) !== formValues.duration) {
+      setFormValues((prev) => ({ ...prev, duration: String(nextDuration) }));
+    }
+  }, [formValues.isPack, formValues.duration, packTotals.totalDuration]);
 
   useEffect(() => {
     if (!isSuperadmin) {
@@ -232,6 +274,8 @@ export default function AdminServicesPage() {
       description: "",
       image: "",
       isActive: true,
+      isPack: false,
+      packServiceIds: [],
     });
     setIsModalOpen(true);
   };
@@ -247,6 +291,8 @@ export default function AdminServicesPage() {
       description: service.description ?? "",
       image: service.image ?? "",
       isActive: service.isActive ?? true,
+      isPack: service.isPack ?? false,
+      packServiceIds: service.packServiceIds ?? [],
     });
     setIsModalOpen(true);
   };
@@ -255,7 +301,24 @@ export default function AdminServicesPage() {
     field: keyof typeof formValues,
     value: string | boolean,
   ) => {
-    setFormValues((prev) => ({ ...prev, [field]: value }));
+    setFormValues((prev) => {
+      if (field === "isPack" && value === false) {
+        return { ...prev, isPack: false, packServiceIds: [] };
+      }
+      return { ...prev, [field]: value };
+    });
+  };
+
+  const togglePackService = (serviceId: string) => {
+    setFormValues((prev) => {
+      const existing = new Set(prev.packServiceIds);
+      if (existing.has(serviceId)) {
+        existing.delete(serviceId);
+      } else {
+        existing.add(serviceId);
+      }
+      return { ...prev, packServiceIds: Array.from(existing) };
+    });
   };
 
   const handleSubmitService = async () => {
@@ -277,30 +340,46 @@ export default function AdminServicesPage() {
       toast.error(t("admin.services.priceInvalid"));
       return;
     }
+    if (formValues.isPack && formValues.packServiceIds.length === 0) {
+      toast.error(t("admin.services.packServicesRequired"));
+      return;
+    }
 
     setIsSavingService(true);
     try {
+      const resolvedDuration =
+        formValues.isPack && packTotals.totalDuration > 0
+          ? packTotals.totalDuration
+          : duration;
       if (modalMode === "create") {
         await post<Service, ServicePayload>("services", {
           salonId: selectedSalonId,
           name: formValues.name.trim(),
           category: formValues.category.trim(),
-          duration,
+          duration: resolvedDuration,
           price,
           description: formValues.description.trim() || undefined,
           image: formValues.image.trim() || undefined,
           isActive: formValues.isActive,
+          isPack: formValues.isPack,
+          packServiceIds: formValues.isPack
+            ? formValues.packServiceIds
+            : [],
         });
         toast.success(t("admin.services.created"));
       } else if (editingServiceId) {
         await patch<Service, ServicePayload>(`services/${editingServiceId}`, {
           name: formValues.name.trim(),
           category: formValues.category.trim(),
-          duration,
+          duration: resolvedDuration,
           price,
           description: formValues.description.trim() || undefined,
           image: formValues.image.trim() || undefined,
           isActive: formValues.isActive,
+          isPack: formValues.isPack,
+          packServiceIds: formValues.isPack
+            ? formValues.packServiceIds
+            : [],
         });
         toast.success(t("admin.services.updated"));
       }
@@ -527,7 +606,21 @@ export default function AdminServicesPage() {
                               />
                             )}
                             <span>{service.name}</span>
+                            {service.isPack && (
+                              <Badge variant="info">
+                                {t("services.pack")}
+                              </Badge>
+                            )}
                           </div>
+                          {service.isPack &&
+                            service.packServiceIds &&
+                            service.packServiceIds.length > 0 && (
+                              <p className="text-xs text-muted-foreground">
+                                {t("admin.services.packItems", {
+                                  count: service.packServiceIds.length,
+                                })}
+                              </p>
+                            )}
                         </TableCell>
                         <TableCell>
                           {translateServiceCategory(
@@ -624,6 +717,7 @@ export default function AdminServicesPage() {
                   onChange={(event) =>
                     handleFormChange("duration", event.target.value)
                   }
+                  disabled={formValues.isPack}
                 />
               </div>
               <div>
@@ -638,6 +732,66 @@ export default function AdminServicesPage() {
                   }
                 />
               </div>
+            </div>
+            <div className="rounded-lg border p-3 space-y-3">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <Label>{t("admin.services.packLabel")}</Label>
+                  <p className="text-xs text-muted-foreground">
+                    {t("admin.services.packDescription")}
+                  </p>
+                </div>
+                <Switch
+                  checked={formValues.isPack}
+                  onCheckedChange={(value) => handleFormChange("isPack", value)}
+                />
+              </div>
+              {formValues.isPack && (
+                <div className="space-y-3">
+                  <div className="text-xs text-muted-foreground">
+                    {t("admin.services.packSummary", {
+                      count: selectedPackServices.length,
+                      duration: packTotals.totalDuration,
+                      price: formatCurrency(packTotals.totalPrice),
+                    })}
+                  </div>
+                  <div className="space-y-2">
+                    <Label>{t("admin.services.packServicesLabel")}</Label>
+                    {packServiceOptions.length === 0 ? (
+                      <p className="text-xs text-muted-foreground">
+                        {t("admin.services.packServicesEmpty")}
+                      </p>
+                    ) : (
+                      <div className="grid gap-2 max-h-40 overflow-y-auto rounded-md border p-2">
+                        {packServiceOptions.map((service) => {
+                          const checked = formValues.packServiceIds.includes(
+                            service.id,
+                          );
+                          return (
+                            <label
+                              key={service.id}
+                              className="flex items-center gap-2 text-sm"
+                            >
+                              <Checkbox
+                                checked={checked}
+                                onCheckedChange={() =>
+                                  togglePackService(service.id)
+                                }
+                              />
+                              <span className="flex-1">
+                                {service.name} ({service.duration} min)
+                              </span>
+                              <span className="text-muted-foreground">
+                                {formatCurrency(Number(service.price) || 0)}
+                              </span>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
             <div>
               <Label>{t("admin.services.descriptionLabel")}</Label>

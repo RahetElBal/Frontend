@@ -195,7 +195,7 @@ export function AppointmentModals({
     () => safeClients.filter((client) => !isWalkInClient(client)),
     [safeClients],
   );
-  const safeServices = useMemo(
+  const allServices = useMemo(
     () => (Array.isArray(services) ? services : []),
     [services],
   );
@@ -228,6 +228,16 @@ export function AppointmentModals({
   const { reset, watch } = form;
   const selectedStaff = watch("staffId");
   const selectedClientId = watch("clientId");
+  const walkInEnabled = watch("walkInEnabled");
+  const walkInIsMarried = watch("walkInIsMarried");
+  const selectedClient = useMemo(
+    () =>
+      safeClients.find((client) => client.id === selectedClientId) || null,
+    [safeClients, selectedClientId],
+  );
+  const canUsePacks = walkInEnabled
+    ? !!walkInIsMarried
+    : !!selectedClient?.isMarried;
 
   const selectableClients = useMemo(() => {
     if (!selectedClientId) return regularClients;
@@ -248,14 +258,55 @@ export function AppointmentModals({
   const walkInEmail = watch("walkInEmail");
   const selectedDate = watch("date") || getLocalDateString();
   const selectedStartTime = watch("startTime");
+  const visibleServices = useMemo(() => {
+    const baseServices = canUsePacks
+      ? allServices
+      : allServices.filter((service) => !service.isPack);
+    if (!selectedServiceId) {
+      return baseServices;
+    }
+    const selected = allServices.find((service) => service.id === selectedServiceId);
+    if (selected && !baseServices.some((service) => service.id === selected.id)) {
+      return [selected, ...baseServices];
+    }
+    return baseServices;
+  }, [allServices, canUsePacks, selectedServiceId]);
   const selectedService = useMemo(
-    () => safeServices.find((s) => s.id === selectedServiceId) || null,
-    [safeServices, selectedServiceId],
+    () => allServices.find((service) => service.id === selectedServiceId) || null,
+    [allServices, selectedServiceId],
   );
   const selectedServiceBasePrice = useMemo(
     () => toNumber(selectedService?.price),
     [selectedService?.price],
   );
+  const serviceLookup = useMemo(
+    () => new Map(allServices.map((service) => [service.id, service])),
+    [allServices],
+  );
+  const selectedPackServices = useMemo(() => {
+    if (!selectedService?.isPack) return [];
+    const packIds = selectedService.packServiceIds ?? [];
+    return packIds
+      .map((id) => serviceLookup.get(id))
+      .filter((service): service is Service => Boolean(service));
+  }, [selectedService, serviceLookup]);
+  const packRegularPrice = useMemo(
+    () =>
+      selectedPackServices.reduce(
+        (sum, service) => sum + toNumber(service.price),
+        0,
+      ),
+    [selectedPackServices],
+  );
+  const packRegularDuration = useMemo(
+    () =>
+      selectedPackServices.reduce(
+        (sum, service) => sum + (Number(service.duration) || 0),
+        0,
+      ),
+    [selectedPackServices],
+  );
+  const packSavings = Math.max(0, packRegularPrice - selectedServiceBasePrice);
   const priceOverridePreview = useMemo(() => {
     if (!selectedService) return null;
     const trimmedPrice = customPriceInput?.toString().trim();
@@ -350,7 +401,6 @@ export function AppointmentModals({
     user?.id,
   ]);
 
-  const walkInEnabled = watch("walkInEnabled");
   const normalizedWalkInEmail = (walkInEmail || "").trim().toLowerCase();
   const emailConflict = useMemo(() => {
     if (!walkInEnabled || !normalizedWalkInEmail) return null;
@@ -406,6 +456,7 @@ export function AppointmentModals({
         walkInName: "",
         walkInPhone: "",
         walkInEmail: "",
+        walkInIsMarried: false,
         price: "",
         discount: "",
         priceOverrideEnabled: false,
@@ -422,6 +473,7 @@ export function AppointmentModals({
         walkInName: "",
         walkInPhone: "",
         walkInEmail: "",
+        walkInIsMarried: false,
         price: "",
         discount: "",
         priceOverrideEnabled: false,
@@ -492,6 +544,20 @@ export function AppointmentModals({
         selectedAppointment?.customPrice ??
         selectedAppointment?.basePrice ??
         selectedAppointment?.service?.price,
+    );
+    const appointmentPackServices =
+      selectedAppointment?.service?.isPack && serviceLookup.size
+        ? (selectedAppointment?.service?.packServiceIds ?? [])
+            .map((id) => serviceLookup.get(id))
+            .filter((service): service is Service => Boolean(service))
+        : [];
+    const appointmentPackValue = appointmentPackServices.reduce(
+      (sum, service) => sum + toNumber(service.price),
+      0,
+    );
+    const appointmentPackSavings = Math.max(
+      0,
+      appointmentPackValue - appointmentPrice,
     );
     return (
       <Dialog open={!!modalState} onOpenChange={handleClose}>
@@ -603,6 +669,23 @@ export function AppointmentModals({
                     {formatCurrency(appointmentPrice)}
                   </p>
                 </div>
+                {selectedAppointment.service?.isPack &&
+                  appointmentPackServices.length > 0 && (
+                    <div className="rounded-lg bg-muted/50 p-3 text-sm text-muted-foreground">
+                      <div>
+                        {t("services.packIncludes")}:{" "}
+                        {appointmentPackServices
+                          .map((service) => translateServiceName(t, service))
+                          .join(", ")}
+                      </div>
+                      <div>
+                        {t("services.packValue")}:{" "}
+                        {formatCurrency(appointmentPackValue)} |{" "}
+                        {t("services.packSavings")}:{" "}
+                        {formatCurrency(appointmentPackSavings)}
+                      </div>
+                    </div>
+                  )}
 
                 <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
                   <Calendar className="h-5 w-5 text-muted-foreground" />
@@ -842,6 +925,29 @@ export function AppointmentModals({
                     />
                     <FormErrorMessage message={getErrorMessage("walkInEmail")} />
                   </div>
+                  <div className="flex items-center justify-between rounded-lg border p-3">
+                    <div>
+                      <Label>{t("fields.maritalStatus")}</Label>
+                      <p className="text-xs text-muted-foreground">
+                        {walkInIsMarried
+                          ? t("fields.married")
+                          : t("fields.single")}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Switch
+                        checked={!!walkInIsMarried}
+                        onCheckedChange={(value) =>
+                          form.setValue("walkInIsMarried", value)
+                        }
+                      />
+                      <span className="text-sm">
+                        {walkInIsMarried
+                          ? t("fields.married")
+                          : t("fields.single")}
+                      </span>
+                    </div>
+                  </div>
                 </div>
               )}
 
@@ -855,17 +961,22 @@ export function AppointmentModals({
                     <SelectValue placeholder={t("agenda.selectService")} />
                   </SelectTrigger>
                   <SelectContent className="bg-white text-black">
-                    {safeServices.length === 0 ? (
+                    {visibleServices.length === 0 ? (
                       <div className="p-2 text-center text-muted-foreground text-sm">
                         {t("services.services")} - {t("common.noResults")}
                       </div>
                     ) : (
-                      safeServices.map((service) => (
+                      visibleServices.map((service) => (
                         <SelectItem key={service.id} value={service.id}>
                           <div className="flex items-center justify-between w-full gap-4">
                             <div className="flex items-center gap-2">
                               <Scissors className="h-4 w-4 text-accent-pink" />
                               {translateServiceName(t, service)}
+                              {service.isPack && (
+                                <Badge variant="info">
+                                  {t("services.pack")}
+                                </Badge>
+                              )}
                             </div>
                             <span className="text-muted-foreground text-sm">
                               {service.duration}min
@@ -894,6 +1005,28 @@ export function AppointmentModals({
                       {formatCurrency(displayServicePrice)}
                     </p>
                   </div>
+                  {selectedService.isPack && selectedPackServices.length > 0 && (
+                    <div className="mt-2 space-y-1 text-xs text-muted-foreground">
+                      <div>
+                        {t("services.packIncludes")}:{" "}
+                        {selectedPackServices
+                          .map((service) => translateServiceName(t, service))
+                          .join(", ")}
+                      </div>
+                      <div>
+                        {t("services.packValue")}:{" "}
+                        {formatCurrency(packRegularPrice)} |{" "}
+                        {t("services.packSavings")}:{" "}
+                        {formatCurrency(packSavings)}
+                      </div>
+                      {packRegularDuration > 0 && (
+                        <div>
+                          {t("services.packDuration")}: {packRegularDuration}{" "}
+                          min
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </Card>
               )}
 

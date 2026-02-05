@@ -134,6 +134,7 @@ export function ClientsPage() {
       lastName: "",
       email: "",
       phone: "",
+      isMarried: false,
     },
   });
 

@@ -89,6 +89,8 @@ export interface CreateServiceDto {
   duration: number;
   price: number;
   categoryId?: string;
+  isPack?: boolean;
+  packServiceIds?: string[];
 }
 
 export interface UpdateServiceDto {
@@ -98,6 +100,8 @@ export interface UpdateServiceDto {
   price?: number;
   categoryId?: string;
   isActive?: boolean;
+  isPack?: boolean;
+  packServiceIds?: string[];
 }
 
 export interface ServiceFilters {

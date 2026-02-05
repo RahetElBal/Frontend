@@ -84,6 +84,9 @@ export interface TranslationKeys {
     country: string;
     dateOfBirth: string;
     gender: string;
+    maritalStatus: string;
+    married: string;
+    single: string;
     password: string;
     confirmPassword: string;
     currentPassword: string;
@@ -424,6 +427,9 @@ export const en = {
     country: "Country",
     dateOfBirth: "Date of birth",
     gender: "Gender",
+    maritalStatus: "Marital status",
+    married: "Married",
+    single: "Single",
 
     // Account
     password: "Password",
@@ -862,6 +868,11 @@ export const en = {
     services: "services",
     selectCategory: "Select or type a category",
     serviceDetails: "Service Details",
+    pack: "Pack",
+    packIncludes: "Includes",
+    packValue: "Regular value",
+    packSavings: "Savings",
+    packDuration: "Total duration",
     deleteService: "Delete Service",
     deleteServiceConfirm:
       "Are you sure you want to delete {{name}}? This action cannot be undone.",
@@ -1023,11 +1034,16 @@ export const en = {
     totalAppointments: "Total Appointments",
     newClients: "New Clients",
     averageTicket: "Average Ticket",
+    marriedClients: "Married Clients",
+    packRevenue: "Pack Revenue",
+    packSold: "Packs Sold",
+    packShare: "Pack Share",
     revenueOverTime: "Revenue Over Time",
     revenue: "Revenue",
     appointments: "Appointments",
     topServices: "Top Services",
     topProducts: "Top Products",
+    topPacks: "Top Packs",
     bestSeller: "Best Seller",
     topCategories: "Top Categories",
     revenueMix: "Revenue Mix",
@@ -1428,6 +1444,14 @@ export const en = {
       categoryLabel: "Category",
       durationLabel: "Duration (minutes)",
       priceLabel: "Price",
+      packLabel: "Pack (bundle)",
+      packDescription:
+        "Combine multiple services with a special price for married clients.",
+      packServicesLabel: "Included services",
+      packServicesEmpty: "No services available to include yet.",
+      packServicesRequired: "Select at least one service for the pack",
+      packSummary: "{{count}} services | {{duration}} min | {{price}}",
+      packItems: "{{count}} services in pack",
       descriptionLabel: "Description",
       imageLabel: "Image URL",
       activeLabel: "Active",

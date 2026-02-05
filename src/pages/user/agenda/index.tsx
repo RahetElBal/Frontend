@@ -217,6 +217,7 @@ export function AgendaPage() {
       walkInName: "",
       walkInPhone: "",
       walkInEmail: "",
+      walkInIsMarried: false,
       price: "",
       discount: "",
       priceOverrideEnabled: false,
@@ -738,6 +739,7 @@ export function AgendaPage() {
             email,
             phone,
             notes: t("agenda.walkInNote"),
+            isMarried: !!data.walkInIsMarried,
           });
           createAppointment({
             ...toAppointmentPayload(data, pricingPayload),

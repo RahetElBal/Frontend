@@ -77,6 +77,9 @@ export function ServiceCard({
         <div className="flex-1">
           <div className="flex items-center gap-2">
             <h3 className="font-semibold">{displayName}</h3>
+            {service.isPack && (
+              <Badge variant="info">{t("services.pack")}</Badge>
+            )}
             {!service.isActive && (
               <Badge variant="warning">{t("common.inactive")}</Badge>
             )}

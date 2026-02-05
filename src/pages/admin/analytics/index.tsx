@@ -8,6 +8,9 @@ import {
   TrendingUp,
   Users,
   Layers,
+  Package,
+  Heart,
+  BadgePercent,
 } from "lucide-react";
 
 import { PageHeader } from "@/components/page-header";
@@ -118,6 +121,14 @@ export function AnalyticsPage() {
     () => servicesResponse?.data ?? [],
     [servicesResponse?.data],
   );
+  const packServices = useMemo(
+    () => services.filter((service) => service.isPack),
+    [services],
+  );
+  const packServiceIds = useMemo(
+    () => new Set(packServices.map((service) => service.id)),
+    [packServices],
+  );
 
   const { start, end } = useMemo(() => getPeriodRange(period), [period]);
 
@@ -133,6 +144,39 @@ export function AnalyticsPage() {
     () => filterClientsByRange(clients, start, end),
     [clients, start, end],
   );
+  const marriedClientsInRange = useMemo(
+    () => clientsInRange.filter((client) => client.isMarried),
+    [clientsInRange],
+  );
+  const packItems = useMemo(() => {
+    if (packServiceIds.size === 0) return [];
+    const totals: Record<string, { name: string; count: number; revenue: number }> =
+      {};
+    salesInRange.forEach((sale) => {
+      const items = Array.isArray(sale.items) ? sale.items : [];
+      items.forEach((item) => {
+        if (item.type !== "service") return;
+        if (!packServiceIds.has(item.itemId)) return;
+        const quantity = Math.max(1, toNumber(item.quantity));
+        const unitPrice = toNumber(
+          item.unitPrice ??
+            item.price ??
+            (item.total ? item.total / quantity : 0),
+        );
+        const lineTotal = toNumber(item.total ?? unitPrice * quantity);
+        if (!totals[item.itemId]) {
+          const packName =
+            item.name ||
+            packServices.find((service) => service.id === item.itemId)?.name ||
+            t("services.pack");
+          totals[item.itemId] = { name: packName, count: 0, revenue: 0 };
+        }
+        totals[item.itemId].count += quantity;
+        totals[item.itemId].revenue += lineTotal;
+      });
+    });
+    return Object.values(totals);
+  }, [packServiceIds, packServices, salesInRange, t]);
 
   if (userLoading) {
     return (
@@ -188,6 +232,14 @@ export function AnalyticsPage() {
     totalItemRevenue > 0 ? (serviceRevenue / totalItemRevenue) * 100 : 0;
   const productShare =
     totalItemRevenue > 0 ? (productRevenue / totalItemRevenue) * 100 : 0;
+  const packRevenue = packItems.reduce(
+    (sum, item) => sum + item.revenue,
+    0,
+  );
+  const packCount = packItems.reduce((sum, item) => sum + item.count, 0);
+  const packShare =
+    serviceRevenue > 0 ? (packRevenue / serviceRevenue) * 100 : 0;
+  const topPacks = getTopItemsBy(packItems, "revenue", 5);
 
   const hasData =
     salesInRange.length > 0 ||
@@ -255,6 +307,37 @@ export function AnalyticsPage() {
           icon={TrendingUp}
           iconColor="text-accent-pink"
           iconBgColor="bg-accent-pink/10"
+        />
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <StatsCard
+          title={t("analytics.marriedClients")}
+          value={marriedClientsInRange.length}
+          icon={Heart}
+          iconColor="text-rose-600"
+          iconBgColor="bg-rose-100"
+        />
+        <StatsCard
+          title={t("analytics.packRevenue")}
+          value={formatCurrency(toNumber(packRevenue))}
+          icon={Package}
+          iconColor="text-indigo-600"
+          iconBgColor="bg-indigo-100"
+        />
+        <StatsCard
+          title={t("analytics.packSold")}
+          value={packCount}
+          icon={Package}
+          iconColor="text-indigo-600"
+          iconBgColor="bg-indigo-100"
+        />
+        <StatsCard
+          title={t("analytics.packShare")}
+          value={`${packShare.toFixed(1)}%`}
+          icon={BadgePercent}
+          iconColor="text-amber-600"
+          iconBgColor="bg-amber-100"
         />
       </div>
 
@@ -362,7 +445,34 @@ export function AnalyticsPage() {
             </Card>
           </div>
 
-          <div className="grid gap-6 lg:grid-cols-2">
+          <div className="grid gap-6 lg:grid-cols-3">
+            <Card className="p-6">
+              <h3 className="text-lg font-semibold mb-4">
+                {t("analytics.topPacks")}
+              </h3>
+              {topPacks.length === 0 ? (
+                <p className="text-muted-foreground">{t("common.noResults")}</p>
+              ) : (
+                <div className="space-y-4">
+                  {topPacks.map((pack, index) => (
+                    <div
+                      key={`${pack.name}-${index}`}
+                      className="flex items-center justify-between"
+                    >
+                      <div>
+                        <p className="font-medium">{pack.name}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {pack.count} {t("analytics.sold")}
+                        </p>
+                      </div>
+                      <p className="font-semibold text-indigo-600">
+                        {formatCurrency(pack.revenue)}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Card>
             <Card className="p-6">
               <h3 className="text-lg font-semibold mb-4">
                 {t("analytics.topServices")}

@@ -24,6 +24,7 @@ export const appointmentFormSchema = z
       }
     ),
     walkInEmail: optionalEmailField(),
+    walkInIsMarried: z.boolean().optional(),
     price: optionalString(),
     discount: optionalString(),
     priceOverrideEnabled: z.boolean().optional(),

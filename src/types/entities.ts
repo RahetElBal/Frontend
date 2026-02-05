@@ -104,6 +104,7 @@ export interface Client extends BaseEntity {
   gender?: Gender;
   address?: string;
   notes?: string;
+  isMarried?: boolean;
   loyaltyPoints: number;
   totalSpent: number;
   visitCount: number;
@@ -124,6 +125,8 @@ export interface Service extends BaseEntity {
   description?: string;
   duration: number;
   price: number;
+  isPack?: boolean;
+  packServiceIds?: string[];
   categoryId?: string;
   category?: Category | string;
   image?: string;

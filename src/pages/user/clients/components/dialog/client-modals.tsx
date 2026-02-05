@@ -7,6 +7,7 @@ import {
   Award,
   DollarSign,
   Calendar,
+  Heart,
   Edit,
   Archive,
   Plus,
@@ -39,6 +40,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PhoneNumberInput } from "@/components/ui/phone-input";
 import { Badge } from "@/components/badge";
+import { Switch } from "@/components/ui/switch";
 import type { ClientModalState } from "@/pages/user/clients/types";
 import type { ClientFormData } from "@/pages/user/clients/validation";
 import { getValidationErrorMessage } from "@/pages/user/utils";
@@ -200,6 +202,7 @@ export function ClientModals({
         lastName: "",
         email: "",
         phone: "",
+        isMarried: false,
       });
     } else if (selectedClient && mode === "edit") {
       form.reset({
@@ -207,6 +210,7 @@ export function ClientModals({
         lastName: selectedClient.lastName,
         email: selectedClient.email || "",
         phone: selectedClient.phone || "",
+        isMarried: selectedClient.isMarried ?? false,
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -224,6 +228,7 @@ export function ClientModals({
       lastName: data.lastName.trim(),
       email: normalizedEmail || data.email.trim(),
       phone: normalizedPhone || data.phone.trim(),
+      isMarried: !!data.isMarried,
     };
     if (derived.isCreateMode) {
       const salonId = user?.salon?.id;
@@ -312,6 +317,20 @@ export function ClientModals({
                     </div>
                   </div>
                 )}
+
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+                  <Heart className="h-5 w-5 text-muted-foreground" />
+                  <div>
+                    <p className="text-sm text-muted-foreground">
+                      {t("fields.maritalStatus")}
+                    </p>
+                    <p className="font-medium">
+                      {selectedClient.isMarried
+                        ? t("fields.married")
+                        : t("fields.single")}
+                    </p>
+                  </div>
+                </div>
 
                 <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
                   <div className="flex items-center gap-3">
@@ -478,6 +497,27 @@ export function ClientModals({
                   />
                 )}
               />
+            </div>
+            <div className="flex items-center justify-between rounded-lg border p-3">
+              <div>
+                <Label>{t("fields.maritalStatus")}</Label>
+                <p className="text-xs text-muted-foreground">
+                  {form.watch("isMarried")
+                    ? t("fields.married")
+                    : t("fields.single")}
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Switch
+                  checked={!!form.watch("isMarried")}
+                  onCheckedChange={(value) => form.setValue("isMarried", value)}
+                />
+                <span className="text-sm">
+                  {form.watch("isMarried")
+                    ? t("fields.married")
+                    : t("fields.single")}
+                </span>
+              </div>
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={handleClose}>
