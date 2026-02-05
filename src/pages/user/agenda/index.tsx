@@ -7,6 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "@/lib/toast";
 import { useGet } from "@/hooks/useGet";
 import { usePost } from "@/hooks/usePost";
@@ -25,6 +32,7 @@ import type {
   Salon,
   SalonSettings,
   SalonSettingsExtended,
+  User,
 } from "@/types";
 import { AppointmentStatus } from "@/types/entities";
 import type { AppointmentModalState } from "./types";
@@ -56,7 +64,7 @@ import { translateServiceName } from "@/common/service-translations";
 
 export function AgendaPage() {
   const { t } = useTranslation();
-  const { user } = useUser();
+  const { user, isAdmin, isSuperadmin } = useUser();
   const { formatCurrency } = useLanguage();
   const queryClient = useQueryClient();
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
@@ -65,6 +73,7 @@ export function AgendaPage() {
     "all" | "today" | "unpaid" | "overdue" | "completed"
   >("all");
   const [selectedDate, setSelectedDate] = useState(() => getLocalDateString());
+  const [selectedStaffId, setSelectedStaffId] = useState<string | null>(null);
   const [autoArchiveWalkIns, setAutoArchiveWalkIns] = useState<boolean>(() => {
     try {
       return localStorage.getItem("agenda.autoArchiveWalkIns") === "true";
@@ -74,12 +83,19 @@ export function AgendaPage() {
   });
 
   const salonId = user?.salon?.id;
+  const canSelectStaff = isAdmin || isSuperadmin;
+
+  useEffect(() => {
+    if (!selectedStaffId && user?.id) {
+      setSelectedStaffId(user.id);
+    }
+  }, [selectedStaffId, user?.id]);
   const appointmentsStaleTime = 1000 * 30; // 30s for near real-time
   const clientsStaleTime = 1000 * 60 * 10; // 10m
   const servicesStaleTime = 1000 * 60 * 10; // 10m
   const appointmentsParams = useMemo(
-    () => ({ salonId, perPage: 100 }),
-    [salonId],
+    () => ({ salonId, perPage: 100, staffId: selectedStaffId || undefined }),
+    [salonId, selectedStaffId],
   );
   const appointmentsQueryKey = useMemo(
     () => ["appointments", appointmentsParams].filter(Boolean),
@@ -92,7 +108,7 @@ export function AgendaPage() {
     refetch,
   } = useGet<PaginatedResponse<Appointment>>("appointments", {
     params: appointmentsParams,
-    enabled: !!salonId,
+    enabled: !!salonId && !!selectedStaffId,
     staleTime: appointmentsStaleTime,
   });
 
@@ -118,9 +134,39 @@ export function AgendaPage() {
     },
   );
 
+  const { data: staffResponse } = useGet<PaginatedResponse<User>>("users", {
+    params: { salonId, role: "user", perPage: 200 },
+    enabled: !!salonId && canSelectStaff,
+    staleTime: 1000 * 60 * 5,
+  });
+
   const appointments = safeExtractArray<Appointment>(appointmentsData);
   const clients = safeExtractArray<Client>(clientsData);
   const services = safeExtractArray<Service>(servicesData);
+  const staffMembers = safeExtractArray<User>(staffResponse);
+  const staffOptions = useMemo(() => {
+    const options: Array<{ id: string; label: string }> = [];
+    if (user?.id) {
+      const label =
+        `${user.firstName || ""} ${user.lastName || ""}`.trim() ||
+        user.name ||
+        user.email ||
+        "Me";
+      options.push({ id: user.id, label });
+    }
+    const deduped = new Set(options.map((option) => option.id));
+    staffMembers.forEach((staff) => {
+      if (deduped.has(staff.id)) return;
+      const label =
+        `${staff.firstName || ""} ${staff.lastName || ""}`.trim() ||
+        staff.name ||
+        staff.email ||
+        "Staff";
+      options.push({ id: staff.id, label });
+      deduped.add(staff.id);
+    });
+    return options;
+  }, [staffMembers, user]);
   type SalonSettingsLike = SalonSettings & Partial<SalonSettingsExtended>;
   const salonSettings = (salonData?.settings ??
     user?.salon?.settings) as SalonSettingsLike | undefined;
@@ -152,6 +198,7 @@ export function AgendaPage() {
       date: getLocalDateString(),
       startTime: "09:00",
       notes: "",
+      staffId: "",
       walkInEnabled: false,
       walkInName: "",
       walkInPhone: "",
@@ -515,6 +562,7 @@ export function AgendaPage() {
       date: data.date,
       startTime: data.startTime,
       notes: data.notes,
+      staffId: data.staffId,
       customPrice: pricing?.customPrice,
       discount: pricing?.discount,
     };
@@ -523,6 +571,11 @@ export function AgendaPage() {
   const handleSubmit = async (data: AppointmentFormData) => {
     if (!salonId) {
       toast.error("No salon assigned to user");
+      return;
+    }
+    const effectiveStaffId = data.staffId || selectedStaffId || user?.id;
+    if (!effectiveStaffId) {
+      toast.error(t("common.error"));
       return;
     }
 
@@ -560,6 +613,7 @@ export function AgendaPage() {
       startTime: data.startTime,
       endTime,
       excludeId: isCreateMode ? null : selectedAppointment?.id,
+      staffId: effectiveStaffId,
     });
 
     if (conflictingAppointment) {
@@ -629,7 +683,10 @@ export function AgendaPage() {
       : undefined;
 
     if (modalState?.mode === "edit" && !isCreateMode) {
-      updateAppointment(toAppointmentPayload(data, pricingPayload));
+      updateAppointment({
+        ...toAppointmentPayload(data, pricingPayload),
+        staffId: effectiveStaffId,
+      });
     } else {
       if (data.walkInEnabled) {
         try {
@@ -653,6 +710,7 @@ export function AgendaPage() {
           createAppointment({
             ...toAppointmentPayload(data, pricingPayload),
             salonId,
+            staffId: effectiveStaffId,
             clientId: walkInClient.id,
           });
         } catch (e) {
@@ -663,6 +721,7 @@ export function AgendaPage() {
         createAppointment({
           ...toAppointmentPayload(data, pricingPayload),
           salonId,
+          staffId: effectiveStaffId,
         });
       }
     }
@@ -744,6 +803,28 @@ export function AgendaPage() {
             className="w-40"
           />
         </div>
+        {canSelectStaff && staffOptions.length > 0 && (
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">
+              {t("fields.staff")}
+            </span>
+            <Select
+              value={selectedStaffId || ""}
+              onValueChange={(value) => setSelectedStaffId(value)}
+            >
+              <SelectTrigger className="w-56 bg-white text-black">
+                <SelectValue placeholder={t("fields.staff")} />
+              </SelectTrigger>
+              <SelectContent className="bg-white text-black">
+                {staffOptions.map((staff) => (
+                  <SelectItem key={staff.id} value={staff.id}>
+                    {staff.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
         <Button
           variant={filter === "all" ? "default" : "outline"}
           size="sm"
@@ -855,6 +936,8 @@ export function AgendaPage() {
         appointments={appointments}
         clients={clients}
         services={services}
+        staffMembers={staffMembers}
+        selectedStaffId={selectedStaffId}
         form={form}
         onSubmit={handleSubmit}
         onDelete={() => {

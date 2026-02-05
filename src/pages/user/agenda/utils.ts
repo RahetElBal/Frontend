@@ -180,9 +180,10 @@ export function findConflictingAppointment(
     startTime: string;
     endTime?: string;
     excludeId?: string | null;
+    staffId?: string | null;
   },
 ): Appointment | null {
-  const { date, startTime, endTime, excludeId } = options;
+  const { date, startTime, endTime, excludeId, staffId } = options;
   const normalizedStart = normalizeTime(startTime);
   const normalizedEnd = endTime ? normalizeTime(endTime) : "";
 
@@ -191,6 +192,7 @@ export function findConflictingAppointment(
       if (appointment.status === "cancelled") return false;
       if (excludeId && appointment.id === excludeId) return false;
       if (appointment.date !== date) return false;
+      if (staffId && appointment.staffId !== staffId) return false;
       const appointmentStart = normalizeTime(appointment.startTime);
       const appointmentEnd = normalizeTime(appointment.endTime);
 

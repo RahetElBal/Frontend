@@ -51,6 +51,7 @@ import type {
   Service,
   SalonSettings,
   SalonSettingsExtended,
+  User as StaffUser,
 } from "@/types/entities";
 import type { AppointmentFormData } from "../../validation";
 import type { AppointmentModalState } from "../../types";
@@ -96,6 +97,8 @@ interface AppointmentModalsProps {
   appointments: Appointment[];
   clients: Client[];
   services: Service[];
+  staffMembers?: StaffUser[];
+  selectedStaffId?: string | null;
   salonSettings?: SalonSettingsLike;
   form: UseFormReturn<AppointmentFormData>;
   onSubmit: (data: AppointmentFormData) => void;
@@ -114,6 +117,8 @@ export function AppointmentModals({
   appointments,
   clients,
   services,
+  staffMembers = [],
+  selectedStaffId,
   salonSettings,
   form,
   onSubmit,
@@ -124,7 +129,7 @@ export function AppointmentModals({
 }: AppointmentModalsProps) {
   const { t } = useTranslation();
   const { formatCurrency } = useLanguage();
-  const { salon, isAdmin, isSuperadmin } = useUser();
+  const { user, salon, isAdmin, isSuperadmin } = useUser();
   const [redeemLoyalty, setRedeemLoyalty] = useState(false);
   const getErrorMessage = (
     name: keyof AppointmentFormData,
@@ -195,7 +200,33 @@ export function AppointmentModals({
     [services],
   );
 
+  const canAssignStaff = isAdmin || isSuperadmin;
+  const staffOptions = useMemo(() => {
+    const options: Array<{ id: string; label: string }> = [];
+    if (user?.id) {
+      const label =
+        `${user.firstName || ""} ${user.lastName || ""}`.trim() ||
+        user.name ||
+        user.email ||
+        "Me";
+      options.push({ id: user.id, label });
+    }
+    const deduped = new Set(options.map((option) => option.id));
+    staffMembers.forEach((staff) => {
+      if (deduped.has(staff.id)) return;
+      const label =
+        `${staff.firstName || ""} ${staff.lastName || ""}`.trim() ||
+        staff.name ||
+        staff.email ||
+        "Staff";
+      options.push({ id: staff.id, label });
+      deduped.add(staff.id);
+    });
+    return options;
+  }, [staffMembers, user]);
+
   const { reset, watch } = form;
+  const selectedStaff = watch("staffId");
   const selectedClientId = watch("clientId");
 
   const selectableClients = useMemo(() => {
@@ -304,6 +335,7 @@ export function AppointmentModals({
       startTime: selectedStartTime,
       endTime,
       excludeId: derived?.isCreateMode ? null : selectedAppointment?.id,
+      staffId: selectedStaff || selectedStaffId || user?.id || undefined,
     });
   }, [
     appointments,
@@ -313,6 +345,9 @@ export function AppointmentModals({
     bookingSlotMinutes,
     derived?.isCreateMode,
     selectedAppointment?.id,
+    selectedStaff,
+    selectedStaffId,
+    user?.id,
   ]);
 
   const walkInEnabled = watch("walkInEnabled");
@@ -366,6 +401,7 @@ export function AppointmentModals({
         date: modalState?.prefillDate || getLocalDateString(),
         startTime: modalState?.prefillTime || "09:00",
         notes: "",
+        staffId: selectedStaffId || user?.id || "",
         walkInEnabled: false,
         walkInName: "",
         walkInPhone: "",
@@ -381,6 +417,7 @@ export function AppointmentModals({
         date: selectedAppointment.date,
         startTime: selectedAppointment.startTime,
         notes: selectedAppointment.notes || "",
+        staffId: selectedAppointment.staffId || selectedStaffId || user?.id || "",
         walkInEnabled: false,
         walkInName: "",
         walkInPhone: "",
@@ -396,6 +433,8 @@ export function AppointmentModals({
     derived?.isCreateMode,
     derived?.isEditMode,
     reset,
+    selectedStaffId,
+    user?.id,
   ]);
 
   if (!derived) return null;
@@ -688,6 +727,30 @@ export function AppointmentModals({
           </DialogHeader>
           <form onSubmit={form.handleSubmit(handleFormSubmit)}>
             <div className="space-y-4 py-4">
+              {canAssignStaff && staffOptions.length > 0 && (
+                <div className="space-y-2">
+                  <Label>{t("fields.staff")} *</Label>
+                  <Select
+                    value={selectedStaff || ""}
+                    onValueChange={(value) => form.setValue("staffId", value)}
+                  >
+                    <SelectTrigger className="bg-white text-black">
+                      <SelectValue placeholder={t("fields.staff")} />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white text-black">
+                      {staffOptions.map((staff) => (
+                        <SelectItem key={staff.id} value={staff.id}>
+                          <div className="flex items-center gap-2">
+                            <User className="h-4 w-4 text-muted-foreground" />
+                            {staff.label}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormErrorMessage message={getErrorMessage("staffId")} />
+                </div>
+              )}
               <div className="space-y-2">
                 <Label>{t("fields.client")} *</Label>
                 <div className="flex items-center justify-between rounded-lg border p-3">

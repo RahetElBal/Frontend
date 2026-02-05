@@ -14,6 +14,7 @@ export const appointmentFormSchema = z
     startTime: requiredString("Heure"),
     notes: optionalString(),
     salonId: z.string().uuid().optional(),
+    staffId: optionalString(),
     walkInEnabled: z.boolean().optional(),
     walkInName: optionalString(),
     walkInPhone: optionalString().refine(
