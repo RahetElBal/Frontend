@@ -216,6 +216,146 @@ export function findConflictingAppointment(
   );
 }
 
+export const ALL_STAFF_ID = "all";
+
+export function getNextSelectedStaffId(options: {
+  currentId: string | null;
+  userId?: string | null;
+  viewMode: "day" | "month";
+  canSelectStaff: boolean;
+  allStaffId?: string;
+}): string | null {
+  const {
+    currentId,
+    userId,
+    viewMode,
+    canSelectStaff,
+    allStaffId = ALL_STAFF_ID,
+  } = options;
+  if (!userId) return null;
+  if (!currentId) {
+    return viewMode === "month" && canSelectStaff ? allStaffId : userId;
+  }
+  if (!canSelectStaff) return currentId;
+  if (viewMode === "month" && currentId === userId) return allStaffId;
+  if (viewMode === "day" && currentId === allStaffId) return userId;
+  return currentId;
+}
+
+export function buildStaffOptions(options: {
+  user?: {
+    id?: string;
+    firstName?: string | null;
+    lastName?: string | null;
+    name?: string | null;
+    email?: string | null;
+  } | null;
+  staffMembers: Array<{
+    id: string;
+    firstName?: string | null;
+    lastName?: string | null;
+    name?: string | null;
+    email?: string | null;
+  }>;
+  includeAll?: boolean;
+  allStaffId?: string;
+  allLabel?: string;
+}): Array<{ id: string; label: string }> {
+  const {
+    user,
+    staffMembers,
+    includeAll,
+    allStaffId = ALL_STAFF_ID,
+    allLabel = "All",
+  } = options;
+  const items: Array<{ id: string; label: string }> = [];
+
+  if (includeAll) {
+    items.push({ id: allStaffId, label: allLabel });
+  }
+
+  if (user?.id) {
+    const label =
+      `${user.firstName || ""} ${user.lastName || ""}`.trim() ||
+      user.name ||
+      user.email ||
+      "Me";
+    items.push({ id: user.id, label });
+  }
+
+  const deduped = new Set(items.map((option) => option.id));
+  staffMembers.forEach((staff) => {
+    if (deduped.has(staff.id)) return;
+    const label =
+      `${staff.firstName || ""} ${staff.lastName || ""}`.trim() ||
+      staff.name ||
+      staff.email ||
+      "Staff";
+    items.push({ id: staff.id, label });
+    deduped.add(staff.id);
+  });
+
+  return items;
+}
+
+export const isOptimisticAppointmentId = (appointmentId: string) =>
+  appointmentId.startsWith("local-");
+
+export const getAppointmentMatchKey = (appointment: Appointment) =>
+  [
+    appointment.date,
+    normalizeTime(appointment.startTime),
+    appointment.clientId,
+    appointment.serviceId,
+    appointment.staffId || "",
+  ].join("|");
+
+export function mergeAppointments(options: {
+  current: Appointment[];
+  incoming: Appointment[];
+  deletedIds: Set<string>;
+  isOptimisticId: (id: string) => boolean;
+  getMatchKey: (appointment: Appointment) => string;
+}): Appointment[] {
+  const { current, incoming, deletedIds, isOptimisticId, getMatchKey } =
+    options;
+  const filteredIncoming = incoming.filter(
+    (appointment) => !deletedIds.has(appointment.id),
+  );
+  const incomingById = new Map(
+    filteredIncoming.map((appointment) => [appointment.id, appointment]),
+  );
+  const incomingByKey = new Map(
+    filteredIncoming.map((appointment) => [getMatchKey(appointment), appointment]),
+  );
+  const currentById = new Map(
+    current.map((appointment) => [appointment.id, appointment]),
+  );
+
+  const merged = filteredIncoming.map((incomingItem) => {
+    const existing = currentById.get(incomingItem.id);
+    if (!existing) return incomingItem;
+    const existingUpdatedAt = Date.parse(existing.updatedAt || "");
+    const incomingUpdatedAt = Date.parse(incomingItem.updatedAt || "");
+    if (Number.isFinite(existingUpdatedAt) && Number.isFinite(incomingUpdatedAt)) {
+      return existingUpdatedAt >= incomingUpdatedAt ? existing : incomingItem;
+    }
+    return Number.isFinite(existingUpdatedAt) ? existing : incomingItem;
+  });
+
+  current.forEach((appointment) => {
+    if (deletedIds.has(appointment.id)) return;
+    if (incomingById.has(appointment.id)) return;
+    if (isOptimisticId(appointment.id)) {
+      const match = incomingByKey.get(getMatchKey(appointment));
+      if (match) return;
+    }
+    merged.push(appointment);
+  });
+
+  return merged;
+}
+
 export interface CalendarEvent {
   id: string;
   title: string;

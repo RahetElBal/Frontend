@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Calendar, List } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { LoadingPanel } from "@/components/loading-panel";
+/* cSpell:ignore Superadmin walkin */
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -39,9 +40,14 @@ import type { AppointmentModalState } from "./types";
 import { appointmentFormSchema, type AppointmentFormData } from "./validation";
 import type { CalendarEvent } from "./utils";
 import {
+  ALL_STAFF_ID,
+  buildStaffOptions,
+  getAppointmentMatchKey,
   safeExtractArray,
   getLocalDateString,
   isAppointmentOverdue,
+  isOptimisticAppointmentId,
+  mergeAppointments,
   timeToDate,
   getWorkingHoursForDate,
   buildTimeSlotsForHours,
@@ -80,18 +86,25 @@ export function AgendaPage() {
   const [viewMode, setViewMode] = useState<"day" | "month">("day");
   const salonId = user?.salon?.id;
   const canSelectStaff = isAdmin || isSuperadmin;
-
-  useEffect(() => {
-    if (!selectedStaffId && user?.id) {
-      setSelectedStaffId(user.id);
+  const selectedStaffIdValue = useMemo(() => {
+    const baseId =
+      viewMode === "day" && selectedStaffId === ALL_STAFF_ID
+        ? null
+        : selectedStaffId;
+    if (canSelectStaff && viewMode === "month") {
+      if (!baseId || baseId === user?.id) return ALL_STAFF_ID;
+      return baseId;
     }
-  }, [selectedStaffId, user?.id]);
+    return baseId ?? user?.id ?? null;
+  }, [selectedStaffId, viewMode, canSelectStaff, user?.id]);
+  const staffFilterId =
+    selectedStaffIdValue === ALL_STAFF_ID ? null : selectedStaffIdValue;
   const appointmentsStaleTime = 1000 * 30; // 30s for near real-time
   const clientsStaleTime = 1000 * 60 * 10; // 10m
   const servicesStaleTime = 1000 * 60 * 10; // 10m
   const appointmentsParams = useMemo(
-    () => ({ salonId, perPage: 100, staffId: selectedStaffId || undefined }),
-    [salonId, selectedStaffId],
+    () => ({ salonId, perPage: 100, staffId: staffFilterId || undefined }),
+    [salonId, staffFilterId],
   );
   const appointmentsQueryKey = useMemo(
     () => ["appointments", appointmentsParams].filter(Boolean),
@@ -104,7 +117,10 @@ export function AgendaPage() {
     refetch,
   } = useGet<PaginatedResponse<Appointment>>(
     withParams("appointments", appointmentsParams),
-    { enabled: !!salonId && !!selectedStaffId, staleTime: appointmentsStaleTime },
+    {
+      enabled: !!salonId && (viewMode === "month" || !!staffFilterId),
+      staleTime: appointmentsStaleTime,
+    },
   );
 
   const { data: clientsData } = useGet<PaginatedResponse<Client>>(
@@ -127,121 +143,47 @@ export function AgendaPage() {
     { enabled: !!salonId && canSelectStaff, staleTime: 1000 * 60 * 5 },
   );
 
-  const [visibleAppointments, setVisibleAppointments] = useState<
-    Appointment[]
-  >([]);
-  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
-  const [deletedAppointmentIds, setDeletedAppointmentIds] = useState<
-    Set<string>
-  >(() => new Set());
+  const [optimisticState, setOptimisticState] = useState(() => ({
+    scopeKey: "",
+    appointments: [] as Appointment[],
+    deletedIds: new Set<string>(),
+  }));
   const rawAppointments = safeExtractArray<Appointment>(appointmentsData);
-
-  const isOptimisticAppointmentId = useCallback(
-    (appointmentId: string) => appointmentId.startsWith("local-"),
-    [],
+  const optimisticScopeKey = useMemo(
+    () => `${salonId ?? "no-salon"}|${selectedStaffIdValue ?? "no-staff"}`,
+    [salonId, selectedStaffIdValue],
   );
-  const getAppointmentMatchKey = useCallback(
-    (appointment: Appointment) =>
-      [
-        appointment.date,
-        normalizeTime(appointment.startTime),
-        appointment.clientId,
-        appointment.serviceId,
-        appointment.staffId || "",
-      ].join("|"),
-    [],
+  const scopedOptimistic =
+    optimisticState.scopeKey === optimisticScopeKey
+      ? optimisticState
+      : {
+          scopeKey: optimisticScopeKey,
+          appointments: [] as Appointment[],
+          deletedIds: new Set<string>(),
+        };
+  const appointments = useMemo(
+    () =>
+      mergeAppointments({
+        current: scopedOptimistic.appointments,
+        incoming: rawAppointments,
+        deletedIds: scopedOptimistic.deletedIds,
+        isOptimisticId: isOptimisticAppointmentId,
+        getMatchKey: getAppointmentMatchKey,
+      }),
+    [rawAppointments, scopedOptimistic],
   );
-
-  useEffect(() => {
-    if (appointmentsData) {
-      setVisibleAppointments((current) => {
-        const filteredIncoming = rawAppointments.filter(
-          (appointment) => !deletedAppointmentIds.has(appointment.id),
-        );
-        const incomingById = new Map(
-          filteredIncoming.map((appointment) => [appointment.id, appointment]),
-        );
-        const incomingByKey = new Map(
-          filteredIncoming.map((appointment) => [
-            getAppointmentMatchKey(appointment),
-            appointment,
-          ]),
-        );
-        const currentById = new Map(
-          current.map((appointment) => [appointment.id, appointment]),
-        );
-
-        const merged = filteredIncoming.map((incoming) => {
-          const existing = currentById.get(incoming.id);
-          if (!existing) return incoming;
-          const existingUpdatedAt = Date.parse(existing.updatedAt || "");
-          const incomingUpdatedAt = Date.parse(incoming.updatedAt || "");
-          if (
-            Number.isFinite(existingUpdatedAt) &&
-            Number.isFinite(incomingUpdatedAt)
-          ) {
-            return existingUpdatedAt >= incomingUpdatedAt ? existing : incoming;
-          }
-          return Number.isFinite(existingUpdatedAt) ? existing : incoming;
-        });
-
-        current.forEach((appointment) => {
-          if (deletedAppointmentIds.has(appointment.id)) return;
-          if (incomingById.has(appointment.id)) return;
-          if (isOptimisticAppointmentId(appointment.id)) {
-            const match = incomingByKey.get(getAppointmentMatchKey(appointment));
-            if (match) return;
-          }
-          merged.push(appointment);
-        });
-
-        return merged;
-      });
-      setHasLoadedOnce(true);
-    }
-  }, [
-    appointmentsData,
-    rawAppointments,
-    deletedAppointmentIds,
-    getAppointmentMatchKey,
-    isOptimisticAppointmentId,
-  ]);
-
-  useEffect(() => {
-    setVisibleAppointments([]);
-    setDeletedAppointmentIds(new Set());
-  }, [salonId, selectedStaffId]);
-
-  useEffect(() => {
-    setHasLoadedOnce(false);
-  }, [salonId]);
-  const appointments = visibleAppointments;
   const clients = safeExtractArray<Client>(clientsData);
   const services = safeExtractArray<Service>(servicesData);
   const staffMembers = safeExtractArray<User>(staffResponse);
   const staffOptions = useMemo(() => {
-    const options: Array<{ id: string; label: string }> = [];
-    if (user?.id) {
-      const label =
-        `${user.firstName || ""} ${user.lastName || ""}`.trim() ||
-        user.name ||
-        user.email ||
-        "Me";
-      options.push({ id: user.id, label });
-    }
-    const deduped = new Set(options.map((option) => option.id));
-    staffMembers.forEach((staff) => {
-      if (deduped.has(staff.id)) return;
-      const label =
-        `${staff.firstName || ""} ${staff.lastName || ""}`.trim() ||
-        staff.name ||
-        staff.email ||
-        "Staff";
-      options.push({ id: staff.id, label });
-      deduped.add(staff.id);
+    return buildStaffOptions({
+      user,
+      staffMembers,
+      includeAll: canSelectStaff && viewMode === "month",
+      allStaffId: ALL_STAFF_ID,
+      allLabel: t("common.all"),
     });
-    return options;
-  }, [staffMembers, user]);
+  }, [staffMembers, user, canSelectStaff, viewMode, t]);
   type SalonSettingsLike = SalonSettings & Partial<SalonSettingsExtended>;
   const salonSettings = (salonData?.settings ?? user?.salon?.settings) as
     | SalonSettingsLike
@@ -379,33 +321,62 @@ export function AgendaPage() {
 
   const upsertVisibleAppointment = useCallback(
     (nextAppointment: Appointment, options?: { prepend?: boolean }) => {
-      setVisibleAppointments((current) => {
-        const index = current.findIndex(
+      setOptimisticState((prev) => {
+        const base =
+          prev.scopeKey === optimisticScopeKey
+            ? prev
+            : {
+                scopeKey: optimisticScopeKey,
+                appointments: [] as Appointment[],
+                deletedIds: new Set<string>(),
+              };
+        const nextAppointments = [...base.appointments];
+        const index = nextAppointments.findIndex(
           (appointment) => appointment.id === nextAppointment.id,
         );
         if (index === -1) {
-          return options?.prepend
-            ? [nextAppointment, ...current]
-            : [...current, nextAppointment];
+          if (options?.prepend) {
+            nextAppointments.unshift(nextAppointment);
+          } else {
+            nextAppointments.push(nextAppointment);
+          }
+        } else {
+          nextAppointments[index] = nextAppointment;
         }
-        const updated = [...current];
-        updated[index] = nextAppointment;
-        return updated;
+        const nextDeletedIds = new Set(base.deletedIds);
+        nextDeletedIds.delete(nextAppointment.id);
+        return {
+          scopeKey: optimisticScopeKey,
+          appointments: nextAppointments,
+          deletedIds: nextDeletedIds,
+        };
       });
     },
-    [],
+    [optimisticScopeKey],
   );
 
   const markAppointmentDeleted = useCallback((appointmentId: string) => {
-    setDeletedAppointmentIds((current) => {
-      const next = new Set(current);
-      next.add(appointmentId);
-      return next;
+    setOptimisticState((prev) => {
+      const base =
+        prev.scopeKey === optimisticScopeKey
+          ? prev
+          : {
+              scopeKey: optimisticScopeKey,
+              appointments: [] as Appointment[],
+              deletedIds: new Set<string>(),
+            };
+      const nextAppointments = base.appointments.filter(
+        (appointment) => appointment.id !== appointmentId,
+      );
+      const nextDeletedIds = new Set(base.deletedIds);
+      nextDeletedIds.add(appointmentId);
+      return {
+        scopeKey: optimisticScopeKey,
+        appointments: nextAppointments,
+        deletedIds: nextDeletedIds,
+      };
     });
-    setVisibleAppointments((current) =>
-      current.filter((appointment) => appointment.id !== appointmentId),
-    );
-  }, []);
+  }, [optimisticScopeKey]);
 
   const handleReminder = useCallback(
     (reminder: AppointmentReminder) => {
@@ -679,7 +650,7 @@ export function AgendaPage() {
       toast.error("No salon assigned to user");
       return;
     }
-    const effectiveStaffId = data.staffId || selectedStaffId || user?.id;
+    const effectiveStaffId = data.staffId || staffFilterId || user?.id;
     if (!effectiveStaffId) {
       toast.error(t("common.error"));
       return;
@@ -928,16 +899,16 @@ export function AgendaPage() {
     }
   };
 
-  const handleDeleteAppointment = useCallback(() => {
+  const handleDeleteAppointment = () => {
     if (!selectedAppointment?.id) {
       toast.error(t("common.error"));
       return;
     }
     markAppointmentDeleted(selectedAppointment.id);
     deleteAppointment(selectedAppointment.id);
-  }, [selectedAppointment?.id, deleteAppointment, markAppointmentDeleted, t]);
+  };
 
-  const showPageLoading = isLoading && !hasLoadedOnce;
+  const showPageLoading = isLoading && appointments.length === 0;
 
   if (showPageLoading) {
     return (
@@ -1013,7 +984,7 @@ export function AgendaPage() {
               {t("fields.staff")}
             </span>
             <Select
-              value={selectedStaffId || ""}
+              value={selectedStaffIdValue || ""}
               onValueChange={(value) => setSelectedStaffId(value)}
             >
               <SelectTrigger className="w-56 bg-white text-black">
@@ -1161,7 +1132,7 @@ export function AgendaPage() {
         clients={clients}
         services={services}
         staffMembers={staffMembers}
-        selectedStaffId={selectedStaffId}
+        selectedStaffId={staffFilterId}
         form={form}
         onSubmit={handleSubmit}
         onDelete={handleDeleteAppointment}
