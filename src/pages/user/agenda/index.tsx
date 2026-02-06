@@ -15,7 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "@/lib/toast";
-import { useGet } from "@/hooks/useGet";
+import { useGet, withParams } from "@/hooks/useGet";
 import { usePost } from "@/hooks/usePost";
 import { useForm } from "@/hooks/useForm";
 import { useUser } from "@/hooks/useUser";
@@ -102,39 +102,30 @@ export function AgendaPage() {
     data: appointmentsData,
     isLoading,
     refetch,
-  } = useGet<PaginatedResponse<Appointment>>("appointments", {
-    params: appointmentsParams,
-    enabled: !!salonId && !!selectedStaffId,
-    staleTime: appointmentsStaleTime,
-  });
-
-  const { data: clientsData } = useGet<PaginatedResponse<Client>>("clients", {
-    params: { salonId, perPage: 100 },
-    enabled: !!salonId,
-    staleTime: clientsStaleTime,
-  });
-
-  const { data: salonData } = useGet<Salon>("salons", {
-    id: salonId,
-    enabled: !!salonId,
-    staleTime: 1000 * 60 * 2,
-    refetchOnWindowFocus: true,
-  });
-
-  const { data: servicesData } = useGet<PaginatedResponse<Service>>(
-    "services",
-    {
-      params: { salonId, perPage: 100 },
-      enabled: !!salonId,
-      staleTime: servicesStaleTime,
-    },
+  } = useGet<PaginatedResponse<Appointment>>(
+    withParams("appointments", appointmentsParams),
+    { enabled: !!salonId && !!selectedStaffId, staleTime: appointmentsStaleTime },
   );
 
-  const { data: staffResponse } = useGet<PaginatedResponse<User>>("users", {
-    params: { salonId, role: "user", perPage: 100 },
-    enabled: !!salonId && canSelectStaff,
-    staleTime: 1000 * 60 * 5,
-  });
+  const { data: clientsData } = useGet<PaginatedResponse<Client>>(
+    withParams("clients", { salonId, perPage: 100 }),
+    { enabled: !!salonId, staleTime: clientsStaleTime },
+  );
+
+  const { data: salonData } = useGet<Salon>(
+    `salons/${salonId}`,
+    { enabled: !!salonId, staleTime: 1000 * 60 * 2, refetchOnWindowFocus: true },
+  );
+
+  const { data: servicesData } = useGet<PaginatedResponse<Service>>(
+    withParams("services", { salonId, perPage: 100 }),
+    { enabled: !!salonId, staleTime: servicesStaleTime },
+  );
+
+  const { data: staffResponse } = useGet<PaginatedResponse<User>>(
+    withParams("users", { salonId, role: "user", perPage: 100 }),
+    { enabled: !!salonId && canSelectStaff, staleTime: 1000 * 60 * 5 },
+  );
 
   const [visibleAppointments, setVisibleAppointments] = useState<
     Appointment[]
@@ -538,7 +529,7 @@ export function AgendaPage() {
     Appointment,
     AppointmentPayload
   >("appointments", {
-    invalidateQueries: ["appointments"],
+    invalidate: ["appointments"],
     onSuccess: () => {
       toast.success(t("agenda.newAppointment") + " - " + t("common.success"));
       setModalState(null);
@@ -552,10 +543,9 @@ export function AgendaPage() {
   const { mutate: updateAppointment, isPending: isUpdating } = usePost<
     Appointment,
     AppointmentPayload
-  >("appointments", {
-    id: selectedAppointment?.id,
+  >(`appointments/${selectedAppointment?.id}`, {
     method: "PATCH",
-    invalidateQueries: ["appointments"],
+    invalidate: ["appointments"],
     onSuccess: () => {
       toast.success(t("common.edit") + " - " + t("common.success"));
       setModalState(null);
@@ -569,10 +559,9 @@ export function AgendaPage() {
   const { mutate: deleteAppointment, isPending: isDeleting } = usePost<
     void,
     string
-  >("appointments", {
-    id: (appointmentId) => appointmentId,
+  >(`appointments/${selectedAppointment?.id}`, {
     method: "DELETE",
-    invalidateQueries: ["appointments"],
+    invalidate: ["appointments"],
     onSuccess: () => {
       toast.success(t("common.delete") + " - " + t("common.success"));
       setModalState(null);
@@ -599,7 +588,7 @@ export function AgendaPage() {
         }[];
       }
     >("sales", {
-      invalidateQueries: ["sales", "appointments", "clients"],
+      invalidate: ["sales", "appointments", "clients"],
       onSuccess: (_sale, variables) => {
         toast.success(
           t("agenda.paymentRecorded") + " - " + t("common.success"),

@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "@/lib/toast";
 import type { User as UserType, StaffSchedule } from "@/types/entities";
 import type { PaginatedResponse } from "@/types";
-import { useGet } from "@/hooks/useGet";
+import { useGet, withParams } from "@/hooks/useGet";
 import { usePost } from "@/hooks/usePost";
 import { useUser } from "@/hooks/useUser";
 import { SchedulesView } from "./components/schedules-view";
@@ -27,22 +27,16 @@ export function StaffPage() {
 
   // Fetch staff members (users) for the current salon
   const { data: staffMembersResponse } = useGet<PaginatedResponse<UserType>>(
-    "users",
-    {
-      params: { salonId, role: "user" },
-      enabled: !!salonId,
-    },
+    withParams("users", { salonId, role: "user" }),
+    { enabled: !!salonId },
   );
   const staffMembers = staffMembersResponse?.data ?? [];
 
   // NOTE: These endpoints are not yet implemented in the backend API
   // For now, we'll use empty arrays as fallback
   const { data: schedulesResponse } = useGet<StaffSchedule[]>(
-    "staff-schedules",
-    {
-      params: { salonId },
-      enabled: !!salonId,
-    },
+    withParams("staff-schedules", { salonId }),
+    { enabled: !!salonId },
   );
   const schedules = Array.isArray(schedulesResponse) ? schedulesResponse : [];
 
@@ -50,7 +44,7 @@ export function StaffPage() {
   const createSchedule = usePost<StaffSchedule, CreateScheduleDto>(
     "staff-schedules",
     {
-      invalidateQueries: ["staff-schedules"],
+      invalidate: ["staff-schedules"],
       onSuccess: () => {
         toast.success(t("staff.scheduleUpdated"));
         setIsScheduleModalOpen(false);

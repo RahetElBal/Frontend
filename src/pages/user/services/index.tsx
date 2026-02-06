@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { Plus, Clock, Edit, DollarSign } from "lucide-react";
@@ -34,10 +34,10 @@ import { useForm } from "@/hooks/useForm";
 import { useUser } from "@/hooks/useUser";
 import { toast } from "@/lib/toast";
 import type { Service } from "@/types/entities";
-import type { PaginatedResponse } from "@/types";
-import { useGet } from "@/hooks/useGet";
+import type { PaginatedResponse, ApiError } from "@/types";
+import { useGet, withParams } from "@/hooks/useGet";
 import { usePost } from "@/hooks/usePost";
-import { usePostAction } from "@/hooks/usePostAction";
+import { post } from "@/lib/http";
 import { ServiceCard } from "./components/service-card";
 import { getServiceCategoryName } from "./utils";
 import {
@@ -88,20 +88,15 @@ export function ServicesPage() {
     data: servicesResponse,
     isLoading,
     refetch,
-    } = useGet<PaginatedResponse<Service>>("services", {
-      params: { salonId, perPage: 100 },
-      enabled: !!salonId,
-      staleTime: servicesStaleTime,
-    });
+    } = useGet<PaginatedResponse<Service>>(
+      withParams("services", { salonId, perPage: 100 }),
+      { enabled: !!salonId, staleTime: servicesStaleTime },
+    );
   const services = servicesResponse?.data ?? [];
   
   const { data: categoriesData = [] } = useGet<ServiceCategory[] | string[]>(
-    "services/categories",
-    {
-      params: { salonId },
-      enabled: !!salonId,
-      staleTime: categoriesStaleTime,
-    },
+    withParams("services/categories", { salonId }),
+    { enabled: !!salonId, staleTime: categoriesStaleTime },
   );
   
   // Transform categories data for display
@@ -173,7 +168,7 @@ export function ServicesPage() {
     Service,
     ServiceFormData & { salonId: string }
   >("services", {
-    invalidateQueries: ["services"],
+    invalidate: ["services"],
     onSuccess: () => {
       toast.success(t("services.addService") + " - " + t("common.success"));
       setModalState(null);
@@ -188,10 +183,9 @@ export function ServicesPage() {
   const { mutate: updateService, isPending: isUpdating } = usePost<
     Service,
     ServiceFormData
-  >("services", {
-    id: selectedService?.id,
+  >(`services/${selectedService?.id}`, {
     method: "PATCH",
-    invalidateQueries: ["services"],
+    invalidate: ["services"],
     onSuccess: () => {
       toast.success(t("common.edit") + " - " + t("common.success"));
       setModalState(null);
@@ -204,11 +198,10 @@ export function ServicesPage() {
 
   // Delete service mutation
   const { mutate: deleteService, isPending: isDeleting } = usePost<void, void>(
-    "services",
+    `services/${selectedService?.id}`,
     {
-      id: selectedService?.id,
       method: "DELETE",
-      invalidateQueries: ["services"],
+      invalidate: ["services"],
       onSuccess: () => {
         toast.success(t("common.delete") + " - " + t("common.success"));
         setModalState(null);
@@ -221,13 +214,16 @@ export function ServicesPage() {
   );
 
   // Toggle service status - POST /services/{id}/toggle
-  const { mutate: toggleStatus } = usePostAction<Service, string>("services", {
-    id: (serviceId) => serviceId,
-    action: "toggle",
-    invalidateQueries: ["services"],
-    showSuccessToast: true,
-    successMessage: t("common.success"),
-  });
+  const toggleStatus = useCallback((serviceId: string) => {
+    post<Service, undefined>(`services/${serviceId}/toggle`, undefined)
+      .then(() => {
+        toast.success(t("common.success"));
+        refetch();
+      })
+      .catch((error: ApiError) => {
+        toast.error(error.message || t("common.error"));
+      });
+  }, [t, refetch]);
 
   const filteredServices = selectedCategory
     ? services.filter((s) => getServiceCategoryName(s) === selectedCategory)

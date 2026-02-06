@@ -15,7 +15,7 @@ import { useTable } from "@/hooks/useTable";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useUser } from "@/hooks/useUser";
 import type { Sale, SaleItem } from "@/types/entities";
-import { useGet } from "@/hooks/useGet";
+import { useGet, withParams } from "@/hooks/useGet";
 import { getSalesColumns } from "./list/columns";
 import { saleStatusColors, formatSaleTime, toNumber } from "./utils";
 import { normalizeSalesResponse } from "@/utils/normalize-sales";
@@ -69,19 +69,16 @@ export function SalesPage() {
   const salesStaleTime = 0;
 
   // Fetch data from API (scoped to current salon)
-  const { data: salesResponse, isLoading } = useGet<SalesResponse>("sales", {
-    params: {
-      salonId,
-      perPage: 100,
-      sortBy: "createdAt",
-      sortOrder: "desc",
+  const { data: salesResponse, isLoading } = useGet<SalesResponse>(
+    withParams("sales", { salonId, perPage: 100, sortBy: "createdAt", sortOrder: "desc" }),
+    {
+      enabled: !!salonId,
+      staleTime: salesStaleTime,
+      refetchOnMount: "always",
+      refetchOnWindowFocus: "always",
+      select: normalizeSalesResponse,
     },
-    enabled: !!salonId,
-    staleTime: salesStaleTime,
-    refetchOnMount: "always",
-    refetchOnWindowFocus: "always",
-    select: normalizeSalesResponse,
-  });
+  );
   const sales = salesResponse?.data || [];
 
   const table = useTable<Sale>({

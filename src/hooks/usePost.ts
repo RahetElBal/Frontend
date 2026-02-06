@@ -1,107 +1,73 @@
 import {
   useMutation,
   useQueryClient,
+  type UseMutationOptions,
   type UseMutationResult,
-} from '@tanstack/react-query';
-import { post, put, patch, del } from '@/lib/http';
-import type { ApiError } from '@/types/api';
+} from "@tanstack/react-query";
+import { post, put, patch, del } from "@/lib/http";
+import type { ApiError } from "@/types/api";
 
-type HttpMethod = 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+type Method = "POST" | "PUT" | "PATCH" | "DELETE";
 
-interface UsePostOptions<TData, TVariables> {
-  id?: string | ((variables: TVariables) => string);
-  method?: HttpMethod;
-  invalidateQueries?: string[];
-  onSuccess?: (data: TData, variables: TVariables) => void;
-  onError?: (error: ApiError, variables: TVariables) => void;
-  onSettled?: (data: TData | undefined, error: ApiError | null, variables: TVariables) => void;
+interface UsePostOptions<TData, TVariables> extends
+  Omit<UseMutationOptions<TData, ApiError, TVariables>, "mutationFn"> {
+  /** HTTP method. Defaults to "POST". */
+  method?: Method;
+  /** Query keys to invalidate on success. */
+  invalidate?: string[];
 }
 
+const methodMap = {
+  POST: post,
+  PUT: put,
+  PATCH: patch,
+  DELETE: del,
+} as const;
+
 /**
- * Generic hook for POST/PUT/PATCH/DELETE requests using React Query
- * 
- * @param endpoint - API endpoint name (e.g., 'clients', 'products')
- * @param options - Mutation options including method, id, and callbacks
- * 
+ * Simple hook for mutations (POST / PUT / PATCH / DELETE).
+ *
+ * @param path - Full API path, or a function that builds the path from variables.
+ * @param options - method, invalidate, plus standard React Query mutation options
+ *
  * @example
- * // Create a new client
- * const createClient = usePost<Client, CreateClientDto>('clients');
- * createClient.mutate({ firstName: 'John', lastName: 'Doe' });
- * 
+ * // Create
+ * const create = usePost<Client, CreateDto>("clients");
+ *
  * @example
- * // Update a client
- * const updateClient = usePost<Client, UpdateClientDto>('clients', {
- *   id: '123',
- *   method: 'PATCH',
- * });
- * 
+ * // Update with static path
+ * const update = usePost<Client, UpdateDto>(`clients/${id}`, { method: "PATCH" });
+ *
  * @example
- * // Update with dynamic ID from variables
- * const updateClient = usePost<Client, { id: string; name: string }>('clients', {
- *   id: (vars) => vars.id,
- *   method: 'PATCH',
- * });
- * 
- * @example
- * // Delete a client
- * const deleteClient = usePost<void, string>('clients', {
- *   id: (id) => id,
- *   method: 'DELETE',
- * });
+ * // Delete with dynamic path
+ * const remove = usePost<void, { id: string }>(
+ *   (v) => `clients/${v.id}`,
+ *   { method: "DELETE" },
+ * );
  */
 export function usePost<TData, TVariables = void>(
-  endpoint: string,
-  options?: UsePostOptions<TData, TVariables>
+  path: string | ((variables: TVariables) => string),
+  options?: UsePostOptions<TData, TVariables>,
 ): UseMutationResult<TData, ApiError, TVariables> {
   const queryClient = useQueryClient();
-  const {
-    id,
-    method = 'POST',
-    invalidateQueries,
-    onSuccess,
-    onError,
-    onSettled,
-  } = options || {};
+  const { method = "POST", invalidate, onSuccess, ...rest } = options || {};
+  const basePath = typeof path === "string" ? path : "";
 
   return useMutation<TData, ApiError, TVariables>({
     mutationFn: async (variables) => {
-      // Build URL: /{endpoint} or /{endpoint}/{id}
-      const resolvedId = typeof id === 'function' ? id(variables) : id;
-      const url = resolvedId ? `${endpoint}/${resolvedId}` : endpoint;
-
-      switch (method) {
-        case 'POST':
-          return post<TData, TVariables>(url, variables);
-        case 'PUT':
-          return put<TData, TVariables>(url, variables);
-        case 'PATCH':
-          return patch<TData, TVariables>(url, variables);
-        case 'DELETE':
-          return del<TData>(url);
-        default:
-          throw new Error(`Unsupported method: ${method}`);
+      const resolvedPath = typeof path === "function" ? path(variables) : path;
+      const fn = methodMap[method];
+      if (method === "DELETE") {
+        return (fn as typeof del)<TData>(resolvedPath);
       }
+      return (fn as typeof post)<TData, TVariables>(resolvedPath, variables);
     },
-    onSuccess: (data, variables) => {
-      // Invalidate specified queries
-      const queriesToInvalidate = invalidateQueries || [endpoint];
-      queriesToInvalidate.forEach((queryKey) => {
-        queryClient.invalidateQueries({ queryKey: [queryKey] });
-      });
-      
-      if (onSuccess) {
-        onSuccess(data, variables);
-      }
+    onSuccess: (data, variables, context) => {
+      const base = typeof path === "function" ? path(variables) : path;
+      const keys = invalidate || [base.split("/")[0] || base];
+      keys.forEach((key) => queryClient.invalidateQueries({ queryKey: [key] }));
+      onSuccess?.(data, variables, context);
     },
-    onError: (error, variables) => {
-      if (onError) {
-        onError(error, variables);
-      }
-    },
-    onSettled: (data, error, variables) => {
-      if (onSettled) {
-        onSettled(data, error, variables);
-      }
-    },
+    ...rest,
   });
 }

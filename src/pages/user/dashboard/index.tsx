@@ -12,7 +12,7 @@ import type {
   PaginatedResponse,
   RevenueData,
 } from "@/types";
-import { useGet } from "@/hooks/useGet";
+import { useGet, withParams } from "@/hooks/useGet";
 import { getLocalDateString } from "./utils";
 
 export function DashboardPage() {
@@ -31,31 +31,25 @@ export function DashboardPage() {
     [salonId, today, isUser, user?.id],
   );
 
-  const { data: todaysRevenue } = useGet<RevenueData>("sales/today/revenue", {
-    params: { salonId },
-    enabled: !!salonId,
-  });
+  const { data: todaysRevenue } = useGet<RevenueData>(
+    withParams("sales/today/revenue", { salonId }),
+    { enabled: !!salonId },
+  );
 
   const { data: lastWeekRevenue } = useGet<RevenueData>(
-    "sales/last-week/revenue",
-    {
-      params: { salonId },
-      enabled: !!salonId,
-    },
+    withParams("sales/last-week/revenue", { salonId }),
+    { enabled: !!salonId },
   );
 
   const { data: appointmentsData } = useGet<PaginatedResponse<Appointment>>(
-    "appointments",
-    {
-      params: appointmentsParams,
-      enabled: !!salonId && !!today,
-    },
+    withParams("appointments", appointmentsParams),
+    { enabled: !!salonId && !!today },
   );
 
-  const { data: clientsData } = useGet<PaginatedResponse<Client>>("clients", {
-    params: { salonId, perPage: 100 },
-    enabled: !!salonId,
-  });
+  const { data: clientsData } = useGet<PaginatedResponse<Client>>(
+    withParams("clients", { salonId, perPage: 100 }),
+    { enabled: !!salonId },
+  );
 
   if (isLoading) {
     return (

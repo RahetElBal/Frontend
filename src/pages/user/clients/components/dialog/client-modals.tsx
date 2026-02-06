@@ -87,7 +87,7 @@ export function ClientModals({
     Client,
     ClientFormData & { salonId: string }
   >("clients", {
-    invalidateQueries: ["clients"],
+    invalidate: ["clients"],
     onSuccess: () => {
       toast.success(t("clients.addClient") + " - " + t("common.success"));
       setModalState(null);
@@ -101,10 +101,9 @@ export function ClientModals({
   const { mutate: updateClientMutate, isPending: isUpdating } = usePost<
     Client,
     ClientFormData
-  >("clients", {
-    id: selectedClient?.id,
+  >(`clients/${selectedClient?.id}`, {
     method: "PATCH",
-    invalidateQueries: ["clients"],
+    invalidate: ["clients"],
     onSuccess: () => {
       toast.success(t("common.edit") + " - " + t("common.success"));
       setModalState(null);
@@ -118,10 +117,9 @@ export function ClientModals({
   const { mutate: deleteClientMutate, isPending: isDeleting } = usePost<
     void,
     void
-  >("clients", {
-    id: selectedClient?.id,
+  >(`clients/${selectedClient?.id}`, {
     method: "DELETE",
-    invalidateQueries: ["clients"],
+    invalidate: ["clients"],
     onSuccess: () => {
       toast.success(t("common.delete") + " - " + t("common.success"));
       setModalState(null);
@@ -136,12 +134,9 @@ export function ClientModals({
   const { mutate: archiveClientMutate, isPending: isArchiving } = usePostAction<
     void,
     string
-  >("clients", {
-    id: (clientId) => clientId,
-    action: "archive",
-    invalidateQueries: ["clients"],
-    showSuccessToast: true,
-    successMessage: t("clients.archived"),
+  >(`clients/${selectedClient?.id}/archive`, {
+    invalidate: ["clients"],
+    successToast: t("clients.archived"),
     onSuccess: () => {
       setModalState(null);
       onSuccess();
@@ -152,12 +147,9 @@ export function ClientModals({
   const { mutate: addLoyaltyPoints, isPending: isAddingPoints } = usePostAction<
     Client,
     { points: number }
-  >("clients", {
-    id: selectedClient?.id,
-    action: "loyalty/add",
-    invalidateQueries: ["clients"],
-    showSuccessToast: true,
-    successMessage: t("clients.pointsAdded"),
+  >(`clients/${selectedClient?.id}/loyalty/add`, {
+    invalidate: ["clients"],
+    successToast: t("clients.pointsAdded"),
     onSuccess: () => {
       onSuccess();
     },
@@ -165,16 +157,16 @@ export function ClientModals({
 
   // Deduct loyalty points - POST /clients/{id}/loyalty/deduct
   const { mutate: deductLoyaltyPoints, isPending: isDeductingPoints } =
-    usePostAction<Client, { points: number }>("clients", {
-      id: selectedClient?.id,
-      action: "loyalty/deduct",
-      invalidateQueries: ["clients"],
-      showSuccessToast: true,
-      successMessage: t("clients.pointsDeducted"),
-      onSuccess: () => {
-        onSuccess();
+    usePostAction<Client, { points: number }>(
+      `clients/${selectedClient?.id}/loyalty/deduct`,
+      {
+        invalidate: ["clients"],
+        successToast: t("clients.pointsDeducted"),
+        onSuccess: () => {
+          onSuccess();
+        },
       },
-    });
+    );
 
   const derived = useMemo(() => {
     if (!modalState) return null;
