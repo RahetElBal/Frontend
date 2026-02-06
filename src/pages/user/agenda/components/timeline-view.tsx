@@ -132,7 +132,7 @@ export function TimelineView({
                 appointment && normalizeTime(appointment.startTime) === time;
               const isOccupied = !!appointment && !isStartSlot;
               const isBookingDisabled = isPastTime && !appointment;
-              const isSlotDisabled = isBlocked || isBookingDisabled;
+              const isSlotDisabled = isBlocked || (isBookingDisabled && !appointment);
               const durationMinutes = appointment
                 ? Math.max(
                     slotMinutes,
@@ -156,7 +156,7 @@ export function TimelineView({
                   className={cn(
                     "flex w-full min-w-full border-b relative overflow-visible",
                     isCurrentTime && "bg-accent-pink/5",
-                    isPastTime && "opacity-60",
+                    isPastTime && !appointment && "opacity-60",
                   )}
                   style={{ minHeight: `${slotHeight}px` }}
                 >
@@ -174,17 +174,18 @@ export function TimelineView({
                       "flex-1 w-full min-w-0 min-h-15 p-2 hover:bg-muted/30 cursor-pointer transition-colors relative",
                       !appointment &&
                         !isSlotDisabled &&
+                        !isBookingDisabled &&
                         "border-l-4 border-l-transparent hover:border-l-accent-pink/30",
-                      isSlotDisabled && "bg-muted/40 cursor-not-allowed",
+                      (isSlotDisabled || (isBookingDisabled && !appointment)) && "bg-muted/40 cursor-not-allowed",
                       isOccupied && "bg-muted/20",
                     )}
                     onClick={() => {
-                      if (isSlotDisabled) return;
-                      if (!appointment) {
-                        onTimeSlotClick(time);
-                      } else {
+                      if (appointment) {
                         onAppointmentClick(appointment);
+                        return;
                       }
+                      if (isSlotDisabled || isBookingDisabled) return;
+                      onTimeSlotClick(time);
                     }}
                   >
                     {appointment && isStartSlot ? (
