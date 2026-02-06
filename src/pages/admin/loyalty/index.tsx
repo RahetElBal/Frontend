@@ -471,7 +471,7 @@ export function LoyaltyPage() {
       </div>
 
       {/* Program Settings Modal */}
-      <Dialog open={isSettingsModalOpen} onOpenChange={setIsSettingsModalOpen}>
+      < Dialog open={isSettingsModalOpen} onOpenChange={setIsSettingsModalOpen}>
         <DialogContent className="sm:max-w-125">
           <DialogHeader>
             <DialogTitle>{t("loyalty.programSettings")}</DialogTitle>

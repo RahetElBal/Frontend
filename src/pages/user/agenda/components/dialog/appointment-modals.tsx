@@ -736,19 +736,21 @@ export function AppointmentModals({
               </Button>
               {selectedAppointment && (
                 <>
-                  <Button
-                    variant="outline"
-                    className="text-destructive"
-                    onClick={() =>
-                      setModalState({
-                        appointmentId: selectedAppointment.id,
-                        mode: "delete",
-                      })
-                    }
-                  >
-                    <Trash2 className="h-4 w-4 me-2" />
-                    {t("common.delete")}
-                  </Button>
+                  {!selectedAppointment.paid && (
+                    <Button
+                      variant="outline"
+                      className="text-destructive"
+                      onClick={() =>
+                        setModalState({
+                          appointmentId: selectedAppointment.id,
+                          mode: "delete",
+                        })
+                      }
+                    >
+                      <Trash2 className="h-4 w-4 me-2" />
+                      {t("common.delete")}
+                    </Button>
+                  )}
                   <Button
                     onClick={() =>
                       setModalState({

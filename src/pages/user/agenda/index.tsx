@@ -5,7 +5,6 @@ import { PageHeader } from "@/components/page-header";
 import { LoadingPanel } from "@/components/loading-panel";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -17,7 +16,6 @@ import {
 import { toast } from "@/lib/toast";
 import { useGet } from "@/hooks/useGet";
 import { usePost } from "@/hooks/usePost";
-import { usePostAction } from "@/hooks/usePostAction";
 import { useForm } from "@/hooks/useForm";
 import { useUser } from "@/hooks/useUser";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -48,6 +46,7 @@ import {
   buildTimeSlotsForHours,
   DEFAULT_SLOT_MINUTES,
   addMinutesToTime,
+  normalizeTime,
   findConflictingAppointment,
 } from "./utils";
 
@@ -75,14 +74,6 @@ export function AgendaPage() {
   >("all");
   const [selectedDate, setSelectedDate] = useState(() => getLocalDateString());
   const [selectedStaffId, setSelectedStaffId] = useState<string | null>(null);
-  const [autoArchiveWalkIns, setAutoArchiveWalkIns] = useState<boolean>(() => {
-    try {
-      return localStorage.getItem("agenda.autoArchiveWalkIns") === "true";
-    } catch {
-      return false;
-    }
-  });
-
   const salonId = user?.salon?.id;
   const canSelectStaff = isAdmin || isSuperadmin;
 
@@ -106,7 +97,6 @@ export function AgendaPage() {
   const {
     data: appointmentsData,
     isLoading,
-    isFetching,
     refetch,
   } = useGet<PaginatedResponse<Appointment>>("appointments", {
     params: appointmentsParams,
@@ -146,13 +136,87 @@ export function AgendaPage() {
     Appointment[]
   >([]);
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
+  const [deletedAppointmentIds, setDeletedAppointmentIds] = useState<
+    Set<string>
+  >(() => new Set());
   const rawAppointments = safeExtractArray<Appointment>(appointmentsData);
+
+  const isOptimisticAppointmentId = useCallback(
+    (appointmentId: string) => appointmentId.startsWith("local-"),
+    [],
+  );
+  const getAppointmentMatchKey = useCallback(
+    (appointment: Appointment) =>
+      [
+        appointment.date,
+        normalizeTime(appointment.startTime),
+        appointment.clientId,
+        appointment.serviceId,
+        appointment.staffId || "",
+      ].join("|"),
+    [],
+  );
+
   useEffect(() => {
     if (appointmentsData) {
-      setVisibleAppointments(rawAppointments);
+      setVisibleAppointments((current) => {
+        const filteredIncoming = rawAppointments.filter(
+          (appointment) => !deletedAppointmentIds.has(appointment.id),
+        );
+        const incomingById = new Map(
+          filteredIncoming.map((appointment) => [appointment.id, appointment]),
+        );
+        const incomingByKey = new Map(
+          filteredIncoming.map((appointment) => [
+            getAppointmentMatchKey(appointment),
+            appointment,
+          ]),
+        );
+        const currentById = new Map(
+          current.map((appointment) => [appointment.id, appointment]),
+        );
+
+        const merged = filteredIncoming.map((incoming) => {
+          const existing = currentById.get(incoming.id);
+          if (!existing) return incoming;
+          const existingUpdatedAt = Date.parse(existing.updatedAt || "");
+          const incomingUpdatedAt = Date.parse(incoming.updatedAt || "");
+          if (
+            Number.isFinite(existingUpdatedAt) &&
+            Number.isFinite(incomingUpdatedAt)
+          ) {
+            return existingUpdatedAt >= incomingUpdatedAt ? existing : incoming;
+          }
+          return Number.isFinite(existingUpdatedAt) ? existing : incoming;
+        });
+
+        current.forEach((appointment) => {
+          if (deletedAppointmentIds.has(appointment.id)) return;
+          if (incomingById.has(appointment.id)) return;
+          if (isOptimisticAppointmentId(appointment.id)) {
+            const match = incomingByKey.get(getAppointmentMatchKey(appointment));
+            if (match) return;
+          }
+          merged.push(appointment);
+        });
+
+        return merged;
+      });
       setHasLoadedOnce(true);
     }
-  }, [appointmentsData, rawAppointments]);
+  }, [
+    appointmentsData,
+    rawAppointments,
+    deletedAppointmentIds,
+    getAppointmentMatchKey,
+    isOptimisticAppointmentId,
+  ]);
+
+  useEffect(() => {
+    setVisibleAppointments([]);
+    setDeletedAppointmentIds(new Set());
+    setHasLoadedOnce(false);
+  }, [salonId, selectedStaffId]);
   const appointments = visibleAppointments;
   const clients = safeExtractArray<Client>(clientsData);
   const services = safeExtractArray<Service>(servicesData);
@@ -309,6 +373,36 @@ export function AgendaPage() {
     overdueAppointments,
     filter,
   ]);
+
+  const upsertVisibleAppointment = useCallback(
+    (nextAppointment: Appointment, options?: { prepend?: boolean }) => {
+      setVisibleAppointments((current) => {
+        const index = current.findIndex(
+          (appointment) => appointment.id === nextAppointment.id,
+        );
+        if (index === -1) {
+          return options?.prepend
+            ? [nextAppointment, ...current]
+            : [...current, nextAppointment];
+        }
+        const updated = [...current];
+        updated[index] = nextAppointment;
+        return updated;
+      });
+    },
+    [],
+  );
+
+  const markAppointmentDeleted = useCallback((appointmentId: string) => {
+    setDeletedAppointmentIds((current) => {
+      const next = new Set(current);
+      next.add(appointmentId);
+      return next;
+    });
+    setVisibleAppointments((current) =>
+      current.filter((appointment) => appointment.id !== appointmentId),
+    );
+  }, []);
 
   const handleReminder = useCallback(
     (reminder: AppointmentReminder) => {
@@ -498,16 +592,6 @@ export function AgendaPage() {
         toast.success(
           t("agenda.paymentRecorded") + " - " + t("common.success"),
         );
-        if (autoArchiveWalkIns) {
-          const paidAppointment = appointments.find(
-            (appointment) => appointment.id === variables.appointmentId,
-          );
-          const clientId = paidAppointment?.client?.id;
-          const clientEmail = paidAppointment?.client?.email || "";
-          if (clientId && clientEmail.startsWith("walkin+")) {
-            archiveClient(clientId);
-          }
-        }
         queryClient.setQueryData<PaginatedResponse<Appointment> | undefined>(
           appointmentsQueryKey,
           (current) => {
@@ -548,17 +632,6 @@ export function AgendaPage() {
 
   const { mutateAsync: createWalkInClient, isPending: isCreatingWalkIn } =
     usePost<Client, Partial<Client>>("clients");
-
-  const { mutateAsync: archiveClient } = usePostAction<void, string>(
-    "clients",
-    {
-      id: (clientId) => clientId,
-      action: "archive",
-      showSuccessToast: true,
-      successMessage: t("clients.archived"),
-      showErrorToast: true,
-    },
-  );
 
   const handleSelectSlot = useCallback(
     ({ start }: { start: Date; end: Date }) => {
@@ -714,8 +787,68 @@ export function AgendaPage() {
           discount: parsedDiscount ?? 0,
         }
       : undefined;
+    const nowIso = new Date().toISOString();
+    const createOptimisticId = () =>
+      `local-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`;
+    const resolvedService =
+      selectedServiceForTime ||
+      services.find((service) => service.id === data.serviceId);
+    const resolvedClient = clients.find(
+      (client) => client.id === data.clientId,
+    );
+    const basePrice =
+      pricingPayload?.customPrice ??
+      resolvedService?.price ??
+      selectedAppointment?.customPrice ??
+      selectedAppointment?.price ??
+      0;
+    const discountValue = pricingPayload?.discount ?? selectedAppointment?.discount ?? 0;
+    const finalPrice = Math.max(0, basePrice - discountValue);
+
+    const buildOptimisticAppointment = (options?: {
+      client?: Client;
+      clientId?: string;
+      appointmentId?: string;
+    }): Appointment => {
+      const optimisticClient = options?.client ?? resolvedClient ?? selectedAppointment?.client;
+      const optimisticClientId =
+        options?.clientId ?? optimisticClient?.id ?? data.clientId ?? "";
+      const appointmentId =
+        options?.appointmentId ||
+        selectedAppointment?.id ||
+        createOptimisticId();
+      return {
+        id: appointmentId,
+        createdAt: selectedAppointment?.createdAt ?? nowIso,
+        updatedAt: nowIso,
+        salonId: salonId || "",
+        clientId: optimisticClientId,
+        client: optimisticClient,
+        serviceId: data.serviceId,
+        service: resolvedService ?? selectedAppointment?.service,
+        staffId: effectiveStaffId,
+        staff: selectedAppointment?.staff,
+        date: data.date,
+        startTime: data.startTime,
+        endTime,
+        status: selectedAppointment?.status ?? AppointmentStatus.PENDING,
+        paid: selectedAppointment?.paid ?? false,
+        notes: data.notes,
+        basePrice: resolvedService?.price ?? selectedAppointment?.basePrice ?? basePrice,
+        customPrice: pricingPayload?.customPrice ?? selectedAppointment?.customPrice ?? null,
+        discount: discountValue,
+        price: finalPrice,
+        reminderSent: selectedAppointment?.reminderSent ?? false,
+      };
+    };
 
     if (modalState?.mode === "edit" && !isCreateMode) {
+      if (selectedAppointment) {
+        const optimisticUpdate = buildOptimisticAppointment({
+          appointmentId: selectedAppointment.id,
+        });
+        upsertVisibleAppointment(optimisticUpdate);
+      }
       updateAppointment({
         ...toAppointmentPayload(data, pricingPayload),
         staffId: effectiveStaffId,
@@ -741,6 +874,12 @@ export function AgendaPage() {
             notes: t("agenda.walkInNote"),
             isMarried: !!data.walkInIsMarried,
           });
+          const optimisticAppointment = buildOptimisticAppointment({
+            client: walkInClient,
+            clientId: walkInClient.id,
+            appointmentId: createOptimisticId(),
+          });
+          upsertVisibleAppointment(optimisticAppointment, { prepend: true });
           createAppointment({
             ...toAppointmentPayload(data, pricingPayload),
             salonId,
@@ -752,6 +891,10 @@ export function AgendaPage() {
           toast.error(t("common.error"));
         }
       } else {
+        const optimisticAppointment = buildOptimisticAppointment({
+          appointmentId: createOptimisticId(),
+        });
+        upsertVisibleAppointment(optimisticAppointment, { prepend: true });
         createAppointment({
           ...toAppointmentPayload(data, pricingPayload),
           salonId,
@@ -771,6 +914,15 @@ export function AgendaPage() {
       });
     }
   };
+
+  const handleDeleteAppointment = useCallback(() => {
+    if (!selectedAppointment?.id) {
+      toast.error(t("common.error"));
+      return;
+    }
+    markAppointmentDeleted(selectedAppointment.id);
+    deleteAppointment(selectedAppointment.id);
+  }, [selectedAppointment?.id, deleteAppointment, markAppointmentDeleted, t]);
 
   const showPageLoading = isLoading && !hasLoadedOnce;
 
@@ -896,32 +1048,13 @@ export function AgendaPage() {
         >
           {t("agenda.filters.completed")}
         </Button>
-        <div className="flex items-center gap-2 ms-auto">
-          <Switch
-            checked={autoArchiveWalkIns}
-            onCheckedChange={(checked) => {
-              setAutoArchiveWalkIns(checked);
-              try {
-                localStorage.setItem(
-                  "agenda.autoArchiveWalkIns",
-                  String(checked),
-                );
-              } catch {
-                // ignore
-              }
-            }}
-          />
-          <span className="text-sm text-muted-foreground">
-            {t("agenda.autoArchiveWalkIns")}
-          </span>
-        </div>
       </div>
 
       <div className="w-full">
         <TimelineView
           appointments={filteredAppointments}
           selectedDate={new Date(`${selectedDate}T00:00:00`)}
-          isLoading={isFetching}
+          isLoading={isLoading && !hasLoadedOnce}
           timeSlots={timelineSlots.slots}
           blockedSlots={timelineSlots.blocked}
           isClosed={!workingHoursForSelectedDate.isOpen}
@@ -947,6 +1080,13 @@ export function AgendaPage() {
               toast.error(t("common.error"));
               return;
             }
+            const optimisticUpdated = {
+              ...appointment,
+              status: AppointmentStatus.COMPLETED,
+              paid: true,
+              updatedAt: new Date().toISOString(),
+            };
+            upsertVisibleAppointment(optimisticUpdated);
             createSaleFromAppointment({
               salonId,
               appointmentId: appointment.id,
@@ -976,18 +1116,19 @@ export function AgendaPage() {
         selectedStaffId={selectedStaffId}
         form={form}
         onSubmit={handleSubmit}
-        onDelete={() => {
-          if (!selectedAppointment?.id) {
-            toast.error(t("common.error"));
-            return;
-          }
-          deleteAppointment(selectedAppointment.id);
-        }}
+        onDelete={handleDeleteAppointment}
         onCreateSale={(appointment, options) => {
           if (!salonId || !appointment.serviceId) {
             toast.error(t("common.error"));
             return;
           }
+          const optimisticUpdated = {
+            ...appointment,
+            status: AppointmentStatus.COMPLETED,
+            paid: true,
+            updatedAt: new Date().toISOString(),
+          };
+          upsertVisibleAppointment(optimisticUpdated);
           createSaleFromAppointment({
             salonId,
             appointmentId: appointment.id,
