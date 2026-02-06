@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { AppSidebar } from "@/components/sidebar/app-sidebar";
 import { LoadingPanel } from "@/components/loading-panel";
 import { Spinner } from "@/components/spinner";
+import { AppTopbar } from "@/components/topbar/app-topbar";
 import { MainLayout } from "@/layouts/main-layout";
 import { useUser } from "@/hooks/useUser";
 import { ROUTES } from "@/constants/navigation";
@@ -62,7 +63,8 @@ export function UserLayout() {
         className={cn("min-h-screen w-full transition-all duration-300")}
         style={{ paddingInlineStart: "var(--app-sidebar-width, 256px)" }}
       >
-        <div className="w-full p-6">
+        <div className="w-full p-6 space-y-6">
+          <AppTopbar />
           <Suspense fallback={<LoadingPanel className="min-h-[60vh]" />}>
             <Outlet />
           </Suspense>

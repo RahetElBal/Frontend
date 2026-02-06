@@ -47,6 +47,8 @@ export const ar = {
     view: "عرض",
     archive: "أرشفة",
     viewAll: "عرض الكل",
+    markAllRead: "وضع الكل كمقروء",
+    noNotifications: "لا توجد إشعارات",
     welcome: "مرحباً، {{name}}",
     item: "عنصر",
     items: "عناصر",

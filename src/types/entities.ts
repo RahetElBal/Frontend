@@ -426,6 +426,32 @@ export interface Notification extends BaseEntity {
 }
 
 // ============================================
+// ADMIN NOTIFICATIONS
+// ============================================
+
+export const AdminNotificationType = {
+  APPOINTMENT_CREATED: "appointment.created",
+  APPOINTMENT_CANCELLED: "appointment.cancelled",
+  APPOINTMENT_REMINDER: "appointment.reminder",
+  SALE_CREATED: "sale.created",
+  SALE_COMPLETED: "sale.completed",
+} as const;
+
+export type AdminNotificationType =
+  (typeof AdminNotificationType)[keyof typeof AdminNotificationType];
+
+export interface AdminNotification extends BaseEntity {
+  recipientId: string;
+  salonId: string;
+  actorId?: string | null;
+  type: AdminNotificationType;
+  title: string;
+  message: string;
+  payload?: Record<string, unknown> | null;
+  readAt?: string | null;
+}
+
+// ============================================
 // STAFF SCHEDULE ENTITY
 // ============================================
 

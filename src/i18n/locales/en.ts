@@ -366,6 +366,8 @@ export const en = {
     view: "View",
     archive: "Archive",
     viewAll: "View all",
+    markAllRead: "Mark all as read",
+    noNotifications: "No notifications",
     welcome: "Welcome, {{name}}",
     item: "item",
     items: "items",

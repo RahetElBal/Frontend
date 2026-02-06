@@ -47,6 +47,8 @@ export const es = {
     view: "Ver",
     archive: "Archivar",
     viewAll: "Ver todo",
+    markAllRead: "Marcar todo como leído",
+    noNotifications: "Sin notificaciones",
     welcome: "Bienvenido, {{name}}",
     item: "artículo",
     items: "artículos",

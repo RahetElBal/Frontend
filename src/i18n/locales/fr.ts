@@ -47,6 +47,8 @@ export const fr = {
     view: "Voir",
     archive: "Archiver",
     viewAll: "Voir tout",
+    markAllRead: "Tout marquer comme lu",
+    noNotifications: "Aucune notification",
     welcome: "Bienvenue, {{name}}",
     item: "article",
     items: "articles",
