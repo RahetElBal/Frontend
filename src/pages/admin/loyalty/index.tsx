@@ -394,27 +394,36 @@ export function LoyaltyPage() {
           <h2 className="text-lg font-semibold mb-4">
             {t("loyalty.recentPayments")}
           </h2>
-          {showLoyaltyLoading ? (
-            <LoadingPanel label={t("common.loading")} />
-          ) : sales.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <p>{t("loyalty.noPayments")}</p>
-            </div>
-          ) : (
-            <div className="border rounded-lg overflow-hidden">
-              <Table>
-                <TableHeader>
+          <div className="border rounded-lg overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t("loyalty.paymentDate")}</TableHead>
+                  <TableHead>{t("loyalty.paymentClient")}</TableHead>
+                  <TableHead>{t("loyalty.paymentStatus")}</TableHead>
+                  <TableHead className="text-right">
+                    {t("loyalty.paymentTotal")}
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {showLoyaltyLoading ? (
                   <TableRow>
-                    <TableHead>{t("loyalty.paymentDate")}</TableHead>
-                    <TableHead>{t("loyalty.paymentClient")}</TableHead>
-                    <TableHead>{t("loyalty.paymentStatus")}</TableHead>
-                    <TableHead className="text-right">
-                      {t("loyalty.paymentTotal")}
-                    </TableHead>
+                    <TableCell colSpan={4}>
+                      <LoadingPanel
+                        label={t("common.loading")}
+                        className="py-6"
+                      />
+                    </TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {sales.map((sale) => (
+                ) : sales.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
+                      {t("loyalty.noPayments")}
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  sales.map((sale) => (
                     <TableRow key={sale.id}>
                       <TableCell>
                         {new Date(sale.createdAt).toLocaleDateString()}
@@ -431,11 +440,11 @@ export function LoyaltyPage() {
                         {formatCurrency(Number(sale.total || 0))}
                       </TableCell>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </Card>
       </div>
 
