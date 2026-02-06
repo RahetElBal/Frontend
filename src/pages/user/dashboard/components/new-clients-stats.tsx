@@ -7,9 +7,10 @@ import { getChangeDisplay } from "@/common/utils";
 
 interface NewClientsStatsProps {
   clients: Client[];
+  loading?: boolean;
 }
 
-export function NewClientsStats({ clients }: NewClientsStatsProps) {
+export function NewClientsStats({ clients, loading = false }: NewClientsStatsProps) {
   const { t } = useTranslation();
 
   const todaysNewClients = getTodaysNewClients(clients);
@@ -23,6 +24,7 @@ export function NewClientsStats({ clients }: NewClientsStatsProps) {
     <StatsCard
       title={t("dashboard.newClients")}
       value={todayCount}
+      loading={loading}
       change={change.value}
       changeText={change.text ? t("common.new") : undefined}
       changeIsPositive={change.isPositive}

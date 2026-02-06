@@ -120,6 +120,7 @@ export function StatsGrid({
         <StatsCard
           title="Revenu total"
           value={formatCurrency(totalRevenue)}
+          loading={loading}
           icon={DollarSign}
           iconColor="text-green-600"
           iconBgColor="bg-green-100"
@@ -127,6 +128,7 @@ export function StatsGrid({
         <StatsCard
           title="Revenu ce mois"
           value={formatCurrency(monthlyRevenue)}
+          loading={loading}
           icon={DollarSign}
           iconColor="text-accent-pink"
           iconBgColor="bg-accent-pink/10"
@@ -138,6 +140,7 @@ export function StatsGrid({
         <StatsCard
           title="Clients"
           value={totalClients}
+          loading={loading}
           icon={UserCheck}
           iconColor="text-accent-blue"
           iconBgColor="bg-accent-blue/10"
@@ -145,6 +148,7 @@ export function StatsGrid({
         <StatsCard
           title="Services"
           value={totalServices}
+          loading={loading}
           icon={Briefcase}
           iconColor="text-indigo-600"
           iconBgColor="bg-indigo-100"
@@ -152,6 +156,7 @@ export function StatsGrid({
         <StatsCard
           title="Equipe"
           value={totalUsers}
+          loading={loading}
           icon={Users}
           iconColor="text-accent-blue"
           iconBgColor="bg-accent-blue/10"

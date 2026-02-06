@@ -63,22 +63,22 @@ export default function SalonsPage() {
   });
 
   // Users endpoint returns paginated data
-  const { data: allUsersResponse } = useGet<{ data: User[] }>(
+  const { data: allUsersResponse, isLoading: isUsersLoading } = useGet<{ data: User[] }>(
     withParams("users", userIsSuperadmin ? {} : { salonId }),
     { enabled: userIsSuperadmin || !!salonId, staleTime: adminStatsStaleTime },
   );
 
-  const { data: servicesResponse } = useGet<PaginatedResponse<Service>>(
+  const { data: servicesResponse, isLoading: isServicesLoading } = useGet<PaginatedResponse<Service>>(
     withParams("services", { salonId, perPage: 1 }),
     { enabled: !!salonId, staleTime: adminStatsStaleTime },
   );
 
-  const { data: clientsResponse } = useGet<{ data: Client[] }>(
+  const { data: clientsResponse, isLoading: isClientsLoading } = useGet<{ data: Client[] }>(
     withParams("clients", { salonId, perPage: 100 }),
     { enabled: !!salonId, staleTime: adminStatsStaleTime },
   );
 
-  const { data: salesResponse } = useGet<{ data: Sale[] }>(
+  const { data: salesResponse, isLoading: isSalesLoading } = useGet<{ data: Sale[] }>(
     withParams("sales", { salonId, perPage: 100 }),
     { enabled: !!salonId, staleTime: adminStatsStaleTime, select: normalizeSalesResponse },
   );
@@ -206,6 +206,7 @@ export default function SalonsPage() {
         activeUsers={stats.activeUsers}
         totalAdmins={stats.totalAdmins}
         isSuperadmin={userIsSuperadmin}
+        loading={isLoading || isUsersLoading || isServicesLoading || isClientsLoading || isSalesLoading || isAdminsLoading}
         totalRevenue={stats.totalRevenue}
         monthlyRevenue={stats.monthlyRevenue}
         totalServices={stats.totalServices}
