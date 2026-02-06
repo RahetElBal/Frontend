@@ -558,7 +558,7 @@ export function ServicesPage() {
                       {t("fields.price")}
                     </p>
                     <p className="font-medium text-accent-pink">
-                      {formatCurrency(selectedService.price)}
+                      {formatCurrency(Number(selectedService.price) || 0)}
                     </p>
                   </div>
                 </div>
