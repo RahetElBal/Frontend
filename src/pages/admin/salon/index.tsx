@@ -26,6 +26,9 @@ import { StatsGrid } from "./components/stats-grid";
 import { useSalonsColumns } from "./list/columns";
 import { DataTable } from "@/components/table";
 import { SalonModals } from "./components/dialog/salon-modal";
+import { MediaImage } from "@/components/media-image";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/badge";
 
 export default function SalonsPage() {
   const { t } = useTranslation();
@@ -198,6 +201,34 @@ export default function SalonsPage() {
           )
         }
       />
+
+      {!userIsSuperadmin && currentSalon && (
+        <Card className="p-6">
+          <div className="flex items-center gap-4">
+            <div className="h-16 w-16 rounded-xl bg-accent-pink/10 flex items-center justify-center overflow-hidden shrink-0">
+              <MediaImage
+                src={currentSalon.logo}
+                fallbackSrc="/salon-placeholder.svg"
+                alt={currentSalon.name}
+                className="h-full w-full object-cover"
+              />
+            </div>
+            <div className="min-w-0">
+              <h2 className="text-lg font-semibold truncate">{currentSalon.name}</h2>
+              <div className="flex items-center gap-2 mt-1">
+                <Badge variant={currentSalon.isActive ? "success" : "warning"}>
+                  {currentSalon.isActive ? t("common.active") : t("common.inactive")}
+                </Badge>
+                {currentSalon.address && (
+                  <span className="text-sm text-muted-foreground truncate">
+                    {currentSalon.address}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        </Card>
+      )}
 
       <StatsGrid
         totalSalons={stats.totalSalons}

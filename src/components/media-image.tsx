@@ -60,12 +60,19 @@ export function MediaImage({
   );
   const [blobSrc, setBlobSrc] = React.useState<string | null>(null);
   const triedAuthRef = React.useRef(false);
+  const prevResolvedRef = React.useRef(resolvedSrc);
 
   React.useEffect(() => {
+    // Only reset if the resolved source actually changed
+    if (prevResolvedRef.current === resolvedSrc) return;
+    prevResolvedRef.current = resolvedSrc;
     triedAuthRef.current = false;
-    setBlobSrc(null);
+    if (blobSrc) {
+      URL.revokeObjectURL(blobSrc);
+      setBlobSrc(null);
+    }
     setDisplaySrc(resolvedSrc || fallbackSrc);
-  }, [resolvedSrc, fallbackSrc]);
+  }, [resolvedSrc, fallbackSrc, blobSrc]);
 
   React.useEffect(() => {
     if (!blobSrc) return;
