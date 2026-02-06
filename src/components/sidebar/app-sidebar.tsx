@@ -11,12 +11,15 @@ import {
   TooltipTrigger,
   TooltipContent,
 } from "@/components/ui/tooltip";
+import { MediaImage } from "@/components/media-image";
 import { SidebarLogo } from "./sidebar-logo";
 import { SidebarNavSection } from "./sidebar-nav-section";
 import { SidebarUserMenu } from "./sidebar-user-menu";
 import type { Salon } from "@/types/entities";
 import type { AuthUser, AppRole } from "@/types/user";
 import { getNavigationForRole } from "@/constants/navigation";
+
+const DEFAULT_SALON_IMAGE = "/salon-placeholder.svg";
 
 interface AppSidebarProps {
   user: AuthUser;
@@ -90,9 +93,13 @@ export function AppSidebar({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <div className="flex justify-center">
-                    <div className="h-10 w-10 rounded-lg bg-linear-to-br from-accent-pink to-accent-blue flex items-center justify-center text-white text-sm font-bold">
-                      {currentSalon.name}
-                    </div>
+                    <MediaImage
+                      src={currentSalon.logo}
+                      fallbackSrc={DEFAULT_SALON_IMAGE}
+                      alt={currentSalon.name}
+                      className="h-10 w-10 rounded-lg object-cover border border-border/60 bg-muted"
+                      loading="lazy"
+                    />
                   </div>
                 </TooltipTrigger>
                 <TooltipContent side="right">
@@ -101,9 +108,13 @@ export function AppSidebar({
               </Tooltip>
             ) : (
               <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/50">
-                <div className="h-8 w-8 rounded-md bg-linear-to-br from-accent-pink to-accent-blue flex items-center justify-center text-white text-xs font-bold shrink-0">
-                  {currentSalon.name}
-                </div>
+                <MediaImage
+                  src={currentSalon.logo}
+                  fallbackSrc={DEFAULT_SALON_IMAGE}
+                  alt={currentSalon.name}
+                  className="h-8 w-8 rounded-md object-cover border border-border/60 bg-muted shrink-0"
+                  loading="lazy"
+                />
                 <div className="text-left min-w-0">
                   <p className="text-sm font-medium truncate">
                     {currentSalon.name}
