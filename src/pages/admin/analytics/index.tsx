@@ -408,8 +408,8 @@ export function AnalyticsPage() {
                   </p>
                 ) : (
                   topCategories.map((category, idx) => {
-                    const maxRevenue = topCategories[0]?.revenue || 1;
-                    const percent = (category.revenue / maxRevenue) * 100;
+                    const totalRevenue = topCategories.reduce((sum, c) => sum + c.revenue, 0) || 1;
+                    const percent = (category.revenue / totalRevenue) * 100;
                     const colors = [
                       "bg-accent-pink",
                       "bg-emerald-500",
