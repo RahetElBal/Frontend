@@ -91,6 +91,7 @@ export default function AdminServicesPage() {
     category: "",
     duration: "",
     price: "",
+    packDiscount: "",
     description: "",
     image: "",
     isActive: true,
@@ -175,6 +176,17 @@ export default function AdminServicesPage() {
     );
     return { totalDuration, totalPrice };
   }, [selectedPackServices]);
+
+  const packDiscountValue = useMemo(() => {
+    if (!formValues.isPack) return 0;
+    const parsed = Number(formValues.packDiscount);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }, [formValues.isPack, formValues.packDiscount]);
+
+  const packFinalPrice = useMemo(() => {
+    if (!formValues.isPack) return 0;
+    return Math.max(0, packTotals.totalPrice - packDiscountValue);
+  }, [formValues.isPack, packTotals.totalPrice, packDiscountValue]);
 
   useEffect(() => {
     if (!isSuperadmin) {
@@ -278,6 +290,7 @@ export default function AdminServicesPage() {
       category: "",
       duration: "",
       price: "",
+      packDiscount: "",
       description: "",
       image: "",
       isActive: true,
@@ -291,12 +304,23 @@ export default function AdminServicesPage() {
     setModalMode("edit");
     setEditingServiceId(service.id);
     const categoryName = getCategoryName(service.category);
+    const packBasePrice = (service.packServiceIds ?? []).reduce(
+      (sum, serviceId) => {
+        const item = services.find((entry) => entry.id === serviceId);
+        return sum + (Number(item?.price) || 0);
+      },
+      0,
+    );
+    const packDiscount = service.isPack
+      ? Math.max(0, packBasePrice - Number(service.price ?? 0))
+      : 0;
     setLastNonPackCategory(service.isPack ? "" : categoryName);
     setFormValues({
       name: service.name ?? "",
       category: service.isPack ? PACK_CATEGORY : categoryName,
       duration: String(service.duration ?? ""),
       price: String(service.price ?? ""),
+      packDiscount: service.isPack ? String(packDiscount) : "",
       description: service.description ?? "",
       image: service.image ?? "",
       isActive: service.isActive ?? true,
@@ -317,7 +341,12 @@ export default function AdminServicesPage() {
           if (prev.category && prev.category !== PACK_CATEGORY) {
             setLastNonPackCategory(prev.category);
           }
-          return { ...prev, isPack: true, category: PACK_CATEGORY };
+          return {
+            ...prev,
+            isPack: true,
+            category: PACK_CATEGORY,
+            packDiscount: "",
+          };
         }
         const restoredCategory =
           prev.category === PACK_CATEGORY ? lastNonPackCategory : prev.category;
@@ -325,6 +354,7 @@ export default function AdminServicesPage() {
           ...prev,
           isPack: false,
           category: restoredCategory || "",
+          packDiscount: "",
           packServiceIds: [],
         };
       }
@@ -355,6 +385,11 @@ export default function AdminServicesPage() {
   const handleSubmitService = async () => {
     const duration = Number(formValues.duration);
     const price = Number(formValues.price);
+    const discount = Number(formValues.packDiscount);
+    const resolvedDiscount = Number.isFinite(discount) ? discount : 0;
+    const resolvedPrice = formValues.isPack
+      ? Math.max(0, packTotals.totalPrice - resolvedDiscount)
+      : price;
     if (!formValues.name.trim()) {
       toast.error(t("admin.services.nameRequired"));
       return;
@@ -367,12 +402,17 @@ export default function AdminServicesPage() {
       toast.error(t("admin.services.durationInvalid"));
       return;
     }
-    if (!Number.isFinite(price) || price < 0) {
-      toast.error(t("admin.services.priceInvalid"));
-      return;
-    }
     if (formValues.isPack && formValues.packServiceIds.length === 0) {
       toast.error(t("admin.services.packServicesRequired"));
+      return;
+    }
+    if (formValues.isPack) {
+      if (!Number.isFinite(discount) || discount < 0) {
+        toast.error(t("admin.services.priceInvalid"));
+        return;
+      }
+    } else if (!Number.isFinite(price) || price < 0) {
+      toast.error(t("admin.services.priceInvalid"));
       return;
     }
 
@@ -387,7 +427,7 @@ export default function AdminServicesPage() {
           name: formValues.name.trim(),
           category: resolvedCategory,
           duration,
-          price,
+          price: resolvedPrice,
           description: formValues.description.trim() || undefined,
           image: formValues.image.trim() || undefined,
           isActive: formValues.isActive,
@@ -402,7 +442,7 @@ export default function AdminServicesPage() {
           name: formValues.name.trim(),
           category: resolvedCategory,
           duration,
-          price,
+          price: resolvedPrice,
           description: formValues.description.trim() || undefined,
           image: formValues.image.trim() || undefined,
           isActive: formValues.isActive,
@@ -759,18 +799,33 @@ export default function AdminServicesPage() {
                   }
                 />
               </div>
-              <div>
-                <Label>{t("admin.services.priceLabel")}</Label>
-                <Input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={formValues.price}
-                  onChange={(event) =>
-                    handleFormChange("price", event.target.value)
-                  }
-                />
-              </div>
+              {formValues.isPack ? (
+                <div>
+                  <Label>{t("sales.discount")}</Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={formValues.packDiscount}
+                    onChange={(event) =>
+                      handleFormChange("packDiscount", event.target.value)
+                    }
+                  />
+                </div>
+              ) : (
+                <div>
+                  <Label>{t("admin.services.priceLabel")}</Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={formValues.price}
+                    onChange={(event) =>
+                      handleFormChange("price", event.target.value)
+                    }
+                  />
+                </div>
+              )}
             </div>
             <div className="rounded-lg border p-3 space-y-3">
               <div className="flex items-center justify-between gap-4">
@@ -829,6 +884,14 @@ export default function AdminServicesPage() {
                         })}
                       </div>
                     )}
+                  </div>
+                  <div className="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2 text-sm">
+                    <span className="text-muted-foreground">
+                      {t("fields.total")}
+                    </span>
+                    <span className="font-semibold text-foreground">
+                      {formatCurrency(packFinalPrice)}
+                    </span>
                   </div>
                 </div>
               )}
