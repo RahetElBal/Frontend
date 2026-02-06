@@ -6,6 +6,10 @@ const normalize = (value?: string) => value?.trim().toLowerCase() ?? "";
 const isBlockedUnsplashSource = (value?: string) =>
   !!value && value.includes("source.unsplash.com");
 
+const isLegacyUploadPath = (value?: string) =>
+  !!value &&
+  (/^\/?uploads\//i.test(value) || /\/\/[^/]+\/uploads\//i.test(value));
+
 const defaultServiceKeyMap: Record<string, string> = {
   "nails|manicure": "services.defaults.nails.manicure",
   "nails|pedicure": "services.defaults.nails.pedicure",
@@ -54,17 +58,14 @@ export const translateServiceCategory = (
 };
 
 const defaultCategoryImageMap: Record<string, string> = {
-  nails:
-    "https://images.unsplash.com/photo-1519014816548-bf5fe059798b?auto=format&fit=crop&w=800&q=80",
-  makeup:
-    "https://images.unsplash.com/photo-1522336572468-97b06e8ef143?auto=format&fit=crop&w=800&q=80",
-  hair: "https://images.unsplash.com/photo-1519415943484-9fa1873496d4?auto=format&fit=crop&w=800&q=80",
-  skincare:
-    "https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=800&q=80",
+  nails: "/service-icons/nails.svg",
+  makeup: "/service-icons/makeup.svg",
+  hair: "/service-icons/hair.svg",
+  skincare: "/service-icons/skincare.svg",
+  pack: "/service-icons/pack.svg",
 };
 
-const genericServiceImage =
-  "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=800&q=80";
+const genericServiceImage = "/service-icons/default.svg";
 
 export const getServiceImageFallback = (
   service: Service
@@ -82,36 +83,24 @@ export const getServiceImageFallback = (
 export const getServiceImage = (service: Service): string | undefined => {
   const fallback = getServiceImageFallback(service);
   if (service.image) {
+    if (isLegacyUploadPath(service.image)) return fallback;
     return isBlockedUnsplashSource(service.image) ? fallback : service.image;
   }
   return fallback;
 };
 
 const defaultServiceImageMap: Record<string, string> = {
-  "services.defaults.nails.manicure":
-    "https://images.unsplash.com/photo-1501004318641-b39e6451bec6?auto=format&fit=crop&w=800&q=80",
-  "services.defaults.nails.pedicure":
-    "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=800&q=80",
-  "services.defaults.nails.nailArt":
-    "https://images.unsplash.com/photo-1519014816548-bf5fe059798b?auto=format&fit=crop&w=800&q=80",
-  "services.defaults.makeup.casual":
-    "https://images.unsplash.com/photo-1522336572468-97b06e8ef143?auto=format&fit=crop&w=800&q=80",
-  "services.defaults.makeup.wedding":
-    "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=800&q=80",
-  "services.defaults.hair.casual":
-    "https://images.unsplash.com/photo-1501004318641-b39e6451bec6?auto=format&fit=crop&w=800&q=80",
-  "services.defaults.hair.wedding":
-    "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=800&q=80",
-  "services.defaults.hair.haircut":
-    "https://images.unsplash.com/photo-1519415943484-9fa1873496d4?auto=format&fit=crop&w=800&q=80",
-  "services.defaults.hair.hairDye":
-    "https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=800&q=80",
-  "services.defaults.hair.hairstyle":
-    "https://images.unsplash.com/photo-1492107376256-402643ee46b0?auto=format&fit=crop&w=800&q=80",
-  "services.defaults.skincare.laser":
-    "https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=800&q=80",
-  "services.defaults.skincare.hydrafacial":
-    "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=800&q=80",
-  "services.defaults.skincare.microneedling":
-    "https://images.unsplash.com/photo-1501004318641-b39e6451bec6?auto=format&fit=crop&w=800&q=80",
+  "services.defaults.nails.manicure": "/service-icons/nails.svg",
+  "services.defaults.nails.pedicure": "/service-icons/nails.svg",
+  "services.defaults.nails.nailArt": "/service-icons/nails.svg",
+  "services.defaults.makeup.casual": "/service-icons/makeup.svg",
+  "services.defaults.makeup.wedding": "/service-icons/makeup.svg",
+  "services.defaults.hair.casual": "/service-icons/hair.svg",
+  "services.defaults.hair.wedding": "/service-icons/hair.svg",
+  "services.defaults.hair.haircut": "/service-icons/hair.svg",
+  "services.defaults.hair.hairDye": "/service-icons/hair.svg",
+  "services.defaults.hair.hairstyle": "/service-icons/hair.svg",
+  "services.defaults.skincare.laser": "/service-icons/skincare.svg",
+  "services.defaults.skincare.hydrafacial": "/service-icons/skincare.svg",
+  "services.defaults.skincare.microneedling": "/service-icons/skincare.svg",
 };

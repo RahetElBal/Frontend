@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
@@ -39,7 +39,7 @@ import { useGet, withParams } from "@/hooks/useGet";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useUser } from "@/hooks/useUser";
 import { ROUTES } from "@/constants/navigation";
-import { patch, post } from "@/lib/http";
+import { patch, post, uploadFile } from "@/lib/http";
 import {
   getServiceImage,
   getServiceImageFallback,
@@ -86,6 +86,9 @@ export default function AdminServicesPage() {
   const [modalMode, setModalMode] = useState<ServiceModalMode>("create");
   const [editingServiceId, setEditingServiceId] = useState<string | null>(null);
   const [isSavingService, setIsSavingService] = useState(false);
+  const [isUploadingServiceImage, setIsUploadingServiceImage] =
+    useState(false);
+  const serviceImageInputRef = useRef<HTMLInputElement | null>(null);
   const [formValues, setFormValues] = useState({
     name: "",
     category: "",
@@ -460,6 +463,32 @@ export default function AdminServicesPage() {
       toast.error(message);
     } finally {
       setIsSavingService(false);
+    }
+  };
+
+  const handleServiceImageChange = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    event.target.value = "";
+    setIsUploadingServiceImage(true);
+    try {
+      const response = await uploadFile<{ url: string }>(
+        "uploads/services",
+        file,
+      );
+      if (!response?.url) {
+        throw new Error(t("common.error"));
+      }
+      setFormValues((prev) => ({ ...prev, image: response.url }));
+      toast.success(t("success.saved"));
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : t("common.error");
+      toast.error(message);
+    } finally {
+      setIsUploadingServiceImage(false);
     }
   };
 
@@ -906,11 +935,61 @@ export default function AdminServicesPage() {
             </div>
             <div>
               <Label>{t("admin.services.imageLabel")}</Label>
+              <div className="mt-2 flex items-center gap-3">
+                <div className="h-16 w-16 rounded-md border bg-muted/40 flex items-center justify-center overflow-hidden">
+                  {formValues.image ? (
+                    <img
+                      src={formValues.image}
+                      alt={formValues.name || t("admin.services.imageLabel")}
+                      className="h-full w-full object-cover"
+                      loading="lazy"
+                      onError={(event) => {
+                        event.currentTarget.removeAttribute("src");
+                      }}
+                    />
+                  ) : (
+                    <span className="text-xs text-muted-foreground">-</span>
+                  )}
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => serviceImageInputRef.current?.click()}
+                    disabled={isUploadingServiceImage}
+                  >
+                    {isUploadingServiceImage
+                      ? t("common.loading")
+                      : t("common.upload")}
+                  </Button>
+                  {formValues.image && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() =>
+                        setFormValues((prev) => ({ ...prev, image: "" }))
+                      }
+                      disabled={isUploadingServiceImage}
+                    >
+                      {t("common.remove")}
+                    </Button>
+                  )}
+                </div>
+              </div>
+              <input
+                ref={serviceImageInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleServiceImageChange}
+              />
               <Input
                 value={formValues.image}
                 onChange={(event) =>
                   handleFormChange("image", event.target.value)
                 }
+                placeholder="https://ik.imagekit.io/beautiq/..."
+                className="mt-2"
               />
             </div>
           </div>
