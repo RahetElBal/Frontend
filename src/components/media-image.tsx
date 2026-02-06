@@ -55,6 +55,7 @@ export function MediaImage({
   ...props
 }: MediaImageProps) {
   const resolvedSrc = resolveMediaUrl(src);
+  console.log("[v0] MediaImage src:", src, "-> resolved:", resolvedSrc);
   const [displaySrc, setDisplaySrc] = React.useState(
     resolvedSrc || fallbackSrc,
   );
@@ -132,10 +133,11 @@ export function MediaImage({
       {...props}
       src={displaySrc}
       onError={(event) => {
+        console.log("[v0] MediaImage onError, src:", displaySrc, "triedAuth:", triedAuthRef.current);
         if (!triedAuthRef.current) {
           triedAuthRef.current = true;
           setDisplaySrc(fallbackSrc);
-          void tryAuthFetch();
+          void tryAuthFetch().then(ok => console.log("[v0] MediaImage authFetch result:", ok));
           return;
         }
         setDisplaySrc(fallbackSrc);
