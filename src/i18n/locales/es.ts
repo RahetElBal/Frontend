@@ -429,6 +429,7 @@ export const es = {
   agenda: {
     description: "Gestiona tus citas",
     newAppointment: "Nueva cita",
+    bookedBy: "Reservado por",
     adjustPrice: "Modificar el precio",
     adjustPriceDescription: "Aplicar un precio personalizado o un descuento para este servicio",
     today: "Hoy",

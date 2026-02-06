@@ -803,6 +803,7 @@ export const en = {
     notificationsOn: "Notifications are on",
     enableNotifications: "Enable notifications",
     appointmentDetails: "Appointment Details",
+    bookedBy: "Booked by",
     deleteAppointment: "Delete Appointment",
     deleteAppointmentConfirm:
       "Are you sure you want to delete the appointment with {{client}}?",

@@ -479,6 +479,7 @@ export const fr = {
     notificationsOn: "Notifications actives",
     enableNotifications: "Activer les notifications",
     appointmentDetails: "Détails du rendez-vous",
+    bookedBy: "Réservé par",
     deleteAppointment: "Supprimer le rendez-vous",
     deleteAppointmentConfirm:
       "Êtes-vous sûr de vouloir supprimer le rendez-vous avec {{client}} ?",

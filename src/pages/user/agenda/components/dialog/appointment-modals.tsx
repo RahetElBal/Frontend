@@ -89,6 +89,17 @@ const toNumber = (value: unknown, fallback = 0): number => {
   return fallback;
 };
 
+const getPersonLabel = (person?: {
+  firstName?: string;
+  lastName?: string;
+  name?: string;
+  email?: string;
+}) => {
+  if (!person) return undefined;
+  const fullName = `${person.firstName || ""} ${person.lastName || ""}`.trim();
+  return fullName || person.name || person.email || undefined;
+};
+
 type SalonSettingsLike = SalonSettings & Partial<SalonSettingsExtended>;
 
 interface AppointmentModalsProps {
@@ -562,6 +573,36 @@ export function AppointmentModals({
       0,
       appointmentPackValue - appointmentPrice,
     );
+    const bookedByLabel = (() => {
+      if (!selectedAppointment) return t("common.unknown");
+      const appointmentMeta = selectedAppointment as Appointment & {
+        createdBy?: StaffUser;
+        createdById?: string;
+        createdByName?: string;
+        createdByUser?: StaffUser;
+        createdByUserId?: string;
+        bookedBy?: StaffUser;
+        bookedById?: string;
+        bookedByName?: string;
+      };
+      const findStaffById = (id?: string | null) =>
+        id ? staffMembers.find((staff) => staff.id === id) : undefined;
+
+      const label =
+        getPersonLabel(appointmentMeta.createdBy) ||
+        appointmentMeta.createdByName ||
+        getPersonLabel(findStaffById(appointmentMeta.createdById)) ||
+        getPersonLabel(appointmentMeta.createdByUser) ||
+        getPersonLabel(findStaffById(appointmentMeta.createdByUserId)) ||
+        getPersonLabel(appointmentMeta.bookedBy) ||
+        appointmentMeta.bookedByName ||
+        getPersonLabel(findStaffById(appointmentMeta.bookedById)) ||
+        getPersonLabel(selectedAppointment.staff) ||
+        getPersonLabel(findStaffById(selectedAppointment.staffId)) ||
+        undefined;
+
+      return label || t("common.unknown");
+    })();
     return (
       <Dialog open={!!modalState} onOpenChange={handleClose}>
         <DialogContent className="sm:max-w-4xl w-full overflow-x-hidden">
@@ -689,6 +730,16 @@ export function AppointmentModals({
                       </div>
                     </div>
                   )}
+
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+                  <User className="h-5 w-5 text-muted-foreground" />
+                  <div>
+                    <p className="text-sm text-muted-foreground">
+                      {t("agenda.bookedBy")}
+                    </p>
+                    <p className="font-medium">{bookedByLabel}</p>
+                  </div>
+                </div>
 
                 <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
                   <Calendar className="h-5 w-5 text-muted-foreground" />
