@@ -407,9 +407,16 @@ export function AnalyticsPage() {
                     {t("common.noResults")}
                   </p>
                 ) : (
-                  topCategories.map((category) => {
+                  topCategories.map((category, idx) => {
                     const maxRevenue = topCategories[0]?.revenue || 1;
                     const percent = (category.revenue / maxRevenue) * 100;
+                    const colors = [
+                      "bg-accent-pink",
+                      "bg-emerald-500",
+                      "bg-indigo-500",
+                      "bg-amber-500",
+                      "bg-sky-500",
+                    ];
                     return (
                       <div key={category.name}>
                         <div className="flex items-center justify-between text-sm mb-1.5">
@@ -422,7 +429,7 @@ export function AnalyticsPage() {
                         </div>
                         <div className="h-2 rounded-full bg-muted">
                           <div
-                            className="h-2 rounded-full bg-accent-pink transition-all duration-500"
+                            className={`h-2 rounded-full transition-all duration-500 ${colors[idx % colors.length]}`}
                             style={{ width: `${Math.min(percent, 100)}%` }}
                           />
                         </div>
