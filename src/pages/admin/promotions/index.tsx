@@ -33,7 +33,7 @@ import { toast } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import type { Promotion, PromotionStatus } from "@/types/entities";
 import { usePost } from "@/hooks/usePost";
-import { useGet } from "@/hooks/useGet";
+import { useGet, withParams } from "@/hooks/useGet";
 import { PromotionModal } from "./components/dialog/promotion-modal";
 import type { CreatePromotionDto } from "./types";
 import {
@@ -63,36 +63,35 @@ export function PromotionsPage() {
 
   // Fetch promotions - NOTE: This endpoint needs to be implemented in backend
   const { data: promotions = [], isLoading } = useGet<Promotion[]>(
-    "promotions",
-    {
-      params: { salonId },
-      enabled: !!salonId,
-    },
+    withParams("promotions", { salonId }),
+    { enabled: !!salonId },
   );
 
   // Mutations - NOTE: These endpoints need to be implemented in backend
   const createPromotion = usePost<Promotion, CreatePromotionDto & { salonId: string }>(
     "promotions",
     {
-    invalidateQueries: ["promotions"],
-    onSuccess: () => {
-      toast.success(t("promotions.created"));
-      setIsAddModalOpen(false);
+      invalidate: ["promotions"],
+      onSuccess: () => {
+        toast.success(t("promotions.created"));
+        setIsAddModalOpen(false);
+      },
+      onError: (error) => toast.error(error.message || t("common.error")),
     },
-    onError: (error) => toast.error(error.message || t("common.error")),
-  },
   );
 
   const updatePromotionStatus = usePost<
     Promotion,
     { id: string; status: PromotionStatus }
-  >("promotions", {
-    id: (variables) => variables.id,
-    method: "PATCH",
-    invalidateQueries: ["promotions"],
-    onSuccess: () => toast.success(t("promotions.statusUpdated")),
-    onError: (error) => toast.error(error.message),
-  });
+  >(
+    (variables) => `promotions/${variables.id}`,
+    {
+      method: "PATCH",
+      invalidate: ["promotions"],
+      onSuccess: () => toast.success(t("promotions.statusUpdated")),
+      onError: (error) => toast.error(error.message),
+    },
+  );
 
   const filteredPromotions =
     selectedStatus === "all"

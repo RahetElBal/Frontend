@@ -12,7 +12,7 @@ import type { SalonSettingsExtended, Salon, Service } from "@/types/entities";
 import type { PaginatedResponse } from "@/types";
 import { usePost } from "@/hooks/usePost";
 import { useUser } from "@/hooks/useUser";
-import { useGet } from "@/hooks/useGet";
+import { useGet, withParams } from "@/hooks/useGet";
 import { GeneralSettings } from "./components/general-settings";
 import { WorkingHoursSettings } from "./components/working-hours-settings";
 import { BookingSettings } from "./components/booking-settings";
@@ -38,13 +38,15 @@ export function SalonSettingsPage() {
   const [activeTab, setActiveTab] = useState<SettingsTab>("general");
   const [hasChanges, setHasChanges] = useState(false);
 
-  const { data: fetchedSalon } = useGet<Salon>("salons", {
-    id: userSalon?.id,
-    enabled: !!userSalon?.id,
-    staleTime: 1000 * 60 * 10,
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-  });
+  const { data: fetchedSalon } = useGet<Salon>(
+    `salons/${userSalon?.id}`,
+    {
+      enabled: !!userSalon?.id,
+      staleTime: 1000 * 60 * 10,
+      refetchOnMount: false,
+      refetchOnWindowFocus: false,
+    },
+  );
 
   // Use latest salon settings when available
   const currentSalon = fetchedSalon || userSalon;
@@ -54,13 +56,15 @@ export function SalonSettingsPage() {
   const isLoading = !currentSalon;
   const { data: servicesData, isLoading: servicesLoading } = useGet<
     PaginatedResponse<Service>
-  >("services", {
-    params: { salonId: currentSalon?.id, perPage: 100, compact: true },
-    enabled: activeTab === "loyalty" && !!currentSalon?.id,
-    staleTime: 1000 * 60 * 30,
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-  });
+  >(
+    withParams("services", { salonId: currentSalon?.id, perPage: 100, compact: true }),
+    {
+      enabled: activeTab === "loyalty" && !!currentSalon?.id,
+      staleTime: 1000 * 60 * 30,
+      refetchOnMount: false,
+      refetchOnWindowFocus: false,
+    },
+  );
   const services = Array.isArray(servicesData?.data)
     ? servicesData.data
     : Array.isArray(servicesData)
@@ -85,10 +89,9 @@ export function SalonSettingsPage() {
   const saveSettings = usePost<
     Salon,
     { settings: Partial<SalonSettingsExtended> }
-  >("salons", {
-    id: currentSalon?.id,
+  >(`salons/${currentSalon?.id}`, {
     method: "PATCH",
-    invalidateQueries: ["salons", "auth"],
+    invalidate: ["salons", "auth"],
     onSuccess: () => {
       toast.success(t("salonSettings.saved"));
       setHasChanges(false);

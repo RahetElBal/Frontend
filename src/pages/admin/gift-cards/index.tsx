@@ -25,7 +25,7 @@ import { Label } from "@/components/ui/label";
 import { GiftCardStatus } from "@/types/entities";
 import type { GiftCard } from "@/types/entities";
 import { cn } from "@/lib/utils";
-import { useGet } from "@/hooks/useGet";
+import { useGet, withParams } from "@/hooks/useGet";
 import { usePost } from "@/hooks/usePost";
 import { usePostAction } from "@/hooks/usePostAction";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -62,16 +62,13 @@ export function GiftCardsPage() {
 
   // Fetch gift cards from API
   const { data: giftCards = [], isLoading } = useGet<GiftCard[]>(
-    "gift-cards",
-    {
-      params: { salonId },
-      enabled: !!salonId,
-    },
+    withParams("gift-cards", { salonId }),
+    { enabled: !!salonId },
   );
 
   // Create gift card mutation
   const createGiftCard = usePost<GiftCard, CreateGiftCardDto>("gift-cards", {
-    invalidateQueries: ["gift-cards"],
+    invalidate: ["gift-cards"],
     onSuccess: () => {
       toast.success(t("giftCards.createCard") + " - " + t("common.success"));
       setIsAddModalOpen(false);
@@ -83,31 +80,30 @@ export function GiftCardsPage() {
   });
 
   // Lookup gift card by code - GET /gift-cards/lookup/{code}
-  const { refetch: lookupGiftCard, isFetching: isLookingUp } = useGet<GiftCard>(
-    `gift-cards/lookup/${lookupCode}`,
-    {
-      params: { salonId },
-      enabled: false, // Manual trigger
-      onSuccess: (data) => {
-        setLookupResult(data);
-      },
-      onError: () => {
-        toast.error(t("giftCards.notFound"));
-        setLookupResult(null);
-      },
-    },
+  const { refetch: lookupGiftCardQuery, isFetching: isLookingUp } = useGet<GiftCard>(
+    withParams(`gift-cards/lookup/${lookupCode}`, { salonId }),
+    { enabled: false },
   );
+
+  const lookupGiftCard = async () => {
+    try {
+      const result = await lookupGiftCardQuery();
+      if (result.data) {
+        setLookupResult(result.data);
+      }
+    } catch {
+      toast.error(t("giftCards.notFound"));
+      setLookupResult(null);
+    }
+  };
 
   // Redeem gift card - POST /gift-cards/{code}/redeem
   const { mutate: redeemGiftCard, isPending: isRedeeming } = usePostAction<
     GiftCard,
     { amount: number }
-  >("gift-cards", {
-    id: lookupResult?.code,
-    action: "redeem",
-    invalidateQueries: ["gift-cards"],
-    showSuccessToast: true,
-    successMessage: t("giftCards.redeemed"),
+  >(`gift-cards/${lookupResult?.code}/redeem`, {
+    invalidate: ["gift-cards"],
+    successToast: t("giftCards.redeemed"),
     onSuccess: (data) => {
       setLookupResult(data);
       setRedeemAmount(0);

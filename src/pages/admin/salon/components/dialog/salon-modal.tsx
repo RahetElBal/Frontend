@@ -133,9 +133,9 @@ export function SalonModals({
   const { mutate: updateSalonMutate, isPending: isUpdating } = usePost<
     Salon,
     SalonFormData & { ownerId?: string }
-  >("salons", {
-    id: selectedSalon?.id,
+  >(`salons/${selectedSalon?.id}`, {
     method: "PATCH",
+    invalidate: ["salons"],
     onSuccess: () => {
       toast.success(t("common.edit") + " - " + t("common.success"));
       setModalState(null);
@@ -149,18 +149,21 @@ export function SalonModals({
   const { mutate: deleteSalonMutate, isPending: isDeleting } = usePost<
     void,
     { salonId: string }
-  >("salons", {
-    id: (variables) => variables.salonId,
-    method: "DELETE",
-    onSuccess: () => {
-      toast.success(t("common.delete") + " - " + t("common.success"));
-      setModalState(null);
-      onSuccess();
+  >(
+    (variables) => `salons/${variables.salonId}`,
+    {
+      method: "DELETE",
+      invalidate: ["salons"],
+      onSuccess: () => {
+        toast.success(t("common.delete") + " - " + t("common.success"));
+        setModalState(null);
+        onSuccess();
+      },
+      onError: (error) => {
+        toast.error(error.message || t("common.error"));
+      },
     },
-    onError: (error) => {
-      toast.error(error.message || t("common.error"));
-    },
-  });
+  );
 
   // Derive all state from modalState
   const derived = useMemo(() => {

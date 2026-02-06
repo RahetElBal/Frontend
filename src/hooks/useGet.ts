@@ -4,55 +4,79 @@ import { buildUrl } from "@/lib/http";
 import type { ApiError } from "@/types/api";
 
 /**
+ * Represents a path that may carry query-param metadata for cache-key splitting.
+ * Created by `withParams()`, but a plain string also works.
+ */
+export interface ParamPath {
+  /** The full URL sent to the API (e.g. "clients?salonId=abc&perPage=100"). */
+  url: string;
+  /** The base resource name used as the first element of the React Query key. */
+  base: string;
+  /** The params object (used as the second element of the query key for granularity). */
+  params: Record<string, string | number | boolean | undefined>;
+}
+
+/**
  * Simple hook for GET requests using React Query.
  *
- * @param path - Full API path (e.g. "clients", "clients/123", "products?salonId=abc")
+ * @param path - A plain string (e.g. "clients") or a `ParamPath` from `withParams()`.
  * @param options - Standard React Query options (enabled, staleTime, select, etc.)
  *
  * @example
- * // Fetch all clients
+ * // Simple fetch
  * const { data } = useGet<Client[]>("clients");
  *
  * @example
- * // Fetch a single client
- * const { data } = useGet<Client>("clients/123");
+ * // Fetch by ID
+ * const { data } = useGet<Client>(`clients/${id}`);
  *
  * @example
- * // With query params
- * const { data } = useGet<Client[]>(`clients?salonId=${salonId}`);
+ * // With query params (cache key splits on base + params)
+ * const { data } = useGet<Client[]>(withParams("clients", { salonId }));
  *
  * @example
  * // With options
- * const { data } = useGet<Client[]>("clients", { enabled: !!salonId, staleTime: 60_000 });
+ * const { data } = useGet<Client[]>(withParams("clients", { salonId }), { enabled: !!salonId });
  */
 export function useGet<TData, TSelect = TData>(
-  path: string,
+  path: string | ParamPath,
   options?: Omit<UseQueryOptions<TData, ApiError, TSelect>, "queryKey" | "queryFn">,
 ): UseQueryResult<TSelect, ApiError> {
+  const isParam = typeof path !== "string" && "url" in path;
+  const url = isParam ? path.url : path;
+  const queryKey: unknown[] = isParam ? [path.base, path.params] : [path];
+
   return useQuery<TData, ApiError, TSelect>({
-    queryKey: [path],
-    queryFn: () => get<TData>(path),
+    queryKey,
+    queryFn: () => get<TData>(url),
     ...options,
   });
 }
 
 /**
  * Helper to build a path with query params for useGet.
+ * Produces a `ParamPath` so that the query key is `[base, params]`, which lets
+ * `invalidateQueries({ queryKey: ["clients"] })` match all client queries
+ * regardless of their params.
  *
  * @example
- * const path = withParams("clients", { salonId, perPage: 100 });
- * const { data } = useGet<Client[]>(path);
+ * const { data } = useGet<Client[]>(withParams("clients", { salonId, perPage: 100 }));
  */
 export function withParams(
   base: string,
   params?: Record<string, string | number | boolean | undefined | null>,
-): string {
-  if (!params) return base;
+): ParamPath {
   const filtered: Record<string, string | number | boolean | undefined> = {};
-  for (const [key, value] of Object.entries(params)) {
-    if (value !== undefined && value !== null && value !== "") {
-      filtered[key] = value as string | number | boolean;
+  if (params) {
+    for (const [key, value] of Object.entries(params)) {
+      if (value !== undefined && value !== null && value !== "") {
+        filtered[key] = value as string | number | boolean;
+      }
     }
   }
-  return buildUrl(base, filtered);
+  return {
+    url: buildUrl(base, filtered),
+    base,
+    params: filtered,
+  };
 }
