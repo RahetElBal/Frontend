@@ -143,7 +143,7 @@ export function AppointmentModals({
   const { user, salon, isAdmin, isSuperadmin } = useUser();
   const [redeemLoyalty, setRedeemLoyalty] = useState(false);
   const modalKey = modalState
-    ? `${modalState.appointmentId}-${modalState.mode}`
+    ? `${modalState.appointmentId}-${modalState.mode}-${modalState.nonce ?? 0}`
     : "";
   const [initializedModalKey, setInitializedModalKey] = useState<string | null>(
     null,
@@ -520,6 +520,7 @@ export function AppointmentModals({
       ...data,
       walkInPhone: normalizedWalkInPhone || data.walkInPhone,
     });
+    handleClose();
   };
 
   // DELETE MODE
@@ -819,6 +820,7 @@ export function AppointmentModals({
                         setModalState({
                           appointmentId: selectedAppointment.id,
                           mode: "delete",
+                          nonce: Date.now(),
                         })
                       }
                     >

@@ -3,4 +3,5 @@ export type AppointmentModalState = {
   mode: "view" | "edit" | "delete";
   prefillTime?: string;
   prefillDate?: string;
+  nonce?: number;
 } | null;

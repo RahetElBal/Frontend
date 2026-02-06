@@ -219,8 +219,11 @@ export function AgendaPage() {
   useEffect(() => {
     setVisibleAppointments([]);
     setDeletedAppointmentIds(new Set());
-    setHasLoadedOnce(false);
   }, [salonId, selectedStaffId]);
+
+  useEffect(() => {
+    setHasLoadedOnce(false);
+  }, [salonId]);
   const appointments = visibleAppointments;
   const clients = safeExtractArray<Client>(clientsData);
   const services = safeExtractArray<Service>(servicesData);
@@ -656,13 +659,14 @@ export function AgendaPage() {
         mode: "edit",
         prefillDate: date,
         prefillTime: time,
+        nonce: Date.now(),
       });
     },
     [],
   );
 
   const handleSelectEvent = useCallback((event: CalendarEvent) => {
-    setModalState({ appointmentId: event.id, mode: "view" });
+    setModalState({ appointmentId: event.id, mode: "view", nonce: Date.now() });
   }, []);
 
   const toAppointmentPayload = (
@@ -973,6 +977,7 @@ export function AgendaPage() {
             appointmentId: "create",
             mode: "edit",
             prefillDate: selectedDate,
+            nonce: Date.now(),
           })
         }
         confirmedCount={confirmedCount}
@@ -1107,7 +1112,7 @@ export function AgendaPage() {
           <TimelineView
             appointments={filteredAppointments}
             selectedDate={selectedDateObj}
-            isLoading={isLoading && !hasLoadedOnce}
+            isLoading={isLoading}
             timeSlots={timelineSlots.slots}
             blockedSlots={timelineSlots.blocked}
             isClosed={!workingHoursForSelectedDate.isOpen}
