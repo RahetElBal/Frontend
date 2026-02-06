@@ -379,16 +379,17 @@ export function AnalyticsPage() {
                 {t("analytics.bestSeller")}
               </h3>
               {bestSeller ? (
-                <div className="space-y-2">
-                  <p className="text-2xl font-bold">
+                <div className="space-y-3">
+                  <p className="text-2xl font-bold text-balance">
                     {getServiceDisplayName(bestSeller)}
                   </p>
                   <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                    <span>
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-emerald-700 font-medium">
                       {bestSeller.count} {t("analytics.sold")}
                     </span>
-                    <span>•</span>
-                    <span>{formatCurrency(bestSeller.revenue)}</span>
+                    <span className="font-semibold text-foreground">
+                      {formatCurrency(bestSeller.revenue)}
+                    </span>
                   </div>
                 </div>
               ) : (
@@ -407,21 +408,21 @@ export function AnalyticsPage() {
                   </p>
                 ) : (
                   topCategories.map((category) => {
-                    const percent =
-                      serviceRevenue > 0
-                        ? (category.revenue / serviceRevenue) * 100
-                        : 0;
+                    const maxRevenue = topCategories[0]?.revenue || 1;
+                    const percent = (category.revenue / maxRevenue) * 100;
                     return (
-                      <div key={category.name} className="space-y-2">
-                        <div className="flex items-center justify-between text-sm">
+                      <div key={category.name}>
+                        <div className="flex items-center justify-between text-sm mb-1.5">
                           <span className="font-medium">
                             {translateServiceCategory(t, category.name)}
                           </span>
-                          <span>{formatCurrency(category.revenue)}</span>
+                          <span className="font-semibold">
+                            {formatCurrency(category.revenue)}
+                          </span>
                         </div>
                         <div className="h-2 rounded-full bg-muted">
                           <div
-                            className="h-2 rounded-full bg-accent-pink"
+                            className="h-2 rounded-full bg-accent-pink transition-all duration-500"
                             style={{ width: `${Math.min(percent, 100)}%` }}
                           />
                         </div>
@@ -438,51 +439,40 @@ export function AnalyticsPage() {
               </h3>
               <div className="space-y-4">
                 <div>
-                  <div className="flex items-center justify-between text-sm mb-1">
-                    <span>{t("nav.services")}</span>
-                    <span>{formatCurrency(serviceRevenue)}</span>
+                  <div className="flex items-center justify-between text-sm mb-1.5">
+                    <span className="font-medium">{t("nav.services")}</span>
+                    <span className="font-semibold">
+                      {formatCurrency(serviceRevenue)}
+                    </span>
                   </div>
                   <div className="h-2 rounded-full bg-muted">
                     <div
-                      className="h-2 rounded-full bg-emerald-500"
+                      className="h-2 rounded-full bg-emerald-500 transition-all duration-500"
                       style={{ width: `${Math.min(serviceShare, 100)}%` }}
                     />
                   </div>
                 </div>
+                {packRevenue > 0 && (
+                  <div>
+                    <div className="flex items-center justify-between text-sm mb-1.5">
+                      <span className="font-medium">{t("services.pack")}</span>
+                      <span className="font-semibold">
+                        {formatCurrency(packRevenue)}
+                      </span>
+                    </div>
+                    <div className="h-2 rounded-full bg-muted">
+                      <div
+                        className="h-2 rounded-full bg-indigo-500 transition-all duration-500"
+                        style={{ width: `${Math.min(packShare, 100)}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
             </Card>
           </div>
 
           <div className="grid gap-6 lg:grid-cols-2">
-            <Card className="p-6">
-              <h3 className="text-lg font-semibold mb-4">
-                {t("analytics.topPacks")}
-              </h3>
-              {topPacks.length === 0 ? (
-                <p className="text-muted-foreground">{t("common.noResults")}</p>
-              ) : (
-                <div className="space-y-4">
-                  {topPacks.map((pack, index) => (
-                    <div
-                      key={`${pack.name}-${index}`}
-                      className="flex items-center justify-between"
-                    >
-                      <div>
-                        <p className="font-medium">
-                          {getServiceDisplayName(pack)}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          {pack.count} {t("analytics.sold")}
-                        </p>
-                      </div>
-                      <p className="font-semibold text-indigo-600">
-                        {formatCurrency(pack.revenue)}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </Card>
             <Card className="p-6">
               <h3 className="text-lg font-semibold mb-4">
                 {t("analytics.topServices")}
@@ -491,24 +481,71 @@ export function AnalyticsPage() {
                 <p className="text-muted-foreground">{t("common.noResults")}</p>
               ) : (
                 <div className="space-y-4">
-                  {topServices.map((service, index) => (
-                    <div
-                      key={`${service.name}-${index}`}
-                      className="flex items-center justify-between"
-                    >
-                      <div>
-                        <p className="font-medium">
-                          {getServiceDisplayName(service)}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          {service.count} {t("analytics.sold")}
-                        </p>
+                  {topServices.map((service, index) => {
+                    const maxRevenue = topServices[0]?.revenue || 1;
+                    const percent = (service.revenue / maxRevenue) * 100;
+                    return (
+                      <div key={`${service.name}-${index}`}>
+                        <div className="flex items-center justify-between text-sm mb-1.5">
+                          <div>
+                            <span className="font-medium">
+                              {getServiceDisplayName(service)}
+                            </span>
+                            <span className="text-muted-foreground ms-2">
+                              {service.count} {t("analytics.sold")}
+                            </span>
+                          </div>
+                          <span className="font-semibold text-emerald-600">
+                            {formatCurrency(service.revenue)}
+                          </span>
+                        </div>
+                        <div className="h-2 rounded-full bg-muted">
+                          <div
+                            className="h-2 rounded-full bg-emerald-500 transition-all duration-500"
+                            style={{ width: `${Math.min(percent, 100)}%` }}
+                          />
+                        </div>
                       </div>
-                      <p className="font-semibold text-emerald-600">
-                        {formatCurrency(service.revenue)}
-                      </p>
-                    </div>
-                  ))}
+                    );
+                  })}
+                </div>
+              )}
+            </Card>
+            <Card className="p-6">
+              <h3 className="text-lg font-semibold mb-4">
+                {t("analytics.topPacks")}
+              </h3>
+              {topPacks.length === 0 ? (
+                <p className="text-muted-foreground">{t("common.noResults")}</p>
+              ) : (
+                <div className="space-y-4">
+                  {topPacks.map((pack, index) => {
+                    const maxRevenue = topPacks[0]?.revenue || 1;
+                    const percent = (pack.revenue / maxRevenue) * 100;
+                    return (
+                      <div key={`${pack.name}-${index}`}>
+                        <div className="flex items-center justify-between text-sm mb-1.5">
+                          <div>
+                            <span className="font-medium">
+                              {getServiceDisplayName(pack)}
+                            </span>
+                            <span className="text-muted-foreground ms-2">
+                              {pack.count} {t("analytics.sold")}
+                            </span>
+                          </div>
+                          <span className="font-semibold text-indigo-600">
+                            {formatCurrency(pack.revenue)}
+                          </span>
+                        </div>
+                        <div className="h-2 rounded-full bg-muted">
+                          <div
+                            className="h-2 rounded-full bg-indigo-500 transition-all duration-500"
+                            style={{ width: `${Math.min(percent, 100)}%` }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </Card>
