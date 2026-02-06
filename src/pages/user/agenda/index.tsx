@@ -1133,7 +1133,7 @@ export function AgendaPage() {
         )}
         <div className="flex items-center gap-2">
           <Button
-            variant={viewMode === "day" ? "default" : "outline"}
+            variant="default"
             size="sm"
             onClick={() => setViewMode("day")}
             className="gap-1"
@@ -1142,7 +1142,7 @@ export function AgendaPage() {
             {t("agenda.day")}
           </Button>
           <Button
-            variant={viewMode === "month" ? "default" : "outline"}
+            variant="outline"
             size="sm"
             onClick={() => setViewMode("month")}
             className="gap-1"
