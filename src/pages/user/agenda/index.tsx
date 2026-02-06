@@ -922,6 +922,137 @@ export function AgendaPage() {
     );
   }
 
+  if (viewMode === "month") {
+    return (
+      <div className="space-y-6 w-full">
+        <PageHeader
+          title={t("nav.agenda")}
+          description={t("agenda.description")}
+        />
+
+        <CalendarToolbar
+          notificationsEnabled={notificationsEnabled}
+          onNotificationToggle={handleNotificationToggle}
+          onNewAppointment={() =>
+            setModalState({
+              appointmentId: "create",
+              mode: "edit",
+              prefillDate: selectedDate,
+              nonce: Date.now(),
+            })
+          }
+          confirmedCount={confirmedCount}
+          pendingCount={pendingCount}
+          totalCount={appointments.length}
+          isNewAppointmentDisabled={isSelectedDatePast}
+          newAppointmentDisabledReason={t("agenda.pastAppointmentNotAllowed")}
+        />
+
+        <div className="flex flex-wrap gap-2 items-center">
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setViewMode("day")}
+              className="gap-1"
+            >
+              <List className="h-3.5 w-3.5" />
+              {t("agenda.day")}
+            </Button>
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => setViewMode("month")}
+              className="gap-1"
+            >
+              <Calendar className="h-3.5 w-3.5" />
+              {t("agenda.month")}
+            </Button>
+          </div>
+          {canSelectStaff && staffOptions.length > 0 && (
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">
+                {t("fields.staff")}
+              </span>
+              <Select
+                value={selectedStaffIdValue || ""}
+                onValueChange={(value) => setSelectedStaffId(value)}
+              >
+                <SelectTrigger className="w-56 bg-white text-black">
+                  <SelectValue placeholder={t("fields.staff")} />
+                </SelectTrigger>
+                <SelectContent className="bg-white text-black">
+                  {staffOptions.map((staff) => (
+                    <SelectItem key={staff.id} value={staff.id}>
+                      {staff.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+        </div>
+
+        <MonthlySummaryView
+          appointments={appointments}
+          selectedDate={selectedDateObj}
+          onSelectDate={setSelectedDate}
+        />
+
+        {modalState && (
+          <AppointmentModals
+            modalState={modalState}
+            setModalState={setModalState}
+            appointments={appointments}
+            clients={clients}
+            services={services}
+            staffMembers={staffMembers}
+            selectedStaffId={staffFilterId}
+            form={form}
+            onSubmit={handleSubmit}
+            onDelete={handleDeleteAppointment}
+            onCreateSale={(appointment, options) => {
+              if (!salonId || !appointment.serviceId) {
+                toast.error(t("common.error"));
+                return;
+              }
+              const optimisticUpdated = {
+                ...appointment,
+                status: AppointmentStatus.COMPLETED,
+                paid: true,
+                updatedAt: new Date().toISOString(),
+              };
+              upsertVisibleAppointment(optimisticUpdated);
+              createSaleFromAppointment({
+                salonId,
+                appointmentId: appointment.id,
+                clientId: appointment.clientId,
+                redeemLoyalty: options?.redeemLoyalty ?? false,
+                items: [
+                  {
+                    type: "service",
+                    itemId: appointment.serviceId,
+                    quantity: 1,
+                    price: appointment.price,
+                  },
+                ],
+              });
+            }}
+            isCreatingSale={isCreatingSale}
+            isPending={
+              isCreating ||
+              isUpdating ||
+              isDeleting ||
+              isCreatingSale ||
+              isCreatingWalkIn
+            }
+            salonSettings={salonSettings}
+          />
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 w-full">
       <PageHeader
@@ -1062,117 +1193,111 @@ export function AgendaPage() {
       </div>
 
       <div className="w-full">
-        {viewMode === "month" ? (
-          <MonthlySummaryView
-            appointments={appointments}
-            selectedDate={selectedDateObj}
-            onSelectDate={setSelectedDate}
-          />
-        ) : (
-          <TimelineView
-            appointments={filteredAppointments}
-            selectedDate={selectedDateObj}
-            isLoading={isLoading}
-            timeSlots={timelineSlots.slots}
-            blockedSlots={timelineSlots.blocked}
-            isClosed={!workingHoursForSelectedDate.isOpen}
-            onTimeSlotClick={(time) =>
-              handleSelectSlot({
-                start: timeToDate(time, selectedDate),
-                end: timeToDate(time, selectedDate),
-              })
+        <TimelineView
+          appointments={filteredAppointments}
+          selectedDate={selectedDateObj}
+          isLoading={isLoading}
+          timeSlots={timelineSlots.slots}
+          blockedSlots={timelineSlots.blocked}
+          isClosed={!workingHoursForSelectedDate.isOpen}
+          onTimeSlotClick={(time) =>
+            handleSelectSlot({
+              start: timeToDate(time, selectedDate),
+              end: timeToDate(time, selectedDate),
+            })
+          }
+          onAppointmentClick={(appointment) =>
+            handleSelectEvent({
+              id: appointment.id,
+              title: appointment.client
+                ? `${appointment.client.firstName} ${appointment.client.lastName}`
+                : appointment.service?.name || t("agenda.appointmentDetails"),
+              start: new Date(`${appointment.date}T${appointment.startTime}`),
+              end: new Date(`${appointment.date}T${appointment.endTime}`),
+              resource: appointment,
+            })
+          }
+          onRecordPayment={(appointment) => {
+            if (!salonId || !appointment.serviceId) {
+              toast.error(t("common.error"));
+              return;
             }
-            onAppointmentClick={(appointment) =>
-              handleSelectEvent({
-                id: appointment.id,
-                title: appointment.client
-                  ? `${appointment.client.firstName} ${appointment.client.lastName}`
-                  : appointment.service?.name || t("agenda.appointmentDetails"),
-                start: new Date(`${appointment.date}T${appointment.startTime}`),
-                end: new Date(`${appointment.date}T${appointment.endTime}`),
-                resource: appointment,
-              })
-            }
-            onRecordPayment={(appointment) => {
-              if (!salonId || !appointment.serviceId) {
-                toast.error(t("common.error"));
-                return;
-              }
-              const optimisticUpdated = {
-                ...appointment,
-                status: AppointmentStatus.COMPLETED,
-                paid: true,
-                updatedAt: new Date().toISOString(),
-              };
-              upsertVisibleAppointment(optimisticUpdated);
-              createSaleFromAppointment({
-                salonId,
-                appointmentId: appointment.id,
-                clientId: appointment.clientId,
-                redeemLoyalty: false,
-                items: [
-                  {
-                    type: "service",
-                    itemId: appointment.serviceId,
-                    quantity: 1,
-                    price: appointment.price,
-                  },
-                ],
-              });
-            }}
-            isRecordingPayment={isCreatingSale}
-          />
-        )}
+            const optimisticUpdated = {
+              ...appointment,
+              status: AppointmentStatus.COMPLETED,
+              paid: true,
+              updatedAt: new Date().toISOString(),
+            };
+            upsertVisibleAppointment(optimisticUpdated);
+            createSaleFromAppointment({
+              salonId,
+              appointmentId: appointment.id,
+              clientId: appointment.clientId,
+              redeemLoyalty: false,
+              items: [
+                {
+                  type: "service",
+                  itemId: appointment.serviceId,
+                  quantity: 1,
+                  price: appointment.price,
+                },
+              ],
+            });
+          }}
+          isRecordingPayment={isCreatingSale}
+        />
       </div>
 
-      <AppointmentModals
-        modalState={modalState}
-        setModalState={setModalState}
-        appointments={appointments}
-        clients={clients}
-        services={services}
-        staffMembers={staffMembers}
-        selectedStaffId={staffFilterId}
-        form={form}
-        onSubmit={handleSubmit}
-        onDelete={handleDeleteAppointment}
-        onCreateSale={(appointment, options) => {
-          if (!salonId || !appointment.serviceId) {
-            toast.error(t("common.error"));
-            return;
+      {modalState && (
+        <AppointmentModals
+          modalState={modalState}
+          setModalState={setModalState}
+          appointments={appointments}
+          clients={clients}
+          services={services}
+          staffMembers={staffMembers}
+          selectedStaffId={staffFilterId}
+          form={form}
+          onSubmit={handleSubmit}
+          onDelete={handleDeleteAppointment}
+          onCreateSale={(appointment, options) => {
+            if (!salonId || !appointment.serviceId) {
+              toast.error(t("common.error"));
+              return;
+            }
+            const optimisticUpdated = {
+              ...appointment,
+              status: AppointmentStatus.COMPLETED,
+              paid: true,
+              updatedAt: new Date().toISOString(),
+            };
+            upsertVisibleAppointment(optimisticUpdated);
+            createSaleFromAppointment({
+              salonId,
+              appointmentId: appointment.id,
+              clientId: appointment.clientId,
+              redeemLoyalty: options?.redeemLoyalty ?? false,
+              items: [
+                {
+                  type: "service",
+                  itemId: appointment.serviceId,
+                  quantity: 1,
+                  price: appointment.price,
+                },
+              ],
+            });
+          }}
+          isCreatingSale={isCreatingSale}
+          isPending={
+            isCreating ||
+            isUpdating ||
+            isDeleting ||
+            isCreatingSale ||
+            isCreatingWalkIn
           }
-          const optimisticUpdated = {
-            ...appointment,
-            status: AppointmentStatus.COMPLETED,
-            paid: true,
-            updatedAt: new Date().toISOString(),
-          };
-          upsertVisibleAppointment(optimisticUpdated);
-          createSaleFromAppointment({
-            salonId,
-            appointmentId: appointment.id,
-            clientId: appointment.clientId,
-            redeemLoyalty: options?.redeemLoyalty ?? false,
-            items: [
-              {
-                type: "service",
-                itemId: appointment.serviceId,
-                quantity: 1,
-                price: appointment.price,
-              },
-            ],
-          });
-        }}
-        isCreatingSale={isCreatingSale}
-        isPending={
-          isCreating ||
-          isUpdating ||
-          isDeleting ||
-          isCreatingSale ||
-          isCreatingWalkIn
-        }
-        salonSettings={salonSettings}
-      />
+          salonSettings={salonSettings}
+        />
+      )}
     </div>
   );
 }
