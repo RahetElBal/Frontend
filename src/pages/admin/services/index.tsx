@@ -35,7 +35,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { toast } from "@/lib/toast";
-import { useGet } from "@/hooks/useGet";
+import { useGet, withParams } from "@/hooks/useGet";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useUser } from "@/hooks/useUser";
 import { ROUTES } from "@/constants/navigation";
@@ -121,11 +121,10 @@ export default function AdminServicesPage() {
     data: servicesResponse,
     isLoading: servicesLoading,
     refetch,
-  } = useGet<PaginatedResponse<Service>>("services", {
-    params: selectedSalonId ? { salonId: selectedSalonId, perPage: 100 } : {},
-    enabled: !!selectedSalonId,
-    staleTime: servicesStaleTime,
-  });
+  } = useGet<PaginatedResponse<Service>>(
+    withParams("services", selectedSalonId ? { salonId: selectedSalonId, perPage: 100 } : {}),
+    { enabled: !!selectedSalonId, staleTime: servicesStaleTime },
+  );
 
   const services = useMemo(
     () => servicesResponse?.data ?? [],

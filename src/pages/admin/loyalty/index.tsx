@@ -33,7 +33,7 @@ import {
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { toast } from "@/lib/toast";
-import { useGet } from "@/hooks/useGet";
+import { useGet, withParams } from "@/hooks/useGet";
 import { usePost } from "@/hooks/usePost";
 import { useUser } from "@/hooks/useUser";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -67,24 +67,19 @@ export function LoyaltyPage() {
   const salonId = salon?.id;
   const canRedeem = isAdmin || isSuperadmin;
 
-  const { data: clientsData } = useGet<PaginatedResponse<Client>>("clients", {
-    params: { salonId, perPage: 100 },
-    enabled: !!salonId,
-  });
+  const { data: clientsData } = useGet<PaginatedResponse<Client>>(
+    withParams("clients", { salonId, perPage: 100 }),
+    { enabled: !!salonId },
+  );
 
-  const { data: salesData } = useGet<PaginatedResponse<Sale>>("sales", {
-    params: { salonId, perPage: 100, sortBy: "createdAt", sortOrder: "desc" },
-    enabled: !!salonId,
-    staleTime: 1000 * 60,
-    select: normalizeSalesResponse,
-  });
+  const { data: salesData } = useGet<PaginatedResponse<Sale>>(
+    withParams("sales", { salonId, perPage: 100, sortBy: "createdAt", sortOrder: "desc" }),
+    { enabled: !!salonId, staleTime: 1000 * 60, select: normalizeSalesResponse },
+  );
 
   const { data: servicesData } = useGet<PaginatedResponse<Service>>(
-    "services",
-    {
-      params: { salonId, perPage: 100 },
-      enabled: !!salonId,
-    },
+    withParams("services", { salonId, perPage: 100 }),
+    { enabled: !!salonId },
   );
 
   const clients = useMemo(
@@ -164,7 +159,7 @@ export function LoyaltyPage() {
       }[];
     }
   >("sales", {
-    invalidateQueries: ["sales", "clients"],
+    invalidate: ["sales", "clients"],
     onSuccess: () => {
       toast.success(t("loyalty.redeemSuccess"));
       setIsRedeemModalOpen(false);

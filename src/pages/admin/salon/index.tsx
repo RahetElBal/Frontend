@@ -5,7 +5,7 @@ import { Plus } from "lucide-react";
 
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
-import { useGet } from "@/hooks/useGet";
+import { useGet, withParams } from "@/hooks/useGet";
 import { useUser } from "@/hooks/useUser";
 import { useTable } from "@/hooks/useTable";
 import { toast } from "@/lib/toast";
@@ -63,33 +63,25 @@ export default function SalonsPage() {
   });
 
   // Users endpoint returns paginated data
-  const { data: allUsersResponse } = useGet<{ data: User[] }>("users", {
-    params: userIsSuperadmin ? undefined : { salonId },
-    enabled: userIsSuperadmin || !!salonId,
-    staleTime: adminStatsStaleTime,
-  });
-
-  const { data: servicesResponse } = useGet<PaginatedResponse<Service>>(
-    "services",
-    {
-      params: { salonId, perPage: 1 },
-      enabled: !!salonId,
-      staleTime: adminStatsStaleTime,
-    },
+  const { data: allUsersResponse } = useGet<{ data: User[] }>(
+    withParams("users", userIsSuperadmin ? {} : { salonId }),
+    { enabled: userIsSuperadmin || !!salonId, staleTime: adminStatsStaleTime },
   );
 
-  const { data: clientsResponse } = useGet<{ data: Client[] }>("clients", {
-    params: { salonId, perPage: 100 },
-    enabled: !!salonId,
-    staleTime: adminStatsStaleTime,
-  });
+  const { data: servicesResponse } = useGet<PaginatedResponse<Service>>(
+    withParams("services", { salonId, perPage: 1 }),
+    { enabled: !!salonId, staleTime: adminStatsStaleTime },
+  );
 
-  const { data: salesResponse } = useGet<{ data: Sale[] }>("sales", {
-    params: { salonId, perPage: 100 },
-    enabled: !!salonId,
-    staleTime: adminStatsStaleTime,
-    select: normalizeSalesResponse,
-  });
+  const { data: clientsResponse } = useGet<{ data: Client[] }>(
+    withParams("clients", { salonId, perPage: 100 }),
+    { enabled: !!salonId, staleTime: adminStatsStaleTime },
+  );
+
+  const { data: salesResponse } = useGet<{ data: Sale[] }>(
+    withParams("sales", { salonId, perPage: 100 }),
+    { enabled: !!salonId, staleTime: adminStatsStaleTime, select: normalizeSalesResponse },
+  );
 
   // Extract data arrays using utility function
   const allUsers = useMemo(

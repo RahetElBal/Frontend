@@ -8,6 +8,7 @@ import { DataTable } from "@/components/table/data-table";
 import { useTable } from "@/hooks/useTable";
 import { useGet } from "@/hooks/useGet";
 import { usePostAction } from "@/hooks/usePostAction";
+
 import type { User, Salon } from "@/types/entities";
 import { StatsGrid } from "./components/stats-grid";
 import { useUser } from "@/hooks/useUser";
@@ -86,15 +87,15 @@ export function AdminUsersPage() {
   };
 
   const { mutate: updateUserStatus, isPending: isUpdatingStatus } =
-    usePostAction<User, { id: string; isActive: boolean }>("users", {
-      id: (variables) => variables.id,
-      action: "status",
-      method: "PATCH",
-      body: ({ isActive }) => ({ isActive }),
-      invalidateQueries: ["users"],
-      showSuccessToast: true,
-      successMessage: t("common.statusUpdated"),
-    });
+    usePostAction<User, { id: string; isActive: boolean }>(
+      (variables) => `users/${variables.id}/status`,
+      {
+        method: "PATCH",
+        body: ({ isActive }) => ({ isActive }),
+        invalidate: ["users"],
+        successToast: t("common.statusUpdated"),
+      },
+    );
 
   // Generate columns with handlers using the hook
   const columns = useUsersColumns({

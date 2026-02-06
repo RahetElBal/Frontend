@@ -1,181 +1,92 @@
 import {
   useMutation,
   useQueryClient,
+  type UseMutationOptions,
   type UseMutationResult,
-} from '@tanstack/react-query';
-import { post, put, patch, del } from '@/lib/http';
-import { toast } from '@/lib/toast';
-import type { ApiError } from '@/types/api';
+} from "@tanstack/react-query";
+import { post, put, patch, del } from "@/lib/http";
+import { toast } from "@/lib/toast";
+import type { ApiError } from "@/types/api";
 
-type ActionMethod = 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+type Method = "POST" | "PUT" | "PATCH" | "DELETE";
 
-interface UsePostActionOptions<TData, TVariables> {
-  action?: string;
-  id?: string | ((variables: TVariables) => string);
-  method?: ActionMethod;
+interface UsePostActionOptions<TData, TVariables>
+  extends Omit<UseMutationOptions<TData, ApiError, TVariables>, "mutationFn"> {
+  /** HTTP method. Defaults to "POST". */
+  method?: Method;
+  /** Transform variables into the request body. */
   body?: (variables: TVariables) => unknown;
-  invalidateQueries?: string[];
-  showSuccessToast?: boolean;
-  showErrorToast?: boolean;
-  successMessage?: string;
-  errorMessage?: string;
-  onSuccess?: (data: TData, variables: TVariables) => void;
-  onError?: (error: ApiError, variables: TVariables) => void;
-  onSettled?: (data: TData | undefined, error: ApiError | null, variables: TVariables) => void;
+  /** Query keys to invalidate on success. */
+  invalidate?: string[];
+  /** Show a success toast. Default: false. */
+  successToast?: string | boolean;
+  /** Show an error toast. Default: true. */
+  errorToast?: string | boolean;
 }
 
+const methodMap = { POST: post, PUT: put, PATCH: patch, DELETE: del } as const;
+
 /**
- * Hook for performing actions (mutations) with built-in toast notifications
- * Extends usePost with automatic success/error toast handling
- * 
- * @param endpoint - API endpoint name (e.g., 'clients', 'products')
- * @param options - Action options including method, id, action, and toast settings
- * 
+ * Mutation hook with built-in toast notifications.
+ *
+ * @param path - Full API path, or a function that builds the path from variables.
+ * @param options - method, body, invalidate, toasts, plus standard mutation options
+ *
  * @example
- * // Archive a client: POST /clients/{id}/archive
- * const archiveClient = usePostAction<void, string>('clients', {
- *   id: (clientId) => clientId,
- *   action: 'archive',
- *   showSuccessToast: true,
- *   successMessage: 'Client archived successfully',
+ * // Static path
+ * const archive = usePostAction<void, void>("clients/123/archive", {
+ *   successToast: "Client archived",
+ *   invalidate: ["clients"],
  * });
- * archiveClient.mutate('client-123');
- * 
+ *
  * @example
- * // Toggle status: POST /clients/{id}/toggle
- * const toggleClient = usePostAction<Client, { id: string; isActive: boolean }>('clients', {
- *   id: (vars) => vars.id,
- *   action: 'toggle',
- * });
- * 
- * @example
- * // Bulk delete: POST /clients/bulk-delete
- * const bulkDelete = usePostAction<void, { ids: string[] }>('clients', {
- *   action: 'bulk-delete',
- * });
+ * // Dynamic path
+ * const updateStatus = usePostAction<User, { id: string; isActive: boolean }>(
+ *   (v) => `users/${v.id}/status`,
+ *   { method: "PATCH", body: (v) => ({ isActive: v.isActive }), invalidate: ["users"] },
+ * );
  */
 export function usePostAction<TData, TVariables = void>(
-  endpoint: string,
-  options?: UsePostActionOptions<TData, TVariables>
-): UseMutationResult<TData, ApiError, TVariables> & {
-  isSubmitting: boolean;
-} {
+  path: string | ((variables: TVariables) => string),
+  options?: UsePostActionOptions<TData, TVariables>,
+): UseMutationResult<TData, ApiError, TVariables> & { isSubmitting: boolean } {
   const queryClient = useQueryClient();
   const {
-    action,
-    id,
-    method = 'POST',
+    method = "POST",
     body,
-    invalidateQueries,
-    showSuccessToast = false,
-    showErrorToast = true,
-    successMessage,
-    errorMessage,
+    invalidate,
+    successToast = false,
+    errorToast = true,
     onSuccess,
     onError,
-    onSettled,
+    ...rest
   } = options || {};
 
   const mutation = useMutation<TData, ApiError, TVariables>({
     mutationFn: async (variables) => {
-      // Build URL: /{endpoint}/{id?}/{action?}
-      const resolvedId = typeof id === 'function' ? id(variables) : id;
-      let url = endpoint;
-      if (resolvedId) url += `/${resolvedId}`;
-      if (action) url += `/${action}`;
+      const resolvedPath = typeof path === "function" ? path(variables) : path;
       const payload = body ? body(variables) : variables;
-
-      switch (method) {
-        case 'POST':
-          return post<TData, typeof payload>(url, payload);
-        case 'PUT':
-          return put<TData, typeof payload>(url, payload);
-        case 'PATCH':
-          return patch<TData, typeof payload>(url, payload);
-        case 'DELETE':
-          return del<TData>(url);
-        default:
-          throw new Error(`Unsupported method: ${method}`);
-      }
+      const fn = methodMap[method];
+      if (method === "DELETE") return (fn as typeof del)<TData>(resolvedPath);
+      return (fn as typeof post)<TData, typeof payload>(resolvedPath, payload);
     },
-    onSuccess: (data, variables) => {
-      // Invalidate specified queries or default to endpoint
-      const queriesToInvalidate = invalidateQueries || [endpoint];
-      queriesToInvalidate.forEach((queryKey) => {
-        queryClient.invalidateQueries({ queryKey: [queryKey] });
-      });
-
-      // Show success toast
-      if (showSuccessToast) {
-        toast.success(successMessage || 'Action completed successfully');
+    onSuccess: (data, variables, context) => {
+      const resolvedPath = typeof path === "function" ? path(variables) : path;
+      const keys = invalidate || [resolvedPath.split("/")[0] || resolvedPath];
+      keys.forEach((key) => queryClient.invalidateQueries({ queryKey: [key] }));
+      if (successToast) {
+        toast.success(typeof successToast === "string" ? successToast : "Action completed successfully");
       }
-
-      if (onSuccess) {
-        onSuccess(data, variables);
-      }
+      onSuccess?.(data, variables, context);
     },
-    onError: (error, variables) => {
-      // Show error toast
-      if (showErrorToast) {
-        toast.error(errorMessage || error.message || 'An error occurred');
+    onError: (error, variables, context) => {
+      if (errorToast) {
+        toast.error(typeof errorToast === "string" ? errorToast : error.message || "An error occurred");
       }
-
-      if (onError) {
-        onError(error, variables);
-      }
+      onError?.(error, variables, context);
     },
-    onSettled: (data, error, variables) => {
-      if (onSettled) {
-        onSettled(data, error, variables);
-      }
-    },
+    ...rest,
   });
 
-  return {
-    ...mutation,
-    isSubmitting: mutation.isPending,
-  };
-}
-
-/**
- * Hook for toggle actions (e.g., activate/deactivate)
- * 
- * @example
- * const toggleStatus = useToggleAction<Client>('clients', 'toggle');
- * toggleStatus.mutate('client-123');
- */
-export function useToggleAction<TData = void>(
-  endpoint: string,
-  action = 'toggle',
-  options?: Omit<UsePostActionOptions<TData, string>, 'id' | 'action'>
-): UseMutationResult<TData, ApiError, string> & {
-  isSubmitting: boolean;
-} {
-  return usePostAction<TData, string>(endpoint, {
-    id: (itemId) => itemId,
-    action,
-    showSuccessToast: true,
-    ...options,
-  });
-}
-
-/**
- * Hook for bulk actions on multiple items
- * 
- * @example
- * const bulkDelete = useBulkAction('clients', 'bulk-delete');
- * bulkDelete.mutate({ ids: ['1', '2', '3'] });
- */
-export function useBulkAction<TData = void, TVariables = { ids: string[] }>(
-  endpoint: string,
-  action: string,
-  options?: Omit<UsePostActionOptions<TData, TVariables>, 'action'>
-): UseMutationResult<TData, ApiError, TVariables> & {
-  isSubmitting: boolean;
-} {
-  return usePostAction<TData, TVariables>(endpoint, {
-    action,
-    showSuccessToast: true,
-    ...options,
-  });
+  return { ...mutation, isSubmitting: mutation.isPending };
 }

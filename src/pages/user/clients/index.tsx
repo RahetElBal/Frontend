@@ -15,7 +15,7 @@ import { clientFormSchema, type ClientFormData } from "./validation";
 import { getClientColumns } from "./components/list/columns";
 import { useUser } from "@/hooks/useUser";
 import type { PaginatedResponse } from "@/types";
-import { useGet } from "@/hooks/useGet";
+import { useGet, withParams } from "@/hooks/useGet";
 import { normalizeSalesResponse } from "@/utils/normalize-sales";
 
 const isWalkInClient = (client: Client) =>
@@ -38,36 +38,29 @@ export function ClientsPage() {
     data: clientsResponse,
     isLoading,
     refetch,
-  } = useGet<PaginatedResponse<Client>>("clients", {
-    params: { salonId, perPage: 100 },
-    enabled: !!salonId,
-    staleTime: clientsStaleTime,
-    refetchOnWindowFocus: "always",
-  });
+  } = useGet<PaginatedResponse<Client>>(
+    withParams("clients", { salonId, perPage: 100 }),
+    { enabled: !!salonId, staleTime: clientsStaleTime, refetchOnWindowFocus: "always" },
+  );
 
-  const { data: salesResponse } = useGet<PaginatedResponse<Sale>>("sales", {
-    params: {
-      salonId,
-      perPage: 100,
-      sortBy: "createdAt",
-      sortOrder: "desc",
+  const { data: salesResponse } = useGet<PaginatedResponse<Sale>>(
+    withParams("sales", { salonId, perPage: 100, sortBy: "createdAt", sortOrder: "desc" }),
+    {
+      enabled: !!salonId,
+      staleTime: salesStaleTime,
+      gcTime: salesCacheTime,
+      refetchOnMount: "always",
+      refetchOnWindowFocus: "always",
+      select: normalizeSalesResponse,
     },
-    enabled: !!salonId,
-    staleTime: salesStaleTime,
-    cacheTime: salesCacheTime,
-    refetchOnMount: "always",
-    refetchOnWindowFocus: "always",
-    select: normalizeSalesResponse,
-  });
+  );
 
   const { data: appointmentsResponse } = useGet<
     PaginatedResponse<Appointment>
-  >("appointments", {
-    params: { salonId, perPage: 100, sortBy: "date", sortOrder: "desc" },
-    enabled: !!salonId,
-    staleTime: appointmentsStaleTime,
-    refetchOnWindowFocus: "always",
-  });
+  >(
+    withParams("appointments", { salonId, perPage: 100, sortBy: "date", sortOrder: "desc" }),
+    { enabled: !!salonId, staleTime: appointmentsStaleTime, refetchOnWindowFocus: "always" },
+  );
 
   const clients = useMemo(() => clientsResponse?.data || [], [clientsResponse]);
   const sales = useMemo(() => salesResponse?.data || [], [salesResponse]);

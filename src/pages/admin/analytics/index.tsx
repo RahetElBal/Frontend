@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/select";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useUser } from "@/hooks/useUser";
-import { useGet } from "@/hooks/useGet";
+import { useGet, withParams } from "@/hooks/useGet";
 import {
   translateServiceCategory,
   translateServiceName,
@@ -64,49 +64,52 @@ export function AnalyticsPage() {
 
   const { data: salesResponse, isLoading: loadingSales } = useGet<
     PaginatedResponse<Sale>
-  >("sales", {
-    params: {
-      salonId,
-      perPage: 100,
-      sortBy: "createdAt",
-      sortOrder: "desc",
+  >(
+    withParams("sales", { salonId, perPage: 100, sortBy: "createdAt", sortOrder: "desc" }),
+    {
+      enabled: !!salonId && canViewAnalytics,
+      staleTime: listStaleTime,
+      gcTime: listCacheTime,
+      refetchOnWindowFocus: false,
+      select: normalizeSalesResponse,
     },
-    enabled: !!salonId && canViewAnalytics,
-    staleTime: listStaleTime,
-    cacheTime: listCacheTime,
-    refetchOnWindowFocus: false,
-    select: normalizeSalesResponse,
-  });
+  );
 
   const { data: appointmentsResponse, isLoading: loadingAppointments } = useGet<
     PaginatedResponse<Appointment>
-  >("appointments", {
-    params: { salonId, perPage: 100 },
-    enabled: !!salonId && canViewAnalytics,
-    staleTime: listStaleTime,
-    cacheTime: listCacheTime,
-    refetchOnWindowFocus: false,
-  });
+  >(
+    withParams("appointments", { salonId, perPage: 100 }),
+    {
+      enabled: !!salonId && canViewAnalytics,
+      staleTime: listStaleTime,
+      gcTime: listCacheTime,
+      refetchOnWindowFocus: false,
+    },
+  );
 
   const { data: clientsResponse, isLoading: loadingClients } = useGet<
     PaginatedResponse<Client>
-  >("clients", {
-    params: { salonId, perPage: 100 },
-    enabled: !!salonId && canViewAnalytics,
-    staleTime: listStaleTime,
-    cacheTime: listCacheTime,
-    refetchOnWindowFocus: false,
-  });
+  >(
+    withParams("clients", { salonId, perPage: 100 }),
+    {
+      enabled: !!salonId && canViewAnalytics,
+      staleTime: listStaleTime,
+      gcTime: listCacheTime,
+      refetchOnWindowFocus: false,
+    },
+  );
 
   const { data: servicesResponse, isLoading: loadingServices } = useGet<
     PaginatedResponse<Service>
-  >("services", {
-    params: { salonId, perPage: 100 },
-    enabled: !!salonId && canViewAnalytics,
-    staleTime: listStaleTime,
-    cacheTime: listCacheTime,
-    refetchOnWindowFocus: false,
-  });
+  >(
+    withParams("services", { salonId, perPage: 100 }),
+    {
+      enabled: !!salonId && canViewAnalytics,
+      staleTime: listStaleTime,
+      gcTime: listCacheTime,
+      refetchOnWindowFocus: false,
+    },
+  );
 
   // Move all data extraction and useMemo hooks before early returns
   const isLoading =

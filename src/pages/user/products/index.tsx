@@ -46,7 +46,7 @@ import type { Product } from "@/types/entities";
 import { cn } from "@/lib/utils";
 import { usePost } from "@/hooks/usePost";
 import { usePostAction } from "@/hooks/usePostAction";
-import { useGet } from "@/hooks/useGet";
+import { useGet, withParams } from "@/hooks/useGet";
 import { getProductColumns } from "./list/columns";
 
 // Modal state type
@@ -96,29 +96,23 @@ export function ProductsPage() {
     data: productsResponse,
     isLoading,
     refetch,
-  } = useGet<ProductsResponse>("products", {
-    params: { salonId },
-    enabled: !!salonId,
-    staleTime: productsStaleTime,
-  });
+  } = useGet<ProductsResponse>(
+    withParams("products", { salonId }),
+    { enabled: !!salonId, staleTime: productsStaleTime },
+  );
   
   const products = productsResponse?.data || [];
 
   const { data: productCategories = [] } = useGet<string[]>(
-    "products/categories",
-    {
-      params: { salonId },
-      enabled: !!salonId,
-      staleTime: categoriesStaleTime,
-    },
+    withParams("products/categories", { salonId }),
+    { enabled: !!salonId, staleTime: categoriesStaleTime },
   );
 
   // Fetch low stock products - GET /products/low-stock
-  const { data: lowStockProducts = [] } = useGet<Product[]>("products/low-stock", {
-    params: { salonId },
-    enabled: !!salonId,
-    staleTime: lowStockStaleTime,
-  });
+  const { data: lowStockProducts = [] } = useGet<Product[]>(
+    withParams("products/low-stock", { salonId }),
+    { enabled: !!salonId, staleTime: lowStockStaleTime },
+  );
 
   // Helper functions
   const getSelectedProduct = (): Product | null => {
@@ -187,7 +181,7 @@ export function ProductsPage() {
     Product,
     ProductFormData & { salonId: string }
   >("products", {
-    invalidateQueries: ["products"],
+    invalidate: ["products"],
     onSuccess: () => {
       toast.success(t("products.addProduct") + " - " + t("common.success"));
       setModalState(null);
@@ -202,10 +196,9 @@ export function ProductsPage() {
   const { mutate: updateProduct, isPending: isUpdating } = usePost<
     Product,
     ProductFormData
-  >("products", {
-    id: selectedProduct?.id,
+  >(`products/${selectedProduct?.id}`, {
     method: "PATCH",
-    invalidateQueries: ["products"],
+    invalidate: ["products"],
     onSuccess: () => {
       toast.success(t("common.edit") + " - " + t("common.success"));
       setModalState(null);
@@ -218,11 +211,10 @@ export function ProductsPage() {
 
   // Delete product mutation
   const { mutate: deleteProduct, isPending: isDeleting } = usePost<void, void>(
-    "products",
+    `products/${selectedProduct?.id}`,
     {
-      id: selectedProduct?.id,
       method: "DELETE",
-      invalidateQueries: ["products"],
+      invalidate: ["products"],
       onSuccess: () => {
         toast.success(t("common.delete") + " - " + t("common.success"));
         setModalState(null);
@@ -238,12 +230,9 @@ export function ProductsPage() {
   const { mutate: updateStock, isPending: isUpdatingStock } = usePostAction<
     Product,
     { quantity: number; type: "add" | "remove" | "set" }
-  >("products", {
-    id: selectedProduct?.id,
-    action: "stock",
-    invalidateQueries: ["products", "products/low-stock"],
-    showSuccessToast: true,
-    successMessage: t("products.stockUpdated"),
+  >(`products/${selectedProduct?.id}/stock`, {
+    invalidate: ["products", "products/low-stock"],
+    successToast: t("products.stockUpdated"),
     onSuccess: () => {
       refetch();
     },

@@ -152,6 +152,7 @@ export function UserDialog({
     User,
     UserFormData
   >("users", {
+    invalidate: ["users"],
     onSuccess: () => {
       toast.success(t("admin.users.addUser") + " - " + t("common.success"));
       onOpenChange(false);
@@ -165,9 +166,9 @@ export function UserDialog({
   const { mutate: updateUser, isPending: isUpdating } = usePost<
     User,
     UserFormData
-  >("users", {
-    id: user?.id,
+  >(`users/${user?.id}`, {
     method: "PATCH",
+    invalidate: ["users"],
     onSuccess: () => {
       toast.success(t("common.edit") + " - " + t("common.success"));
       onOpenChange(false);
@@ -181,18 +182,21 @@ export function UserDialog({
   const { mutate: deleteUser, isPending: isDeleting } = usePost<
     void,
     { userId: string }
-  >("users", {
-    id: (variables) => variables.userId,
-    method: "DELETE",
-    onSuccess: () => {
-      toast.success(t("common.delete") + " - " + t("common.success"));
-      onOpenChange(false);
-      onSuccess();
+  >(
+    (variables) => `users/${variables.userId}`,
+    {
+      method: "DELETE",
+      invalidate: ["users"],
+      onSuccess: () => {
+        toast.success(t("common.delete") + " - " + t("common.success"));
+        onOpenChange(false);
+        onSuccess();
+      },
+      onError: (error) => {
+        toast.error(error.message || t("common.error"));
+      },
     },
-    onError: (error) => {
-      toast.error(error.message || t("common.error"));
-    },
-  });
+  );
 
   const handleSubmit = (data: UserFormData) => {
     const role = isCreateMode
