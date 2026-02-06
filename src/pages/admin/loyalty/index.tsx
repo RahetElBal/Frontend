@@ -6,6 +6,8 @@ import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/badge";
+import { Spinner } from "@/components/spinner";
+import { LoadingPanel } from "@/components/loading-panel";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -67,17 +69,20 @@ export function LoyaltyPage() {
   const salonId = salon?.id;
   const canRedeem = isAdmin || isSuperadmin;
 
-  const { data: clientsData } = useGet<PaginatedResponse<Client>>(
+  const { data: clientsData, isLoading: isClientsLoading } =
+    useGet<PaginatedResponse<Client>>(
     withParams("clients", { salonId, perPage: 100 }),
     { enabled: !!salonId },
   );
 
-  const { data: salesData } = useGet<PaginatedResponse<Sale>>(
+  const { data: salesData, isLoading: isSalesLoading } =
+    useGet<PaginatedResponse<Sale>>(
     withParams("sales", { salonId, perPage: 100, sortBy: "createdAt", sortOrder: "desc" }),
     { enabled: !!salonId, staleTime: 1000 * 60, select: normalizeSalesResponse },
   );
 
-  const { data: servicesData } = useGet<PaginatedResponse<Service>>(
+  const { data: servicesData, isLoading: isServicesLoading } =
+    useGet<PaginatedResponse<Service>>(
     withParams("services", { salonId, perPage: 100 }),
     { enabled: !!salonId },
   );
@@ -92,6 +97,11 @@ export function LoyaltyPage() {
     () => extractArray<Service>(servicesData),
     [servicesData],
   );
+  const showLoyaltyLoading =
+    (isClientsLoading || isSalesLoading || isServicesLoading) &&
+    clients.length === 0 &&
+    salesStats.length === 0 &&
+    services.length === 0;
 
   const derivedSettings = useMemo(() => deriveLoyaltySettings(salon), [salon]);
 
@@ -242,7 +252,13 @@ export function LoyaltyPage() {
               <p className="text-sm text-muted-foreground">
                 {t("loyalty.activeMembers")}
               </p>
-              <p className="text-xl font-bold">{activeMembers}</p>
+              {showLoyaltyLoading ? (
+                <div className="flex items-center h-6">
+                  <Spinner size="sm" />
+                </div>
+              ) : (
+                <p className="text-xl font-bold">{activeMembers}</p>
+              )}
             </div>
           </div>
         </Card>
@@ -255,9 +271,15 @@ export function LoyaltyPage() {
               <p className="text-sm text-muted-foreground">
                 {t("loyalty.pointsIssued")}
               </p>
-              <p className="text-xl font-bold">
-                {totalPointsIssued.toLocaleString()}
-              </p>
+              {showLoyaltyLoading ? (
+                <div className="flex items-center h-6">
+                  <Spinner size="sm" />
+                </div>
+              ) : (
+                <p className="text-xl font-bold">
+                  {totalPointsIssued.toLocaleString()}
+                </p>
+              )}
             </div>
           </div>
         </Card>
@@ -270,9 +292,15 @@ export function LoyaltyPage() {
               <p className="text-sm text-muted-foreground">
                 {t("loyalty.pointsRedeemed")}
               </p>
-              <p className="text-xl font-bold">
-                {totalPointsRedeemed.toLocaleString()}
-              </p>
+              {showLoyaltyLoading ? (
+                <div className="flex items-center h-6">
+                  <Spinner size="sm" />
+                </div>
+              ) : (
+                <p className="text-xl font-bold">
+                  {totalPointsRedeemed.toLocaleString()}
+                </p>
+              )}
             </div>
           </div>
         </Card>
@@ -285,12 +313,18 @@ export function LoyaltyPage() {
               <p className="text-sm text-muted-foreground">
                 {t("loyalty.redemptionValue")}
               </p>
-              <p className="text-xl font-bold">
-                {formatCurrency(
-                  totalPointsRedeemed *
-                    (derivedSettings.loyaltyPointValue || 0),
-                )}
-              </p>
+              {showLoyaltyLoading ? (
+                <div className="flex items-center h-6">
+                  <Spinner size="sm" />
+                </div>
+              ) : (
+                <p className="text-xl font-bold">
+                  {formatCurrency(
+                    totalPointsRedeemed *
+                      (derivedSettings.loyaltyPointValue || 0),
+                  )}
+                </p>
+              )}
             </div>
           </div>
         </Card>
@@ -302,7 +336,9 @@ export function LoyaltyPage() {
           <h2 className="text-lg font-semibold mb-4">
             {t("loyalty.topMembers")}
           </h2>
-          {topClients.length > 0 ? (
+          {showLoyaltyLoading ? (
+            <LoadingPanel label={t("common.loading")} />
+          ) : topClients.length > 0 ? (
             <div className="space-y-3">
               {topClients.map((client, index) => (
                 <div
@@ -358,7 +394,9 @@ export function LoyaltyPage() {
           <h2 className="text-lg font-semibold mb-4">
             {t("loyalty.recentPayments")}
           </h2>
-          {sales.length === 0 ? (
+          {showLoyaltyLoading ? (
+            <LoadingPanel label={t("common.loading")} />
+          ) : sales.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <p>{t("loyalty.noPayments")}</p>
             </div>

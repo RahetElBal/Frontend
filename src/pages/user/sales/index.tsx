@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import { PageHeader } from "@/components/page-header";
 import { Card } from "@/components/ui/card";
+import { Spinner } from "@/components/spinner";
 import {
   Dialog,
   DialogContent,
@@ -80,6 +81,7 @@ export function SalesPage() {
     },
   );
   const sales = salesResponse?.data || [];
+  const showSalesLoading = isLoading && sales.length === 0;
 
   const table = useTable<Sale>({
     data: sales,
@@ -137,21 +139,41 @@ export function SalesPage() {
           <p className="text-sm text-muted-foreground">
             {t("sales.todayTotal")}
           </p>
-          <p className="text-2xl font-bold text-green-600">
-            {formatCurrency(todayTotal)}
-          </p>
+          {showSalesLoading ? (
+            <div className="flex items-center h-8">
+              <Spinner size="sm" />
+            </div>
+          ) : (
+            <p className="text-2xl font-bold text-green-600">
+              {formatCurrency(todayTotal)}
+            </p>
+          )}
         </Card>
         <Card className="p-4">
           <p className="text-sm text-muted-foreground">
             {t("sales.transactions")}
           </p>
-          <p className="text-2xl font-bold">{sales.length}</p>
+          {showSalesLoading ? (
+            <div className="flex items-center h-8">
+              <Spinner size="sm" />
+            </div>
+          ) : (
+            <p className="text-2xl font-bold">{sales.length}</p>
+          )}
         </Card>
         <Card className="p-4">
           <p className="text-sm text-muted-foreground">
             {t("sales.averageTicket")}
           </p>
-          <p className="text-2xl font-bold">{formatCurrency(averageTicket)}</p>
+          {showSalesLoading ? (
+            <div className="flex items-center h-8">
+              <Spinner size="sm" />
+            </div>
+          ) : (
+            <p className="text-2xl font-bold">
+              {formatCurrency(averageTicket)}
+            </p>
+          )}
         </Card>
       </div>
 
