@@ -95,7 +95,7 @@ export function ServiceCard({
               {service.duration} min
             </div>
             <span className="text-lg font-bold text-accent-pink">
-              {formatCurrency(service.price)}
+              {formatCurrency(Number(service.price) || 0)}
             </span>
           </div>
         </div>
