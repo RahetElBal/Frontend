@@ -411,7 +411,7 @@ export function AnalyticsPage() {
                     const totalRevenue = topCategories.reduce((sum, c) => sum + c.revenue, 0) || 1;
                     const percent = (category.revenue / totalRevenue) * 100;
                     const colors = [
-                      "bg-accent-pink",
+                      "bg-accent-pink-500",
                       "bg-emerald-500",
                       "bg-indigo-500",
                       "bg-amber-500",
