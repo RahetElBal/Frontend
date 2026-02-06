@@ -197,6 +197,12 @@ export function findConflictingAppointment(
       const appointmentEnd = normalizeTime(appointment.endTime);
 
       if (normalizedEnd) {
+        if (
+          appointmentEnd === normalizedStart ||
+          appointmentStart === normalizedEnd
+        ) {
+          return false;
+        }
         return isTimeOverlap(
           normalizedStart,
           normalizedEnd,

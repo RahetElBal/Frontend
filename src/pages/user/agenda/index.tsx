@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
+import { Calendar, List } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { LoadingPanel } from "@/components/loading-panel";
 import { Button } from "@/components/ui/button";
@@ -47,6 +48,7 @@ import {
   DEFAULT_SLOT_MINUTES,
   addMinutesToTime,
   normalizeTime,
+  timeToMinutes,
   findConflictingAppointment,
 } from "./utils";
 
@@ -59,6 +61,7 @@ import {
 } from "@/lib/notifications";
 import { CalendarToolbar } from "./components/dialog/calendar-toolbar";
 import { TimelineView } from "./components/timeline-view";
+import { MonthlySummaryView } from "./components/monthly-summary-view";
 import { AppointmentModals } from "./components/dialog/appointment-modals";
 import { translateServiceName } from "@/common/service-translations";
 
@@ -74,6 +77,7 @@ export function AgendaPage() {
   >("all");
   const [selectedDate, setSelectedDate] = useState(() => getLocalDateString());
   const [selectedStaffId, setSelectedStaffId] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<"day" | "month">("day");
   const salonId = user?.salon?.id;
   const canSelectStaff = isAdmin || isSuperadmin;
 
@@ -327,6 +331,11 @@ export function AgendaPage() {
   );
 
   const today = useMemo(() => getLocalDateString(), []);
+  const isSelectedDatePast = selectedDate < today;
+  const selectedDateObj = useMemo(
+    () => new Date(`${selectedDate}T00:00:00`),
+    [selectedDate],
+  );
 
   const todayAppointments = useMemo(
     () => appointments.filter((apt) => apt.date === today),
@@ -682,6 +691,17 @@ export function AgendaPage() {
       toast.error(t("common.error"));
       return;
     }
+    const now = new Date();
+    const today = getLocalDateString(now);
+    const selectedStartMinutes = timeToMinutes(normalizeTime(data.startTime));
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+    if (
+      data.date < today ||
+      (data.date === today && selectedStartMinutes < currentMinutes)
+    ) {
+      toast.error(t("agenda.pastAppointmentNotAllowed"));
+      return;
+    }
 
     const workingHoursForDate = getWorkingHoursForDate(
       salonSettings,
@@ -958,6 +978,8 @@ export function AgendaPage() {
         confirmedCount={confirmedCount}
         pendingCount={pendingCount}
         totalCount={appointments.length}
+        isNewAppointmentDisabled={isSelectedDatePast}
+        newAppointmentDisabledReason={t("agenda.pastAppointmentNotAllowed")}
       />
 
       <div className="grid gap-3 sm:grid-cols-2">
@@ -1013,97 +1035,129 @@ export function AgendaPage() {
             </Select>
           </div>
         )}
-        <Button
-          variant={filter === "all" ? "default" : "outline"}
-          size="sm"
-          onClick={() => setFilter("all")}
-        >
-          {t("agenda.filters.all")}
-        </Button>
-        <Button
-          variant={filter === "today" ? "default" : "outline"}
-          size="sm"
-          onClick={() => setFilter("today")}
-        >
-          {t("agenda.filters.today")}
-        </Button>
-        <Button
-          variant={filter === "unpaid" ? "default" : "outline"}
-          size="sm"
-          onClick={() => setFilter("unpaid")}
-        >
-          {t("agenda.filters.unpaid")}
-        </Button>
-        <Button
-          variant={filter === "overdue" ? "default" : "outline"}
-          size="sm"
-          onClick={() => setFilter("overdue")}
-        >
-          {t("agenda.filters.overdue")}
-        </Button>
-        <Button
-          variant={filter === "completed" ? "default" : "outline"}
-          size="sm"
-          onClick={() => setFilter("completed")}
-        >
-          {t("agenda.filters.completed")}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant={viewMode === "day" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setViewMode("day")}
+            className="gap-1"
+          >
+            <List className="h-3.5 w-3.5" />
+            {t("agenda.day")}
+          </Button>
+          <Button
+            variant={viewMode === "month" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setViewMode("month")}
+            className="gap-1"
+          >
+            <Calendar className="h-3.5 w-3.5" />
+            {t("agenda.month")}
+          </Button>
+        </div>
+        {viewMode === "day" && (
+          <>
+            <Button
+              variant={filter === "all" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setFilter("all")}
+            >
+              {t("agenda.filters.all")}
+            </Button>
+            <Button
+              variant={filter === "today" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setFilter("today")}
+            >
+              {t("agenda.filters.today")}
+            </Button>
+            <Button
+              variant={filter === "unpaid" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setFilter("unpaid")}
+            >
+              {t("agenda.filters.unpaid")}
+            </Button>
+            <Button
+              variant={filter === "overdue" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setFilter("overdue")}
+            >
+              {t("agenda.filters.overdue")}
+            </Button>
+            <Button
+              variant={filter === "completed" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setFilter("completed")}
+            >
+              {t("agenda.filters.completed")}
+            </Button>
+          </>
+        )}
       </div>
 
       <div className="w-full">
-        <TimelineView
-          appointments={filteredAppointments}
-          selectedDate={new Date(`${selectedDate}T00:00:00`)}
-          isLoading={isLoading && !hasLoadedOnce}
-          timeSlots={timelineSlots.slots}
-          blockedSlots={timelineSlots.blocked}
-          isClosed={!workingHoursForSelectedDate.isOpen}
-          onTimeSlotClick={(time) =>
-            handleSelectSlot({
-              start: timeToDate(time, selectedDate),
-              end: timeToDate(time, selectedDate),
-            })
-          }
-          onAppointmentClick={(appointment) =>
-            handleSelectEvent({
-              id: appointment.id,
-              title: appointment.client
-                ? `${appointment.client.firstName} ${appointment.client.lastName}`
-                : appointment.service?.name || t("agenda.appointmentDetails"),
-              start: new Date(`${appointment.date}T${appointment.startTime}`),
-              end: new Date(`${appointment.date}T${appointment.endTime}`),
-              resource: appointment,
-            })
-          }
-          onRecordPayment={(appointment) => {
-            if (!salonId || !appointment.serviceId) {
-              toast.error(t("common.error"));
-              return;
+        {viewMode === "month" ? (
+          <MonthlySummaryView
+            appointments={appointments}
+            selectedDate={selectedDateObj}
+            onSelectDate={setSelectedDate}
+          />
+        ) : (
+          <TimelineView
+            appointments={filteredAppointments}
+            selectedDate={selectedDateObj}
+            isLoading={isLoading && !hasLoadedOnce}
+            timeSlots={timelineSlots.slots}
+            blockedSlots={timelineSlots.blocked}
+            isClosed={!workingHoursForSelectedDate.isOpen}
+            onTimeSlotClick={(time) =>
+              handleSelectSlot({
+                start: timeToDate(time, selectedDate),
+                end: timeToDate(time, selectedDate),
+              })
             }
-            const optimisticUpdated = {
-              ...appointment,
-              status: AppointmentStatus.COMPLETED,
-              paid: true,
-              updatedAt: new Date().toISOString(),
-            };
-            upsertVisibleAppointment(optimisticUpdated);
-            createSaleFromAppointment({
-              salonId,
-              appointmentId: appointment.id,
-              clientId: appointment.clientId,
-              redeemLoyalty: false,
-              items: [
-                {
-                  type: "service",
-                  itemId: appointment.serviceId,
-                  quantity: 1,
-                  price: appointment.price,
-                },
-              ],
-            });
-          }}
-          isRecordingPayment={isCreatingSale}
-        />
+            onAppointmentClick={(appointment) =>
+              handleSelectEvent({
+                id: appointment.id,
+                title: appointment.client
+                  ? `${appointment.client.firstName} ${appointment.client.lastName}`
+                  : appointment.service?.name || t("agenda.appointmentDetails"),
+                start: new Date(`${appointment.date}T${appointment.startTime}`),
+                end: new Date(`${appointment.date}T${appointment.endTime}`),
+                resource: appointment,
+              })
+            }
+            onRecordPayment={(appointment) => {
+              if (!salonId || !appointment.serviceId) {
+                toast.error(t("common.error"));
+                return;
+              }
+              const optimisticUpdated = {
+                ...appointment,
+                status: AppointmentStatus.COMPLETED,
+                paid: true,
+                updatedAt: new Date().toISOString(),
+              };
+              upsertVisibleAppointment(optimisticUpdated);
+              createSaleFromAppointment({
+                salonId,
+                appointmentId: appointment.id,
+                clientId: appointment.clientId,
+                redeemLoyalty: false,
+                items: [
+                  {
+                    type: "service",
+                    itemId: appointment.serviceId,
+                    quantity: 1,
+                    price: appointment.price,
+                  },
+                ],
+              });
+            }}
+            isRecordingPayment={isCreatingSale}
+          />
+        )}
       </div>
 
       <AppointmentModals

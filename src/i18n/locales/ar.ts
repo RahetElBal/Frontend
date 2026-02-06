@@ -448,6 +448,7 @@ export const ar = {
       breakTime: "استراحة",
       closedDay: "هذا اليوم مُغلق حسب إعدادات الصالون.",
       timeOutsideWorkingHours: "الوقت المحدد خارج ساعات عمل الصالون.",
+    pastAppointmentNotAllowed: "?? ???? ????? ???????? ?? ??????.",
       timeSlotOccupied: "هذا الموعد محجوز بالفعل.",
     timeSlotOccupiedDetails: "يتعارض مع {{client}} ({{start}}-{{end}}).",
     recordPayment: "تسجيل الدفع",

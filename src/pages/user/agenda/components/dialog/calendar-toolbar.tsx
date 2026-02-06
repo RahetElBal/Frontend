@@ -11,6 +11,8 @@ interface CalendarToolbarProps {
   confirmedCount: number;
   pendingCount: number;
   totalCount: number;
+  isNewAppointmentDisabled?: boolean;
+  newAppointmentDisabledReason?: string;
 }
 
 export function CalendarToolbar({
@@ -20,6 +22,8 @@ export function CalendarToolbar({
   confirmedCount,
   pendingCount,
   totalCount,
+  isNewAppointmentDisabled = false,
+  newAppointmentDisabledReason,
 }: CalendarToolbarProps) {
   const { t } = useTranslation();
 
@@ -58,7 +62,14 @@ export function CalendarToolbar({
               <Bell className="h-4 w-4" />
             )}
           </Button>
-          <Button className="gap-2" onClick={onNewAppointment}>
+          <Button
+            className="gap-2"
+            onClick={onNewAppointment}
+            disabled={isNewAppointmentDisabled}
+            title={
+              isNewAppointmentDisabled ? newAppointmentDisabledReason : undefined
+            }
+          >
             <Plus className="h-4 w-4" />
             {t("agenda.newAppointment")}
           </Button>

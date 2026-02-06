@@ -810,6 +810,7 @@ export const en = {
       breakTime: "Break",
       closedDay: "This day is marked as closed in salon settings.",
       timeOutsideWorkingHours: "Selected time is outside working hours.",
+      pastAppointmentNotAllowed: "Appointments can't be scheduled in the past.",
       timeSlotOccupied: "This time slot is already booked.",
     timeSlotOccupiedDetails: "Conflicts with {{client}} ({{start}}-{{end}}).",
     recordPayment: "Record Payment",

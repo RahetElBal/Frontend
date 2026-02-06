@@ -7,7 +7,6 @@ import {
   Scissors,
   Clock,
   Calendar,
-  Edit,
   Trash2,
   DollarSign,
   UserPlus,
@@ -64,6 +63,7 @@ import {
   buildTimeSlotsForHours,
   DEFAULT_SLOT_MINUTES,
   addMinutesToTime,
+  timeToMinutes,
   findConflictingAppointment,
 } from "../../utils";
 import { getValidationErrorMessage } from "@/pages/user/utils";
@@ -131,6 +131,12 @@ export function AppointmentModals({
   const { formatCurrency } = useLanguage();
   const { user, salon, isAdmin, isSuperadmin } = useUser();
   const [redeemLoyalty, setRedeemLoyalty] = useState(false);
+  const modalKey = modalState
+    ? `${modalState.appointmentId}-${modalState.mode}`
+    : "";
+  const [initializedModalKey, setInitializedModalKey] = useState<string | null>(
+    null,
+  );
   const getErrorMessage = (
     name: keyof AppointmentFormData,
   ): string | undefined => {
@@ -249,6 +255,11 @@ export function AppointmentModals({
   const walkInEmail = watch("walkInEmail");
   const selectedDate = watch("date") || getLocalDateString();
   const selectedStartTime = watch("startTime");
+  const todayStr = getLocalDateString();
+  const now = new Date();
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+  const isPastDate = selectedDate < todayStr;
+  const isToday = selectedDate === todayStr;
   const visibleServices = useMemo(() => allServices, [allServices]);
   const selectedService = useMemo(
     () => allServices.find((service) => service.id === selectedServiceId) || null,
@@ -357,6 +368,8 @@ export function AppointmentModals({
   const isClosedDay = !workingHoursForDate.isOpen;
 
   const conflict = useMemo(() => {
+    if (!derived?.isEditMode) return null;
+    if (initializedModalKey !== modalKey) return null;
     if (!selectedDate || !selectedStartTime) return null;
     const durationMinutes = selectedService?.duration || bookingSlotMinutes;
     const endTime = addMinutesToTime(selectedStartTime, durationMinutes);
@@ -374,10 +387,13 @@ export function AppointmentModals({
     selectedService?.duration,
     bookingSlotMinutes,
     derived?.isCreateMode,
+    derived?.isEditMode,
     selectedAppointment?.id,
     selectedStaff,
     selectedStaffId,
     user?.id,
+    initializedModalKey,
+    modalKey,
   ]);
 
   const normalizedWalkInEmail = (walkInEmail || "").trim().toLowerCase();
@@ -419,7 +435,10 @@ export function AppointmentModals({
 
   // Reset form when modal state changes
   useEffect(() => {
-    if (!modalState) return;
+    if (!modalState) {
+      setInitializedModalKey(null);
+      return;
+    }
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setRedeemLoyalty(false);
 
@@ -440,6 +459,7 @@ export function AppointmentModals({
         discount: "",
         priceOverrideEnabled: false,
       });
+      setInitializedModalKey(modalKey);
     } else if (selectedAppointment && derived?.isEditMode) {
       reset({
         clientId: selectedAppointment.clientId,
@@ -457,6 +477,9 @@ export function AppointmentModals({
         discount: "",
         priceOverrideEnabled: false,
       });
+      setInitializedModalKey(modalKey);
+    } else {
+      setInitializedModalKey(modalKey);
     }
   }, [
     modalState,
@@ -466,6 +489,7 @@ export function AppointmentModals({
     reset,
     selectedStaffId,
     user?.id,
+    modalKey,
   ]);
 
   if (!derived) return null;
@@ -751,17 +775,6 @@ export function AppointmentModals({
                       {t("common.delete")}
                     </Button>
                   )}
-                  <Button
-                    onClick={() =>
-                      setModalState({
-                        appointmentId: selectedAppointment.id,
-                        mode: "edit",
-                      })
-                    }
-                  >
-                    <Edit className="h-4 w-4 me-2" />
-                    {t("common.edit")}
-                  </Button>
                 </>
               )}
             </div>
@@ -1078,7 +1091,12 @@ export function AppointmentModals({
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="date">{t("fields.date")} *</Label>
-                  <Input id="date" type="date" {...form.register("date")} />
+                  <Input
+                    id="date"
+                    type="date"
+                    min={todayStr}
+                    {...form.register("date")}
+                  />
                   <FormErrorMessage message={getErrorMessage("date")} />
                 </div>
                 <div className="space-y-2">
@@ -1099,11 +1117,16 @@ export function AppointmentModals({
                       ) : (
                         availableSlots.map((time) => {
                           const isBlocked = blockedSlots.has(time);
+                          const slotMinutesValue = timeToMinutes(time);
+                          const isPastSlot =
+                            isPastDate ||
+                            (isToday && slotMinutesValue < currentMinutes);
+                          const isDisabled = isBlocked || isPastSlot;
                           return (
                             <SelectItem
                               key={time}
                               value={time}
-                              disabled={isBlocked}
+                              disabled={isDisabled}
                             >
                               <div className="flex items-center gap-2">
                                 <Clock className="h-4 w-4" />

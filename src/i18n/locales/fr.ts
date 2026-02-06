@@ -482,11 +482,10 @@ export const fr = {
     deleteAppointment: "Supprimer le rendez-vous",
     deleteAppointmentConfirm:
       "Êtes-vous sûr de vouloir supprimer le rendez-vous avec {{client}} ?",
-    notesPlaceholder: "Notes supplémentaires...",
-    breakTime: "Pause",
+    notesPlaceholder: "Notes supplémentaires...",    breakTime: "Pause",
     closedDay: "Ce jour est marqué comme fermé dans les paramètres du salon.",
-    timeOutsideWorkingHours:
-      "L'horaire sélectionné est en dehors des horaires du salon.",
+    timeOutsideWorkingHours: "L'horaire sélectionné est en dehors des horaires du salon.",
+    pastAppointmentNotAllowed: "Impossible de planifier un rendez-vous dans le passé.",
     timeSlotOccupied: "Ce créneau est déjà réservé.",
     timeSlotOccupiedDetails: "Conflit avec {{client}} ({{start}}-{{end}}).",
     recordPayment: "Enregistrer le paiement",

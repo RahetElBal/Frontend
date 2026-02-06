@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Heart, TrendingUp, Settings, Award } from "lucide-react";
+import { Heart, TrendingUp, Award } from "lucide-react";
 
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
@@ -37,20 +37,10 @@ import { useGet } from "@/hooks/useGet";
 import { usePost } from "@/hooks/usePost";
 import { useUser } from "@/hooks/useUser";
 import { useLanguage } from "@/hooks/useLanguage";
-import type {
-  Client,
-  Sale,
-  Service,
-  Salon,
-  SalonSettings,
-  SalonSettingsExtended,
-} from "@/types/entities";
+import type { Client, Sale, Service } from "@/types/entities";
 import type { PaginatedResponse } from "@/types";
-import { LoyaltySettings } from "../salon-settings/components/loyalty-settings";
-import type { SettingsSectionProps } from "../salon-settings/types";
 import { normalizeSalesResponse } from "@/utils/normalize-sales";
 import {
-  defaultLoyaltySettings,
   extractArray,
   deriveLoyaltySettings,
   calculateTotalPointsIssued,
@@ -71,13 +61,9 @@ export function LoyaltyPage() {
   /* cSpell:ignore Superadmin */
   const { salon, isAdmin, isSuperadmin } = useUser();
   const { formatCurrency } = useLanguage();
-  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isRedeemModalOpen, setIsRedeemModalOpen] = useState(false);
   const [redeemClientId, setRedeemClientId] = useState("");
   const [redeemServiceId, setRedeemServiceId] = useState("");
-  const [settings, setSettings] = useState<Partial<SalonSettingsExtended>>({
-    ...defaultLoyaltySettings,
-  });
   const salonId = salon?.id;
   const canRedeem = isAdmin || isSuperadmin;
 
@@ -188,45 +174,6 @@ export function LoyaltyPage() {
     onError: (error) => toast.error(error.message || t("common.error")),
   });
 
-  const updateField: SettingsSectionProps["updateField"] = (field, value) => {
-    setSettings((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const saveSettings = usePost<Salon, { settings: Partial<SalonSettings> }>(
-    "salons",
-    {
-      id: salonId,
-      method: "PATCH",
-      invalidateQueries: ["salons", "auth"],
-      onSuccess: () => {
-        toast.success(t("salonSettings.saved"));
-        setIsSettingsModalOpen(false);
-      },
-      onError: (error) => toast.error(error.message || t("common.error")),
-    },
-  );
-
-  const handleSaveSettings = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!salonId) {
-      toast.error(t("common.error"));
-      return;
-    }
-
-    saveSettings.mutate({
-      settings: {
-        ...salon?.settings,
-        loyaltyEnabled: settings.loyaltyEnabled,
-        loyaltyPointsPerCurrency: settings.loyaltyPointsPerCurrency,
-        loyaltyPointValue: settings.loyaltyPointValue,
-        loyaltyMinimumRedemption: settings.loyaltyMinimumRedemption,
-        loyaltyRewardServiceId: settings.loyaltyRewardServiceId,
-        loyaltyRewardDiscountType: settings.loyaltyRewardDiscountType,
-        loyaltyRewardDiscountValue: settings.loyaltyRewardDiscountValue,
-      },
-    });
-  };
-
   const handleRedeemPoints = () => {
     if (!salonId) {
       toast.error(t("common.error"));
@@ -285,17 +232,6 @@ export function LoyaltyPage() {
                 {t("loyalty.redeemPoints")}
               </Button>
             )}
-            <Button
-              variant="outline"
-              className="gap-2"
-              onClick={() => {
-                setSettings(derivedSettings);
-                setIsSettingsModalOpen(true);
-              }}
-            >
-              <Settings className="h-4 w-4" />
-              {t("loyalty.programSettings")}
-            </Button>
           </div>
         }
       />
@@ -469,37 +405,6 @@ export function LoyaltyPage() {
           )}
         </Card>
       </div>
-
-      {/* Program Settings Modal */}
-      < Dialog open={isSettingsModalOpen} onOpenChange={setIsSettingsModalOpen}>
-        <DialogContent className="sm:max-w-125">
-          <DialogHeader>
-            <DialogTitle>{t("loyalty.programSettings")}</DialogTitle>
-            <DialogDescription>
-              {t("loyalty.programDescription")}
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleSaveSettings}>
-            <div className="py-4">
-              <LoyaltySettings
-                formData={settings}
-                updateField={updateField}
-                services={services}
-              />
-            </div>
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setIsSettingsModalOpen(false)}
-              >
-                {t("common.cancel")}
-              </Button>
-              <Button type="submit">{t("common.save")}</Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
 
       <Dialog open={isRedeemModalOpen} onOpenChange={setIsRedeemModalOpen}>
         <DialogContent className="sm:max-w-md">
