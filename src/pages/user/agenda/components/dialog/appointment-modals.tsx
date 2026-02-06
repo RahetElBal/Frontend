@@ -89,15 +89,47 @@ const toNumber = (value: unknown, fallback = 0): number => {
   return fallback;
 };
 
-const getPersonLabel = (person?: {
-  firstName?: string;
-  lastName?: string;
-  name?: string;
-  email?: string;
-}) => {
+const getPersonLabel = (person?: unknown): string | undefined => {
   if (!person) return undefined;
-  const fullName = `${person.firstName || ""} ${person.lastName || ""}`.trim();
-  return fullName || person.name || person.email || undefined;
+  if (typeof person === "string") {
+    const trimmed = person.trim();
+    return trimmed ? trimmed : undefined;
+  }
+  if (typeof person === "number") {
+    return Number.isFinite(person) ? String(person) : undefined;
+  }
+  if (typeof person !== "object") return undefined;
+
+  const data = person as Record<string, unknown>;
+  const firstName = typeof data.firstName === "string" ? data.firstName : "";
+  const lastName = typeof data.lastName === "string" ? data.lastName : "";
+  const fullName = `${firstName} ${lastName}`.trim();
+  if (fullName) return fullName;
+
+  const directName = typeof data.name === "string" ? data.name.trim() : "";
+  if (directName) return directName;
+
+  const fullNameField =
+    typeof data.fullName === "string" ? data.fullName.trim() : "";
+  if (fullNameField) return fullNameField;
+
+  const email = typeof data.email === "string" ? data.email.trim() : "";
+  if (email) return email;
+
+  const username =
+    typeof data.username === "string" ? data.username.trim() : "";
+  if (username) return username;
+
+  if (data.user) return getPersonLabel(data.user);
+  if (data.profile) return getPersonLabel(data.profile);
+
+  return undefined;
+};
+
+const getStringLabel = (value?: unknown): string | undefined => {
+  if (typeof value !== "string") return undefined;
+  const trimmed = value.trim();
+  return trimmed ? trimmed : undefined;
 };
 
 type SalonSettingsLike = SalonSettings & Partial<SalonSettingsExtended>;
@@ -240,6 +272,17 @@ export function AppointmentModals({
       deduped.add(staff.id);
     });
     return options;
+  }, [staffMembers, user]);
+
+  const staffLookup = useMemo(() => {
+    const map = new Map<string, StaffUser>();
+    if (user?.id) {
+      map.set(user.id, user as StaffUser);
+    }
+    staffMembers.forEach((staff) => {
+      map.set(staff.id, staff);
+    });
+    return map;
   }, [staffMembers, user]);
 
   const { reset, watch } = form;
@@ -576,31 +619,50 @@ export function AppointmentModals({
     );
     const bookedByLabel = (() => {
       if (!selectedAppointment) return t("common.unknown");
-      const appointmentMeta = selectedAppointment as Appointment & {
-        createdBy?: StaffUser;
-        createdById?: string;
-        createdByName?: string;
-        createdByUser?: StaffUser;
-        createdByUserId?: string;
-        bookedBy?: StaffUser;
-        bookedById?: string;
-        bookedByName?: string;
+      const appointmentMeta = selectedAppointment as Appointment &
+        Record<string, unknown>;
+
+      const resolveById = (value?: unknown) => {
+        if (typeof value !== "string") return undefined;
+        return getPersonLabel(staffLookup.get(value));
       };
-      const findStaffById = (id?: string | null) =>
-        id ? staffMembers.find((staff) => staff.id === id) : undefined;
+
+      const resolvePerson = (value?: unknown) => {
+        const direct = getPersonLabel(value);
+        if (direct) return direct;
+        if (value && typeof value === "object") {
+          const maybeId = (value as Record<string, unknown>).id;
+          const resolved = resolveById(maybeId);
+          if (resolved) return resolved;
+        }
+        return undefined;
+      };
 
       const label =
-        getPersonLabel(appointmentMeta.createdBy) ||
-        appointmentMeta.createdByName ||
-        getPersonLabel(findStaffById(appointmentMeta.createdById)) ||
-        getPersonLabel(appointmentMeta.createdByUser) ||
-        getPersonLabel(findStaffById(appointmentMeta.createdByUserId)) ||
-        getPersonLabel(appointmentMeta.bookedBy) ||
-        appointmentMeta.bookedByName ||
-        getPersonLabel(findStaffById(appointmentMeta.bookedById)) ||
-        getPersonLabel(selectedAppointment.staff) ||
-        getPersonLabel(findStaffById(selectedAppointment.staffId)) ||
-        undefined;
+        resolvePerson(appointmentMeta.createdBy) ||
+        resolvePerson(appointmentMeta.createdByUser) ||
+        resolvePerson(appointmentMeta.bookedBy) ||
+        resolvePerson(appointmentMeta.bookedByUser) ||
+        resolvePerson(appointmentMeta.creator) ||
+        resolvePerson(appointmentMeta.user) ||
+        getStringLabel(appointmentMeta.createdByName) ||
+        getStringLabel(appointmentMeta.createdByFullName) ||
+        getStringLabel(appointmentMeta.createdByEmail) ||
+        getStringLabel(appointmentMeta.bookedByName) ||
+        getStringLabel(appointmentMeta.bookedByFullName) ||
+        getStringLabel(appointmentMeta.bookedByEmail) ||
+        getStringLabel(appointmentMeta.creatorName) ||
+        getStringLabel(appointmentMeta.creatorEmail) ||
+        getStringLabel(appointmentMeta.userName) ||
+        getStringLabel(appointmentMeta.userEmail) ||
+        resolveById(appointmentMeta.createdById) ||
+        resolveById(appointmentMeta.createdByUserId) ||
+        resolveById(appointmentMeta.bookedById) ||
+        resolveById(appointmentMeta.bookedByUserId) ||
+        resolveById(appointmentMeta.creatorId) ||
+        resolveById(appointmentMeta.userId) ||
+        resolvePerson(selectedAppointment.staff) ||
+        resolveById(selectedAppointment.staffId);
 
       return label || t("common.unknown");
     })();
