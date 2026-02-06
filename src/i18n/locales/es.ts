@@ -706,6 +706,45 @@ export const es = {
     billingDescription: "Gestionar métodos de pago y suscripción",
   },
 
+  // ============================================
+  // NOTIFICATIONS
+  // ============================================
+  notifications: {
+    actor: "Por {{name}}",
+    statuses: {
+      paid: "Pagado",
+      pending: "Pendiente",
+      cancelled: "Cancelado",
+      completed: "Completado",
+    },
+    types: {
+      appointmentCreated: {
+        title: "Nueva cita",
+        message: "{{client}} - {{service}} el {{date}} a las {{time}}",
+      },
+      appointmentCancelled: {
+        title: "Cita cancelada",
+        message: "{{client}} - {{service}} el {{date}} a las {{time}}",
+      },
+      appointmentReminder: {
+        title: "Cita próxima",
+        message: "{{client}} - {{service}} a las {{time}} el {{date}}",
+      },
+      saleCreated: {
+        title: "Pago registrado",
+        message: "{{client}} - {{amount}}",
+      },
+      saleCompleted: {
+        title: "Pago completado",
+        message: "{{client}} - {{amount}}",
+      },
+      whatsappConfirmationSent: {
+        title: "Confirmación de WhatsApp enviada",
+        message: "{{client}} - {{service}}",
+      },
+    },
+  },
+
   viewMode: {
     title: "Modo de vista",
     admin: "Vista de administrador",

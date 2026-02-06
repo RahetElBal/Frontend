@@ -704,6 +704,45 @@ export const ar = {
     billingDescription: "إدارة طرق الدفع والاشتراك",
   },
 
+  // ============================================
+  // NOTIFICATIONS
+  // ============================================
+  notifications: {
+    actor: "بواسطة {{name}}",
+    statuses: {
+      paid: "مدفوع",
+      pending: "قيد الانتظار",
+      cancelled: "ملغى",
+      completed: "مكتمل",
+    },
+    types: {
+      appointmentCreated: {
+        title: "موعد جديد",
+        message: "{{client}} - {{service}} في {{date}} على {{time}}",
+      },
+      appointmentCancelled: {
+        title: "تم إلغاء الموعد",
+        message: "{{client}} - {{service}} في {{date}} على {{time}}",
+      },
+      appointmentReminder: {
+        title: "موعد قادم",
+        message: "{{client}} - {{service}} على {{time}} في {{date}}",
+      },
+      saleCreated: {
+        title: "تم تسجيل الدفع",
+        message: "{{client}} - {{amount}}",
+      },
+      saleCompleted: {
+        title: "تم إكمال الدفع",
+        message: "{{client}} - {{amount}}",
+      },
+      whatsappConfirmationSent: {
+        title: "تم إرسال تأكيد واتساب",
+        message: "{{client}} - {{service}}",
+      },
+    },
+  },
+
   viewMode: {
     title: "وضع العرض",
     admin: "عرض المدير",

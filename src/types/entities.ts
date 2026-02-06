@@ -433,6 +433,7 @@ export const AdminNotificationType = {
   APPOINTMENT_CREATED: "appointment.created",
   APPOINTMENT_CANCELLED: "appointment.cancelled",
   APPOINTMENT_REMINDER: "appointment.reminder",
+  WHATSAPP_CONFIRMATION_SENT: "whatsapp.confirmation.sent",
   SALE_CREATED: "sale.created",
   SALE_COMPLETED: "sale.completed",
 } as const;
