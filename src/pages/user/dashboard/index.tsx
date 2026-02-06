@@ -31,12 +31,12 @@ export function DashboardPage() {
     [salonId, today, isUser, user?.id],
   );
 
-  const { data: todaysRevenue } = useGet<RevenueData>(
+  const { data: todaysRevenue, isLoading: isRevenueLoading } = useGet<RevenueData>(
     withParams("sales/today/revenue", { salonId }),
     { enabled: !!salonId },
   );
 
-  const { data: lastWeekRevenue } = useGet<RevenueData>(
+  const { data: lastWeekRevenue, isLoading: isLastWeekLoading } = useGet<RevenueData>(
     withParams("sales/last-week/revenue", { salonId }),
     { enabled: !!salonId },
   );
@@ -46,10 +46,12 @@ export function DashboardPage() {
     { enabled: !!salonId && !!today },
   );
 
-  const { data: clientsData } = useGet<PaginatedResponse<Client>>(
+  const { data: clientsData, isLoading: isClientsLoading } = useGet<PaginatedResponse<Client>>(
     withParams("clients", { salonId, perPage: 100 }),
     { enabled: !!salonId },
   );
+
+  const statsLoading = isRevenueLoading || isLastWeekLoading || isClientsLoading;
 
   if (isLoading) {
     return (
@@ -72,6 +74,7 @@ export function DashboardPage() {
         todaysRevenue={todaysRevenue}
         lastWeekRevenue={lastWeekRevenue}
         clients={clients}
+        loading={statsLoading}
       />
 
       <TodaysAppointments appointments={appointmentsData} />

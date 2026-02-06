@@ -1,10 +1,12 @@
 import { type LucideIcon, TrendingUp, TrendingDown } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import { Spinner } from '@/components/spinner';
 import { cn } from '@/lib/utils';
 
 interface StatsCardProps {
   title: string;
   value: string | number;
+  loading?: boolean;
   change?: number;
   changeText?: string;
   changeIsPositive?: boolean;
@@ -17,6 +19,7 @@ interface StatsCardProps {
 export function StatsCard({
   title,
   value,
+  loading = false,
   change,
   changeText,
   changeIsPositive,
@@ -26,7 +29,7 @@ export function StatsCard({
   iconBgColor = 'bg-accent-pink/10',
 }: StatsCardProps) {
   const safeChange = Number.isFinite(change) ? change : undefined;
-  const hasChange = changeText !== undefined || safeChange !== undefined;
+  const hasChange = !loading && (changeText !== undefined || safeChange !== undefined);
   const isPositive =
     changeIsPositive ?? (safeChange !== undefined && safeChange >= 0);
   const formatPercent = (value: number) =>
@@ -37,7 +40,13 @@ export function StatsCard({
       <div className="flex items-start justify-between">
         <div className="space-y-2">
           <p className="text-sm font-medium text-muted-foreground">{title}</p>
-          <p className="text-2xl font-bold">{value}</p>
+          {loading ? (
+            <div className="flex items-center h-8">
+              <Spinner size="sm" />
+            </div>
+          ) : (
+            <p className="text-2xl font-bold">{value}</p>
+          )}
           {hasChange && (
             <div className="flex items-center gap-1 text-sm">
               {isPositive ? (

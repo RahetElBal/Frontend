@@ -9,6 +9,7 @@ import { AdminStatsGrid } from "@/pages/admin/components/stats-grid";
 interface StatsGridProps {
   salonsData?: Salon[];
   usersData?: PaginatedResponse<User>;
+  loading?: boolean;
   revenueData?: {
     total: number;
     bySalon?: Record<string, number>;
@@ -18,6 +19,7 @@ interface StatsGridProps {
 export function StatsGrid({
   salonsData,
   usersData,
+  loading = false,
   revenueData,
 }: StatsGridProps) {
   const { t } = useTranslation();
@@ -36,6 +38,7 @@ export function StatsGrid({
         <StatsCard
           title={t("admin.stats.totalSalons")}
           value={totalSalons}
+          loading={loading}
           icon={Building2}
           iconColor="text-accent-pink"
           iconBgColor="bg-accent-pink/10"
@@ -44,6 +47,7 @@ export function StatsGrid({
       <StatsCard
         title={t("admin.stats.totalUsers")}
         value={totalUsers}
+        loading={loading}
         icon={Users}
         iconColor="text-accent-blue"
         iconBgColor="bg-accent-blue/10"
@@ -51,6 +55,7 @@ export function StatsGrid({
       <StatsCard
         title={t("admin.stats.totalRevenue")}
         value={formatCurrency(totalRevenue)}
+        loading={loading}
         icon={DollarSign}
         iconColor="text-green-600"
         iconBgColor="bg-green-100"
@@ -59,6 +64,7 @@ export function StatsGrid({
         <StatsCard
           title={t("admin.stats.activeSubscriptions")}
           value={activeSubscriptions}
+          loading={loading}
           icon={Activity}
           iconColor="text-purple-600"
           iconBgColor="bg-purple-100"

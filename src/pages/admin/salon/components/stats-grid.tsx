@@ -18,6 +18,7 @@ interface StatsGridProps {
   activeUsers?: number;
   totalAdmins?: number;
   isSuperadmin: boolean;
+  loading?: boolean;
   // Admin-specific stats
   totalRevenue?: number;
   monthlyRevenue?: number;
@@ -32,6 +33,7 @@ export function StatsGrid({
   activeUsers = 0,
   totalAdmins = 0,
   isSuperadmin,
+  loading = false,
   totalRevenue = 0,
   monthlyRevenue = 0,
   totalServices = 0,
@@ -48,6 +50,7 @@ export function StatsGrid({
           <StatsCard
             title={t("admin.salons.totalSalons")}
             value={totalSalons}
+            loading={loading}
             icon={Building2}
             iconColor="text-accent-pink"
             iconBgColor="bg-accent-pink/10"
@@ -55,6 +58,7 @@ export function StatsGrid({
           <StatsCard
             title={t("admin.salons.activeSalons")}
             value={activeSalons}
+            loading={loading}
             icon={CheckCircle2}
             iconColor="text-green-600"
             iconBgColor="bg-green-100"
@@ -62,6 +66,7 @@ export function StatsGrid({
           <StatsCard
             title="Admins"
             value={totalAdmins}
+            loading={loading}
             icon={UserCheck}
             iconColor="text-indigo-600"
             iconBgColor="bg-indigo-100"
@@ -69,6 +74,7 @@ export function StatsGrid({
           <StatsCard
             title={t("admin.salons.totalUsers")}
             value={totalUsers}
+            loading={loading}
             icon={Users}
             iconColor="text-accent-blue"
             iconBgColor="bg-accent-blue/10"
@@ -80,6 +86,7 @@ export function StatsGrid({
           <StatsCard
             title="Salons inactifs"
             value={Math.max(totalSalons - activeSalons, 0)}
+            loading={loading}
             icon={Building2}
             iconColor="text-orange-600"
             iconBgColor="bg-orange-100"
@@ -87,6 +94,7 @@ export function StatsGrid({
           <StatsCard
             title="Utilisateurs actifs"
             value={activeUsers}
+            loading={loading}
             icon={Users}
             iconColor="text-green-600"
             iconBgColor="bg-green-100"
@@ -94,6 +102,7 @@ export function StatsGrid({
           <StatsCard
             title="Utilisateurs inactifs"
             value={Math.max(totalUsers - activeUsers, 0)}
+            loading={loading}
             icon={Users}
             iconColor="text-yellow-600"
             iconBgColor="bg-yellow-100"
@@ -111,6 +120,7 @@ export function StatsGrid({
         <StatsCard
           title="Revenu total"
           value={formatCurrency(totalRevenue)}
+          loading={loading}
           icon={DollarSign}
           iconColor="text-green-600"
           iconBgColor="bg-green-100"
@@ -118,6 +128,7 @@ export function StatsGrid({
         <StatsCard
           title="Revenu ce mois"
           value={formatCurrency(monthlyRevenue)}
+          loading={loading}
           icon={DollarSign}
           iconColor="text-accent-pink"
           iconBgColor="bg-accent-pink/10"
@@ -129,6 +140,7 @@ export function StatsGrid({
         <StatsCard
           title="Clients"
           value={totalClients}
+          loading={loading}
           icon={UserCheck}
           iconColor="text-accent-blue"
           iconBgColor="bg-accent-blue/10"
@@ -136,6 +148,7 @@ export function StatsGrid({
         <StatsCard
           title="Services"
           value={totalServices}
+          loading={loading}
           icon={Briefcase}
           iconColor="text-indigo-600"
           iconBgColor="bg-indigo-100"
@@ -143,6 +156,7 @@ export function StatsGrid({
         <StatsCard
           title="Equipe"
           value={totalUsers}
+          loading={loading}
           icon={Users}
           iconColor="text-accent-blue"
           iconBgColor="bg-accent-blue/10"

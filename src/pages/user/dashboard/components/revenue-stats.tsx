@@ -8,11 +8,13 @@ import { getChangeDisplay } from "@/common/utils";
 interface RevenueStatsProps {
   todaysRevenue?: RevenueData;
   lastWeekRevenue?: RevenueData;
+  loading?: boolean;
 }
 
 export function RevenueStats({
   todaysRevenue,
   lastWeekRevenue,
+  loading = false,
 }: RevenueStatsProps) {
   const { t } = useTranslation();
   const { formatCurrency } = useLanguage();
@@ -25,6 +27,7 @@ export function RevenueStats({
     <StatsCard
       title={t("dashboard.todayRevenue")}
       value={formatCurrency(todayValue)}
+      loading={loading}
       change={change.value}
       changeText={change.text ? t("common.new") : undefined}
       changeIsPositive={change.isPositive}

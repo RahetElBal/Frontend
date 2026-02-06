@@ -75,7 +75,7 @@ export default function AdminDashboardPage() {
         )}
       />
 
-      <StatsGrid salonsData={salonsToDisplay} usersData={usersData} />
+      <StatsGrid salonsData={salonsToDisplay} usersData={usersData} loading={isLoading} />
 
       <div
         className={`grid gap-6 ${isSuperadmin ? "lg:grid-cols-2" : "lg:grid-cols-1"}`}

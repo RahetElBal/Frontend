@@ -292,6 +292,7 @@ export function AnalyticsPage() {
         <StatsCard
           title={t("analytics.totalRevenue")}
           value={formatCurrency(toNumber(totalRevenue))}
+          loading={isLoading}
           icon={DollarSign}
           iconColor="text-green-600"
           iconBgColor="bg-green-100"
@@ -299,6 +300,7 @@ export function AnalyticsPage() {
         <StatsCard
           title={t("sales.transactions")}
           value={totalTransactions}
+          loading={isLoading}
           icon={ShoppingCart}
           iconColor="text-blue-600"
           iconBgColor="bg-blue-100"
@@ -306,6 +308,7 @@ export function AnalyticsPage() {
         <StatsCard
           title={t("analytics.totalAppointments")}
           value={totalAppointments}
+          loading={isLoading}
           icon={Calendar}
           iconColor="text-purple-600"
           iconBgColor="bg-purple-100"
@@ -313,6 +316,7 @@ export function AnalyticsPage() {
         <StatsCard
           title={t("analytics.newClients")}
           value={newClients}
+          loading={isLoading}
           icon={Users}
           iconColor="text-amber-600"
           iconBgColor="bg-amber-100"
@@ -320,6 +324,7 @@ export function AnalyticsPage() {
         <StatsCard
           title={t("analytics.averageTicket")}
           value={formatCurrency(toNumber(averageTicket))}
+          loading={isLoading}
           icon={TrendingUp}
           iconColor="text-accent-pink"
           iconBgColor="bg-accent-pink/10"
@@ -330,6 +335,7 @@ export function AnalyticsPage() {
         <StatsCard
           title={t("analytics.marriedClients")}
           value={marriedClientsInRange.length}
+          loading={isLoading}
           icon={Heart}
           iconColor="text-rose-600"
           iconBgColor="bg-rose-100"
@@ -337,6 +343,7 @@ export function AnalyticsPage() {
         <StatsCard
           title={t("analytics.packRevenue")}
           value={formatCurrency(toNumber(packRevenue))}
+          loading={isLoading}
           icon={Package}
           iconColor="text-indigo-600"
           iconBgColor="bg-indigo-100"
@@ -344,6 +351,7 @@ export function AnalyticsPage() {
         <StatsCard
           title={t("analytics.packSold")}
           value={packCount}
+          loading={isLoading}
           icon={Package}
           iconColor="text-indigo-600"
           iconBgColor="bg-indigo-100"
@@ -351,6 +359,7 @@ export function AnalyticsPage() {
         <StatsCard
           title={t("analytics.packShare")}
           value={`${packShare.toFixed(1)}%`}
+          loading={isLoading}
           icon={BadgePercent}
           iconColor="text-amber-600"
           iconBgColor="bg-amber-100"
