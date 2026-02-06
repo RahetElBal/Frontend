@@ -51,7 +51,6 @@ export function usePost<TData, TVariables = void>(
 ): UseMutationResult<TData, ApiError, TVariables> {
   const queryClient = useQueryClient();
   const { method = "POST", invalidate, onSuccess, ...rest } = options || {};
-  const basePath = typeof path === "string" ? path : "";
 
   return useMutation<TData, ApiError, TVariables>({
     mutationFn: async (variables) => {
@@ -62,11 +61,11 @@ export function usePost<TData, TVariables = void>(
       }
       return (fn as typeof post)<TData, TVariables>(resolvedPath, variables);
     },
-    onSuccess: (data, variables, context) => {
+    onSuccess: (data, variables, ...args) => {
       const base = typeof path === "function" ? path(variables) : path;
       const keys = invalidate || [base.split("/")[0] || base];
       keys.forEach((key) => queryClient.invalidateQueries({ queryKey: [key] }));
-      onSuccess?.(data, variables, context);
+      onSuccess?.(data, variables, ...args);
     },
     ...rest,
   });

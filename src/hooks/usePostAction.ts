@@ -70,20 +70,20 @@ export function usePostAction<TData, TVariables = void>(
       if (method === "DELETE") return (fn as typeof del)<TData>(resolvedPath);
       return (fn as typeof post)<TData, typeof payload>(resolvedPath, payload);
     },
-    onSuccess: (data, variables, context) => {
+    onSuccess: (data, variables, ...args) => {
       const resolvedPath = typeof path === "function" ? path(variables) : path;
       const keys = invalidate || [resolvedPath.split("/")[0] || resolvedPath];
       keys.forEach((key) => queryClient.invalidateQueries({ queryKey: [key] }));
       if (successToast) {
         toast.success(typeof successToast === "string" ? successToast : "Action completed successfully");
       }
-      onSuccess?.(data, variables, context);
+      onSuccess?.(data, variables, ...args);
     },
-    onError: (error, variables, context) => {
+    onError: (error, variables, ...args) => {
       if (errorToast) {
         toast.error(typeof errorToast === "string" ? errorToast : error.message || "An error occurred");
       }
-      onError?.(error, variables, context);
+      onError?.(error, variables, ...args);
     },
     ...rest,
   });
