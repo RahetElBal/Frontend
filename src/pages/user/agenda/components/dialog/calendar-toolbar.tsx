@@ -3,6 +3,7 @@ import { Plus, Bell, BellRing, Calendar, List, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/badge";
 import { Card } from "@/components/ui/card";
+import { Spinner } from "@/components/spinner";
 
 interface CalendarToolbarProps {
   notificationsEnabled: boolean;
@@ -11,6 +12,7 @@ interface CalendarToolbarProps {
   confirmedCount: number;
   pendingCount: number;
   totalCount: number;
+  loading?: boolean;
   isNewAppointmentDisabled?: boolean;
   newAppointmentDisabledReason?: string;
 }
@@ -22,6 +24,7 @@ export function CalendarToolbar({
   confirmedCount,
   pendingCount,
   totalCount,
+  loading = false,
   isNewAppointmentDisabled = false,
   newAppointmentDisabledReason,
 }: CalendarToolbarProps) {
@@ -33,15 +36,42 @@ export function CalendarToolbar({
         <div className="flex items-center gap-2">
           <Badge variant="success" className="gap-1">
             <Calendar className="h-3 w-3" />
-            {confirmedCount} {t("agenda.confirmed")}
+            {loading ? (
+              <>
+                <Spinner size="sm" className="mx-1" />
+                {t("agenda.confirmed")}
+              </>
+            ) : (
+              <>
+                {confirmedCount} {t("agenda.confirmed")}
+              </>
+            )}
           </Badge>
           <Badge variant="warning" className="gap-1">
             <Clock className="h-3 w-3" />
-            {pendingCount} {t("agenda.pending")}
+            {loading ? (
+              <>
+                <Spinner size="sm" className="mx-1" />
+                {t("agenda.pending")}
+              </>
+            ) : (
+              <>
+                {pendingCount} {t("agenda.pending")}
+              </>
+            )}
           </Badge>
           <Badge variant="default" className="gap-1">
             <List className="h-3 w-3" />
-            {totalCount} {t("common.total")}
+            {loading ? (
+              <>
+                <Spinner size="sm" className="mx-1" />
+                {t("common.total")}
+              </>
+            ) : (
+              <>
+                {totalCount} {t("common.total")}
+              </>
+            )}
           </Badge>
         </div>
 

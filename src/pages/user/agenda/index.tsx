@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Calendar, List } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { LoadingPanel } from "@/components/loading-panel";
+import { Spinner } from "@/components/spinner";
 /* cSpell:ignore Superadmin walkin */
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -113,7 +114,7 @@ export function AgendaPage() {
 
   const {
     data: appointmentsData,
-    isLoading,
+    isLoading: isAppointmentsLoading,
     refetch,
   } = useGet<PaginatedResponse<Appointment>>(
     withParams("appointments", appointmentsParams),
@@ -172,6 +173,8 @@ export function AgendaPage() {
       }),
     [rawAppointments, scopedOptimistic],
   );
+  const showAppointmentsLoading =
+    isAppointmentsLoading && appointments.length === 0;
   const clients = safeExtractArray<Client>(clientsData);
   const services = safeExtractArray<Service>(servicesData);
   const staffMembers = safeExtractArray<User>(staffResponse);
@@ -908,151 +911,6 @@ export function AgendaPage() {
     deleteAppointment(selectedAppointment.id);
   };
 
-  const showPageLoading = isLoading && appointments.length === 0;
-
-  if (showPageLoading) {
-    return (
-      <div className="space-y-6">
-        <PageHeader
-          title={t("nav.agenda")}
-          description={t("agenda.description")}
-        />
-        <LoadingPanel label={t("common.loading")} className="h-96" />
-      </div>
-    );
-  }
-
-  if (viewMode === "month") {
-    return (
-      <div className="space-y-6 w-full">
-        <PageHeader
-          title={t("nav.agenda")}
-          description={t("agenda.description")}
-        />
-
-        <CalendarToolbar
-          notificationsEnabled={notificationsEnabled}
-          onNotificationToggle={handleNotificationToggle}
-          onNewAppointment={() =>
-            setModalState({
-              appointmentId: "create",
-              mode: "edit",
-              prefillDate: selectedDate,
-              nonce: Date.now(),
-            })
-          }
-          confirmedCount={confirmedCount}
-          pendingCount={pendingCount}
-          totalCount={appointments.length}
-          isNewAppointmentDisabled={isSelectedDatePast}
-          newAppointmentDisabledReason={t("agenda.pastAppointmentNotAllowed")}
-        />
-
-        <div className="flex flex-wrap gap-2 items-center">
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setViewMode("day")}
-              className="gap-1"
-            >
-              <List className="h-3.5 w-3.5" />
-              {t("agenda.day")}
-            </Button>
-            <Button
-              variant="default"
-              size="sm"
-              onClick={() => setViewMode("month")}
-              className="gap-1"
-            >
-              <Calendar className="h-3.5 w-3.5" />
-              {t("agenda.month")}
-            </Button>
-          </div>
-          {canSelectStaff && staffOptions.length > 0 && (
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">
-                {t("fields.staff")}
-              </span>
-              <Select
-                value={selectedStaffIdValue || ""}
-                onValueChange={(value) => setSelectedStaffId(value)}
-              >
-                <SelectTrigger className="w-56 bg-white text-black">
-                  <SelectValue placeholder={t("fields.staff")} />
-                </SelectTrigger>
-                <SelectContent className="bg-white text-black">
-                  {staffOptions.map((staff) => (
-                    <SelectItem key={staff.id} value={staff.id}>
-                      {staff.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-        </div>
-
-        <MonthlySummaryView
-          appointments={appointments}
-          selectedDate={selectedDateObj}
-          onSelectDate={setSelectedDate}
-        />
-
-        {modalState && (
-          <AppointmentModals
-            modalState={modalState}
-            setModalState={setModalState}
-            appointments={appointments}
-            clients={clients}
-            services={services}
-            staffMembers={staffMembers}
-            selectedStaffId={staffFilterId}
-            form={form}
-            onSubmit={handleSubmit}
-            onDelete={handleDeleteAppointment}
-            onCreateSale={(appointment, options) => {
-              if (!salonId || !appointment.serviceId) {
-                toast.error(t("common.error"));
-                return;
-              }
-              const optimisticUpdated = {
-                ...appointment,
-                status: AppointmentStatus.COMPLETED,
-                paid: true,
-                updatedAt: new Date().toISOString(),
-              };
-              upsertVisibleAppointment(optimisticUpdated);
-              createSaleFromAppointment({
-                salonId,
-                appointmentId: appointment.id,
-                clientId: appointment.clientId,
-                redeemLoyalty: options?.redeemLoyalty ?? false,
-                items: [
-                  {
-                    type: "service",
-                    itemId: appointment.serviceId,
-                    quantity: 1,
-                    price: appointment.price,
-                  },
-                ],
-              });
-            }}
-            isCreatingSale={isCreatingSale}
-            isPending={
-              isCreating ||
-              isUpdating ||
-              isDeleting ||
-              isCreatingSale ||
-              isCreatingWalkIn
-            }
-            salonSettings={salonSettings}
-          />
-        )}
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6 w-full">
       <PageHeader
@@ -1074,6 +932,7 @@ export function AgendaPage() {
         confirmedCount={confirmedCount}
         pendingCount={pendingCount}
         totalCount={appointments.length}
+        loading={showAppointmentsLoading}
         isNewAppointmentDisabled={isSelectedDatePast}
         newAppointmentDisabledReason={t("agenda.pastAppointmentNotAllowed")}
       />
@@ -1083,17 +942,29 @@ export function AgendaPage() {
           <p className="text-sm text-muted-foreground">
             {t("agenda.unpaidTotalToday")}
           </p>
-          <p className="text-xl font-bold text-accent-pink">
-            {formatCurrency(unpaidTotalToday)}
-          </p>
+          {showAppointmentsLoading ? (
+            <div className="flex items-center h-7">
+              <Spinner size="sm" />
+            </div>
+          ) : (
+            <p className="text-xl font-bold text-accent-pink">
+              {formatCurrency(unpaidTotalToday)}
+            </p>
+          )}
         </Card>
         <Card className="p-4">
           <p className="text-sm text-muted-foreground">
             {t("agenda.overdueCount")}
           </p>
-          <p className="text-xl font-bold text-orange-600">
-            {overdueAppointments.length}
-          </p>
+          {showAppointmentsLoading ? (
+            <div className="flex items-center h-7">
+              <Spinner size="sm" />
+            </div>
+          ) : (
+            <p className="text-xl font-bold text-orange-600">
+              {overdueAppointments.length}
+            </p>
+          )}
         </Card>
       </div>
 
@@ -1133,7 +1004,7 @@ export function AgendaPage() {
         )}
         <div className="flex items-center gap-2">
           <Button
-            variant="default"
+            variant={viewMode === "day" ? "default" : "outline"}
             size="sm"
             onClick={() => setViewMode("day")}
             className="gap-1"
@@ -1142,7 +1013,7 @@ export function AgendaPage() {
             {t("agenda.day")}
           </Button>
           <Button
-            variant="outline"
+            variant={viewMode === "month" ? "default" : "outline"}
             size="sm"
             onClick={() => setViewMode("month")}
             className="gap-1"
@@ -1193,59 +1064,73 @@ export function AgendaPage() {
       </div>
 
       <div className="w-full">
-        <TimelineView
-          appointments={filteredAppointments}
-          selectedDate={selectedDateObj}
-          isLoading={isLoading}
-          timeSlots={timelineSlots.slots}
-          blockedSlots={timelineSlots.blocked}
-          isClosed={!workingHoursForSelectedDate.isOpen}
-          onTimeSlotClick={(time) =>
-            handleSelectSlot({
-              start: timeToDate(time, selectedDate),
-              end: timeToDate(time, selectedDate),
-            })
-          }
-          onAppointmentClick={(appointment) =>
-            handleSelectEvent({
-              id: appointment.id,
-              title: appointment.client
-                ? `${appointment.client.firstName} ${appointment.client.lastName}`
-                : appointment.service?.name || t("agenda.appointmentDetails"),
-              start: new Date(`${appointment.date}T${appointment.startTime}`),
-              end: new Date(`${appointment.date}T${appointment.endTime}`),
-              resource: appointment,
-            })
-          }
-          onRecordPayment={(appointment) => {
-            if (!salonId || !appointment.serviceId) {
-              toast.error(t("common.error"));
-              return;
+        {viewMode === "month" ? (
+          showAppointmentsLoading ? (
+            <Card className="p-6">
+              <LoadingPanel label={t("common.loading")} />
+            </Card>
+          ) : (
+            <MonthlySummaryView
+              appointments={appointments}
+              selectedDate={selectedDateObj}
+              onSelectDate={setSelectedDate}
+            />
+          )
+        ) : (
+          <TimelineView
+            appointments={filteredAppointments}
+            selectedDate={selectedDateObj}
+            isLoading={showAppointmentsLoading}
+            timeSlots={timelineSlots.slots}
+            blockedSlots={timelineSlots.blocked}
+            isClosed={!workingHoursForSelectedDate.isOpen}
+            onTimeSlotClick={(time) =>
+              handleSelectSlot({
+                start: timeToDate(time, selectedDate),
+                end: timeToDate(time, selectedDate),
+              })
             }
-            const optimisticUpdated = {
-              ...appointment,
-              status: AppointmentStatus.COMPLETED,
-              paid: true,
-              updatedAt: new Date().toISOString(),
-            };
-            upsertVisibleAppointment(optimisticUpdated);
-            createSaleFromAppointment({
-              salonId,
-              appointmentId: appointment.id,
-              clientId: appointment.clientId,
-              redeemLoyalty: false,
-              items: [
-                {
-                  type: "service",
-                  itemId: appointment.serviceId,
-                  quantity: 1,
-                  price: appointment.price,
-                },
-              ],
-            });
-          }}
-          isRecordingPayment={isCreatingSale}
-        />
+            onAppointmentClick={(appointment) =>
+              handleSelectEvent({
+                id: appointment.id,
+                title: appointment.client
+                  ? `${appointment.client.firstName} ${appointment.client.lastName}`
+                  : appointment.service?.name || t("agenda.appointmentDetails"),
+                start: new Date(`${appointment.date}T${appointment.startTime}`),
+                end: new Date(`${appointment.date}T${appointment.endTime}`),
+                resource: appointment,
+              })
+            }
+            onRecordPayment={(appointment) => {
+              if (!salonId || !appointment.serviceId) {
+                toast.error(t("common.error"));
+                return;
+              }
+              const optimisticUpdated = {
+                ...appointment,
+                status: AppointmentStatus.COMPLETED,
+                paid: true,
+                updatedAt: new Date().toISOString(),
+              };
+              upsertVisibleAppointment(optimisticUpdated);
+              createSaleFromAppointment({
+                salonId,
+                appointmentId: appointment.id,
+                clientId: appointment.clientId,
+                redeemLoyalty: false,
+                items: [
+                  {
+                    type: "service",
+                    itemId: appointment.serviceId,
+                    quantity: 1,
+                    price: appointment.price,
+                  },
+                ],
+              });
+            }}
+            isRecordingPayment={isCreatingSale}
+          />
+        )}
       </div>
 
       {modalState && (
