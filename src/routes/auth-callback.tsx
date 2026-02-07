@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuthContext } from "@/contexts/AuthProvider";
 import { AUTH_STORAGE_KEY, AUTH_ROUTES } from "@/constants/auth";
 import { get } from "@/lib/http";
+import { markStaffKicked, readStaffLock } from "@/lib/staff-lock";
 import { Spinner } from "@/components/spinner";
 import type { AuthUser } from "@/types/user";
 
@@ -113,6 +114,20 @@ export default function AuthCallback() {
 
         if (!user) {
           throw new Error("Failed to fetch user data");
+        }
+
+        if (readStaffLock().active && user.role === "user" && !user.isSuperadmin) {
+          markStaffKicked();
+          localStorage.removeItem(AUTH_STORAGE_KEY);
+          localStorage.removeItem("user");
+          setError(
+            "Staff access is temporarily paused. Please contact your administrator.",
+          );
+          setIsProcessing(false);
+          setTimeout(() => {
+            navigate(AUTH_ROUTES.LOGIN, { replace: true });
+          }, 4000);
+          return;
         }
 
         if ((user as AuthUser & { isActive?: boolean }).isActive === false) {

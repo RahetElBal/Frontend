@@ -54,6 +54,10 @@ export interface Salon extends BaseEntity {
   email?: string;
   logo?: string;
   isActive: boolean;
+  staffLockActive?: boolean;
+  staffLockActivatedAt?: string | null;
+  staffLockClearedAt?: string | null;
+  staffLockReason?: string | null;
   ownerId: string;
   owner?: User;
   settings?: SalonSettings;

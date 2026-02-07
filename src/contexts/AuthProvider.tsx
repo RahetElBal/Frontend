@@ -9,6 +9,7 @@ import {
 } from 'react';
 import type { AuthUser, AuthState, AppRole } from '@/types/user';
 import { AUTH_STORAGE_KEY } from '@/constants/auth';
+import { markStaffKicked, readStaffLock } from '@/lib/staff-lock';
 
 interface AuthContextValue extends AuthState {
   login: (user: AuthUser, token: string) => void;
@@ -48,6 +49,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
         if (token && storedUser) {
           const user = JSON.parse(storedUser) as AuthUser;
+          if (readStaffLock().active && user.role === 'user' && !user.isSuperadmin) {
+            markStaffKicked();
+            localStorage.removeItem(AUTH_STORAGE_KEY);
+            localStorage.removeItem('user');
+            setState({
+              user: null,
+              isAuthenticated: false,
+              isLoading: false,
+            });
+            return;
+          }
           setState({
             user,
             isAuthenticated: true,

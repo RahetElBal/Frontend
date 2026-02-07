@@ -5,12 +5,15 @@ import { AuthProvider } from "@/contexts/AuthProvider";
 import { GlobalProvider } from "@/contexts/GlobalProvider";
 import { ModalsProvider } from "@/contexts/ModalsProvider";
 import { QueryProvider } from "@/contexts/QueryProvider";
+import { StaffLockProvider } from "@/contexts/StaffLockProvider";
 import { ViewModeProvider } from "@/contexts/ViewModeProvider";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { Toaster } from "@/components/ui/sonner";
+import { StaffLockEnforcer } from "@/components/staff-lock-enforcer";
 
 import { initI18n } from "@/i18n";
 import "@/index.css";
+import { initPwa } from "@/pwa";
 
 import App from "@/App";
 
@@ -22,19 +25,24 @@ const bootstrap = async () => {
       <ErrorBoundary>
         <QueryProvider>
           <AuthProvider>
-            <ViewModeProvider>
-              <GlobalProvider>
-                <ModalsProvider>
-                  <App />
-                  <Toaster />
-                </ModalsProvider>
-              </GlobalProvider>
-            </ViewModeProvider>
+            <StaffLockProvider>
+              <StaffLockEnforcer />
+              <ViewModeProvider>
+                <GlobalProvider>
+                  <ModalsProvider>
+                    <App />
+                    <Toaster />
+                  </ModalsProvider>
+                </GlobalProvider>
+              </ViewModeProvider>
+            </StaffLockProvider>
           </AuthProvider>
         </QueryProvider>
       </ErrorBoundary>
     </StrictMode>,
   );
+
+  initPwa();
 };
 
 void bootstrap();

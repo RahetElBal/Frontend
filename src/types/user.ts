@@ -34,6 +34,10 @@ export interface Salon {
   email?: string;
   logo?: string;
   isActive: boolean;
+  staffLockActive?: boolean;
+  staffLockActivatedAt?: string | null;
+  staffLockClearedAt?: string | null;
+  staffLockReason?: string | null;
   ownerId: string; // Required - every salon must have an owner admin
   owner?: User;
   staff?: User[];

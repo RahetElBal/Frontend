@@ -6,6 +6,7 @@ import { AppSidebar } from "@/components/sidebar/app-sidebar";
 import { LoadingPanel } from "@/components/loading-panel";
 import { Spinner } from "@/components/spinner";
 import { AppTopbar } from "@/components/topbar/app-topbar";
+import { StaffLockBanner } from "@/components/staff-lock-banner";
 import { MainLayout } from "@/layouts/main-layout";
 import { useUser } from "@/hooks/useUser";
 import { ROUTES } from "@/constants/navigation";
@@ -64,6 +65,7 @@ export function UserLayout() {
         style={{ paddingInlineStart: "var(--app-sidebar-width, 256px)" }}
       >
         <div className="w-full p-6 space-y-6">
+          <StaffLockBanner />
           <AppTopbar />
           <Suspense fallback={<LoadingPanel className="min-h-[60vh]" />}>
             <Outlet />
