@@ -1,4 +1,4 @@
-﻿import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuthContext } from "@/contexts/AuthProvider";
 import { AUTH_STORAGE_KEY, AUTH_ROUTES } from "@/constants/auth";
@@ -154,11 +154,11 @@ export default function AuthCallback() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center p-8 bg-card rounded-2xl shadow-xl shadow-black/10 max-w-md border border-destructive/20">
-          <div className="w-16 h-16 mx-auto mb-4 bg-destructive/10 rounded-full flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-red-50 to-orange-50">
+        <div className="text-center p-8 bg-white rounded-2xl shadow-xl max-w-md border border-red-100">
+          <div className="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
             <svg
-              className="w-8 h-8 text-destructive"
+              className="w-8 h-8 text-red-500"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -171,11 +171,11 @@ export default function AuthCallback() {
               />
             </svg>
           </div>
-          <h1 className="text-2xl font-bold text-foreground mb-3">
+          <h1 className="text-2xl font-bold text-gray-900 mb-3">
             Accès refusé
           </h1>
-          <p className="text-muted-foreground mb-4 leading-relaxed">{error}</p>
-          <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+          <p className="text-gray-600 mb-4 leading-relaxed">{error}</p>
+          <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
             <svg
               className="w-4 h-4 animate-spin"
               fill="none"
@@ -203,19 +203,16 @@ export default function AuthCallback() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="text-center p-8 bg-card rounded-2xl shadow-lg shadow-black/5 border border-border/60">
-        <Spinner className="w-12 h-12 mx-auto mb-4 text-primary" />
-        <h1 className="text-2xl font-bold text-foreground mb-2">
+    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-pink-50 to-blue-50">
+      <div className="text-center p-8 bg-white rounded-2xl shadow-lg">
+        <Spinner className="w-12 h-12 mx-auto mb-4 text-pink-500" />
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">
           {isProcessing ? "Authenticating..." : "Redirecting..."}
         </h1>
-        <p className="text-muted-foreground">
+        <p className="text-gray-600">
           Please wait while we complete your sign in.
         </p>
       </div>
     </div>
   );
 }
-
-
-

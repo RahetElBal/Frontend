@@ -93,7 +93,7 @@ export function LoginPage() {
           <Button
             variant="outline"
             size="lg"
-            className="w-full h-12 text-base font-medium border-2 border-accent-pink-100 bg-linear-to-br from-accent-pink-50 to-accent-blue-50 text-foreground shadow-sm transition-all duration-200 hover:from-accent-pink-100 hover:to-accent-blue-100"
+            className="w-full h-12 text-base font-medium border-2 border-pink-100 bg-linear-to-br from-pink-50 to-blue-50 text-gray-900 shadow-sm transition-all duration-200 hover:from-pink-100 hover:to-blue-100"
             onClick={loginWithGoogle}
             disabled={isLoading}
           >
@@ -124,7 +124,7 @@ export function LoginPage() {
           {/* Contact Info */}
           <a
             href={`tel:${CONTACT_INFO.PHONE.replace(/\s/g, "")}`}
-            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-accent-pink transition-colors"
+            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-accent-pink-500 transition-colors"
           >
             <Phone className="w-4 h-4" />
             <span>{t("auth.login.phoneLabel")}:</span>

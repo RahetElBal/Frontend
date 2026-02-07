@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { useSearchParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { Calendar, List } from "lucide-react";
@@ -78,23 +77,14 @@ export function AgendaPage() {
   const { user, isAdmin, isSuperadmin } = useUser();
   const { formatCurrency } = useLanguage();
   const queryClient = useQueryClient();
-  const [searchParams] = useSearchParams();
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [modalState, setModalState] = useState<AppointmentModalState>(null);
   const [filter, setFilter] = useState<
     "all" | "today" | "unpaid" | "overdue" | "completed"
   >("all");
-  const initialViewMode =
-    searchParams.get("view") === "month" ? "month" : "day";
-  const initialDate = searchParams.get("date") || getLocalDateString();
-  const initialStaffId = searchParams.get("staffId");
-  const [selectedDate, setSelectedDate] = useState(() => initialDate);
-  const [selectedStaffId, setSelectedStaffId] = useState<string | null>(
-    () => initialStaffId,
-  );
-  const [viewMode, setViewMode] = useState<"day" | "month">(
-    () => initialViewMode,
-  );
+  const [selectedDate, setSelectedDate] = useState(() => getLocalDateString());
+  const [selectedStaffId, setSelectedStaffId] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<"day" | "month">("day");
   const salonId = user?.salon?.id;
   const canSelectStaff = isAdmin || isSuperadmin;
   const selectedStaffIdValue = useMemo(() => {
@@ -999,10 +989,10 @@ export function AgendaPage() {
               value={selectedStaffIdValue || ""}
               onValueChange={(value) => setSelectedStaffId(value)}
             >
-              <SelectTrigger className="w-56 bg-popover text-foreground">
+              <SelectTrigger className="w-56 bg-white text-black">
                 <SelectValue placeholder={t("fields.staff")} />
               </SelectTrigger>
-              <SelectContent className="bg-popover text-foreground">
+              <SelectContent className="bg-white text-black">
                 {staffOptions.map((staff) => (
                   <SelectItem key={staff.id} value={staff.id}>
                     {staff.label}

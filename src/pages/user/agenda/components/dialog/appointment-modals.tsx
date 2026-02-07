@@ -926,10 +926,10 @@ export function AppointmentModals({
                     value={selectedStaff || ""}
                     onValueChange={(value) => form.setValue("staffId", value)}
                   >
-                    <SelectTrigger className="bg-popover text-foreground">
+                    <SelectTrigger className="bg-white text-black">
                       <SelectValue placeholder={t("fields.staff")} />
                     </SelectTrigger>
-                    <SelectContent className="bg-popover text-foreground">
+                    <SelectContent className="bg-white text-black">
                       {staffOptions.map((staff) => (
                         <SelectItem key={staff.id} value={staff.id}>
                           <div className="flex items-center gap-2">
@@ -972,10 +972,10 @@ export function AppointmentModals({
                   onValueChange={(value) => form.setValue("clientId", value)}
                   disabled={!!walkInEnabled}
                 >
-                <SelectTrigger className="bg-popover text-foreground">
+                <SelectTrigger className="bg-white text-black">
                   <SelectValue placeholder={t("agenda.selectClient")} />
                 </SelectTrigger>
-                <SelectContent className="bg-popover text-foreground">
+                <SelectContent className="bg-white text-black">
                     {selectableClients.length === 0 ? (
                       <div className="p-2 text-center text-muted-foreground text-sm">
                         {t("clients.noClients")}
@@ -1066,10 +1066,10 @@ export function AppointmentModals({
                   value={form.watch("serviceId")}
                   onValueChange={(value) => form.setValue("serviceId", value)}
                 >
-                  <SelectTrigger className="bg-popover text-foreground">
+                  <SelectTrigger className="bg-white text-black">
                     <SelectValue placeholder={t("agenda.selectService")} />
                   </SelectTrigger>
-                  <SelectContent className="bg-popover text-foreground">
+                  <SelectContent className="bg-white text-black">
                     {visibleServices.length === 0 ? (
                       <div className="p-2 text-center text-muted-foreground text-sm">
                         {t("services.services")} - {t("common.noResults")}
@@ -1221,10 +1221,10 @@ export function AppointmentModals({
                     onValueChange={(value) => form.setValue("startTime", value)}
                     disabled={isClosedDay || availableSlots.length === 0}
                   >
-                  <SelectTrigger className="bg-popover text-foreground">
+                  <SelectTrigger className="bg-white text-black">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-popover text-foreground">
+                  <SelectContent className="bg-white text-black">
                       {availableSlots.length === 0 ? (
                         <div className="p-2 text-center text-muted-foreground text-sm">
                           {t("common.noResults")}
@@ -1309,4 +1309,3 @@ export function AppointmentModals({
 
   return null;
 }
-
