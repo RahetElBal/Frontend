@@ -72,6 +72,33 @@ export interface TranslationKeys {
       admin: string;
     };
   };
+  plans: {
+    badge: string;
+    standard: string;
+    pro: string;
+  };
+  planWarning: {
+    title: string;
+    message: string;
+    note: string;
+  };
+  sla: {
+    title: string;
+    subtitle: string;
+    welcomeHeadline: string;
+    description: string;
+    acceptLabel: string;
+    acceptButton: string;
+    processing: string;
+    accepted: string;
+    error: string;
+    items: {
+      usage: string;
+      data: string;
+      security: string;
+      support: string;
+    };
+  };
   fields: {
     firstName: string;
     lastName: string;
@@ -1553,6 +1580,35 @@ export const en = {
       category: "Category",
       duration: "Duration",
       price: "Price",
+    },
+  },
+  plans: {
+    badge: "Plan: {{plan}}",
+    standard: "Standard",
+    pro: "Pro",
+  },
+  planWarning: {
+    title: "Plan ending soon",
+    message:
+      "Your plan will deactivate in {{days}} days. Please contact support to renew.",
+    note: "Staff access will pause when the plan ends.",
+  },
+  sla: {
+    title: "Welcome to Beautiq",
+    subtitle: "Thank you for choosing our salon platform.",
+    welcomeHeadline: "Before you start, please review the service agreement.",
+    description:
+      "This agreement defines how the platform should be used and how we protect your data.",
+    acceptLabel: "I have read and accept the Service Level Agreement.",
+    acceptButton: "Accept and continue",
+    processing: "Saving...",
+    accepted: "Agreement accepted",
+    error: "Unable to accept the agreement. Please try again.",
+    items: {
+      usage: "Use the platform only for legitimate salon operations.",
+      data: "Keep client data accurate and up to date.",
+      security: "Protect your access credentials and staff permissions.",
+      support: "Contact support for any service interruption or issue.",
     },
   },
 } as const;

@@ -909,4 +909,33 @@ export const es = {
       price: "Precio",
     },
   },
+  plans: {
+    badge: "Plan: {{plan}}",
+    standard: "Standard",
+    pro: "Pro",
+  },
+  planWarning: {
+    title: "Plan por expirar",
+    message:
+      "Tu plan se desactivará en {{days}} días. Contacta al soporte para renovar.",
+    note: "El acceso del personal se pausará al finalizar el plan.",
+  },
+  sla: {
+    title: "Bienvenido a Beautiq",
+    subtitle: "Gracias por elegir nuestra plataforma para salones.",
+    welcomeHeadline: "Antes de empezar, revisa el acuerdo de servicio.",
+    description:
+      "Este acuerdo define el uso de la plataforma y la protecciÃ³n de tus datos.",
+    acceptLabel: "He leÃ­do y acepto el acuerdo de nivel de servicio.",
+    acceptButton: "Aceptar y continuar",
+    processing: "Guardando...",
+    accepted: "Acuerdo aceptado",
+    error: "No se pudo aceptar el acuerdo. IntÃ©ntalo de nuevo.",
+    items: {
+      usage: "Utiliza la plataforma solo para operaciones del salÃ³n.",
+      data: "MantÃ©n los datos de clientes exactos y actualizados.",
+      security: "Protege tus credenciales y permisos del equipo.",
+      support: "Contacta al soporte ante cualquier interrupciÃ³n.",
+    },
+  },
 } as const;

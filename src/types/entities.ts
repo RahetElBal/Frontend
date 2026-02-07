@@ -54,6 +54,17 @@ export interface Salon extends BaseEntity {
   email?: string;
   logo?: string;
   isActive: boolean;
+  planTier?: "standard" | "pro";
+  planStatus?: "active" | "inactive" | "expired" | "paused";
+  planUserLimit?: number;
+  planStartAt?: string | null;
+  planEndAt?: string | null;
+  planUpdatedAt?: string | null;
+  planUpdatedById?: string | null;
+  planNotes?: string | null;
+  slaAcceptedAt?: string | null;
+  slaAcceptedById?: string | null;
+  slaAcceptedVersion?: number | null;
   staffLockActive?: boolean;
   staffLockActivatedAt?: string | null;
   staffLockClearedAt?: string | null;

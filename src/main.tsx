@@ -10,6 +10,7 @@ import { ViewModeProvider } from "@/contexts/ViewModeProvider";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { Toaster } from "@/components/ui/sonner";
 import { StaffLockEnforcer } from "@/components/staff-lock-enforcer";
+import { SlaWelcomeModal } from "@/components/sla-welcome-modal";
 
 import { initI18n } from "@/i18n";
 import "@/index.css";
@@ -27,6 +28,7 @@ const bootstrap = async () => {
           <AuthProvider>
             <StaffLockProvider>
               <StaffLockEnforcer />
+              <SlaWelcomeModal />
               <ViewModeProvider>
                 <GlobalProvider>
                   <ModalsProvider>

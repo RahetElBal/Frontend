@@ -1152,4 +1152,33 @@ export const fr = {
       price: "Prix",
     },
   },
+  plans: {
+    badge: "Plan : {{plan}}",
+    standard: "Standard",
+    pro: "Pro",
+  },
+  planWarning: {
+    title: "Plan bientôt expiré",
+    message:
+      "Votre plan sera désactivé dans {{days}} jours. Veuillez contacter le support pour renouveler.",
+    note: "L'accès du personnel sera suspendu à la fin du plan.",
+  },
+  sla: {
+    title: "Bienvenue sur Beautiq",
+    subtitle: "Merci d'avoir choisi notre plateforme de salon.",
+    welcomeHeadline: "Avant de commencer, veuillez lire l'accord de service.",
+    description:
+      "Cet accord dÃ©finit l'utilisation de la plateforme et la protection de vos donnÃ©es.",
+    acceptLabel: "J'ai lu et j'accepte l'accord de niveau de service.",
+    acceptButton: "Accepter et continuer",
+    processing: "Enregistrement...",
+    accepted: "Accord acceptÃ©",
+    error: "Impossible d'accepter l'accord. Veuillez rÃ©essayer.",
+    items: {
+      usage: "Utilisez la plateforme uniquement pour les activitÃ©s du salon.",
+      data: "Gardez les donnÃ©es clients Ã  jour et exactes.",
+      security: "ProtÃ©gez vos accÃ¨s et permissions d'Ã©quipe.",
+      support: "Contactez le support en cas d'interruption de service.",
+    },
+  },
 } as const;
