@@ -1,5 +1,11 @@
 import { lazy } from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  useLocation,
+} from "react-router-dom";
 
 import { LoginPage } from "@/routes/login";
 import AuthCallback from "@/routes/auth-callback";
@@ -77,6 +83,11 @@ const SettingsPage = lazy(() =>
   })),
 );
 
+function AgendaPageWrapper() {
+  const location = useLocation();
+  return <AgendaPage key={location.search} />;
+}
+
 function App() {
   return (
     <BrowserRouter>
@@ -89,7 +100,7 @@ function App() {
         <Route element={<UserLayout />}>
           <Route path={ROUTES.DASHBOARD} element={<DashboardPage />} />
           <Route path={ROUTES.CLIENTS} element={<ClientsPage />} />
-          <Route path={ROUTES.AGENDA} element={<AgendaPage />} />
+          <Route path={ROUTES.AGENDA} element={<AgendaPageWrapper />} />
           <Route path={ROUTES.SERVICES} element={<ServicesPage />} />
           <Route path={ROUTES.STAFF} element={<StaffPage />} />
           <Route path={ROUTES.PRODUCTS} element={<ProductsPage />} />

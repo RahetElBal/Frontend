@@ -773,6 +773,45 @@ export const fr = {
     billingDescription: "Gérer les moyens de paiement et abonnement",
   },
 
+  // ============================================
+  // NOTIFICATIONS
+  // ============================================
+  notifications: {
+    actor: "Par {{name}}",
+    statuses: {
+      paid: "Payé",
+      pending: "En attente",
+      cancelled: "Annulé",
+      completed: "Terminé",
+    },
+    types: {
+      appointmentCreated: {
+        title: "Nouveau rendez-vous",
+        message: "{{client}} - {{service}} le {{date}} à {{time}}",
+      },
+      appointmentCancelled: {
+        title: "Rendez-vous annulé",
+        message: "{{client}} - {{service}} le {{date}} à {{time}}",
+      },
+      appointmentReminder: {
+        title: "Rendez-vous à venir",
+        message: "{{client}} - {{service}} à {{time}} le {{date}}",
+      },
+      saleCreated: {
+        title: "Paiement enregistré",
+        message: "{{client}} - {{amount}}",
+      },
+      saleCompleted: {
+        title: "Paiement confirmé",
+        message: "{{client}} - {{amount}}",
+      },
+      whatsappConfirmationSent: {
+        title: "Confirmation WhatsApp envoyée",
+        message: "{{client}} - {{service}}",
+      },
+    },
+  },
+
   salon: {
     selectSalon: "Sélectionnez votre salon",
     selectSalonDescription:

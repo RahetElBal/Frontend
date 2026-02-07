@@ -311,6 +311,41 @@ export interface TranslationKeys {
       logout: string;
     };
   };
+  notifications: {
+    actor: string;
+    statuses: {
+      paid: string;
+      pending: string;
+      cancelled: string;
+      completed: string;
+    };
+    types: {
+      appointmentCreated: {
+        title: string;
+        message: string;
+      };
+      appointmentCancelled: {
+        title: string;
+        message: string;
+      };
+      appointmentReminder: {
+        title: string;
+        message: string;
+      };
+      saleCreated: {
+        title: string;
+        message: string;
+      };
+      saleCompleted: {
+        title: string;
+        message: string;
+      };
+      whatsappConfirmationSent: {
+        title: string;
+        message: string;
+      };
+    };
+  };
 }
 
 // ============================================
@@ -1119,6 +1154,45 @@ export const en = {
     salonInfoDescription: "Update your salon details and business hours",
     billing: "Billing & Subscription",
     billingDescription: "Manage payment methods and subscription",
+  },
+
+  // ============================================
+  // NOTIFICATIONS
+  // ============================================
+  notifications: {
+    actor: "By {{name}}",
+    statuses: {
+      paid: "Paid",
+      pending: "Pending",
+      cancelled: "Cancelled",
+      completed: "Completed",
+    },
+    types: {
+      appointmentCreated: {
+        title: "New appointment",
+        message: "{{client}} - {{service}} on {{date}} at {{time}}",
+      },
+      appointmentCancelled: {
+        title: "Appointment cancelled",
+        message: "{{client}} - {{service}} on {{date}} at {{time}}",
+      },
+      appointmentReminder: {
+        title: "Upcoming appointment",
+        message: "{{client}} - {{service}} at {{time}} on {{date}}",
+      },
+      saleCreated: {
+        title: "Payment recorded",
+        message: "{{client}} - {{amount}}",
+      },
+      saleCompleted: {
+        title: "Payment completed",
+        message: "{{client}} - {{amount}}",
+      },
+      whatsappConfirmationSent: {
+        title: "WhatsApp confirmation sent",
+        message: "{{client}} - {{service}}",
+      },
+    },
   },
 
   // ============================================

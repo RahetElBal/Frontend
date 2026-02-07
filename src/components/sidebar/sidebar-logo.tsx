@@ -16,7 +16,7 @@ export function SidebarLogo({ collapsed, className }: SidebarLogoProps) {
       {/* Logo Text - Hidden when collapsed */}
       {!collapsed && (
         <div className="flex flex-col">
-          <span className="text-xl font-bold tracking-tight text-foreground">
+          <span className="text-xl font-display font-bold tracking-tight text-foreground">
             Beautiq
           </span>
           <span className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground">

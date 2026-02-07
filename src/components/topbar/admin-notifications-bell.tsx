@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Bell, BellRing, Check } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -12,15 +13,21 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/badge";
 import { Spinner } from "@/components/spinner";
 import { cn } from "@/lib/utils";
 import { useGet, withParams } from "@/hooks/useGet";
 import { usePost } from "@/hooks/usePost";
+import { useLanguage } from "@/hooks/useLanguage";
 import { useUser } from "@/hooks/useUser";
 import { AUTH_STORAGE_KEY } from "@/constants/auth";
+import { ROUTES } from "@/constants/navigation";
 import { API_BASE_URL } from "@/lib/http";
 import type { PaginatedResponse } from "@/types";
-import type { AdminNotification } from "@/types/entities";
+import {
+  AdminNotificationType,
+  type AdminNotification,
+} from "@/types/entities";
 
 const NOTIFICATIONS_POLL_MS = 30000;
 const UNREAD_POLL_MS = 15000;
@@ -41,7 +48,9 @@ const formatNotificationTime = (value?: string | null) => {
 export function AdminNotificationsBell() {
   const { t } = useTranslation();
   const { user, isAdmin, isSuperadmin } = useUser();
+  const { formatCurrency } = useLanguage();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
 
   const canShow = isAdmin || isSuperadmin;
@@ -167,6 +176,157 @@ export function AdminNotificationsBell() {
     return null;
   }
 
+  type NotificationPayload = {
+    clientName?: string;
+    serviceName?: string;
+    date?: string;
+    time?: string;
+    staffId?: string;
+    total?: number | string;
+    paymentStatus?: string;
+    status?: string;
+    actorName?: string;
+  };
+
+  const toPayload = (notification: AdminNotification): NotificationPayload =>
+    (notification.payload || {}) as NotificationPayload;
+
+  const formatAmount = (value?: number | string) => {
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed)) return "";
+    return formatCurrency(parsed);
+  };
+
+  const getStatusBadge = (payload: NotificationPayload) => {
+    const rawStatus = payload.paymentStatus || payload.status;
+    if (!rawStatus) return null;
+    const normalized = String(rawStatus).toLowerCase();
+    if (normalized === "paid") {
+      return { label: t("notifications.statuses.paid"), variant: "success" as const };
+    }
+    if (normalized === "pending") {
+      return { label: t("notifications.statuses.pending"), variant: "warning" as const };
+    }
+    if (normalized === "cancelled") {
+      return { label: t("notifications.statuses.cancelled"), variant: "error" as const };
+    }
+    if (normalized === "completed") {
+      return { label: t("notifications.statuses.completed"), variant: "success" as const };
+    }
+    return null;
+  };
+
+  const getNotificationContent = (notification: AdminNotification) => {
+    const payload = toPayload(notification);
+    const hasPayload =
+      notification.payload &&
+      typeof notification.payload === "object" &&
+      Object.keys(notification.payload).length > 0;
+    if (!hasPayload) {
+      return {
+        title: notification.title,
+        message: notification.message,
+      };
+    }
+    const clientName = payload.clientName || t("fields.client");
+    const serviceName = payload.serviceName || t("fields.service");
+    const date = payload.date || "";
+    const time = payload.time || "";
+    const amount = formatAmount(payload.total);
+
+    switch (notification.type) {
+      case AdminNotificationType.APPOINTMENT_CREATED:
+        return {
+          title: t("notifications.types.appointmentCreated.title"),
+          message: t("notifications.types.appointmentCreated.message", {
+            client: clientName,
+            service: serviceName,
+            date,
+            time,
+          }),
+        };
+      case AdminNotificationType.APPOINTMENT_CANCELLED:
+        return {
+          title: t("notifications.types.appointmentCancelled.title"),
+          message: t("notifications.types.appointmentCancelled.message", {
+            client: clientName,
+            service: serviceName,
+            date,
+            time,
+          }),
+        };
+      case AdminNotificationType.APPOINTMENT_REMINDER:
+        return {
+          title: t("notifications.types.appointmentReminder.title"),
+          message: t("notifications.types.appointmentReminder.message", {
+            client: clientName,
+            service: serviceName,
+            date,
+            time,
+          }),
+        };
+      case AdminNotificationType.SALE_CREATED:
+        return {
+          title: t("notifications.types.saleCreated.title"),
+          message: t("notifications.types.saleCreated.message", {
+            client: clientName,
+            amount,
+          }),
+        };
+      case AdminNotificationType.SALE_COMPLETED:
+        return {
+          title: t("notifications.types.saleCompleted.title"),
+          message: t("notifications.types.saleCompleted.message", {
+            client: clientName,
+            amount,
+          }),
+        };
+      case AdminNotificationType.WHATSAPP_CONFIRMATION_SENT:
+        return {
+          title: t("notifications.types.whatsappConfirmationSent.title"),
+          message: t("notifications.types.whatsappConfirmationSent.message", {
+            client: clientName,
+            service: serviceName,
+          }),
+        };
+      default:
+        return {
+          title: notification.title,
+          message: notification.message,
+        };
+    }
+  };
+
+  const handleNotificationNavigation = (notification: AdminNotification) => {
+    const payload = toPayload(notification);
+    const isPayment =
+      notification.type === AdminNotificationType.SALE_CREATED ||
+      notification.type === AdminNotificationType.SALE_COMPLETED ||
+      String(payload.paymentStatus || "").toLowerCase() === "paid";
+
+    if (isPayment) {
+      navigate(ROUTES.SALES);
+      setOpen(false);
+      return;
+    }
+
+    const params = new URLSearchParams();
+    if (payload.date) {
+      params.set("date", payload.date);
+    }
+    if (payload.staffId) {
+      params.set("staffId", payload.staffId);
+    }
+    params.set("view", "day");
+
+    const target = params.toString()
+      ? `${ROUTES.AGENDA}?${params.toString()}`
+      : ROUTES.AGENDA;
+
+    navigate(target);
+    setOpen(false);
+  };
+
   const isLoading = isNotificationsLoading || isUnreadLoading;
   const hasUnread = unreadCount > 0;
 
@@ -196,9 +356,9 @@ export function AdminNotificationsBell() {
         <DropdownMenuLabel className="flex items-center justify-between">
           <span>{t("settings.notifications")}</span>
           <Button
-            variant="ghost"
+            variant="default"
             size="sm"
-            className="h-7 px-2 text-xs"
+            className="h-8 px-3 text-xs font-semibold bg-accent-pink text-white hover:bg-accent-pink/90 shadow-sm"
             onClick={() => markAllRead({ salonId })}
             disabled={isMarkingAll || unreadCount === 0}
           >
@@ -220,6 +380,13 @@ export function AdminNotificationsBell() {
           <div className="max-h-[360px] overflow-y-auto">
             {notifications.map((notification) => {
               const isUnread = !notification.readAt;
+              const payload = toPayload(notification);
+              const actorName =
+                typeof payload.actorName === "string" && payload.actorName.trim()
+                  ? payload.actorName.trim()
+                  : null;
+              const statusBadge = getStatusBadge(payload);
+              const content = getNotificationContent(notification);
               return (
                 <DropdownMenuItem
                   key={notification.id}
@@ -227,6 +394,7 @@ export function AdminNotificationsBell() {
                     if (isUnread) {
                       markRead({ id: notification.id });
                     }
+                    handleNotificationNavigation(notification);
                   }}
                   className={cn(
                     "items-start gap-3 whitespace-normal py-3",
@@ -240,12 +408,24 @@ export function AdminNotificationsBell() {
                     )}
                   />
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold truncate">
-                      {notification.title}
-                    </p>
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-sm font-semibold truncate">
+                        {content.title}
+                      </p>
+                      {statusBadge && (
+                        <Badge variant={statusBadge.variant}>
+                          {statusBadge.label}
+                        </Badge>
+                      )}
+                    </div>
                     <p className="text-xs text-muted-foreground leading-4 mt-1">
-                      {notification.message}
+                      {content.message}
                     </p>
+                    {actorName && (
+                      <p className="text-[11px] text-muted-foreground mt-1">
+                        {t("notifications.actor", { name: actorName })}
+                      </p>
+                    )}
                     <p className="text-[11px] text-muted-foreground mt-2">
                       {formatNotificationTime(notification.createdAt)}
                     </p>

@@ -183,7 +183,7 @@ export function MonthlySummaryView({
               type="button"
               onClick={() => onSelectDate(cell.dateStr)}
               className={cn(
-                "min-h-[96px] p-2 text-left bg-white transition",
+                "min-h-[96px] p-2 text-left bg-card transition",
                 "hover:bg-muted/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-pink/50",
                 !cell.inMonth && "bg-muted/10 text-muted-foreground",
                 isSelected && "ring-2 ring-accent-pink ring-inset",
