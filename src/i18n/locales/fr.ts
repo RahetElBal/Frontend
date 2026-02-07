@@ -494,6 +494,8 @@ export const fr = {
     recordPayment: "Enregistrer le paiement",
     paymentRecorded: "Paiement enregistré",
     completeAndPay: "Terminer et encaisser",
+    markInProgress: "Marquer en cours",
+    markFinished: "Marquer terminé",
     unpaidTotalToday: "Total impayé aujourd'hui",
     overdueCount: "En retard",
     filters: {
@@ -781,6 +783,7 @@ export const fr = {
     statuses: {
       paid: "Payé",
       pending: "En attente",
+      in_progress: "En cours",
       cancelled: "Annulé",
       completed: "Terminé",
     },
@@ -796,6 +799,14 @@ export const fr = {
       appointmentReminder: {
         title: "Rendez-vous à venir",
         message: "{{client}} - {{service}} à {{time}} le {{date}}",
+      },
+      appointmentAssigned: {
+        title: "Nouvelle affectation",
+        message: "{{client}} - {{service}} le {{date}} à {{time}}",
+      },
+      appointmentStatusUpdated: {
+        title: "Statut du rendez-vous mis à jour",
+        message: "{{client}} - {{service}} est maintenant {{status}}",
       },
       saleCreated: {
         title: "Paiement enregistré",

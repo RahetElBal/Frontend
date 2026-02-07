@@ -52,6 +52,7 @@ import type {
   SalonSettingsExtended,
   User as StaffUser,
 } from "@/types/entities";
+import { AppointmentStatus } from "@/types/entities";
 import type { AppointmentFormData } from "../../validation";
 import type { AppointmentModalState } from "../../types";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -150,7 +151,9 @@ interface AppointmentModalsProps {
     appointment: Appointment,
     options?: { redeemLoyalty?: boolean },
   ) => void;
+  onUpdateStatus?: (appointment: Appointment, status: AppointmentStatus) => void;
   isCreatingSale?: boolean;
+  isUpdatingStatus?: boolean;
   isPending: boolean;
 }
 
@@ -167,7 +170,9 @@ export function AppointmentModals({
   onSubmit,
   onDelete,
   onCreateSale,
+  onUpdateStatus,
   isCreatingSale = false,
+  isUpdatingStatus = false,
   isPending,
 }: AppointmentModalsProps) {
   const { t } = useTranslation();
@@ -666,6 +671,15 @@ export function AppointmentModals({
 
       return label || t("common.unknown");
     })();
+    const canUpdateStatus =
+      !!selectedAppointment &&
+      !!user?.id &&
+      (selectedAppointment.staffId === user.id || isAdmin || isSuperadmin);
+    const canMarkInProgress =
+      selectedAppointment?.status === AppointmentStatus.PENDING ||
+      selectedAppointment?.status === AppointmentStatus.CONFIRMED;
+    const canMarkFinished =
+      selectedAppointment?.status === AppointmentStatus.IN_PROGRESS;
     return (
       <Dialog open={!!modalState} onOpenChange={handleClose}>
         <DialogContent className="sm:max-w-4xl w-full overflow-x-hidden">
@@ -842,9 +856,50 @@ export function AppointmentModals({
           )}
           <DialogFooter className="flex flex-col sm:flex-row gap-2">
             {selectedAppointment &&
-              onCreateSale &&
+              onUpdateStatus &&
+              canUpdateStatus &&
               !selectedAppointment.paid &&
               selectedAppointment.status !== "cancelled" && (
+                <div className="flex gap-2 w-full sm:w-auto">
+                  {canMarkInProgress && (
+                    <Button
+                      variant="outline"
+                      className="w-full sm:w-auto"
+                      onClick={() =>
+                        onUpdateStatus(
+                          selectedAppointment,
+                          AppointmentStatus.IN_PROGRESS,
+                        )
+                      }
+                      disabled={isPending || isUpdatingStatus}
+                    >
+                      {isUpdatingStatus
+                        ? t("common.loading")
+                        : t("agenda.markInProgress")}
+                    </Button>
+                  )}
+                  {canMarkFinished && (
+                    <Button
+                      className="w-full sm:w-auto"
+                      onClick={() =>
+                        onUpdateStatus(
+                          selectedAppointment,
+                          AppointmentStatus.COMPLETED,
+                        )
+                      }
+                      disabled={isPending || isUpdatingStatus}
+                    >
+                      {isUpdatingStatus
+                        ? t("common.loading")
+                        : t("agenda.markFinished")}
+                    </Button>
+                  )}
+                </div>
+              )}
+            {selectedAppointment &&
+              onCreateSale &&
+              !selectedAppointment.paid &&
+              selectedAppointment.status === "completed" && (
                 <div className="flex gap-2 w-full sm:w-auto">
                   <Button
                     className="w-full sm:w-auto"
@@ -862,9 +917,7 @@ export function AppointmentModals({
                     <DollarSign className="h-4 w-4 me-2" />
                     {isCreatingSale
                       ? t("common.loading")
-                      : selectedAppointment.status === "completed"
-                      ? t("agenda.recordPayment")
-                      : t("agenda.completeAndPay")}
+                      : t("agenda.recordPayment")}
                   </Button>
                 </div>
               )}

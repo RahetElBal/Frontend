@@ -433,6 +433,8 @@ export const AdminNotificationType = {
   APPOINTMENT_CREATED: "appointment.created",
   APPOINTMENT_CANCELLED: "appointment.cancelled",
   APPOINTMENT_REMINDER: "appointment.reminder",
+  APPOINTMENT_ASSIGNED: "appointment.assigned",
+  APPOINTMENT_STATUS_UPDATED: "appointment.status.updated",
   WHATSAPP_CONFIRMATION_SENT: "whatsapp.confirmation.sent",
   SALE_CREATED: "sale.created",
   SALE_COMPLETED: "sale.completed",

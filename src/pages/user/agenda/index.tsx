@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { Calendar, List } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
@@ -23,7 +23,8 @@ import { useForm } from "@/hooks/useForm";
 import { useUser } from "@/hooks/useUser";
 import { useLanguage } from "@/hooks/useLanguage";
 import { normalizePhone } from "@/common/phone";
-import { buildUrl, get } from "@/lib/http";
+import { buildUrl, get, patch } from "@/lib/http";
+import type { ApiError } from "@/types/api";
 
 import type {
   Appointment,
@@ -77,6 +78,7 @@ export function AgendaPage() {
   const { user, isAdmin, isSuperadmin } = useUser();
   const { formatCurrency } = useLanguage();
   const queryClient = useQueryClient();
+  const canRecordPayment = isAdmin || isSuperadmin;
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [modalState, setModalState] = useState<AppointmentModalState>(null);
   const [filter, setFilter] = useState<
@@ -530,6 +532,29 @@ export function AgendaPage() {
     },
   });
 
+  const {
+    mutate: updateAppointmentStatus,
+    isPending: isUpdatingStatus,
+  } = useMutation<
+    Appointment,
+    ApiError,
+    { id: string; status: AppointmentStatus }
+  >({
+    mutationFn: ({ id, status }) =>
+      patch<Appointment, { status: AppointmentStatus }>(
+        `appointments/${id}`,
+        { status },
+      ),
+    onSuccess: () => {
+      toast.success(t("common.statusUpdated"));
+      queryClient.invalidateQueries({ queryKey: ["appointments"] });
+      refetch();
+    },
+    onError: (error) => {
+      toast.error(error.message || t("common.error"));
+    },
+  });
+
   const { mutate: deleteAppointment, isPending: isDeleting } = usePost<
     void,
     string
@@ -911,6 +936,24 @@ export function AgendaPage() {
     deleteAppointment(selectedAppointment.id);
   };
 
+  const handleStatusUpdate = useCallback(
+    (appointment: Appointment, status: AppointmentStatus) => {
+      if (!appointment?.id) {
+        toast.error(t("common.error"));
+        return;
+      }
+      if (appointment.status === status) return;
+      const optimisticUpdated = {
+        ...appointment,
+        status,
+        updatedAt: new Date().toISOString(),
+      };
+      upsertVisibleAppointment(optimisticUpdated);
+      updateAppointmentStatus({ id: appointment.id, status });
+    },
+    [updateAppointmentStatus, upsertVisibleAppointment, t],
+  );
+
   return (
     <div className="space-y-6 w-full">
       <PageHeader
@@ -1101,33 +1144,37 @@ export function AgendaPage() {
                 resource: appointment,
               })
             }
-            onRecordPayment={(appointment) => {
-              if (!salonId || !appointment.serviceId) {
-                toast.error(t("common.error"));
-                return;
-              }
-              const optimisticUpdated = {
-                ...appointment,
-                status: AppointmentStatus.COMPLETED,
-                paid: true,
-                updatedAt: new Date().toISOString(),
-              };
-              upsertVisibleAppointment(optimisticUpdated);
-              createSaleFromAppointment({
-                salonId,
-                appointmentId: appointment.id,
-                clientId: appointment.clientId,
-                redeemLoyalty: false,
-                items: [
-                  {
-                    type: "service",
-                    itemId: appointment.serviceId,
-                    quantity: 1,
-                    price: appointment.price,
-                  },
-                ],
-              });
-            }}
+            onRecordPayment={
+              canRecordPayment
+                ? (appointment) => {
+                    if (!salonId || !appointment.serviceId) {
+                      toast.error(t("common.error"));
+                      return;
+                    }
+                    const optimisticUpdated = {
+                      ...appointment,
+                      status: AppointmentStatus.COMPLETED,
+                      paid: true,
+                      updatedAt: new Date().toISOString(),
+                    };
+                    upsertVisibleAppointment(optimisticUpdated);
+                    createSaleFromAppointment({
+                      salonId,
+                      appointmentId: appointment.id,
+                      clientId: appointment.clientId,
+                      redeemLoyalty: false,
+                      items: [
+                        {
+                          type: "service",
+                          itemId: appointment.serviceId,
+                          quantity: 1,
+                          price: appointment.price,
+                        },
+                      ],
+                    });
+                  }
+                : undefined
+            }
             isRecordingPayment={isCreatingSale}
           />
         )}
@@ -1145,34 +1192,40 @@ export function AgendaPage() {
           form={form}
           onSubmit={handleSubmit}
           onDelete={handleDeleteAppointment}
-          onCreateSale={(appointment, options) => {
-            if (!salonId || !appointment.serviceId) {
-              toast.error(t("common.error"));
-              return;
-            }
-            const optimisticUpdated = {
-              ...appointment,
-              status: AppointmentStatus.COMPLETED,
-              paid: true,
-              updatedAt: new Date().toISOString(),
-            };
-            upsertVisibleAppointment(optimisticUpdated);
-            createSaleFromAppointment({
-              salonId,
-              appointmentId: appointment.id,
-              clientId: appointment.clientId,
-              redeemLoyalty: options?.redeemLoyalty ?? false,
-              items: [
-                {
-                  type: "service",
-                  itemId: appointment.serviceId,
-                  quantity: 1,
-                  price: appointment.price,
-                },
-              ],
-            });
-          }}
+          onCreateSale={
+            canRecordPayment
+              ? (appointment, options) => {
+                  if (!salonId || !appointment.serviceId) {
+                    toast.error(t("common.error"));
+                    return;
+                  }
+                  const optimisticUpdated = {
+                    ...appointment,
+                    status: AppointmentStatus.COMPLETED,
+                    paid: true,
+                    updatedAt: new Date().toISOString(),
+                  };
+                  upsertVisibleAppointment(optimisticUpdated);
+                  createSaleFromAppointment({
+                    salonId,
+                    appointmentId: appointment.id,
+                    clientId: appointment.clientId,
+                    redeemLoyalty: options?.redeemLoyalty ?? false,
+                    items: [
+                      {
+                        type: "service",
+                        itemId: appointment.serviceId,
+                        quantity: 1,
+                        price: appointment.price,
+                      },
+                    ],
+                  });
+                }
+              : undefined
+          }
+          onUpdateStatus={handleStatusUpdate}
           isCreatingSale={isCreatingSale}
+          isUpdatingStatus={isUpdatingStatus}
           isPending={
             isCreating ||
             isUpdating ||

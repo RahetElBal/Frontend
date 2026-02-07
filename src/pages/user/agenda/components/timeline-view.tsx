@@ -245,8 +245,8 @@ export function TimelineView({
                                 })}
                               </Badge>
                               {!appointment.paid &&
-                                appointment.status !==
-                                  AppointmentStatus.CANCELLED &&
+                                appointment.status ===
+                                  AppointmentStatus.COMPLETED &&
                                 onRecordPayment && (
                                   <Button
                                     size="icon"
@@ -256,18 +256,8 @@ export function TimelineView({
                                       onRecordPayment(appointment);
                                     }}
                                     disabled={isRecordingPayment}
-                                    title={
-                                      appointment.status ===
-                                      AppointmentStatus.COMPLETED
-                                        ? t("agenda.recordPayment")
-                                        : t("agenda.completeAndPay")
-                                    }
-                                    aria-label={
-                                      appointment.status ===
-                                      AppointmentStatus.COMPLETED
-                                        ? t("agenda.recordPayment")
-                                        : t("agenda.completeAndPay")
-                                    }
+                                    title={t("agenda.recordPayment")}
+                                    aria-label={t("agenda.recordPayment")}
                                   >
                                     <DollarSign className="h-3.5 w-3.5" />
                                   </Button>
@@ -337,8 +327,8 @@ export function TimelineView({
                                 })}
                               </Badge>
                               {!appointment.paid &&
-                                appointment.status !==
-                                  AppointmentStatus.CANCELLED &&
+                                appointment.status ===
+                                  AppointmentStatus.COMPLETED &&
                                 onRecordPayment && (
                                   <Button
                                     size="sm"
@@ -352,10 +342,7 @@ export function TimelineView({
                                     <DollarSign className="h-3 w-3 me-1" />
                                     {isRecordingPayment
                                       ? t("common.loading")
-                                      : appointment.status ===
-                                          AppointmentStatus.COMPLETED
-                                        ? t("agenda.recordPayment")
-                                        : t("agenda.completeAndPay")}
+                                      : t("agenda.recordPayment")}
                                   </Button>
                                 )}
                             </div>

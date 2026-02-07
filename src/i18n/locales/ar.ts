@@ -457,6 +457,8 @@ export const ar = {
     recordPayment: "تسجيل الدفع",
     paymentRecorded: "تم تسجيل الدفع",
     completeAndPay: "إنهاء والدفع",
+    markInProgress: "وضع قيد التنفيذ",
+    markFinished: "وضع مكتمل",
     unpaidTotalToday: "إجمالي غير مدفوع اليوم",
     overdueCount: "متأخر",
     filters: {
@@ -712,6 +714,7 @@ export const ar = {
     statuses: {
       paid: "مدفوع",
       pending: "قيد الانتظار",
+      in_progress: "قيد التنفيذ",
       cancelled: "ملغى",
       completed: "مكتمل",
     },
@@ -727,6 +730,14 @@ export const ar = {
       appointmentReminder: {
         title: "موعد قادم",
         message: "{{client}} - {{service}} على {{time}} في {{date}}",
+      },
+      appointmentAssigned: {
+        title: "تم تعيين موعد",
+        message: "{{client}} - {{service}} في {{date}} على {{time}}",
+      },
+      appointmentStatusUpdated: {
+        title: "تم تحديث حالة الموعد",
+        message: "{{client}} - {{service}} أصبح الآن {{status}}",
       },
       saleCreated: {
         title: "تم تسجيل الدفع",

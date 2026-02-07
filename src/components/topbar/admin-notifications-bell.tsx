@@ -47,13 +47,13 @@ const formatNotificationTime = (value?: string | null) => {
 
 export function AdminNotificationsBell() {
   const { t } = useTranslation();
-  const { user, isAdmin, isSuperadmin } = useUser();
+  const { user } = useUser();
   const { formatCurrency } = useLanguage();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
 
-  const canShow = isAdmin || isSuperadmin;
+  const canShow = !!user?.id;
   const salonId = user?.salon?.id;
 
   const notificationsParams = useMemo(
@@ -207,6 +207,9 @@ export function AdminNotificationsBell() {
     if (normalized === "pending") {
       return { label: t("notifications.statuses.pending"), variant: "warning" as const };
     }
+    if (normalized === "in_progress") {
+      return { label: t("notifications.statuses.in_progress"), variant: "info" as const };
+    }
     if (normalized === "cancelled") {
       return { label: t("notifications.statuses.cancelled"), variant: "error" as const };
     }
@@ -233,6 +236,11 @@ export function AdminNotificationsBell() {
     const date = payload.date || "";
     const time = payload.time || "";
     const amount = formatAmount(payload.total);
+    const statusLabel =
+      payload.status &&
+      t(`notifications.statuses.${String(payload.status).toLowerCase()}`, {
+        defaultValue: String(payload.status),
+      });
 
     switch (notification.type) {
       case AdminNotificationType.APPOINTMENT_CREATED:
@@ -263,6 +271,25 @@ export function AdminNotificationsBell() {
             service: serviceName,
             date,
             time,
+          }),
+        };
+      case AdminNotificationType.APPOINTMENT_ASSIGNED:
+        return {
+          title: t("notifications.types.appointmentAssigned.title"),
+          message: t("notifications.types.appointmentAssigned.message", {
+            client: clientName,
+            service: serviceName,
+            date,
+            time,
+          }),
+        };
+      case AdminNotificationType.APPOINTMENT_STATUS_UPDATED:
+        return {
+          title: t("notifications.types.appointmentStatusUpdated.title"),
+          message: t("notifications.types.appointmentStatusUpdated.message", {
+            client: clientName,
+            service: serviceName,
+            status: statusLabel || payload.status || "",
           }),
         };
       case AdminNotificationType.SALE_CREATED:
