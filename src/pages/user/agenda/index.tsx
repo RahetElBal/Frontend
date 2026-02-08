@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { Calendar, List } from "lucide-react";
@@ -75,18 +76,46 @@ import { translateServiceName } from "@/common/service-translations";
 
 export function AgendaPage() {
   const { t } = useTranslation();
+  const location = useLocation();
+  const navigate = useNavigate();
   const { user, isAdmin, isSuperadmin } = useUser();
   const { formatCurrency } = useLanguage();
   const queryClient = useQueryClient();
   const canRecordPayment = isAdmin || isSuperadmin;
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [modalState, setModalState] = useState<AppointmentModalState>(null);
+  const queryParams = useMemo(
+    () => new URLSearchParams(location.search),
+    [location.search],
+  );
+  const initialDate = useMemo(() => {
+    const value = queryParams.get("date");
+    if (!value) return getLocalDateString();
+    const trimmed = value.trim();
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return getLocalDateString();
+    const parsed = new Date(`${trimmed}T00:00:00`);
+    return Number.isNaN(parsed.getTime()) ? getLocalDateString() : trimmed;
+  }, [queryParams]);
+  const initialStaffId = useMemo(() => {
+    const value = queryParams.get("staffId");
+    if (!value) return null;
+    if (value === "all") return ALL_STAFF_ID;
+    return value;
+  }, [queryParams]);
+  const initialViewMode = useMemo<"day" | "month">(
+    () => (queryParams.get("view") === "month" ? "month" : "day"),
+    [queryParams],
+  );
   const [filter, setFilter] = useState<
     "all" | "today" | "unpaid" | "overdue" | "completed"
   >("all");
-  const [selectedDate, setSelectedDate] = useState(() => getLocalDateString());
-  const [selectedStaffId, setSelectedStaffId] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<"day" | "month">("day");
+  const [selectedDate, setSelectedDate] = useState(() => initialDate);
+  const [selectedStaffId, setSelectedStaffId] = useState<string | null>(
+    () => initialStaffId,
+  );
+  const [viewMode, setViewMode] = useState<"day" | "month">(
+    () => initialViewMode,
+  );
   const salonId = user?.salon?.id;
   const canSelectStaff = isAdmin || isSuperadmin;
   const selectedStaffIdValue = useMemo(() => {
@@ -100,6 +129,12 @@ export function AgendaPage() {
     }
     return baseId ?? user?.id ?? null;
   }, [selectedStaffId, viewMode, canSelectStaff, user?.id]);
+  const selectedStaffParam = useMemo(() => {
+    if (!selectedStaffIdValue) return null;
+    return selectedStaffIdValue === ALL_STAFF_ID
+      ? "all"
+      : selectedStaffIdValue;
+  }, [selectedStaffIdValue]);
   const staffFilterId =
     selectedStaffIdValue === ALL_STAFF_ID ? null : selectedStaffIdValue;
   const appointmentsStaleTime = 1000 * 30; // 30s for near real-time
@@ -212,6 +247,38 @@ export function AgendaPage() {
       breakEnd: workingHoursForSelectedDate.breakEnd || undefined,
     });
   }, [workingHoursForSelectedDate, bookingSlotMinutes]);
+
+  useEffect(() => {
+    if (!selectedDate) return;
+    const nextParams = new URLSearchParams(location.search);
+    nextParams.set("date", selectedDate);
+    nextParams.set("view", viewMode);
+    if (selectedStaffParam) {
+      nextParams.set("staffId", selectedStaffParam);
+    } else {
+      nextParams.delete("staffId");
+    }
+    const nextSearch = nextParams.toString();
+    const currentSearch = location.search.startsWith("?")
+      ? location.search.slice(1)
+      : location.search;
+    if (nextSearch !== currentSearch) {
+      navigate(
+        {
+          pathname: location.pathname,
+          search: nextSearch ? `?${nextSearch}` : "",
+        },
+        { replace: true },
+      );
+    }
+  }, [
+    selectedDate,
+    selectedStaffParam,
+    viewMode,
+    location.pathname,
+    location.search,
+    navigate,
+  ]);
 
   const form = useForm<AppointmentFormData>({
     schema: appointmentFormSchema,
