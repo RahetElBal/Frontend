@@ -89,7 +89,11 @@ export function AdminNotificationsBell() {
   });
 
   const notifications = notificationsData?.data ?? [];
-  const unreadCount = unreadData?.count ?? 0;
+  const unreadCountFromList = notifications.reduce(
+    (count, notification) => count + (notification.readAt ? 0 : 1),
+    0,
+  );
+  const unreadCount = Math.max(unreadData?.count ?? 0, unreadCountFromList);
 
   const { mutate: markRead, isPending: isMarkingRead } = usePost<
     void,
@@ -418,7 +422,7 @@ export function AdminNotificationsBell() {
 
   const isLoading = isNotificationsLoading || isUnreadLoading;
   const hasUnread = unreadCount > 0;
-  const shouldShowPill = showNewPill && !open;
+  const shouldShowPill = unreadCount > 0 && !open;
 
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
@@ -444,7 +448,12 @@ export function AdminNotificationsBell() {
             </span>
           )}
           {shouldShowPill && (
-            <Badge className="absolute right-12 top-1/2 -translate-y-1/2 bg-accent-pink-500 text-white text-[11px] font-semibold px-3 py-1 shadow-lg whitespace-nowrap uppercase tracking-wide ring-2 ring-white/70 z-20">
+            <Badge
+              className={cn(
+                "absolute right-12 top-1/2 -translate-y-1/2 bg-accent-pink-500 text-white text-[11px] font-semibold px-3 py-1 shadow-lg whitespace-nowrap uppercase tracking-wide ring-2 ring-white/70 z-30",
+                showNewPill && "animate-pulse",
+              )}
+            >
               {t("notifications.newNotification")}
             </Badge>
           )}
