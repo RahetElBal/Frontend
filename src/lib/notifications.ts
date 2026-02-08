@@ -8,6 +8,16 @@ const NOTIFICATION_SOUND_URL = "/sounds/notification-soft.mp3";
 const NOTIFICATION_SOUND_FALLBACK = "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2teleAUFTI7X3qdrFAFIm9j2fwsMT5TZ59YGBU+U2OfWBgVPlNjn1gYFT5TY59YGBU+U2OfWBgVPlNjn1gYFT5TY59YGBU+U2OfWBgVPlNjn1gYFT5TY59YGBU+U2OfWBgVPlNjn1gYFT5TY59YGBU+U2OfWBgVPlNjn1gYFT5TY59YGBU+U2OfWBgVPlNjn1gYFT5TY59YGBU+U2OfWBgVPlNjn1gYFT5TY59YGBU+U2OfWBgU=";
 
 let audioContext: AudioContext | null = null;
+let notificationAudio: HTMLAudioElement | null = null;
+
+const getNotificationAudio = () => {
+  if (!notificationAudio) {
+    notificationAudio = new Audio(NOTIFICATION_SOUND_URL);
+    notificationAudio.preload = "auto";
+    notificationAudio.volume = 0.5;
+  }
+  return notificationAudio;
+};
 
 /**
  * Initialize audio context (must be called after user interaction)
@@ -17,6 +27,20 @@ export function initAudio() {
     audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
   }
   return audioContext;
+}
+
+/**
+ * Preload the notification sound so playback is immediate.
+ */
+export function primeNotificationSound() {
+  try {
+    const audio = getNotificationAudio();
+    audio.load();
+    return true;
+  } catch (error) {
+    console.warn("Could not preload notification sound:", error);
+    return false;
+  }
 }
 
 /**
@@ -35,7 +59,16 @@ export async function playNotificationSound() {
     };
 
     try {
-      await tryPlay(NOTIFICATION_SOUND_URL);
+      const audio = getNotificationAudio();
+      if (audio.readyState < 2) {
+        audio.load();
+        throw new Error("Notification sound not ready");
+      }
+      audio.currentTime = 0;
+      const playPromise = audio.play();
+      if (playPromise) {
+        await playPromise;
+      }
       return;
     } catch {
       await tryPlay(NOTIFICATION_SOUND_FALLBACK);

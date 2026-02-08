@@ -1190,7 +1190,7 @@ export const en = {
   // NOTIFICATIONS
   // ============================================
   notifications: {
-    newNotification: "You have a new notification!",
+    newNotification: "YOU HAVE A NEW NOTIFICATION !",
     actor: "By {{name}}",
     statuses: {
       paid: "Paid",

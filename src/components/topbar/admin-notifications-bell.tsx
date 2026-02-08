@@ -16,7 +16,11 @@ import {
 import { Badge } from "@/components/badge";
 import { Spinner } from "@/components/spinner";
 import { cn } from "@/lib/utils";
-import { initAudio, playNotificationSound } from "@/lib/notifications";
+import {
+  initAudio,
+  playNotificationSound,
+  primeNotificationSound,
+} from "@/lib/notifications";
 import { useGet, withParams } from "@/hooks/useGet";
 import { usePost } from "@/hooks/usePost";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -191,6 +195,15 @@ export function AdminNotificationsBell() {
     }
     if (prevUnreadRef.current === null) {
       prevUnreadRef.current = unreadCount;
+      if (unreadCount > 0) {
+        setShowNewPill(true);
+        if (pillTimerRef.current) {
+          clearTimeout(pillTimerRef.current);
+        }
+        pillTimerRef.current = setTimeout(() => {
+          setShowNewPill(false);
+        }, 6000);
+      }
       return;
     }
 
@@ -202,11 +215,16 @@ export function AdminNotificationsBell() {
       }
       pillTimerRef.current = setTimeout(() => {
         setShowNewPill(false);
-      }, 4000);
+      }, 6000);
     }
 
     prevUnreadRef.current = unreadCount;
   }, [canShow, isUnreadLoading, unreadCount]);
+
+  useEffect(() => {
+    if (!canShow) return;
+    primeNotificationSound();
+  }, [canShow]);
 
   useEffect(() => {
     return () => {
@@ -410,7 +428,10 @@ export function AdminNotificationsBell() {
           size="icon"
           className="relative overflow-visible"
           aria-label={t("settings.notifications")}
-          onClick={() => initAudio()}
+          onClick={() => {
+            initAudio();
+            primeNotificationSound();
+          }}
         >
           {hasUnread ? (
             <BellRing className="h-5 w-5 text-accent-pink" />
@@ -423,7 +444,7 @@ export function AdminNotificationsBell() {
             </span>
           )}
           {shouldShowPill && (
-            <Badge className="absolute right-12 top-1/2 -translate-y-1/2 bg-accent-pink text-white text-[11px] font-semibold px-3 py-1 shadow-sm whitespace-nowrap">
+            <Badge className="absolute right-12 top-1/2 -translate-y-1/2 bg-accent-pink-500 text-white text-[11px] font-semibold px-3 py-1 shadow-lg whitespace-nowrap uppercase tracking-wide ring-2 ring-white/70 z-20">
               {t("notifications.newNotification")}
             </Badge>
           )}

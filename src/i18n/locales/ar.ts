@@ -731,7 +731,7 @@ export const ar = {
   // NOTIFICATIONS
   // ============================================
   notifications: {
-    newNotification: "???? ????? ????!",
+    newNotification: "لديك إشعار جديد!",
     actor: "بواسطة {{name}}",
     statuses: {
       paid: "مدفوع",
