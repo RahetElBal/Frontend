@@ -23,6 +23,7 @@ import { usePost } from "@/hooks/usePost";
 import { useForm } from "@/hooks/useForm";
 import { useUser } from "@/hooks/useUser";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useViewMode } from "@/contexts/ViewModeProvider";
 import { normalizePhone } from "@/common/phone";
 import { buildUrl, get, patch } from "@/lib/http";
 import type { ApiError } from "@/types/api";
@@ -79,9 +80,10 @@ export function AgendaPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, isAdmin, isSuperadmin } = useUser();
+  const { isAdminViewMode } = useViewMode();
   const { formatCurrency } = useLanguage();
   const queryClient = useQueryClient();
-  const canRecordPayment = isAdmin || isSuperadmin;
+  const canRecordPayment = (isAdmin || isSuperadmin) && isAdminViewMode;
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [modalState, setModalState] = useState<AppointmentModalState>(null);
   const queryParams = useMemo(
