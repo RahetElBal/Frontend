@@ -365,6 +365,10 @@ export interface TranslationKeys {
         title: string;
         message: string;
       };
+      appointmentPaymentRecorded: {
+        title: string;
+        message: string;
+      };
       saleCreated: {
         title: string;
         message: string;
@@ -1232,6 +1236,10 @@ export const en = {
       appointmentOverdue: {
         title: "Appointment overdue",
         message: "{{client}} - {{service}} on {{date}} at {{time}}",
+      },
+      appointmentPaymentRecorded: {
+        title: "Payment recorded",
+        message: "Payment recorded for {{client}} - {{service}} on {{date}} at {{time}}",
       },
       saleCreated: {
         title: "Payment recorded",

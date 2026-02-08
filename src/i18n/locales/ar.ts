@@ -769,6 +769,11 @@ export const ar = {
         title: "موعد متأخر",
         message: "{{client}} - {{service}} في {{date}} عند {{time}}",
       },
+      appointmentPaymentRecorded: {
+        title: "تم تسجيل الدفع",
+        message:
+          "تم تسجيل الدفع لـ {{client}} - {{service}} في {{date}} عند {{time}}",
+      },
       saleCreated: {
         title: "تم تسجيل الدفع",
         message: "{{client}} - {{amount}}",

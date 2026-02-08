@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 
 import { useState } from "react";
+import { Navigate } from "react-router-dom";
 import { PageHeader } from "@/components/page-header";
 import { Card } from "@/components/ui/card";
 import { Spinner } from "@/components/spinner";
@@ -15,6 +16,7 @@ import { DataTable } from "@/components/table/data-table";
 import { useTable } from "@/hooks/useTable";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useUser } from "@/hooks/useUser";
+import { ROUTES } from "@/constants/navigation";
 import type { Sale, SaleItem } from "@/types/entities";
 import { useGet, withParams } from "@/hooks/useGet";
 import { getSalesColumns } from "./list/columns";
@@ -63,8 +65,12 @@ const getSaleItemPricing = (item: SaleItem) => {
 export function SalesPage() {
   const { t } = useTranslation();
   const { formatCurrency } = useLanguage();
-  const { user } = useUser();
+  const { user, isAdmin, isSuperadmin } = useUser();
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
+
+  if (!isAdmin && !isSuperadmin) {
+    return <Navigate to={ROUTES.DASHBOARD} replace />;
+  }
 
   const salonId = user?.salon?.id;
   const salesStaleTime = 0;

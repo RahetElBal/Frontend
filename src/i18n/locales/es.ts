@@ -756,6 +756,11 @@ export const es = {
         title: "Cita retrasada",
         message: "{{client}} - {{service}} el {{date}} a las {{time}}",
       },
+      appointmentPaymentRecorded: {
+        title: "Pago registrado",
+        message:
+          "Pago registrado para {{client}} - {{service}} el {{date}} a las {{time}}",
+      },
       saleCreated: {
         title: "Pago registrado",
         message: "{{client}} - {{amount}}",

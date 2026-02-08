@@ -395,6 +395,16 @@ export function AdminNotificationsBell() {
             time,
           }),
         };
+      case AdminNotificationType.APPOINTMENT_PAYMENT_RECORDED:
+        return {
+          title: t("notifications.types.appointmentPaymentRecorded.title"),
+          message: t("notifications.types.appointmentPaymentRecorded.message", {
+            client: clientName,
+            service: serviceName,
+            date,
+            time,
+          }),
+        };
       default:
         return {
           title: notification.title,
@@ -406,9 +416,10 @@ export function AdminNotificationsBell() {
   const handleNotificationNavigation = (notification: AdminNotification) => {
     const payload = toPayload(notification);
     const isPayment =
-      notification.type === AdminNotificationType.SALE_CREATED ||
-      notification.type === AdminNotificationType.SALE_COMPLETED ||
-      String(payload.paymentStatus || "").toLowerCase() === "paid";
+      (notification.type === AdminNotificationType.SALE_CREATED ||
+        notification.type === AdminNotificationType.SALE_COMPLETED ||
+        String(payload.paymentStatus || "").toLowerCase() === "paid") &&
+      notification.type !== AdminNotificationType.APPOINTMENT_PAYMENT_RECORDED;
 
     if (isPayment) {
       navigate(ROUTES.SALES);

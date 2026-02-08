@@ -820,6 +820,11 @@ export const fr = {
         title: "Rendez-vous en retard",
         message: "{{client}} - {{service}} le {{date}} à {{time}}",
       },
+      appointmentPaymentRecorded: {
+        title: "Paiement enregistré",
+        message:
+          "Paiement enregistré pour {{client}} - {{service}} le {{date}} à {{time}}",
+      },
       saleCreated: {
         title: "Paiement enregistré",
         message: "{{client}} - {{amount}}",

@@ -124,18 +124,6 @@ export const USER_NAVIGATION: NavSection[] = [
     ],
   },
   {
-    id: "inventory",
-    titleKey: "nav.sections.inventory",
-    items: [
-      {
-        id: "sales",
-        titleKey: "nav.sales",
-        href: ROUTES.SALES,
-        icon: ShoppingCart,
-      },
-    ],
-  },
-  {
     id: "account",
     titleKey: "nav.sections.account",
     items: [
