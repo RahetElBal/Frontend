@@ -255,7 +255,8 @@ export const es = {
     pageError: "Error de página",
     pageErrorDescription: "Hubo un problema al cargar esta página.",
     db: {
-      foreignKey: "No se puede eliminar: este elemento est? usado en otro lugar.",
+      foreignKey:
+        "No se puede eliminar: este elemento est? usado en otro lugar.",
       unique: "Este valor ya existe.",
       notNull: "Falta un campo obligatorio.",
       check: "El valor proporcionado no es v?lido.",
@@ -433,7 +434,8 @@ export const es = {
     newAppointment: "Nueva cita",
     bookedBy: "Reservado por",
     adjustPrice: "Modificar el precio",
-    adjustPriceDescription: "Aplicar un precio personalizado o un descuento para este servicio",
+    adjustPriceDescription:
+      "Aplicar un precio personalizado o un descuento para este servicio",
     today: "Hoy",
     previous: "Atrás",
     next: "Siguiente",
@@ -448,9 +450,12 @@ export const es = {
     showMore: "+{{count}} más",
     confirmed: "confirmadas",
     pending: "pendientes",
-    appointments: "citas",    breakTime: "Pausa",
-    closedDay: "Este día está marcado como cerrado en la configuración del salón.",
-    timeOutsideWorkingHours: "El horario seleccionado está fuera del horario del salón.",
+    appointments: "citas",
+    breakTime: "Pausa",
+    closedDay:
+      "Este día está marcado como cerrado en la configuración del salón.",
+    timeOutsideWorkingHours:
+      "El horario seleccionado está fuera del horario del salón.",
     pastAppointmentNotAllowed: "No se pueden programar citas en el pasado.",
     timeSlotOccupied: "Este horario ya está reservado.",
     timeSlotOccupiedDetails: "Conflicto con {{client}} ({{start}}-{{end}}).",
@@ -475,10 +480,10 @@ export const es = {
     walkInOptionalDetails: "Detalles opcionales (pueden añadirse después)",
     walkInPhone: "Teléfono del cliente de paso",
     walkInPhonePlaceholder: "Se completa si está vacío",
-      walkInEmail: "Email del cliente de paso",
-      walkInEmailPlaceholder: "Se completa si está vacío",
-      walkInEmailExists:
-        "Este cliente ya está registrado. Selecciónalo en la lista.",
+    walkInEmail: "Email del cliente de paso",
+    walkInEmailPlaceholder: "Se completa si está vacío",
+    walkInEmailExists:
+      "Este cliente ya está registrado. Selecciónalo en la lista.",
     walkInNameRequired: "El nombre completo es obligatorio",
     walkInLastNameFallback: "Cliente de paso",
     autoArchiveWalkIns: "Archivar automáticamente tras el pago",
@@ -568,10 +573,10 @@ export const es = {
     todayTotal: "Total de hoy",
     transactions: "Transacciones",
     averageTicket: "Ticket promedio",
-      printReceipt: "Imprimir recibo",
-      viewPayment: "Ver pago",
-      paymentStatus: "Estado del pago",
-      paidBy: "Pagado por",
+    printReceipt: "Imprimir recibo",
+    viewPayment: "Ver pago",
+    paymentStatus: "Estado del pago",
+    paidBy: "Pagado por",
   },
 
   giftCards: {
@@ -656,7 +661,8 @@ export const es = {
     packShare: "Porcentaje de packs",
     topPacks: "Packs populares",
     noData: "No hay datos para mostrar",
-    noDataDescription: "Empieza a registrar ventas y citas para ver tus an\u00e1lisis.",
+    noDataDescription:
+      "Empieza a registrar ventas y citas para ver tus an\u00e1lisis.",
   },
 
   marketing: {
@@ -925,17 +931,17 @@ export const es = {
     subtitle: "Gracias por elegir nuestra plataforma para salones.",
     welcomeHeadline: "Antes de empezar, revisa el acuerdo de servicio.",
     description:
-      "Este acuerdo define el uso de la plataforma y la protecciÃ³n de tus datos.",
-    acceptLabel: "He leÃ­do y acepto el acuerdo de nivel de servicio.",
+      "Este acuerdo define el uso de la plataforma y la protección de tus datos.",
+    acceptLabel: "He leído y acepto el acuerdo de nivel de servicio.",
     acceptButton: "Aceptar y continuar",
     processing: "Guardando...",
     accepted: "Acuerdo aceptado",
-    error: "No se pudo aceptar el acuerdo. IntÃ©ntalo de nuevo.",
+    error: "No se pudo aceptar el acuerdo. Inténtalo de nuevo.",
     items: {
-      usage: "Utiliza la plataforma solo para operaciones del salÃ³n.",
-      data: "MantÃ©n los datos de clientes exactos y actualizados.",
+      usage: "Utiliza la plataforma solo para operaciones del salón.",
+      data: "Mantén los datos de clientes exactos y actualizados.",
       security: "Protege tus credenciales y permisos del equipo.",
-      support: "Contacta al soporte ante cualquier interrupciÃ³n.",
+      support: "Contacta al soporte ante cualquier interrupción.",
     },
   },
 } as const;

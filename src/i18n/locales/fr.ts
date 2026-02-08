@@ -272,7 +272,7 @@ export const fr = {
       notNull: "Un champ obligatoire est manquant.",
       check: "La valeur fournie est invalide.",
       invalidData: "Donn?es invalides.",
-      unknown: "Erreur de base de donn?es. Veuillez r?essayer.",
+      unknown: "Erreur de base de donn?es. Veuillez réessayer.",
     },
   },
 
@@ -485,10 +485,13 @@ export const fr = {
     deleteAppointment: "Supprimer le rendez-vous",
     deleteAppointmentConfirm:
       "Êtes-vous sûr de vouloir supprimer le rendez-vous avec {{client}} ?",
-    notesPlaceholder: "Notes supplémentaires...",    breakTime: "Pause",
+    notesPlaceholder: "Notes supplémentaires...",
+    breakTime: "Pause",
     closedDay: "Ce jour est marqué comme fermé dans les paramètres du salon.",
-    timeOutsideWorkingHours: "L'horaire sélectionné est en dehors des horaires du salon.",
-    pastAppointmentNotAllowed: "Impossible de planifier un rendez-vous dans le passé.",
+    timeOutsideWorkingHours:
+      "L'horaire sélectionné est en dehors des horaires du salon.",
+    pastAppointmentNotAllowed:
+      "Impossible de planifier un rendez-vous dans le passé.",
     timeSlotOccupied: "Ce créneau est déjà réservé.",
     timeSlotOccupiedDetails: "Conflit avec {{client}} ({{start}}-{{end}}).",
     recordPayment: "Enregistrer le paiement",
@@ -1168,16 +1171,16 @@ export const fr = {
     subtitle: "Merci d'avoir choisi notre plateforme de salon.",
     welcomeHeadline: "Avant de commencer, veuillez lire l'accord de service.",
     description:
-      "Cet accord dÃ©finit l'utilisation de la plateforme et la protection de vos donnÃ©es.",
+      "Cet accord définit l'utilisation de la plateforme et la protection de vos données.",
     acceptLabel: "J'ai lu et j'accepte l'accord de niveau de service.",
     acceptButton: "Accepter et continuer",
     processing: "Enregistrement...",
-    accepted: "Accord acceptÃ©",
-    error: "Impossible d'accepter l'accord. Veuillez rÃ©essayer.",
+    accepted: "Accord accepté",
+    error: "Impossible d'accepter l'accord. Veuillez réessayer.",
     items: {
-      usage: "Utilisez la plateforme uniquement pour les activitÃ©s du salon.",
-      data: "Gardez les donnÃ©es clients Ã  jour et exactes.",
-      security: "ProtÃ©gez vos accÃ¨s et permissions d'Ã©quipe.",
+      usage: "Utilisez la plateforme uniquement pour les activités du salon.",
+      data: "Gardez les données clients à jour et exactes.",
+      security: "Protégez vos accès et permissions d'équipe.",
       support: "Contactez le support en cas d'interruption de service.",
     },
   },
