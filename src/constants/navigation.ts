@@ -6,6 +6,7 @@ import {
   ShoppingCart,
   BarChart3,
   Settings,
+  Bell,
   Building2,
   UserCog,
   Sliders,
@@ -73,6 +74,7 @@ export const ROUTES = {
   SETTINGS: "/settings",
   SALON_SETTINGS: "/salon-settings",
   PROFILE: "/settings/profile",
+  NOTIFICATIONS: "/notifications",
 
   // Admin/Superadmin only
   ADMIN: "/admin",
@@ -127,6 +129,12 @@ export const USER_NAVIGATION: NavSection[] = [
     id: "account",
     titleKey: "nav.sections.account",
     items: [
+      {
+        id: "notifications",
+        titleKey: "nav.notifications",
+        href: ROUTES.NOTIFICATIONS,
+        icon: Bell,
+      },
       {
         id: "settings",
         titleKey: "nav.settings",
@@ -217,6 +225,12 @@ export const ADMIN_SALON_NAVIGATION: NavSection[] = [
         titleKey: "nav.salonSettings",
         href: ROUTES.SALON_SETTINGS,
         icon: Sliders,
+      },
+      {
+        id: "notifications",
+        titleKey: "nav.notifications",
+        href: ROUTES.NOTIFICATIONS,
+        icon: Bell,
       },
       {
         id: "settings",

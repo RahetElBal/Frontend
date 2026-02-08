@@ -379,6 +379,7 @@ export const ar = {
     giftCards: "بطاقات الهدايا",
     marketing: "التسويق",
     analytics: "التحليلات",
+    notifications: "الإشعارات",
     settings: "الإعدادات",
     sections: {
       management: "الإدارة",

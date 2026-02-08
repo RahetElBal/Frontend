@@ -394,6 +394,7 @@ export const fr = {
     giftCards: "Cartes cadeaux",
     marketing: "Marketing",
     analytics: "Analytique",
+    notifications: "Notifications",
     salonSettings: "Paramètres salon",
     settings: "Paramètres",
     sections: {

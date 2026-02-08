@@ -311,6 +311,7 @@ export interface TranslationKeys {
     giftCards: string;
     marketing: string;
     analytics: string;
+    notifications: string;
     settings: string;
     sections: {
       management: string;
@@ -782,6 +783,7 @@ export const en = {
     giftCards: "Gift Cards",
     marketing: "Marketing",
     analytics: "Analytics",
+    notifications: "Notifications",
     salonSettings: "Salon Settings",
     settings: "Settings",
     sections: {

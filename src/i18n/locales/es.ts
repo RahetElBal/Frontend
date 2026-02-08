@@ -381,6 +381,7 @@ export const es = {
     giftCards: "Tarjetas regalo",
     marketing: "Marketing",
     analytics: "Analíticas",
+    notifications: "Notificaciones",
     settings: "Configuración",
     sections: {
       management: "Gestión",

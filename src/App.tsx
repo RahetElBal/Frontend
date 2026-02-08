@@ -82,6 +82,11 @@ const SettingsPage = lazy(() =>
     default: module.SettingsPage,
   })),
 );
+const NotificationsPage = lazy(() =>
+  import("./pages/user/notifications").then((module) => ({
+    default: module.NotificationsPage,
+  })),
+);
 
 function AgendaPageWrapper() {
   const location = useLocation();
@@ -111,6 +116,7 @@ function App() {
           <Route path={ROUTES.SALON_SETTINGS} element={<SalonSettingsPage />} />
           <Route path={ROUTES.SETTINGS} element={<SettingsPage />} />
           <Route path={ROUTES.PROFILE} element={<SettingsPage />} />
+          <Route path={ROUTES.NOTIFICATIONS} element={<NotificationsPage />} />
         </Route>
 
         {/* Admin routes - with AdminLayout */}
