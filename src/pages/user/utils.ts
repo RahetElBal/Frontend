@@ -27,11 +27,12 @@ export const agendaStatusColors: Record<
   [AppointmentStatus.COMPLETED]: "default",
   [AppointmentStatus.CANCELLED]: "error",
   [AppointmentStatus.NO_SHOW]: "error",
+  [AppointmentStatus.OVERDUE]: "error",
 };
 
 export const dashboardStatusColors: Record<
   string,
-  "default" | "success" | "warning" | "info"
+  "default" | "success" | "warning" | "info" | "error"
 > = {
   [AppointmentStatus.CONFIRMED]: "success",
   [AppointmentStatus.PENDING]: "warning",
@@ -39,4 +40,5 @@ export const dashboardStatusColors: Record<
   [AppointmentStatus.COMPLETED]: "default",
   [AppointmentStatus.CANCELLED]: "default",
   [AppointmentStatus.NO_SHOW]: "default",
+  [AppointmentStatus.OVERDUE]: "error",
 };

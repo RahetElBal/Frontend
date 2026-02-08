@@ -267,7 +267,10 @@ export function AgendaPage() {
   );
 
   const unpaidAppointments = useMemo(
-    () => appointments.filter((apt) => !apt.paid && apt.status !== "cancelled"),
+    () =>
+      appointments.filter(
+        (apt) => !apt.paid && apt.status !== AppointmentStatus.CANCELLED,
+      ),
     [appointments],
   );
 
@@ -311,7 +314,9 @@ export function AgendaPage() {
       case "overdue":
         return overdueAppointments;
       case "completed":
-        return appointments.filter((apt) => apt.status === "completed");
+        return appointments.filter(
+          (apt) => apt.status === AppointmentStatus.COMPLETED,
+        );
       case "all":
       default:
         return appointments;
@@ -410,8 +415,8 @@ export function AgendaPage() {
     const todayAppointments = appointments.filter(
       (apt) =>
         apt.date === today &&
-        apt.status !== "cancelled" &&
-        apt.status !== "completed",
+        apt.status !== AppointmentStatus.CANCELLED &&
+        apt.status !== AppointmentStatus.COMPLETED,
     );
 
     todayAppointments.forEach((apt) => {
@@ -448,7 +453,7 @@ export function AgendaPage() {
     // Find overdue unpaid appointments (completed but not paid, or past end time and not paid)
     const overdueUnpaid = appointments.filter((apt) => {
       // Skip cancelled appointments
-      if (apt.status === "cancelled") return false;
+      if (apt.status === AppointmentStatus.CANCELLED) return false;
 
       // Already paid, no need to notify
       if (apt.paid) return false;
@@ -600,7 +605,11 @@ export function AgendaPage() {
               ...current,
               data: current.data.map((appointment) =>
                 appointment.id === variables.appointmentId
-                  ? { ...appointment, status: "completed", paid: true }
+                  ? {
+                      ...appointment,
+                      status: AppointmentStatus.COMPLETED,
+                      paid: true,
+                    }
                   : appointment,
               ),
             };

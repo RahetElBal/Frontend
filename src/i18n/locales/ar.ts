@@ -503,9 +503,12 @@ export const ar = {
       completed: "مكتمل",
       cancelled: "ملغى",
       no_show: "لم يحضر",
+      overdue: "متأخر",
     },
     overdueUnpaid: "موعد متأخر غير مدفوع",
     overdueUnpaidTitle: "تذكير بموعد غير مدفوع",
+    overdueStatusTitle: "موعد متأخر",
+    overdueStatus: "موعد متأخر",
     appointmentCancelled: "تم إلغاء الموعد",
     appointmentCompleted: "تم إكمال الموعد",
     paymentStatus: "حالة الدفع",
@@ -739,6 +742,7 @@ export const ar = {
       in_progress: "قيد التنفيذ",
       cancelled: "ملغى",
       completed: "مكتمل",
+      overdue: "متأخر",
     },
     types: {
       appointmentCreated: {
@@ -760,6 +764,10 @@ export const ar = {
       appointmentStatusUpdated: {
         title: "تم تحديث حالة الموعد",
         message: "{{client}} - {{service}} أصبح الآن {{status}}",
+      },
+      appointmentOverdue: {
+        title: "موعد متأخر",
+        message: "{{client}} - {{service}} في {{date}} عند {{time}}",
       },
       saleCreated: {
         title: "تم تسجيل الدفع",

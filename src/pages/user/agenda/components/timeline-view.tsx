@@ -16,6 +16,7 @@ import type { Appointment } from "@/types/entities";
 import { AppointmentStatus } from "@/types/entities";
 import {
   statusColors,
+  getAppointmentDisplayStatus,
   getCurrentTimeString,
   normalizeTime,
   getLocalDateString,
@@ -128,6 +129,9 @@ export function TimelineView({
                 }
                 return slotMinutesValue >= start && slotMinutesValue < end;
               });
+              const displayStatus = appointment
+                ? getAppointmentDisplayStatus(appointment)
+                : null;
               const isStartSlot =
                 appointment && normalizeTime(appointment.startTime) === time;
               const isOccupied = !!appointment && !isStartSlot;
@@ -194,16 +198,18 @@ export function TimelineView({
                           "rounded-lg cursor-pointer hover:shadow-md transition-all absolute left-2 right-2 z-10",
                           isCompact ? "p-1.5" : "p-3",
                           "border-l-4",
-                          appointment.status === AppointmentStatus.CONFIRMED &&
+                          displayStatus === AppointmentStatus.CONFIRMED &&
                             "bg-green-50 border-l-green-500",
-                          appointment.status === AppointmentStatus.PENDING &&
+                          displayStatus === AppointmentStatus.PENDING &&
                             "bg-yellow-50 border-l-yellow-500",
-                          appointment.status ===
+                          displayStatus ===
                             AppointmentStatus.IN_PROGRESS &&
                             "bg-blue-50 border-l-blue-500",
-                          appointment.status === AppointmentStatus.COMPLETED &&
+                          displayStatus === AppointmentStatus.COMPLETED &&
                             "bg-gray-50 border-l-gray-400",
-                          appointment.status === AppointmentStatus.CANCELLED &&
+                          displayStatus === AppointmentStatus.CANCELLED &&
+                            "bg-red-50 border-l-red-500",
+                          displayStatus === AppointmentStatus.OVERDUE &&
                             "bg-red-50 border-l-red-500",
                         )}
                         style={{
@@ -237,12 +243,22 @@ export function TimelineView({
                             </div>
                             <div className="flex items-center gap-1.5 shrink-0">
                               <Badge
-                                variant={statusColors[appointment.status]}
+                                variant={
+                                  statusColors[
+                                    displayStatus ?? appointment.status
+                                  ]
+                                }
                                 className="text-[10px] leading-4 px-1.5 py-0.5 whitespace-nowrap"
                               >
-                                {t(`agenda.statuses.${appointment.status}`, {
-                                  defaultValue: appointment.status,
-                                })}
+                                {t(
+                                  `agenda.statuses.${
+                                    displayStatus ?? appointment.status
+                                  }`,
+                                  {
+                                    defaultValue:
+                                      displayStatus ?? appointment.status,
+                                  },
+                                )}
                               </Badge>
                               {!appointment.paid &&
                                 appointment.status ===
@@ -319,12 +335,22 @@ export function TimelineView({
                             </div>
                             <div className="flex flex-col items-end gap-2 shrink-0">
                               <Badge
-                                variant={statusColors[appointment.status]}
+                                variant={
+                                  statusColors[
+                                    displayStatus ?? appointment.status
+                                  ]
+                                }
                                 className="text-xs"
                               >
-                                {t(`agenda.statuses.${appointment.status}`, {
-                                  defaultValue: appointment.status,
-                                })}
+                                {t(
+                                  `agenda.statuses.${
+                                    displayStatus ?? appointment.status
+                                  }`,
+                                  {
+                                    defaultValue:
+                                      displayStatus ?? appointment.status,
+                                  },
+                                )}
                               </Badge>
                               {!appointment.paid &&
                                 appointment.status ===

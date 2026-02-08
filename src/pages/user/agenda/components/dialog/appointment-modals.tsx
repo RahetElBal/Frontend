@@ -59,6 +59,7 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { useUser } from "@/hooks/useUser";
 import {
   statusColors,
+  getAppointmentDisplayStatus,
   getLocalDateString,
   getWorkingHoursForDate,
   buildTimeSlotsForHours,
@@ -679,7 +680,11 @@ export function AppointmentModals({
       selectedAppointment?.status === AppointmentStatus.PENDING ||
       selectedAppointment?.status === AppointmentStatus.CONFIRMED;
     const canMarkFinished =
-      selectedAppointment?.status === AppointmentStatus.IN_PROGRESS;
+      selectedAppointment?.status === AppointmentStatus.IN_PROGRESS ||
+      selectedAppointment?.status === AppointmentStatus.OVERDUE;
+    const displayStatus = selectedAppointment
+      ? getAppointmentDisplayStatus(selectedAppointment)
+      : null;
     return (
       <Dialog open={!!modalState} onOpenChange={handleClose}>
         <DialogContent className="sm:max-w-4xl w-full overflow-x-hidden">
@@ -705,10 +710,17 @@ export function AppointmentModals({
                     )}
                   </div>
                 </div>
-                <Badge variant={statusColors[selectedAppointment.status]}>
-                  {t(`agenda.statuses.${selectedAppointment.status}`, {
-                    defaultValue: selectedAppointment.status,
-                  })}
+                <Badge
+                  variant={
+                    statusColors[displayStatus ?? selectedAppointment.status]
+                  }
+                >
+                  {t(
+                    `agenda.statuses.${displayStatus ?? selectedAppointment.status}`,
+                    {
+                      defaultValue: displayStatus ?? selectedAppointment.status,
+                    },
+                  )}
                 </Badge>
               </div>
 
@@ -727,7 +739,7 @@ export function AppointmentModals({
                   </div>
                 </div>
                 {onCreateSale &&
-                  selectedAppointment.status === "completed" &&
+                  selectedAppointment.status === AppointmentStatus.COMPLETED &&
                   !selectedAppointment.paid &&
                   loyaltyEnabled &&
                   canRedeemLoyalty && (
@@ -859,7 +871,7 @@ export function AppointmentModals({
               onUpdateStatus &&
               canUpdateStatus &&
               !selectedAppointment.paid &&
-              selectedAppointment.status !== "cancelled" && (
+              selectedAppointment.status !== AppointmentStatus.CANCELLED && (
                 <div className="flex gap-2 w-full sm:w-auto">
                   {canMarkInProgress && (
                     <Button
@@ -899,14 +911,14 @@ export function AppointmentModals({
             {selectedAppointment &&
               onCreateSale &&
               !selectedAppointment.paid &&
-              selectedAppointment.status === "completed" && (
+              selectedAppointment.status === AppointmentStatus.COMPLETED && (
                 <div className="flex gap-2 w-full sm:w-auto">
                   <Button
                     className="w-full sm:w-auto"
                     onClick={() =>
                       onCreateSale(selectedAppointment, {
                         redeemLoyalty:
-                          selectedAppointment.status === "completed" &&
+                          selectedAppointment.status === AppointmentStatus.COMPLETED &&
                           canRedeemLoyalty
                             ? redeemLoyalty
                             : false,

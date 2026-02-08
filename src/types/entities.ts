@@ -192,6 +192,7 @@ export const AppointmentStatus = {
   CONFIRMED: "confirmed",
   IN_PROGRESS: "in_progress",
   COMPLETED: "completed",
+  OVERDUE: "overdue",
   CANCELLED: "cancelled",
   NO_SHOW: "no_show",
 } as const;
@@ -450,6 +451,7 @@ export const AdminNotificationType = {
   APPOINTMENT_REMINDER: "appointment.reminder",
   APPOINTMENT_ASSIGNED: "appointment.assigned",
   APPOINTMENT_STATUS_UPDATED: "appointment.status.updated",
+  APPOINTMENT_OVERDUE: "appointment.overdue",
   WHATSAPP_CONFIRMATION_SENT: "whatsapp.confirmation.sent",
   SALE_CREATED: "sale.created",
   SALE_COMPLETED: "sale.completed",

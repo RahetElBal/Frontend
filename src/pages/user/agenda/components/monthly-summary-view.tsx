@@ -47,7 +47,8 @@ type DayCounts = {
 const isPendingStatus = (status: AppointmentStatus) =>
   status === AppointmentStatus.PENDING ||
   status === AppointmentStatus.CONFIRMED ||
-  status === AppointmentStatus.IN_PROGRESS;
+  status === AppointmentStatus.IN_PROGRESS ||
+  status === AppointmentStatus.OVERDUE;
 
 export function MonthlySummaryView({
   appointments,

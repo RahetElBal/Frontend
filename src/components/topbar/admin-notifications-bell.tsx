@@ -279,6 +279,9 @@ export function AdminNotificationsBell() {
     if (normalized === "cancelled") {
       return { label: t("notifications.statuses.cancelled"), variant: "error" as const };
     }
+    if (normalized === "overdue") {
+      return { label: t("notifications.statuses.overdue"), variant: "error" as const };
+    }
     if (normalized === "completed") {
       return { label: t("notifications.statuses.completed"), variant: "success" as const };
     }
@@ -382,6 +385,16 @@ export function AdminNotificationsBell() {
             service: serviceName,
           }),
         };
+      case AdminNotificationType.APPOINTMENT_OVERDUE:
+        return {
+          title: t("notifications.types.appointmentOverdue.title"),
+          message: t("notifications.types.appointmentOverdue.message", {
+            client: clientName,
+            service: serviceName,
+            date,
+            time,
+          }),
+        };
       default:
         return {
           title: notification.title,
@@ -466,7 +479,7 @@ export function AdminNotificationsBell() {
           <Button
             variant="default"
             size="sm"
-            className="h-8 px-3 text-xs font-semibold bg-accent-pink text-white hover:bg-accent-pink/90 shadow-sm"
+            className="h-8 px-3 text-xs font-semibold bg-accent-pink-500 text-white hover:bg-accent-pink-400 shadow-sm border border-accent-pink-400"
             onClick={() => markAllRead({ salonId })}
             disabled={isMarkingAll || unreadCount === 0}
           >

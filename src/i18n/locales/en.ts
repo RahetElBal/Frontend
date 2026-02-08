@@ -344,6 +344,7 @@ export interface TranslationKeys {
     statuses: {
       paid: string;
       pending: string;
+      overdue: string;
       cancelled: string;
       completed: string;
     };
@@ -357,6 +358,10 @@ export interface TranslationKeys {
         message: string;
       };
       appointmentReminder: {
+        title: string;
+        message: string;
+      };
+      appointmentOverdue: {
         title: string;
         message: string;
       };
@@ -915,9 +920,12 @@ export const en = {
       completed: "Completed",
       cancelled: "Cancelled",
       no_show: "No show",
+      overdue: "Overdue",
     },
     overdueUnpaid: "Overdue unpaid appointment",
     overdueUnpaidTitle: "Unpaid Appointment Reminder",
+    overdueStatusTitle: "Appointment overdue",
+    overdueStatus: "Appointment overdue",
     appointmentCancelled: "Appointment cancelled",
     appointmentCompleted: "Appointment completed",
     paymentStatus: "Payment Status",
@@ -1198,6 +1206,7 @@ export const en = {
       in_progress: "In progress",
       cancelled: "Cancelled",
       completed: "Completed",
+      overdue: "Overdue",
     },
     types: {
       appointmentCreated: {
@@ -1219,6 +1228,10 @@ export const en = {
       appointmentStatusUpdated: {
         title: "Appointment status updated",
         message: "{{client}} - {{service}} is now {{status}}",
+      },
+      appointmentOverdue: {
+        title: "Appointment overdue",
+        message: "{{client}} - {{service}} on {{date}} at {{time}}",
       },
       saleCreated: {
         title: "Payment recorded",

@@ -530,9 +530,12 @@ export const fr = {
       completed: "Terminé",
       cancelled: "Annulé",
       no_show: "Absent",
+      overdue: "En retard",
     },
     overdueUnpaid: "Rendez-vous impayé en retard",
     overdueUnpaidTitle: "Rappel de paiement en attente",
+    overdueStatusTitle: "Rendez-vous en retard",
+    overdueStatus: "Rendez-vous en retard",
     appointmentCancelled: "Rendez-vous annulé",
     appointmentCompleted: "Rendez-vous terminé",
     paymentStatus: "Statut du paiement",
@@ -790,6 +793,7 @@ export const fr = {
       in_progress: "En cours",
       cancelled: "Annulé",
       completed: "Terminé",
+      overdue: "En retard",
     },
     types: {
       appointmentCreated: {
@@ -811,6 +815,10 @@ export const fr = {
       appointmentStatusUpdated: {
         title: "Statut du rendez-vous mis à jour",
         message: "{{client}} - {{service}} est maintenant {{status}}",
+      },
+      appointmentOverdue: {
+        title: "Rendez-vous en retard",
+        message: "{{client}} - {{service}} le {{date}} à {{time}}",
       },
       saleCreated: {
         title: "Paiement enregistré",

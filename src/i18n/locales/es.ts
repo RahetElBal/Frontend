@@ -495,9 +495,12 @@ export const es = {
       completed: "Completada",
       cancelled: "Cancelada",
       no_show: "No asistió",
+      overdue: "Retrasado",
     },
     overdueUnpaid: "Cita impaga vencida",
     overdueUnpaidTitle: "Recordatorio de cita sin pagar",
+    overdueStatusTitle: "Cita retrasada",
+    overdueStatus: "Cita retrasada",
     appointmentCancelled: "Cita cancelada",
     appointmentCompleted: "Cita completada",
     paymentStatus: "Estado del pago",
@@ -726,6 +729,7 @@ export const es = {
       in_progress: "En curso",
       cancelled: "Cancelado",
       completed: "Completado",
+      overdue: "Retrasado",
     },
     types: {
       appointmentCreated: {
@@ -747,6 +751,10 @@ export const es = {
       appointmentStatusUpdated: {
         title: "Estado de la cita actualizado",
         message: "{{client}} - {{service}} ahora está {{status}}",
+      },
+      appointmentOverdue: {
+        title: "Cita retrasada",
+        message: "{{client}} - {{service}} el {{date}} a las {{time}}",
       },
       saleCreated: {
         title: "Pago registrado",

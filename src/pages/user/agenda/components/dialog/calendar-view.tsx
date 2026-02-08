@@ -7,7 +7,11 @@ import type { Appointment } from "@/types/entities";
 import { AppointmentStatus } from "@/types/entities";
 
 import "../calendar-styles.css";
-import { appointmentToCalendarEvent, type CalendarEvent } from "../../utils";
+import {
+  appointmentToCalendarEvent,
+  getAppointmentDisplayStatus,
+  type CalendarEvent,
+} from "../../utils";
 
 const localizer = momentLocalizer(moment);
 
@@ -48,9 +52,10 @@ export function CalendarView({
 
   const eventStyleGetter = useCallback((event: CalendarEvent) => {
     const appointment = event.resource;
+    const displayStatus = getAppointmentDisplayStatus(appointment);
     let backgroundColor = "#3174ad";
 
-    switch (appointment.status) {
+    switch (displayStatus) {
       case AppointmentStatus.CONFIRMED:
         backgroundColor = "#22c55e";
         break;
@@ -64,6 +69,9 @@ export function CalendarView({
         backgroundColor = "#6b7280";
         break;
       case AppointmentStatus.CANCELLED:
+        backgroundColor = "#ef4444";
+        break;
+      case AppointmentStatus.OVERDUE:
         backgroundColor = "#ef4444";
         break;
       case AppointmentStatus.NO_SHOW:

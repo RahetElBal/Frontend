@@ -1,11 +1,50 @@
 import { momentLocalizer } from "react-big-calendar";
 import moment from "moment";
 import { agendaStatusColors } from "../utils";
-import type { Appointment } from "@/types/entities";
+import { AppointmentStatus, type Appointment } from "@/types/entities";
 
 export const localizer = momentLocalizer(moment);
 
 export const statusColors = agendaStatusColors;
+
+export type AppointmentDisplayStatus = AppointmentStatus;
+
+export function isAppointmentLate(
+  appointment: Appointment,
+  referenceDate: Date = new Date(),
+): boolean {
+  if (appointment.status === AppointmentStatus.OVERDUE) {
+    return true;
+  }
+  if (
+    appointment.status === AppointmentStatus.CANCELLED ||
+    appointment.status === AppointmentStatus.COMPLETED ||
+    appointment.status === AppointmentStatus.NO_SHOW
+  ) {
+    return false;
+  }
+  const today = getLocalDateString(referenceDate);
+  const currentTime = `${referenceDate
+    .getHours()
+    .toString()
+    .padStart(2, "0")}:${referenceDate
+    .getMinutes()
+    .toString()
+    .padStart(2, "0")}`;
+  const endTime = normalizeTime(appointment.endTime || appointment.startTime);
+  const isPastDate = appointment.date < today;
+  const isPastTime = appointment.date === today && endTime < currentTime;
+  return isPastDate || isPastTime;
+}
+
+export function getAppointmentDisplayStatus(
+  appointment: Appointment,
+  referenceDate: Date = new Date(),
+): AppointmentDisplayStatus {
+  return isAppointmentLate(appointment, referenceDate)
+    ? AppointmentStatus.OVERDUE
+    : appointment.status;
+}
 
 export const timeSlots = [
   "09:00",
@@ -189,7 +228,7 @@ export function findConflictingAppointment(
 
   return (
     appointments.find((appointment) => {
-      if (appointment.status === "cancelled") return false;
+      if (appointment.status === AppointmentStatus.CANCELLED) return false;
       if (excludeId && appointment.id === excludeId) return false;
       if (appointment.date !== date) return false;
       if (staffId && appointment.staffId !== staffId) return false;
@@ -430,7 +469,12 @@ export function isAppointmentOverdue(
   appointment: Appointment,
   referenceDate: Date = new Date(),
 ): boolean {
-  if (appointment.status === "cancelled" || appointment.paid) return false;
+  if (appointment.status === AppointmentStatus.CANCELLED || appointment.paid) {
+    return false;
+  }
+  if (appointment.status === AppointmentStatus.OVERDUE) {
+    return true;
+  }
   const today = getLocalDateString(referenceDate);
   const currentTime = `${referenceDate
     .getHours()
