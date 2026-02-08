@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Bell, BellRing, Check } from "lucide-react";
@@ -16,6 +16,7 @@ import {
 import { Badge } from "@/components/badge";
 import { Spinner } from "@/components/spinner";
 import { cn } from "@/lib/utils";
+import { initAudio, playNotificationSound } from "@/lib/notifications";
 import { useGet, withParams } from "@/hooks/useGet";
 import { usePost } from "@/hooks/usePost";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -52,6 +53,9 @@ export function AdminNotificationsBell() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
+  const [showNewPill, setShowNewPill] = useState(false);
+  const prevUnreadRef = useRef<number | null>(null);
+  const pillTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const canShow = !!user?.id;
   const salonId = user?.salon?.id;
@@ -171,6 +175,46 @@ export function AdminNotificationsBell() {
       }
     };
   }, [canShow, queryClient]);
+
+  useEffect(() => {
+    if (!canShow) {
+      prevUnreadRef.current = null;
+      if (pillTimerRef.current) {
+        clearTimeout(pillTimerRef.current);
+        pillTimerRef.current = null;
+      }
+      setShowNewPill(false);
+      return;
+    }
+    if (isUnreadLoading) {
+      return;
+    }
+    if (prevUnreadRef.current === null) {
+      prevUnreadRef.current = unreadCount;
+      return;
+    }
+
+    if (unreadCount > prevUnreadRef.current) {
+      setShowNewPill(true);
+      playNotificationSound();
+      if (pillTimerRef.current) {
+        clearTimeout(pillTimerRef.current);
+      }
+      pillTimerRef.current = setTimeout(() => {
+        setShowNewPill(false);
+      }, 4000);
+    }
+
+    prevUnreadRef.current = unreadCount;
+  }, [canShow, isUnreadLoading, unreadCount]);
+
+  useEffect(() => {
+    return () => {
+      if (pillTimerRef.current) {
+        clearTimeout(pillTimerRef.current);
+      }
+    };
+  }, []);
 
   if (!canShow) {
     return null;
@@ -356,6 +400,7 @@ export function AdminNotificationsBell() {
 
   const isLoading = isNotificationsLoading || isUnreadLoading;
   const hasUnread = unreadCount > 0;
+  const shouldShowPill = showNewPill && !open;
 
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
@@ -363,8 +408,9 @@ export function AdminNotificationsBell() {
         <Button
           variant="ghost"
           size="icon"
-          className="relative"
+          className="relative overflow-visible"
           aria-label={t("settings.notifications")}
+          onClick={() => initAudio()}
         >
           {hasUnread ? (
             <BellRing className="h-5 w-5 text-accent-pink" />
@@ -375,6 +421,11 @@ export function AdminNotificationsBell() {
             <span className="absolute -top-1 -right-1 h-5 min-w-[1.25rem] rounded-full bg-accent-pink text-white text-[10px] font-semibold flex items-center justify-center px-1">
               {unreadCount > 9 ? "9+" : unreadCount}
             </span>
+          )}
+          {shouldShowPill && (
+            <Badge className="absolute right-12 top-1/2 -translate-y-1/2 bg-accent-pink text-white text-[11px] font-semibold px-3 py-1 shadow-sm whitespace-nowrap">
+              {t("notifications.newNotification")}
+            </Badge>
           )}
         </Button>
       </DropdownMenuTrigger>

@@ -339,6 +339,7 @@ export interface TranslationKeys {
     };
   };
   notifications: {
+    newNotification: string;
     actor: string;
     statuses: {
       paid: string;
@@ -1189,6 +1190,7 @@ export const en = {
   // NOTIFICATIONS
   // ============================================
   notifications: {
+    newNotification: "You have a new notification!",
     actor: "By {{name}}",
     statuses: {
       paid: "Paid",

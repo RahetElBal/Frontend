@@ -718,6 +718,7 @@ export const es = {
   // NOTIFICATIONS
   // ============================================
   notifications: {
+    newNotification: "¡Tienes una nueva notificación!",
     actor: "Por {{name}}",
     statuses: {
       paid: "Pagado",

@@ -2,8 +2,10 @@
 // NOTIFICATION & REMINDER SYSTEM
 // ============================================
 
-// Notification sound - base64 encoded short beep
-const NOTIFICATION_SOUND = 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2teleAUFTI7X3qdrFAFIm9j2fwsMT5TZ59YGBU+U2OfWBgVPlNjn1gYFT5TY59YGBU+U2OfWBgVPlNjn1gYFT5TY59YGBU+U2OfWBgVPlNjn1gYFT5TY59YGBU+U2OfWBgVPlNjn1gYFT5TY59YGBU+U2OfWBgVPlNjn1gYFT5TY59YGBU+U2OfWBgVPlNjn1gYFT5TY59YGBU+U2OfWBgVPlNjn1gYFT5TY59YGBU+U2OfWBgU=';
+// Optional custom notification sound placed in public/sounds/notification-soft.mp3
+const NOTIFICATION_SOUND_URL = "/sounds/notification-soft.mp3";
+// Fallback: base64 encoded short beep
+const NOTIFICATION_SOUND_FALLBACK = "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2teleAUFTI7X3qdrFAFIm9j2fwsMT5TZ59YGBU+U2OfWBgVPlNjn1gYFT5TY59YGBU+U2OfWBgVPlNjn1gYFT5TY59YGBU+U2OfWBgVPlNjn1gYFT5TY59YGBU+U2OfWBgVPlNjn1gYFT5TY59YGBU+U2OfWBgVPlNjn1gYFT5TY59YGBU+U2OfWBgVPlNjn1gYFT5TY59YGBU+U2OfWBgVPlNjn1gYFT5TY59YGBU+U2OfWBgU=";
 
 let audioContext: AudioContext | null = null;
 
@@ -22,10 +24,23 @@ export function initAudio() {
  */
 export async function playNotificationSound() {
   try {
-    // Try using HTML5 Audio first
-    const audio = new Audio(NOTIFICATION_SOUND);
-    audio.volume = 0.5;
-    await audio.play();
+    const tryPlay = async (source: string) => {
+      const audio = new Audio(source);
+      audio.volume = 0.5;
+      const playPromise = audio.play();
+      if (playPromise) {
+        await playPromise;
+      }
+      return true;
+    };
+
+    try {
+      await tryPlay(NOTIFICATION_SOUND_URL);
+      return;
+    } catch {
+      await tryPlay(NOTIFICATION_SOUND_FALLBACK);
+      return;
+    }
   } catch (error) {
     console.warn('Could not play notification sound:', error);
     // Fallback: try Web Audio API beep

@@ -782,6 +782,7 @@ export const fr = {
   // NOTIFICATIONS
   // ============================================
   notifications: {
+    newNotification: "Vous avez une nouvelle notification !",
     actor: "Par {{name}}",
     statuses: {
       paid: "Payé",
