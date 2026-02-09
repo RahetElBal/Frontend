@@ -40,41 +40,14 @@ export function AvailabilityView({
 }: AvailabilityViewProps) {
   const { t } = useTranslation();
 
-  if (isLoading) {
-    return (
-      <Card className="p-6">
-        <LoadingPanel label={t("common.loading")} />
-      </Card>
-    );
-  }
-
-  if (isClosed) {
-    return (
-      <Card className="p-6">
-        <div className="text-center text-muted-foreground">
-          <Calendar className="h-10 w-10 mx-auto mb-3" />
-          <p className="text-sm font-medium">{t("agenda.closedDay")}</p>
-        </div>
-      </Card>
-    );
-  }
-
-  if (!staffMembers.length) {
-    return (
-      <Card className="p-6">
-        <div className="text-center text-muted-foreground">
-          <Calendar className="h-10 w-10 mx-auto mb-3" />
-          <p className="text-sm font-medium">{t("agenda.noAvailability")}</p>
-        </div>
-      </Card>
-    );
-  }
-
   const now = new Date();
   const todayStr = getLocalDateString(now);
   const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
   const availabilityByStaff = useMemo(() => {
+    if (isLoading || isClosed || staffMembers.length === 0) {
+      return [] as Array<{ staff: StaffUser; slots: string[] }>;
+    }
     const appointmentsByStaff = new Map<string, Appointment[]>();
 
     appointments.forEach((appointment) => {
@@ -107,7 +80,48 @@ export function AvailabilityView({
 
       return { staff, slots };
     });
-  }, [appointments, staffMembers, timeSlots, blockedSlots, selectedDate, todayStr, currentMinutes]);
+  }, [
+    isLoading,
+    isClosed,
+    staffMembers.length,
+    appointments,
+    staffMembers,
+    timeSlots,
+    blockedSlots,
+    selectedDate,
+    todayStr,
+    currentMinutes,
+  ]);
+
+  if (isLoading) {
+    return (
+      <Card className="p-6">
+        <LoadingPanel label={t("common.loading")} />
+      </Card>
+    );
+  }
+
+  if (isClosed) {
+    return (
+      <Card className="p-6">
+        <div className="text-center text-muted-foreground">
+          <Calendar className="h-10 w-10 mx-auto mb-3" />
+          <p className="text-sm font-medium">{t("agenda.closedDay")}</p>
+        </div>
+      </Card>
+    );
+  }
+
+  if (!staffMembers.length) {
+    return (
+      <Card className="p-6">
+        <div className="text-center text-muted-foreground">
+          <Calendar className="h-10 w-10 mx-auto mb-3" />
+          <p className="text-sm font-medium">{t("agenda.noAvailability")}</p>
+        </div>
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-4">
