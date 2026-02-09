@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
-import { Sparkles } from "lucide-react";
 
 interface AuthLayoutProps {
   children: ReactNode;
@@ -31,18 +30,6 @@ export function AuthLayout({ children, className }: AuthLayoutProps) {
         <div className="absolute inset-0 bg-grid-pattern opacity-5" />
       </div>
 
-      {/* Logo/Branding */}
-      <div className="absolute top-8 left-8 z-10">
-        <div className="flex items-center gap-2">
-          <div className="h-10 w-10 rounded-lg bg-linear-to-br from-accent-pink to-accent-blue flex items-center justify-center shadow-lg">
-            <Sparkles className="h-6 w-6 text-white" />
-          </div>
-          <span className="text-2xl font-bold bg-linear-to-r from-accent-pink to-accent-blue bg-clip-text text-transparent">
-            SalonFlow
-          </span>
-        </div>
-      </div>
-
       {/* Content Card */}
       <div className="relative z-10 w-full max-w-md">
         <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/20 p-8">
@@ -53,7 +40,7 @@ export function AuthLayout({ children, className }: AuthLayoutProps) {
       {/* Footer */}
       <div className="absolute bottom-8 left-0 right-0 z-10 text-center">
         <p className="text-sm text-muted-foreground">
-          © 2025 SalonFlow. Tous droits réservés.
+          © 2026 Beautiq. Tous droits réservés.
         </p>
       </div>
     </div>
