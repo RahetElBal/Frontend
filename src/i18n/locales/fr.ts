@@ -562,6 +562,15 @@ export const fr = {
     redeemNowDescription: "Appliquer la réduction ({{points}} pts requis)",
     redeemNowNotEligible: "Non éligible à l'utilisation",
   },
+  history: {
+    description: "Consulter l'historique des rendez-vous et la performance",
+    totalAppointments: "Total des rendez-vous",
+    completedAppointments: "Rendez-vous termin?s",
+    unpaidAppointments: "Rendez-vous impay?s",
+    totalRevenue: "Chiffre d'affaires total",
+    averageTicket: "Panier moyen",
+    noShowAppointments: "Absences",
+  },
 
   services: {
     description: "{{count}} services disponibles",

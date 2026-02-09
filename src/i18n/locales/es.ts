@@ -527,6 +527,15 @@ export const es = {
     redeemNowDescription: "Aplicar el descuento ({{points}} pts requeridos)",
     redeemNowNotEligible: "No elegible para canjear",
   },
+  history: {
+    description: "Revisa el historial de citas y el rendimiento",
+    totalAppointments: "Total de citas",
+    completedAppointments: "Citas completadas",
+    unpaidAppointments: "Citas sin pagar",
+    totalRevenue: "Ingresos totales",
+    averageTicket: "Ticket promedio",
+    noShowAppointments: "Ausencias",
+  },
 
   services: {
     description: "{{count}} servicios disponibles",

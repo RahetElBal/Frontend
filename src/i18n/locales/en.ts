@@ -962,6 +962,15 @@ export const en = {
     redeemNowDescription: "Apply the reward discount ({{points}} pts required)",
     redeemNowNotEligible: "Not eligible for redemption",
   },
+  history: {
+    description: "Review historical appointments and performance",
+    totalAppointments: "Total appointments",
+    completedAppointments: "Completed appointments",
+    unpaidAppointments: "Unpaid appointments",
+    totalRevenue: "Total revenue",
+    averageTicket: "Average ticket",
+    noShowAppointments: "No-shows",
+  },
 
   // ============================================
   // SERVICES

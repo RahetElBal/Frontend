@@ -36,7 +36,7 @@ interface HistoryViewProps {
   staffId: string | null;
   staffOptions: Array<{ id: string; label: string }>;
   onStaffChange: (value: string) => void;
-  onSelectAppointment: (appointment: Appointment) => void;
+  onSelectAppointment?: (appointment: Appointment) => void;
 }
 
 type AppointmentHistoryRow = Appointment & {
@@ -215,10 +215,6 @@ export function HistoryView({
     [t, formatCurrency],
   );
 
-  const totalCount = rows.length;
-  const paidCount = rows.filter((row) => row.paid).length;
-  const unpaidCount = totalCount - paidCount;
-
   return (
     <div className="space-y-4">
       <Card className="p-4">
@@ -311,29 +307,12 @@ export function HistoryView({
         </div>
       </Card>
 
-      <div className="grid gap-3 sm:grid-cols-3">
-        <Card className="p-4">
-          <p className="text-sm text-muted-foreground">{t("common.total")}</p>
-          <p className="text-2xl font-bold">{totalCount}</p>
-        </Card>
-        <Card className="p-4">
-          <p className="text-sm text-muted-foreground">
-            {t("agenda.paymentPaid")}
-          </p>
-          <p className="text-2xl font-bold text-emerald-600">{paidCount}</p>
-        </Card>
-        <Card className="p-4">
-          <p className="text-sm text-muted-foreground">
-            {t("agenda.paymentUnpaid")}
-          </p>
-          <p className="text-2xl font-bold text-amber-600">{unpaidCount}</p>
-        </Card>
-      </div>
-
       <DataTable
         table={table}
         columns={columns}
-        onRowClick={(row) => onSelectAppointment(row)}
+        onRowClick={
+          onSelectAppointment ? (row) => onSelectAppointment(row) : undefined
+        }
         searchPlaceholder={t("common.search")}
         emptyMessage={t("common.noResults")}
         loading={isLoading}

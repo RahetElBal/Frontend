@@ -36,6 +36,7 @@ export const ROUTES = {
 
   // Agenda
   AGENDA: "/agenda",
+  AGENDA_HISTORY: "/agenda/history",
 
   // Services
   SERVICES: "/services",
@@ -182,7 +183,7 @@ export const ADMIN_SALON_NAVIGATION: NavSection[] = [
       {
         id: "agenda-history",
         titleKey: "nav.history",
-        href: `${ROUTES.AGENDA}?tab=history`,
+        href: ROUTES.AGENDA_HISTORY,
         icon: History,
       },
       {

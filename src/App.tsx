@@ -57,6 +57,11 @@ const AgendaPage = lazy(() =>
     default: module.AgendaPage,
   })),
 );
+const AgendaHistoryPage = lazy(() =>
+  import("./pages/user/agenda-history").then((module) => ({
+    default: module.AgendaHistoryPage,
+  })),
+);
 const ServicesPage = lazy(() =>
   import("./pages/user/services").then((module) => ({
     default: module.ServicesPage,
@@ -103,10 +108,11 @@ function App() {
 
         {/* User routes - with UserLayout */}
         <Route element={<UserLayout />}>
-          <Route path={ROUTES.DASHBOARD} element={<DashboardPage />} />
-          <Route path={ROUTES.CLIENTS} element={<ClientsPage />} />
-          <Route path={ROUTES.AGENDA} element={<AgendaPageWrapper />} />
-          <Route path={ROUTES.SERVICES} element={<ServicesPage />} />
+        <Route path={ROUTES.DASHBOARD} element={<DashboardPage />} />
+        <Route path={ROUTES.CLIENTS} element={<ClientsPage />} />
+        <Route path={ROUTES.AGENDA} element={<AgendaPageWrapper />} />
+        <Route path={ROUTES.AGENDA_HISTORY} element={<AgendaHistoryPage />} />
+        <Route path={ROUTES.SERVICES} element={<ServicesPage />} />
           <Route path={ROUTES.STAFF} element={<StaffPage />} />
           <Route path={ROUTES.PRODUCTS} element={<ProductsPage />} />
           <Route path={ROUTES.SALES} element={<SalesPage />} />
