@@ -84,7 +84,7 @@ export function AgendaPage() {
   const { formatCurrency } = useLanguage();
   const queryClient = useQueryClient();
   const canRecordPayment = isAdmin || isSuperadmin;
-  const canViewHistory = isAdmin || isSuperadmin;
+  const canViewHistory = user?.role === "admin" && !isSuperadmin;
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [modalState, setModalState] = useState<AppointmentModalState>(null);
   const queryParams = useMemo(

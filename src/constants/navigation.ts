@@ -322,7 +322,14 @@ export function getNavigationForRole(
   // Regular salon panel
   switch (role) {
     case "superadmin":
-      return ADMIN_SALON_NAVIGATION;
+      return ADMIN_SALON_NAVIGATION.map((section) =>
+        section.id === "management"
+          ? {
+              ...section,
+              items: section.items.filter((item) => item.id !== "agenda-history"),
+            }
+          : section
+      );
     case "admin":
       return ADMIN_SALON_NAVIGATION.map((section) =>
         section.id === "management"
