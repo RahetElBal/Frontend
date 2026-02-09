@@ -880,6 +880,7 @@ export const en = {
     pending: "pending",
     appointments: "appointments",
     availabilities: "Availabilities",
+    history: "History",
     availableSlots: "Available slots",
     noAvailability: "No availability for this day.",
     makeAppointment: "Make appointment",

@@ -478,6 +478,7 @@ export const fr = {
     pending: "en attente",
     appointments: "rendez-vous",
     availabilities: "Disponibilités",
+    history: "Historique",
     availableSlots: "Créneaux disponibles",
     noAvailability: "Aucune disponibilité pour cette journée.",
     makeAppointment: "Prendre rendez-vous",

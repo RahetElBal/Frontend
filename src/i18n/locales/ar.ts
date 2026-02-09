@@ -460,6 +460,7 @@ export const ar = {
     pending: "قيد الانتظار",
     appointments: "مواعيد",
     availabilities: "التوافر",
+    history: "السجل",
     availableSlots: "الأوقات المتاحة",
     noAvailability: "لا توجد أوقات متاحة لهذا اليوم.",
     makeAppointment: "حجز موعد",

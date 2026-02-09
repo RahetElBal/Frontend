@@ -463,6 +463,7 @@ export const es = {
     pending: "pendientes",
     appointments: "citas",
     availabilities: "Disponibilidades",
+    history: "Historial",
     availableSlots: "Horarios disponibles",
     noAvailability: "No hay disponibilidad para este día.",
     makeAppointment: "Reservar cita",

@@ -72,6 +72,7 @@ import { AvailabilityView } from "./components/availability-view";
 import { CalendarToolbar } from "./components/dialog/calendar-toolbar";
 import { TimelineView } from "./components/timeline-view";
 import { MonthlySummaryView } from "./components/monthly-summary-view";
+import { HistoryView } from "./components/history-view";
 import { AppointmentModals } from "./components/dialog/appointment-modals";
 import { translateServiceName } from "@/common/service-translations";
 
@@ -83,11 +84,12 @@ export function AgendaPage() {
   const { formatCurrency } = useLanguage();
   const queryClient = useQueryClient();
   const canRecordPayment = isAdmin || isSuperadmin;
+  const canViewHistory = isAdmin || isSuperadmin;
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [modalState, setModalState] = useState<AppointmentModalState>(null);
-  const [activeTab, setActiveTab] = useState<"appointments" | "availability">(
-    "appointments",
-  );
+  const [activeTab, setActiveTab] = useState<
+    "appointments" | "availability" | "history"
+  >("appointments");
   const queryParams = useMemo(
     () => new URLSearchParams(location.search),
     [location.search],
@@ -123,6 +125,18 @@ export function AgendaPage() {
   const [viewMode, setViewMode] = useState<"day" | "month">(
     () => initialViewMode,
   );
+  const [historyDateFrom, setHistoryDateFrom] = useState(() => {
+    const date = new Date();
+    date.setDate(date.getDate() - 30);
+    return getLocalDateString(date);
+  });
+  const [historyDateTo, setHistoryDateTo] = useState(() =>
+    getLocalDateString(),
+  );
+  const [historyStatus, setHistoryStatus] = useState<
+    "all" | AppointmentStatus
+  >("all");
+  const [historyStaffId, setHistoryStaffId] = useState<string | null>(null);
   const salonId = user?.salon?.id;
   const canSelectStaff = isAdmin || isSuperadmin;
 
@@ -137,6 +151,25 @@ export function AgendaPage() {
       setAvailabilityStaffId(user.id);
     }
   }, [availabilityStaffId, canSelectStaff, user?.id]);
+
+  useEffect(() => {
+    if (!canViewHistory && activeTab === "history") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setActiveTab("appointments");
+    }
+  }, [activeTab, canViewHistory]);
+
+  useEffect(() => {
+    if (historyStaffId) return;
+    if (canSelectStaff) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setHistoryStaffId(ALL_STAFF_ID);
+      return;
+    }
+    if (user?.id) {
+      setHistoryStaffId(user.id);
+    }
+  }, [historyStaffId, canSelectStaff, user?.id]);
 
   const selectedStaffIdValue = useMemo(() => {
     const baseId =
@@ -163,6 +196,11 @@ export function AgendaPage() {
     return availabilityStaffId;
   }, [availabilityStaffId, canSelectStaff, user?.id]);
 
+  const historyStaffFilterId = useMemo(() => {
+    if (!historyStaffId || historyStaffId === ALL_STAFF_ID) return null;
+    return historyStaffId;
+  }, [historyStaffId]);
+
   const activeStaffFilterId =
     activeTab === "availability" ? availabilityStaffFilterId : staffFilterId;
   const activeStaffScopeId = activeStaffFilterId ?? ALL_STAFF_ID;
@@ -184,6 +222,18 @@ export function AgendaPage() {
   const shouldFetchAppointments =
     !!salonId &&
     (activeTab === "availability" || viewMode === "month" || !!staffFilterId);
+  const historyAppointmentsParams = useMemo(
+    () => ({
+      salonId,
+      perPage: 200,
+      staffId: historyStaffFilterId || undefined,
+      dateFrom: historyDateFrom || undefined,
+      dateTo: historyDateTo || undefined,
+      sortBy: "date",
+      sortOrder: "desc",
+    }),
+    [salonId, historyStaffFilterId, historyDateFrom, historyDateTo],
+  );
 
   const {
     data: appointmentsData,
@@ -196,6 +246,15 @@ export function AgendaPage() {
       staleTime: appointmentsStaleTime,
     },
   );
+
+  const { data: historyAppointmentsData, isLoading: isHistoryLoading } =
+    useGet<PaginatedResponse<Appointment>>(
+      withParams("appointments", historyAppointmentsParams),
+      {
+        enabled: canViewHistory && activeTab === "history" && !!salonId,
+        staleTime: appointmentsStaleTime,
+      },
+    );
 
   const { data: clientsData } = useGet<PaginatedResponse<Client>>(
     withParams("clients", { salonId, perPage: 100 }),
@@ -224,6 +283,8 @@ export function AgendaPage() {
     deletedIds: new Set<string>(),
   }));
   const rawAppointments = safeExtractArray<Appointment>(appointmentsData);
+  const historyAppointments =
+    safeExtractArray<Appointment>(historyAppointmentsData);
   const optimisticScopeKey = useMemo(
     () => `${salonId ?? "no-salon"}|${activeStaffScopeId ?? "no-staff"}`,
     [salonId, activeStaffScopeId],
@@ -249,6 +310,8 @@ export function AgendaPage() {
   );
   const showAppointmentsLoading =
     isAppointmentsLoading && appointments.length === 0;
+  const showHistoryLoading =
+    isHistoryLoading && historyAppointments.length === 0;
   const clients = safeExtractArray<Client>(clientsData);
   const services = safeExtractArray<Service>(servicesData);
   const staffMembers = safeExtractArray<User>(staffResponse);
@@ -261,6 +324,15 @@ export function AgendaPage() {
       allLabel: t("common.all"),
     });
   }, [staffMembers, user, canSelectStaff, viewMode, t]);
+  const historyStaffOptions = useMemo(() => {
+    return buildStaffOptions({
+      user,
+      staffMembers,
+      includeAll: canSelectStaff,
+      allStaffId: ALL_STAFF_ID,
+      allLabel: t("common.all"),
+    });
+  }, [staffMembers, user, canSelectStaff, t]);
   const availabilityStaffMembers = useMemo(() => {
     const list: User[] = [];
     if (user?.role === "user" && user?.id) {
@@ -320,6 +392,26 @@ export function AgendaPage() {
     });
   }, [workingHoursForSelectedDate, bookingSlotMinutes]);
 
+  const handleHistoryDateFromChange = useCallback(
+    (nextValue: string) => {
+      setHistoryDateFrom(nextValue);
+      if (historyDateTo && nextValue && nextValue > historyDateTo) {
+        setHistoryDateTo(nextValue);
+      }
+    },
+    [historyDateTo],
+  );
+
+  const handleHistoryDateToChange = useCallback(
+    (nextValue: string) => {
+      setHistoryDateTo(nextValue);
+      if (historyDateFrom && nextValue && nextValue < historyDateFrom) {
+        setHistoryDateFrom(nextValue);
+      }
+    },
+    [historyDateFrom],
+  );
+
   useEffect(() => {
     if (!selectedDate) return;
     const nextParams = new URLSearchParams(location.search);
@@ -373,10 +465,15 @@ export function AgendaPage() {
   });
 
   // Derived states
+  const appointmentsForModals =
+    activeTab === "history" ? historyAppointments : appointments;
   const selectedAppointment = useMemo(() => {
     if (!modalState || modalState.appointmentId === "create") return null;
-    return appointments.find((a) => a.id === modalState.appointmentId) || null;
-  }, [modalState, appointments]);
+    return (
+      appointmentsForModals.find((a) => a.id === modalState.appointmentId) ||
+      null
+    );
+  }, [modalState, appointmentsForModals]);
 
   const isCreateMode = useMemo(
     () => modalState?.appointmentId === "create",
@@ -1146,157 +1243,170 @@ export function AgendaPage() {
         >
           {t("agenda.availabilities")}
         </Button>
+        {canViewHistory && (
+          <Button
+            variant={activeTab === "history" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setActiveTab("history")}
+          >
+            {t("agenda.history")}
+          </Button>
+        )}
       </div>
 
-      <CalendarToolbar
-        notificationsEnabled={notificationsEnabled}
-        onNotificationToggle={handleNotificationToggle}
-        onNewAppointment={() =>
-          setModalState({
-            appointmentId: "create",
-            mode: "edit",
-            prefillDate: selectedDate,
-            prefillStaffId: staffFilterId || undefined,
-            nonce: Date.now(),
-          })
-        }
-        confirmedCount={confirmedCount}
-        pendingCount={pendingCount}
-        totalCount={appointments.length}
-        loading={showAppointmentsLoading}
-        isNewAppointmentDisabled={isSelectedDatePast}
-        newAppointmentDisabledReason={t("agenda.pastAppointmentNotAllowed")}
-      />
-
-      <div className="grid gap-3 sm:grid-cols-2">
-        <Card className="p-4">
-          <p className="text-sm text-muted-foreground">
-            {t("agenda.unpaidTotalToday")}
-          </p>
-          {showAppointmentsLoading ? (
-            <div className="flex items-center h-7">
-              <Spinner size="sm" />
-            </div>
-          ) : (
-            <p className="text-xl font-bold text-accent-pink">
-              {formatCurrency(unpaidTotalToday)}
-            </p>
-          )}
-        </Card>
-        <Card className="p-4">
-          <p className="text-sm text-muted-foreground">
-            {t("agenda.overdueCount")}
-          </p>
-          {showAppointmentsLoading ? (
-            <div className="flex items-center h-7">
-              <Spinner size="sm" />
-            </div>
-          ) : (
-            <p className="text-xl font-bold text-orange-600">
-              {overdueAppointments.length}
-            </p>
-          )}
-        </Card>
-      </div>
-
-      <div className="flex flex-wrap gap-2 items-center">
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">
-            {t("fields.date")}
-          </span>
-          <Input
-            type="date"
-            value={selectedDate}
-            onChange={(event) => setSelectedDate(event.target.value)}
-            className="w-40"
+      {activeTab !== "history" && (
+        <>
+          <CalendarToolbar
+            notificationsEnabled={notificationsEnabled}
+            onNotificationToggle={handleNotificationToggle}
+            onNewAppointment={() =>
+              setModalState({
+                appointmentId: "create",
+                mode: "edit",
+                prefillDate: selectedDate,
+                prefillStaffId: staffFilterId || undefined,
+                nonce: Date.now(),
+              })
+            }
+            confirmedCount={confirmedCount}
+            pendingCount={pendingCount}
+            totalCount={appointments.length}
+            loading={showAppointmentsLoading}
+            isNewAppointmentDisabled={isSelectedDatePast}
+            newAppointmentDisabledReason={t("agenda.pastAppointmentNotAllowed")}
           />
-        </div>
-        {activeTab === "appointments" &&
-          canSelectStaff &&
-          staffOptions.length > 0 && (
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Card className="p-4">
+              <p className="text-sm text-muted-foreground">
+                {t("agenda.unpaidTotalToday")}
+              </p>
+              {showAppointmentsLoading ? (
+                <div className="flex items-center h-7">
+                  <Spinner size="sm" />
+                </div>
+              ) : (
+                <p className="text-xl font-bold text-accent-pink">
+                  {formatCurrency(unpaidTotalToday)}
+                </p>
+              )}
+            </Card>
+            <Card className="p-4">
+              <p className="text-sm text-muted-foreground">
+                {t("agenda.overdueCount")}
+              </p>
+              {showAppointmentsLoading ? (
+                <div className="flex items-center h-7">
+                  <Spinner size="sm" />
+                </div>
+              ) : (
+                <p className="text-xl font-bold text-orange-600">
+                  {overdueAppointments.length}
+                </p>
+              )}
+            </Card>
+          </div>
+
+          <div className="flex flex-wrap gap-2 items-center">
             <div className="flex items-center gap-2">
               <span className="text-sm text-muted-foreground">
-                {t("fields.staff")}
+                {t("fields.date")}
               </span>
-              <Select
-                value={selectedStaffIdValue || ""}
-                onValueChange={(value) => setSelectedStaffId(value)}
-              >
-                <SelectTrigger className="w-56 bg-white text-black">
-                  <SelectValue placeholder={t("fields.staff")} />
-                </SelectTrigger>
-                <SelectContent className="bg-white text-black">
-                  {staffOptions.map((staff) => (
-                    <SelectItem key={staff.id} value={staff.id}>
-                      {staff.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Input
+                type="date"
+                value={selectedDate}
+                onChange={(event) => setSelectedDate(event.target.value)}
+                className="w-40"
+              />
             </div>
-          )}
-        {activeTab === "appointments" && (
-          <div className="flex items-center gap-2">
-            <Button
-              variant={viewMode === "day" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setViewMode("day")}
-              className="gap-1"
-            >
-              <List className="h-3.5 w-3.5" />
-              {t("agenda.day")}
-            </Button>
-            <Button
-              variant={viewMode === "month" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setViewMode("month")}
-              className="gap-1"
-            >
-              <Calendar className="h-3.5 w-3.5" />
-              {t("agenda.month")}
-            </Button>
+            {activeTab === "appointments" &&
+              canSelectStaff &&
+              staffOptions.length > 0 && (
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">
+                    {t("fields.staff")}
+                  </span>
+                  <Select
+                    value={selectedStaffIdValue || ""}
+                    onValueChange={(value) => setSelectedStaffId(value)}
+                  >
+                    <SelectTrigger className="w-56 bg-white text-black">
+                      <SelectValue placeholder={t("fields.staff")} />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white text-black">
+                      {staffOptions.map((staff) => (
+                        <SelectItem key={staff.id} value={staff.id}>
+                          {staff.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+            {activeTab === "appointments" && (
+              <div className="flex items-center gap-2">
+                <Button
+                  variant={viewMode === "day" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setViewMode("day")}
+                  className="gap-1"
+                >
+                  <List className="h-3.5 w-3.5" />
+                  {t("agenda.day")}
+                </Button>
+                <Button
+                  variant={viewMode === "month" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setViewMode("month")}
+                  className="gap-1"
+                >
+                  <Calendar className="h-3.5 w-3.5" />
+                  {t("agenda.month")}
+                </Button>
+              </div>
+            )}
+            {activeTab === "appointments" && viewMode === "day" && (
+              <>
+                <Button
+                  variant={filter === "all" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setFilter("all")}
+                >
+                  {t("agenda.filters.all")}
+                </Button>
+                <Button
+                  variant={filter === "today" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setFilter("today")}
+                >
+                  {t("agenda.filters.today")}
+                </Button>
+                <Button
+                  variant={filter === "unpaid" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setFilter("unpaid")}
+                >
+                  {t("agenda.filters.unpaid")}
+                </Button>
+                <Button
+                  variant={filter === "overdue" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setFilter("overdue")}
+                >
+                  {t("agenda.filters.overdue")}
+                </Button>
+                <Button
+                  variant={filter === "completed" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setFilter("completed")}
+                >
+                  {t("agenda.filters.completed")}
+                </Button>
+              </>
+            )}
           </div>
-        )}
-        {activeTab === "appointments" && viewMode === "day" && (
-          <>
-            <Button
-              variant={filter === "all" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setFilter("all")}
-            >
-              {t("agenda.filters.all")}
-            </Button>
-            <Button
-              variant={filter === "today" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setFilter("today")}
-            >
-              {t("agenda.filters.today")}
-            </Button>
-            <Button
-              variant={filter === "unpaid" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setFilter("unpaid")}
-            >
-              {t("agenda.filters.unpaid")}
-            </Button>
-            <Button
-              variant={filter === "overdue" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setFilter("overdue")}
-            >
-              {t("agenda.filters.overdue")}
-            </Button>
-            <Button
-              variant={filter === "completed" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setFilter("completed")}
-            >
-              {t("agenda.filters.completed")}
-            </Button>
-          </>
-        )}
-      </div>
+        </>
+      )}
 
       {activeTab === "availability" &&
         canSelectStaff &&
@@ -1318,7 +1428,28 @@ export function AgendaPage() {
         )}
 
       <div className="w-full">
-        {activeTab === "availability" ? (
+        {activeTab === "history" ? (
+          <HistoryView
+            appointments={historyAppointments}
+            isLoading={showHistoryLoading}
+            dateFrom={historyDateFrom}
+            dateTo={historyDateTo}
+            onDateFromChange={handleHistoryDateFromChange}
+            onDateToChange={handleHistoryDateToChange}
+            statusFilter={historyStatus}
+            onStatusChange={(value) => setHistoryStatus(value)}
+            staffId={historyStaffId}
+            staffOptions={historyStaffOptions}
+            onStaffChange={(value) => setHistoryStaffId(value)}
+            onSelectAppointment={(appointment) =>
+              setModalState({
+                appointmentId: appointment.id,
+                mode: "view",
+                nonce: Date.now(),
+              })
+            }
+          />
+        ) : activeTab === "availability" ? (
           <AvailabilityView
             selectedDate={selectedDate}
             timeSlots={timelineSlots.slots}
@@ -1406,7 +1537,7 @@ export function AgendaPage() {
         <AppointmentModals
           modalState={modalState}
           setModalState={setModalState}
-          appointments={appointments}
+          appointments={appointmentsForModals}
           clients={clients}
           services={services}
           staffMembers={staffMembers}
