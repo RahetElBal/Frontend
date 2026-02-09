@@ -87,13 +87,19 @@ export function AgendaPage() {
   const canViewHistory = isAdmin || isSuperadmin;
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [modalState, setModalState] = useState<AppointmentModalState>(null);
-  const [activeTab, setActiveTab] = useState<
-    "appointments" | "availability" | "history"
-  >("appointments");
   const queryParams = useMemo(
     () => new URLSearchParams(location.search),
     [location.search],
   );
+  const initialTab = useMemo(() => {
+    const value = queryParams.get("tab");
+    if (value === "availability") return "availability";
+    if (value === "history" && canViewHistory) return "history";
+    return "appointments";
+  }, [queryParams, canViewHistory]);
+  const [activeTab, setActiveTab] = useState<
+    "appointments" | "availability" | "history"
+  >(() => initialTab);
   const initialDate = useMemo(() => {
     const value = queryParams.get("date");
     if (!value) return getLocalDateString();
@@ -158,6 +164,11 @@ export function AgendaPage() {
       setActiveTab("appointments");
     }
   }, [activeTab, canViewHistory]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setActiveTab(initialTab);
+  }, [initialTab]);
 
   useEffect(() => {
     if (historyStaffId) return;
@@ -417,6 +428,13 @@ export function AgendaPage() {
     const nextParams = new URLSearchParams(location.search);
     nextParams.set("date", selectedDate);
     nextParams.set("view", viewMode);
+    if (activeTab === "availability") {
+      nextParams.set("tab", "availability");
+    } else if (activeTab === "history" && canViewHistory) {
+      nextParams.set("tab", "history");
+    } else {
+      nextParams.delete("tab");
+    }
     if (selectedStaffParam) {
       nextParams.set("staffId", selectedStaffParam);
     } else {
@@ -439,6 +457,8 @@ export function AgendaPage() {
     selectedDate,
     selectedStaffParam,
     viewMode,
+    activeTab,
+    canViewHistory,
     location.pathname,
     location.search,
     navigate,

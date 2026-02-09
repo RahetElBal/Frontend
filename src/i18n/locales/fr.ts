@@ -395,6 +395,7 @@ export const fr = {
     dashboard: "Tableau de bord",
     clients: "Clients",
     agenda: "Agenda",
+    history: "Historique",
     services: "Services",
     staff: "Personnel",
     products: "Produits",

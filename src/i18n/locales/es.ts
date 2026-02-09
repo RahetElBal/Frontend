@@ -384,6 +384,7 @@ export const es = {
     dashboard: "Panel",
     clients: "Clientes",
     agenda: "Agenda",
+    history: "Historial",
     services: "Servicios",
     products: "Productos",
     sales: "Pagos",

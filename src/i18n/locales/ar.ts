@@ -382,6 +382,7 @@ export const ar = {
     dashboard: "لوحة التحكم",
     clients: "العملاء",
     agenda: "جدول المواعيد",
+    history: "السجل",
     services: "الخدمات",
     products: "المنتجات",
     sales: "المدفوعات",

@@ -309,6 +309,7 @@ export interface TranslationKeys {
     dashboard: string;
     clients: string;
     agenda: string;
+    history: string;
     services: string;
     products: string;
     sales: string;
@@ -788,6 +789,7 @@ export const en = {
     dashboard: "Dashboard",
     clients: "Clients",
     agenda: "Agenda",
+    history: "History",
     services: "Services",
     staff: "Staff",
     products: "Products",

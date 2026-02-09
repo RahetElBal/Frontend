@@ -2,6 +2,7 @@ import {
   LayoutDashboard,
   Users,
   Calendar,
+  History,
   Scissors,
   ShoppingCart,
   BarChart3,
@@ -116,6 +117,12 @@ export const USER_NAVIGATION: NavSection[] = [
         titleKey: "nav.agenda",
         href: ROUTES.AGENDA,
         icon: Calendar,
+      },
+      {
+        id: "agenda-history",
+        titleKey: "nav.history",
+        href: `${ROUTES.AGENDA}?tab=history`,
+        icon: History,
       },
       {
         id: "services",
