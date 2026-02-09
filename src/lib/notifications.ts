@@ -46,7 +46,7 @@ export function primeNotificationSound() {
 /**
  * Play a notification sound
  */
-export async function playNotificationSound() {
+export async function playNotificationSound(soundUrl?: string) {
   try {
     const tryPlay = async (source: string) => {
       const audio = new Audio(source);
@@ -57,6 +57,15 @@ export async function playNotificationSound() {
       }
       return true;
     };
+
+    if (soundUrl && soundUrl !== NOTIFICATION_SOUND_URL) {
+      try {
+        await tryPlay(soundUrl);
+        return;
+      } catch {
+        // Fall through to default sound
+      }
+    }
 
     try {
       const audio = getNotificationAudio();
@@ -132,14 +141,15 @@ export async function showNotification(
     icon?: string;
     tag?: string;
     playSound?: boolean;
+    soundUrl?: string;
     onClick?: () => void;
   }
 ) {
-  const { body, icon, tag, playSound = true, onClick } = options || {};
+  const { body, icon, tag, playSound = true, soundUrl, onClick } = options || {};
   
   // Play sound if enabled
   if (playSound) {
-    playNotificationSound();
+    playNotificationSound(soundUrl);
   }
   
   // Show browser notification if permitted

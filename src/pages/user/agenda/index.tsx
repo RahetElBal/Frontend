@@ -66,6 +66,7 @@ import {
   scheduleReminder,
   cancelAllReminders,
   showNotification,
+  playNotificationSound,
   type AppointmentReminder,
 } from "@/lib/notifications";
 import { AvailabilityView } from "./components/availability-view";
@@ -630,10 +631,12 @@ export function AgendaPage() {
         { duration: 10000 },
       );
 
+      playNotificationSound("/sounds/delayed.mp3");
+
       if (notificationsEnabled) {
         showNotification(t("agenda.overdueUnpaidTitle"), {
           body: `${clientName} - ${serviceName} (${apt.date} ${apt.startTime})`,
-          playSound: true,
+          playSound: false,
         });
       }
     });
