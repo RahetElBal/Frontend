@@ -119,12 +119,6 @@ export const USER_NAVIGATION: NavSection[] = [
         icon: Calendar,
       },
       {
-        id: "agenda-history",
-        titleKey: "nav.history",
-        href: `${ROUTES.AGENDA}?tab=history`,
-        icon: History,
-      },
-      {
         id: "services",
         titleKey: "nav.services",
         href: ROUTES.SERVICES,
@@ -184,6 +178,12 @@ export const ADMIN_SALON_NAVIGATION: NavSection[] = [
         titleKey: "nav.agenda",
         href: ROUTES.AGENDA,
         icon: Calendar,
+      },
+      {
+        id: "agenda-history",
+        titleKey: "nav.history",
+        href: `${ROUTES.AGENDA}?tab=history`,
+        icon: History,
       },
       {
         id: "services",
