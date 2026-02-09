@@ -250,6 +250,7 @@ export function AdminNotificationsBell() {
     date?: string;
     time?: string;
     staffId?: string;
+    appointmentId?: string;
     total?: number | string;
     paymentStatus?: string;
     status?: string;
@@ -440,6 +441,12 @@ export function AdminNotificationsBell() {
     }
     if (payload.staffId) {
       params.set("staffId", payload.staffId);
+    }
+    if (payload.time) {
+      params.set("time", payload.time);
+    }
+    if (payload.appointmentId) {
+      params.set("appointmentId", payload.appointmentId);
     }
     params.set("view", "day");
 

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -90,6 +90,39 @@ export function AgendaPage() {
     () => new URLSearchParams(location.search),
     [location.search],
   );
+  const appointmentIdParam = useMemo(() => {
+    const value = queryParams.get("appointmentId");
+    const trimmed = value?.trim();
+    return trimmed ? trimmed : null;
+  }, [queryParams]);
+  const appointmentDateParam = useMemo(() => {
+    const value = queryParams.get("date");
+    const trimmed = value?.trim();
+    return trimmed ? trimmed : null;
+  }, [queryParams]);
+  const appointmentTimeParam = useMemo(() => {
+    const value = queryParams.get("time") || queryParams.get("appointmentTime");
+    const trimmed = value?.trim();
+    return trimmed ? trimmed : null;
+  }, [queryParams]);
+  const appointmentStaffParam = useMemo(() => {
+    const value = queryParams.get("staffId");
+    const trimmed = value?.trim();
+    return trimmed ? trimmed : null;
+  }, [queryParams]);
+  const appointmentFocusKey = useMemo(() => {
+    if (appointmentIdParam) return `id:${appointmentIdParam}`;
+    if (!appointmentDateParam || !appointmentTimeParam) return null;
+    return `time:${appointmentDateParam}|${normalizeTime(appointmentTimeParam)}|${
+      appointmentStaffParam || ""
+    }`;
+  }, [
+    appointmentIdParam,
+    appointmentDateParam,
+    appointmentStaffParam,
+    appointmentTimeParam,
+  ]);
+  const openedAppointmentRef = useRef<string | null>(null);
   const [activeTab, setActiveTab] = useState<
     "appointments" | "availability"
   >("appointments");
@@ -399,6 +432,61 @@ export function AgendaPage() {
   useEffect(() => {
     requestNotificationPermission().then(setNotificationsEnabled);
   }, []);
+
+  useEffect(() => {
+    if (!appointmentFocusKey) return;
+    if (openedAppointmentRef.current === appointmentFocusKey) return;
+    if (appointmentIdParam && modalState?.appointmentId === appointmentIdParam) {
+      openedAppointmentRef.current = appointmentFocusKey;
+      return;
+    }
+
+    const appointmentById = appointmentIdParam
+      ? appointments.find((item) => item.id === appointmentIdParam)
+      : null;
+    const normalizedTime = appointmentTimeParam
+      ? normalizeTime(appointmentTimeParam)
+      : "";
+    const appointmentByTime =
+      !appointmentById && appointmentDateParam && normalizedTime
+        ? appointments.find((item) => {
+            if (appointmentDateParam && item.date !== appointmentDateParam) {
+              return false;
+            }
+            if (
+              appointmentStaffParam &&
+              appointmentStaffParam !== ALL_STAFF_ID &&
+              item.staffId !== appointmentStaffParam
+            ) {
+              return false;
+            }
+            return normalizeTime(item.startTime) === normalizedTime;
+          })
+        : null;
+
+    const appointment = appointmentById || appointmentByTime;
+    if (!appointment) return;
+
+    if (activeTab !== "appointments") {
+      setActiveTab("appointments");
+    }
+
+    setModalState({
+      appointmentId: appointment.id,
+      mode: "view",
+      nonce: Date.now(),
+    });
+    openedAppointmentRef.current = appointmentFocusKey;
+  }, [
+    appointmentDateParam,
+    appointmentFocusKey,
+    appointmentIdParam,
+    appointmentStaffParam,
+    appointmentTimeParam,
+    appointments,
+    activeTab,
+    modalState,
+  ]);
 
   const isOverdue = useCallback(
     (apt: Appointment) => isAppointmentOverdue(apt),

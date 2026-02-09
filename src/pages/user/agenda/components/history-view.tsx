@@ -60,7 +60,11 @@ const getDisplayPrice = (appointment: Appointment) =>
       0,
   );
 
-const getStaffLabel = (appointment: Appointment, fallback: string): string => {
+const getStaffLabel = (
+  appointment: Appointment,
+  staffLabelById: Map<string, string>,
+  fallback: string,
+): string => {
   if (appointment.staff) {
     const fullName = `${appointment.staff.firstName || ""} ${
       appointment.staff.lastName || ""
@@ -68,7 +72,10 @@ const getStaffLabel = (appointment: Appointment, fallback: string): string => {
     if (fullName) return fullName;
     return appointment.staff.name || appointment.staff.email || fallback;
   }
-  if (appointment.staffId) return appointment.staffId;
+  if (appointment.staffId) {
+    const label = staffLabelById.get(appointment.staffId);
+    if (label) return label;
+  }
   return fallback;
 };
 
@@ -88,6 +95,14 @@ export function HistoryView({
 }: HistoryViewProps) {
   const { t } = useTranslation();
   const { formatCurrency } = useLanguage();
+  const staffLabelById = useMemo(() => {
+    const map = new Map<string, string>();
+    staffOptions.forEach((staff) => {
+      if (!staff.id || staff.id === "all") return;
+      map.set(staff.id, staff.label);
+    });
+    return map;
+  }, [staffOptions]);
 
   const filteredAppointments = useMemo(() => {
     if (statusFilter === "all") return appointments;
@@ -110,7 +125,7 @@ export function HistoryView({
       const serviceName = appointment.service
         ? translateServiceName(t, appointment.service)
         : "";
-      const staffName = getStaffLabel(appointment, "");
+      const staffName = getStaffLabel(appointment, staffLabelById, "");
       const timeRange = `${normalizeTime(appointment.startTime)} - ${normalizeTime(
         appointment.endTime,
       )}`;
@@ -139,7 +154,7 @@ export function HistoryView({
         dateTimeSort,
       };
     });
-  }, [filteredAppointments, t]);
+  }, [filteredAppointments, staffLabelById, t]);
 
   const table = useTable<AppointmentHistoryRow>({
     data: rows,
@@ -188,6 +203,7 @@ export function HistoryView({
         key: "displayStatus",
         header: t("fields.status"),
         sortable: true,
+        className: "min-w-[140px] whitespace-nowrap",
         render: (row) => (
           <Badge variant={statusColors[row.displayStatus]}>
             {row.statusLabel}
