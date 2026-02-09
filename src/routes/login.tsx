@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Phone } from "lucide-react";
 
@@ -16,11 +15,6 @@ import { Spinner } from "@/components/spinner";
 import { useAuthentication } from "@/hooks/useAuthentication";
 import { useUser } from "@/hooks/useUser";
 import { CONTACT_INFO } from "@/constants/auth";
-import { useStaffLock } from "@/contexts/StaffLockProvider";
-import {
-  clearStaffKickedAt,
-  readStaffKickedAt,
-} from "@/lib/staff-lock";
 
 // Google Icon SVG
 function GoogleIcon({ className }: { className?: string }) {
@@ -53,19 +47,9 @@ function GoogleIcon({ className }: { className?: string }) {
 export function LoginPage() {
   const { t } = useTranslation();
   const { isLoading, error, loginWithGoogle } = useAuthentication();
-  const { lockActive } = useStaffLock();
-  const [kickedAt, setKickedAt] = useState<string | null>(null);
 
   // Redirect if already authenticated
   useUser({ redirectIfFound: true });
-
-  useEffect(() => {
-    const kicked = readStaffKickedAt();
-    if (kicked) {
-      setKickedAt(kicked);
-      clearStaffKickedAt();
-    }
-  }, []);
 
   const getErrorMessage = (errorKey: string): string => {
     switch (errorKey) {
@@ -98,20 +82,6 @@ export function LoginPage() {
         </CardHeader>
 
         <CardContent className="space-y-4 pt-4">
-          {kickedAt && (
-            <div className="p-3 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-sm text-center">
-              You were signed out because staff access was paused. Please
-              contact your administrator.
-            </div>
-          )}
-
-          {lockActive && (
-            <div className="p-3 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-sm text-center">
-              Staff access is temporarily paused. Admins can log in and
-              reactivate staff when the connection is stable.
-            </div>
-          )}
-
           {/* Error message */}
           {error && (
             <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm text-center">

@@ -5,11 +5,9 @@ import { AuthProvider } from "@/contexts/AuthProvider";
 import { GlobalProvider } from "@/contexts/GlobalProvider";
 import { ModalsProvider } from "@/contexts/ModalsProvider";
 import { QueryProvider } from "@/contexts/QueryProvider";
-import { StaffLockProvider } from "@/contexts/StaffLockProvider";
 import { ViewModeProvider } from "@/contexts/ViewModeProvider";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { Toaster } from "@/components/ui/sonner";
-import { StaffLockEnforcer } from "@/components/staff-lock-enforcer";
 import { SlaWelcomeModal } from "@/components/sla-welcome-modal";
 
 import { initI18n } from "@/i18n";
@@ -26,18 +24,15 @@ const bootstrap = async () => {
       <ErrorBoundary>
         <QueryProvider>
           <AuthProvider>
-            <StaffLockProvider>
-              <StaffLockEnforcer />
-              <SlaWelcomeModal />
-              <ViewModeProvider>
-                <GlobalProvider>
-                  <ModalsProvider>
-                    <App />
-                    <Toaster />
-                  </ModalsProvider>
-                </GlobalProvider>
-              </ViewModeProvider>
-            </StaffLockProvider>
+            <SlaWelcomeModal />
+            <ViewModeProvider>
+              <GlobalProvider>
+                <ModalsProvider>
+                  <App />
+                  <Toaster />
+                </ModalsProvider>
+              </GlobalProvider>
+            </ViewModeProvider>
           </AuthProvider>
         </QueryProvider>
       </ErrorBoundary>
