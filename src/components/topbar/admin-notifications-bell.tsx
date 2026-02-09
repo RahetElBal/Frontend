@@ -202,6 +202,7 @@ export function AdminNotificationsBell() {
       prevUnreadRef.current = unreadCount;
       if (unreadCount > 0) {
         setShowNewPill(true);
+        playNotificationSound();
         if (pillTimerRef.current) {
           clearTimeout(pillTimerRef.current);
         }

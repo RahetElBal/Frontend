@@ -13,6 +13,7 @@ export const ar = {
     edit: "تعديل",
     add: "إضافة",
     upload: "رفع",
+    download: "تنزيل",
     remove: "إزالة",
     search: "بحث",
     filter: "تصفية",
@@ -63,6 +64,15 @@ export const ar = {
     total: "الإجمالي",
     new: "جديد",
   },
+
+  // ============================================
+  // APP UPDATE
+  // ============================================
+  appUpdate: {
+    title: "إصدار جديد متاح",
+    message: "الإصدار {{version}} متاح. قم بتنزيل أحدث ملف APK.",
+  },
+
 
   // ============================================
   // AUTHENTICATION
@@ -449,6 +459,10 @@ export const ar = {
     confirmed: "مؤكد",
     pending: "قيد الانتظار",
     appointments: "مواعيد",
+    availabilities: "التوافر",
+    availableSlots: "الأوقات المتاحة",
+    noAvailability: "لا توجد أوقات متاحة لهذا اليوم.",
+    makeAppointment: "حجز موعد",
     noAppointments: "لا توجد مواعيد",
     noAppointmentsDescription: "لا توجد مواعيد مجدولة لهذا اليوم بعد.",
     addSlot: "إضافة",

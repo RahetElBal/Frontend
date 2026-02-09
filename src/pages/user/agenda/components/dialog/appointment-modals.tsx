@@ -179,6 +179,7 @@ export function AppointmentModals({
   const { t } = useTranslation();
   const { formatCurrency } = useLanguage();
   const { user, salon, isAdmin, isSuperadmin } = useUser();
+  const canViewPayment = isAdmin || isSuperadmin;
   const [redeemLoyalty, setRedeemLoyalty] = useState(false);
   const modalKey = modalState
     ? `${modalState.appointmentId}-${modalState.mode}-${modalState.nonce ?? 0}`
@@ -509,7 +510,7 @@ export function AppointmentModals({
         date: modalState?.prefillDate || getLocalDateString(),
         startTime: modalState?.prefillTime || "09:00",
         notes: "",
-        staffId: selectedStaffId || user?.id || "",
+        staffId: modalState?.prefillStaffId || selectedStaffId || user?.id || "",
         walkInEnabled: false,
         walkInName: "",
         walkInPhone: "",
@@ -724,20 +725,22 @@ export function AppointmentModals({
                 </Badge>
               </div>
 
-              <div className="grid gap-4">
-                <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
-                  <DollarSign className="h-5 w-5 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">
-                      {t("agenda.paymentStatus")}
-                    </p>
-                    <p className="font-medium">
-                      {selectedAppointment.paid
-                        ? t("agenda.paymentPaid")
-                        : t("agenda.paymentUnpaid")}
-                    </p>
-                  </div>
-                </div>
+                <div className="grid gap-4">
+                  {canViewPayment && (
+                    <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+                      <DollarSign className="h-5 w-5 text-muted-foreground" />
+                      <div>
+                        <p className="text-sm text-muted-foreground">
+                          {t("agenda.paymentStatus")}
+                        </p>
+                        <p className="font-medium">
+                          {selectedAppointment.paid
+                            ? t("agenda.paymentPaid")
+                            : t("agenda.paymentUnpaid")}
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 {onCreateSale &&
                   selectedAppointment.status === AppointmentStatus.COMPLETED &&
                   !selectedAppointment.paid &&

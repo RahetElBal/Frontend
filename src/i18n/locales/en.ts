@@ -14,6 +14,7 @@ export interface TranslationKeys {
     edit: string;
     add: string;
     upload: string;
+    download: string;
     remove: string;
     search: string;
     filter: string;
@@ -51,6 +52,10 @@ export interface TranslationKeys {
     total: string;
     new: string;
     detectAddress: string;
+  };
+  appUpdate: {
+    title: string;
+    message: string;
   };
   auth: {
     login: {
@@ -405,6 +410,7 @@ export const en = {
     edit: "Edit",
     add: "Add",
     upload: "Upload",
+    download: "Download",
     remove: "Remove",
     search: "Search",
     filter: "Filter",
@@ -460,6 +466,14 @@ export const en = {
     success: "Success",
     total: "Total",
     new: "New",
+  },
+
+  // ============================================
+  // APP UPDATE
+  // ============================================
+  appUpdate: {
+    title: "New app version available",
+    message: "Version {{version}} is available. Download the latest APK.",
   },
 
   // ============================================
@@ -865,6 +879,10 @@ export const en = {
     confirmed: "confirmed",
     pending: "pending",
     appointments: "appointments",
+    availabilities: "Availabilities",
+    availableSlots: "Available slots",
+    noAvailability: "No availability for this day.",
+    makeAppointment: "Make appointment",
     noAppointments: "No appointments",
     noAppointmentsDescription:
       "You have no appointments scheduled for this day.",

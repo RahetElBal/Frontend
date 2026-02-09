@@ -13,6 +13,7 @@ export const es = {
     edit: "Editar",
     add: "Añadir",
     upload: "Subir",
+    download: "Descargar",
     remove: "Eliminar",
     search: "Buscar",
     filter: "Filtrar",
@@ -63,6 +64,15 @@ export const es = {
     total: "Total",
     new: "Nuevo",
   },
+
+  // ============================================
+  // APP UPDATE
+  // ============================================
+  appUpdate: {
+    title: "Nueva versión disponible",
+    message: "La versión {{version}} está disponible. Descarga el APK más reciente.",
+  },
+
 
   // ============================================
   // AUTHENTICATION
@@ -452,6 +462,10 @@ export const es = {
     confirmed: "confirmadas",
     pending: "pendientes",
     appointments: "citas",
+    availabilities: "Disponibilidades",
+    availableSlots: "Horarios disponibles",
+    noAvailability: "No hay disponibilidad para este día.",
+    makeAppointment: "Reservar cita",
     breakTime: "Pausa",
     closedDay:
       "Este día está marcado como cerrado en la configuración del salón.",

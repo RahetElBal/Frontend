@@ -13,6 +13,7 @@ export const fr = {
     edit: "Modifier",
     add: "Ajouter",
     upload: "Télécharger",
+    download: "Télécharger",
     remove: "Retirer",
     search: "Rechercher",
     filter: "Filtrer",
@@ -69,6 +70,15 @@ export const fr = {
     total: "Total",
     new: "Nouveau",
   },
+
+  // ============================================
+  // APP UPDATE
+  // ============================================
+  appUpdate: {
+    title: "Nouvelle version disponible",
+    message: "La version {{version}} est disponible. Téléchargez le dernier APK.",
+  },
+
 
   // ============================================
   // AUTHENTICATION
@@ -467,6 +477,10 @@ export const fr = {
     confirmed: "confirmés",
     pending: "en attente",
     appointments: "rendez-vous",
+    availabilities: "Disponibilités",
+    availableSlots: "Créneaux disponibles",
+    noAvailability: "Aucune disponibilité pour cette journée.",
+    makeAppointment: "Prendre rendez-vous",
     noAppointments: "Aucun rendez-vous",
     noAppointmentsDescription:
       "Vous n'avez pas encore de rendez-vous programmé pour cette journée.",
