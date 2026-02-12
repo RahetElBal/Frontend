@@ -9,7 +9,7 @@ export function SidebarLogo({ collapsed, className }: SidebarLogoProps) {
   return (
     <div className={cn('flex items-center gap-3', className)}>
       {/* Logo Icon */}
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-white/60 bg-white/80 shadow-sm">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center">
         <img
           src="/branding/beautiq-logo.svg"
           alt="Beautiq logo"

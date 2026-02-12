@@ -294,6 +294,7 @@ export function NotificationsPage() {
       params.set("appointmentId", payload.appointmentId);
     }
     params.set("view", "day");
+    params.set("focus", "notification");
 
     const target = params.toString()
       ? `${ROUTES.AGENDA}?${params.toString()}`

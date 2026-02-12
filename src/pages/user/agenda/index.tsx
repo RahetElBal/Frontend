@@ -110,6 +110,11 @@ export function AgendaPage() {
     const trimmed = value?.trim();
     return trimmed ? trimmed : null;
   }, [queryParams]);
+  const appointmentFocusSource = useMemo(() => {
+    const value = queryParams.get("focus");
+    const trimmed = value?.trim();
+    return trimmed ? trimmed : null;
+  }, [queryParams]);
   const appointmentFocusKey = useMemo(() => {
     if (appointmentIdParam) return `id:${appointmentIdParam}`;
     if (!appointmentDateParam || !appointmentTimeParam) return null;
@@ -435,6 +440,7 @@ export function AgendaPage() {
 
   useEffect(() => {
     if (!appointmentFocusKey) return;
+    if (appointmentFocusSource !== "notification") return;
     if (openedAppointmentRef.current === appointmentFocusKey) return;
     if (appointmentIdParam && modalState?.appointmentId === appointmentIdParam) {
       openedAppointmentRef.current = appointmentFocusKey;
@@ -477,15 +483,35 @@ export function AgendaPage() {
       nonce: Date.now(),
     });
     openedAppointmentRef.current = appointmentFocusKey;
+
+    const nextParams = new URLSearchParams(location.search);
+    nextParams.delete("focus");
+    const nextSearch = nextParams.toString();
+    const currentSearch = location.search.startsWith("?")
+      ? location.search.slice(1)
+      : location.search;
+    if (nextSearch !== currentSearch) {
+      navigate(
+        {
+          pathname: location.pathname,
+          search: nextSearch ? `?${nextSearch}` : "",
+        },
+        { replace: true },
+      );
+    }
   }, [
     appointmentDateParam,
     appointmentFocusKey,
+    appointmentFocusSource,
     appointmentIdParam,
     appointmentStaffParam,
     appointmentTimeParam,
     appointments,
     activeTab,
     modalState,
+    location.pathname,
+    location.search,
+    navigate,
   ]);
 
   const isOverdue = useCallback(

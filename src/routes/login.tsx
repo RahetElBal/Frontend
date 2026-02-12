@@ -70,11 +70,11 @@ export function LoginPage() {
       >
         <CardHeader className="text-center space-y-2 pb-2">
           {/* Brand logo */}
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl border border-white/60 bg-white/80 shadow-lg">
+          <div className="mx-auto mb-4 flex items-center justify-center">
             <img
               src="/branding/beautiq-logo.svg"
               alt="Beautiq logo"
-              className="h-14 w-14 object-contain"
+              className="h-14 w-auto object-contain"
               decoding="async"
             />
           </div>
@@ -117,14 +117,9 @@ export function LoginPage() {
         </CardContent>
 
         <CardFooter className="flex flex-col items-center gap-4 pt-2 pb-6">
-          {/* Divider */}
-          <div className="w-full flex items-center gap-3">
-            <div className="flex-1 h-px bg-border" />
-            <span className="text-xs text-muted-foreground uppercase tracking-wider">
-              {t("auth.login.contactUs")}
-            </span>
-            <div className="flex-1 h-px bg-border" />
-          </div>
+          <span className="text-xs text-muted-foreground uppercase tracking-wider">
+            {t("auth.login.contactUs")}
+          </span>
 
           {/* Contact Info */}
           <a
