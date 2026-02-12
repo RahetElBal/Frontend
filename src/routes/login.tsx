@@ -69,9 +69,14 @@ export function LoginPage() {
         style={{ background: "transparent" }}
       >
         <CardHeader className="text-center space-y-2 pb-2">
-          {/* Logo placeholder - can be replaced with actual logo */}
-          <div className="mx-auto mb-4 w-16 h-16 rounded-2xl bg-linear-to-br from-accent-pink-400 to-accent-pink-500 flex items-center justify-center shadow-lg">
-            <span className="text-2xl font-bold text-white">BS</span>
+          {/* Brand logo */}
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl border border-white/60 bg-white/80 shadow-lg">
+            <img
+              src="/branding/beautiq-logo.svg"
+              alt="Beautiq logo"
+              className="h-14 w-14 object-contain"
+              decoding="async"
+            />
           </div>
           <CardTitle className="text-2xl font-bold text-foreground">
             {t("auth.login.title")}
@@ -93,7 +98,7 @@ export function LoginPage() {
           <Button
             variant="outline"
             size="lg"
-            className="w-full h-12 text-base font-medium border-2 border-pink-100 bg-linear-to-br from-pink-50 to-blue-50 text-gray-900 shadow-sm transition-all duration-200 hover:from-pink-100 hover:to-blue-100"
+            className="w-full h-12 text-base font-medium border-2 border-accent-pink-100 bg-linear-to-br from-accent-pink-50 to-accent-blue-50 text-gray-900 shadow-sm transition-all duration-200 hover:from-accent-pink-100 hover:to-accent-blue-100"
             onClick={loginWithGoogle}
             disabled={isLoading}
           >

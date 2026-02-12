@@ -3,21 +3,21 @@
 @theme {
   --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
   
-  /* Pale pink accent */
-  --color-accent-pink-50: oklch(0.97 0.02 350);
-  --color-accent-pink-100: oklch(0.94 0.04 350);
-  --color-accent-pink-200: oklch(0.90 0.06 350);
-  --color-accent-pink-300: oklch(0.85 0.08 350);
-  --color-accent-pink-400: oklch(0.78 0.10 350);
-  --color-accent-pink-500: oklch(0.70 0.12 350);
+  /* Brand rose accent */
+  --color-accent-pink-50: #fbf4f5;
+  --color-accent-pink-100: #f7e7ea;
+  --color-accent-pink-200: #f0cfd6;
+  --color-accent-pink-300: #e2a9b7;
+  --color-accent-pink-400: #cf7c91;
+  --color-accent-pink-500: #c05f73;
   
-  /* Pale blue accent */
-  --color-accent-blue-50: oklch(0.97 0.02 230);
-  --color-accent-blue-100: oklch(0.94 0.04 230);
-  --color-accent-blue-200: oklch(0.90 0.06 230);
-  --color-accent-blue-300: oklch(0.85 0.08 230);
-  --color-accent-blue-400: oklch(0.78 0.10 230);
-  --color-accent-blue-500: oklch(0.70 0.12 230);
+  /* Warm mauve accent */
+  --color-accent-blue-50: #f6f0f2;
+  --color-accent-blue-100: #efe3e7;
+  --color-accent-blue-200: #e0c8d1;
+  --color-accent-blue-300: #c79fb0;
+  --color-accent-blue-400: #ad748f;
+  --color-accent-blue-500: #8f526c;
   
   /* Primary (using pale pink as primary) */
   --color-primary: var(--color-accent-pink-500);

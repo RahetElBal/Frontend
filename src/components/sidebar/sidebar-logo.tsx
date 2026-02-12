@@ -9,8 +9,13 @@ export function SidebarLogo({ collapsed, className }: SidebarLogoProps) {
   return (
     <div className={cn('flex items-center gap-3', className)}>
       {/* Logo Icon */}
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-accent-pink-400 to-accent-pink-500 shadow-lg shadow-accent-pink-200">
-        <span className="text-lg font-bold text-white">B</span>
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-white/60 bg-white/80 shadow-sm">
+        <img
+          src="/branding/beautiq-logo.svg"
+          alt="Beautiq logo"
+          className="h-10 w-10 object-contain"
+          decoding="async"
+        />
       </div>
       
       {/* Logo Text - Hidden when collapsed */}

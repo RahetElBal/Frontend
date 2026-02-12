@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+﻿import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 interface AuthLayoutProps {
@@ -10,7 +10,7 @@ export function AuthLayout({ children, className }: AuthLayoutProps) {
   return (
     <div
       className={cn(
-        "min-h-screen w-full bg-linear-to-br from-pink-50 to-blue-50",
+        "min-h-screen w-full bg-linear-to-br from-accent-pink-50 to-accent-blue-50",
         "flex items-center justify-center p-4 relative overflow-hidden",
         className,
       )}
@@ -25,6 +25,16 @@ export function AuthLayout({ children, className }: AuthLayoutProps) {
 
         {/* Center accent */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-160 h-160 bg-linear-to-br from-accent-pink/10 via-transparent to-accent-blue/10 rounded-full blur-3xl" />
+
+        {/* Brand cover watermark */}
+        <div className="absolute inset-0 flex items-center justify-center opacity-20">
+          <img
+            src="/branding/beautiq-cover.svg"
+            alt=""
+            className="w-[70rem] max-w-[92vw] select-none"
+            aria-hidden="true"
+          />
+        </div>
 
         {/* Decorative grid */}
         <div className="absolute inset-0 bg-grid-pattern opacity-5" />

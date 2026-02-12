@@ -203,9 +203,9 @@ export default function AuthCallback() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-pink-50 to-blue-50">
+    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-accent-pink-50 to-accent-blue-50">
       <div className="text-center p-8 bg-white rounded-2xl shadow-lg">
-        <Spinner className="w-12 h-12 mx-auto mb-4 text-pink-500" />
+        <Spinner className="w-12 h-12 mx-auto mb-4 text-accent-pink-500" />
         <h1 className="text-2xl font-bold text-gray-900 mb-2">
           {isProcessing ? "Authenticating..." : "Redirecting..."}
         </h1>
