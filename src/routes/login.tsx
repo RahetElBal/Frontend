@@ -74,7 +74,7 @@ export function LoginPage() {
             <img
               src="/branding/beautiq-logo.svg"
               alt="Beautiq logo"
-              className="h-14 w-auto object-contain"
+              className="h-16 w-16 rounded-2xl object-contain"
               decoding="async"
             />
           </div>
