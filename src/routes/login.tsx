@@ -65,33 +65,26 @@ export function LoginPage() {
   return (
     <AuthLayout>
       <Card
-        className="relative overflow-hidden border-0 !bg-transparent shadow-none"
+        className="border-0 !bg-transparent shadow-none"
         style={{ background: "transparent" }}
       >
-        <img
-          src="/branding/beautiq-cover.svg"
-          alt=""
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-20"
-        />
-        <div className="relative z-10">
-          <CardHeader className="text-center space-y-2 pb-2">
-            {/* Brand logo */}
-            <img
-              src="/branding/beautiq-logo.svg"
-              alt="Beautiq logo"
-              className="mx-auto mb-4 h-20 w-20 rounded-3xl object-contain"
-              decoding="async"
-            />
+        <CardHeader className="text-center space-y-2 pb-2">
+          {/* Brand logo */}
+          <img
+            src="/branding/beautiq-logo.svg"
+            alt="Beautiq logo"
+            className="mx-auto mb-4 h-20 w-20 rounded-3xl object-contain"
+            decoding="async"
+          />
           <CardTitle className="text-2xl font-bold text-foreground">
             {t("auth.login.title")}
           </CardTitle>
           <CardDescription className="text-muted-foreground">
             {t("auth.login.subtitle")}
           </CardDescription>
-          </CardHeader>
+        </CardHeader>
 
-          <CardContent className="space-y-4 pt-4">
+        <CardContent className="space-y-4 pt-4">
           {/* Error message */}
           {error && (
             <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm text-center">
@@ -119,9 +112,9 @@ export function LoginPage() {
               </>
             )}
           </Button>
-          </CardContent>
+        </CardContent>
 
-          <CardFooter className="flex flex-col items-center gap-4 pt-2 pb-6">
+        <CardFooter className="flex flex-col items-center gap-4 pt-2 pb-6">
           <span className="text-xs text-muted-foreground uppercase tracking-wider">
             {t("auth.login.contactUs")}
           </span>
@@ -137,8 +130,7 @@ export function LoginPage() {
               {CONTACT_INFO.PHONE}
             </span>
           </a>
-          </CardFooter>
-        </div>
+        </CardFooter>
       </Card>
     </AuthLayout>
   );

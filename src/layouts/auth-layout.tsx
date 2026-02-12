@@ -26,6 +26,16 @@ export function AuthLayout({ children, className }: AuthLayoutProps) {
         {/* Center accent */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-160 h-160 bg-linear-to-br from-accent-pink/10 via-transparent to-accent-blue/10 rounded-full blur-3xl" />
 
+        {/* Brand cover in background */}
+        <div className="absolute inset-0 flex items-center justify-center opacity-15">
+          <img
+            src="/branding/beautiq-cover.svg"
+            alt=""
+            aria-hidden="true"
+            className="w-[80rem] max-w-[96vw] select-none"
+          />
+        </div>
+
         {/* Decorative grid */}
         <div className="absolute inset-0 bg-grid-pattern opacity-5" />
       </div>
