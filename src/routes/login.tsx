@@ -130,6 +130,26 @@ export function LoginPage() {
               {CONTACT_INFO.PHONE}
             </span>
           </a>
+
+          <p className="text-xs text-muted-foreground text-center">
+            {t("auth.login.troubleConnectingPrefix")}{" "}
+            <a
+              href="https://mail.google.com/mail/?view=cm&fs=1&to=support@beautiq-app.com"
+              target="_blank"
+              rel="noreferrer"
+              className="font-medium text-foreground hover:text-accent-pink-500 transition-colors"
+            >
+              support@beautiq-app.com
+            </a>{" "}
+            {t("auth.login.troubleConnectingOrCall")}{" "}
+            <a
+              href={`tel:${CONTACT_INFO.PHONE.replace(/\s/g, "")}`}
+              className="font-medium text-foreground hover:text-accent-pink-500 transition-colors"
+            >
+              {CONTACT_INFO.PHONE}
+            </a>
+            {t("auth.login.troubleConnectingSuffix")}
+          </p>
         </CardFooter>
       </Card>
     </AuthLayout>

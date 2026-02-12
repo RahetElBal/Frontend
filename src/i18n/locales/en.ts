@@ -64,6 +64,9 @@ export interface TranslationKeys {
       googleButton: string;
       contactUs: string;
       phoneLabel: string;
+      troubleConnectingPrefix: string;
+      troubleConnectingOrCall: string;
+      troubleConnectingSuffix: string;
       loading: string;
       error: {
         generic: string;
@@ -487,6 +490,9 @@ export const en = {
       googleButton: "Continue with Google",
       contactUs: "Contact us",
       phoneLabel: "Phone",
+      troubleConnectingPrefix: "Trouble connecting? Contact",
+      troubleConnectingOrCall: "or call",
+      troubleConnectingSuffix: ".",
       loading: "Signing in...",
       error: {
         generic: "An error occurred during sign in",
