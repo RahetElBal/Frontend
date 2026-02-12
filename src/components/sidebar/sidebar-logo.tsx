@@ -13,7 +13,7 @@ export function SidebarLogo({ collapsed, className }: SidebarLogoProps) {
         <img
           src="/branding/beautiq-logo.svg"
           alt="Beautiq logo"
-          className="h-10 w-10 object-contain"
+          className="h-10 w-10 rounded-xl object-contain"
           decoding="async"
         />
       </div>
