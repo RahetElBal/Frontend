@@ -203,8 +203,11 @@ export default function LandingPage() {
               </p>
             </div>
             <div className="space-y-5">
-              <h1 className="text-balance text-4xl font-semibold leading-tight sm:text-5xl lg:text-6xl">
-                Premiere solution intelligente de gestion de salon de beaute.
+              <h1 className="text-balance text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl lg:text-6xl">
+                <span className="bg-linear-to-r from-accent-pink-500 via-accent-pink-400 to-accent-blue-500 bg-clip-text text-transparent">
+                  Beautiq, le premier logiciel de gestion 100% Algerien pour
+                  booster votre salon de beaute, onglerie, esthetique ou spa.
+                </span>
               </h1>
               <p className="max-w-2xl text-base text-muted-foreground sm:text-lg">
                 De la prise de rendez-vous au paiement, Beautiq centralise CRM,
