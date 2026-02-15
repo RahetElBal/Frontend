@@ -1,4 +1,4 @@
-﻿export const ar = {
+export const ar = {
   // ============================================
   // COMMON
   // ============================================
@@ -394,6 +394,7 @@
     marketing: "التسويق",
     analytics: "التحليلات",
     notifications: "الإشعارات",
+    report: "بلاغ الدعم",
     settings: "الإعدادات",
     sections: {
       management: "الإدارة",
@@ -965,6 +966,89 @@
       category: "الفئة",
       duration: "المدة",
       price: "السعر",
+    },
+  },
+  landing: {
+    algeriaFlagLabel: "علم الجزائر",
+    dzPioneer:
+      "أول تطبيق DZ لإدارة صالونات التجميل ومراكز العناية الجمالية في الجزائر.",
+    digitalizeOneClick: "رقمن صالونك بنقرة واحدة.",
+  },
+  supportReport: {
+    title: "بلاغ الدعم",
+    description: "أرسل طلب دعم منظم مباشرة إلى دعم Beautiq.",
+    routing: {
+      title: "التوجيه والأولوية",
+      currentOffer: "العرض الحالي:",
+      predictedPriority: "الأولوية المتوقعة:",
+      description:
+        "يتم إرسال البلاغات إلى {{email}} وتصنيفها بشارة العرض والأولوية.",
+      lastTicket: "آخر تذكرة مرسلة: {{ticketId}}",
+    },
+    planTier: {
+      standard: "القياسية",
+      pro: "الاحترافية",
+      allIn: "الشاملة",
+    },
+    priorities: {
+      low: "منخفضة",
+      normal: "عادية",
+      high: "عالية",
+      urgent: "عاجلة",
+    },
+    types: {
+      technical_issue: {
+        label: "مشكلة تقنية",
+        description: "مشكلات في سلوك التطبيق أو الأداء أو المزامنة.",
+      },
+      bug_report: {
+        label: "بلاغ خطأ",
+        description: "خطأ غير متوقع أو مسار لا يعمل.",
+      },
+      billing: {
+        label: "الفوترة",
+        description: "استفسارات الاشتراك أو الفاتورة أو العرض.",
+      },
+      account_access: {
+        label: "الوصول إلى الحساب",
+        description: "مشكلات تسجيل الدخول أو الوصول أو الصلاحيات.",
+      },
+      incident: {
+        label: "حادث حرج",
+        description: "انقطاع عاجل في الخدمة يتطلب استجابة سريعة.",
+      },
+      feature_request: {
+        label: "طلب ميزة",
+        description: "اقتراح تحسين للمنتج.",
+      },
+      other: {
+        label: "أخرى",
+        description: "أي موضوع دعم آخر.",
+      },
+    },
+    form: {
+      title: "إنشاء بلاغ",
+      typeLabel: "نوع البلاغ",
+      typePlaceholder: "اختر نوع البلاغ",
+      subjectLabel: "الموضوع",
+      subjectPlaceholder: "ملخص قصير للمشكلة",
+      messageLabel: "الرسالة",
+      messagePlaceholder:
+        "اشرح ما حدث وخطوات إعادة المشكلة والنتيجة المتوقعة",
+      messageCount: "{{count}}/4000",
+      includeDiagnosticsLabel: "تضمين بيانات التشخيص",
+      includeDiagnosticsDescription:
+        "سياق المتصفح/المستخدم يساعد الدعم على إعادة المشكلة بشكل أسرع.",
+      submit: "إرسال البلاغ",
+      sending: "جارٍ الإرسال...",
+    },
+    validation: {
+      subjectMin: "يجب أن يحتوي الموضوع على 4 أحرف على الأقل",
+      messageMin: "يجب أن تحتوي الرسالة على 20 حرفًا على الأقل",
+    },
+    toasts: {
+      success: "تم إرسال البلاغ - التذكرة {{ticketId}}",
+      error: "تعذر إرسال البلاغ",
     },
   },
   plans: {

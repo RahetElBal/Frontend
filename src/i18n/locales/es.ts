@@ -1,4 +1,4 @@
-﻿export const es = {
+export const es = {
   // ============================================
   // COMMON
   // ============================================
@@ -396,6 +396,7 @@
     marketing: "Marketing",
     analytics: "Analíticas",
     notifications: "Notificaciones",
+    report: "Reporte de soporte",
     settings: "Configuración",
     sections: {
       management: "Gestión",
@@ -956,6 +957,90 @@
       category: "Categoría",
       duration: "Duración",
       price: "Precio",
+    },
+  },
+  landing: {
+    algeriaFlagLabel: "Bandera de Argelia",
+    dzPioneer:
+      "Primera app DZ para la gestión de salones de belleza y estética en Argelia.",
+    digitalizeOneClick: "Digitaliza tu salón en un clic.",
+  },
+  supportReport: {
+    title: "Reporte de soporte",
+    description:
+      "Envía una solicitud de soporte estructurada directamente al soporte de Beautiq.",
+    routing: {
+      title: "Enrutamiento y prioridad",
+      currentOffer: "Oferta actual:",
+      predictedPriority: "Prioridad estimada:",
+      description:
+        "Los reportes se envían a {{email}} y se clasifican con una insignia de oferta y prioridad.",
+      lastTicket: "Último ticket enviado: {{ticketId}}",
+    },
+    planTier: {
+      standard: "Standard",
+      pro: "Pro",
+      allIn: "All-In",
+    },
+    priorities: {
+      low: "Baja",
+      normal: "Normal",
+      high: "Alta",
+      urgent: "Urgente",
+    },
+    types: {
+      technical_issue: {
+        label: "Problema técnico",
+        description: "Comportamiento de la app, rendimiento o problemas de sincronización.",
+      },
+      bug_report: {
+        label: "Reporte de error",
+        description: "Error inesperado o flujo roto.",
+      },
+      billing: {
+        label: "Facturación",
+        description: "Preguntas sobre suscripción, factura u oferta.",
+      },
+      account_access: {
+        label: "Acceso a la cuenta",
+        description: "Problemas de inicio de sesión, acceso o permisos.",
+      },
+      incident: {
+        label: "Incidente crítico",
+        description: "Interrupción urgente del servicio que requiere respuesta rápida.",
+      },
+      feature_request: {
+        label: "Solicitud de funcionalidad",
+        description: "Sugerir una mejora del producto.",
+      },
+      other: {
+        label: "Otro",
+        description: "Cualquier otro tema de soporte.",
+      },
+    },
+    form: {
+      title: "Crear reporte",
+      typeLabel: "Tipo de reporte",
+      typePlaceholder: "Selecciona el tipo de reporte",
+      subjectLabel: "Asunto",
+      subjectPlaceholder: "Resumen breve de tu problema",
+      messageLabel: "Mensaje",
+      messagePlaceholder:
+        "Describe qué ocurrió, pasos para reproducir y resultado esperado",
+      messageCount: "{{count}}/4000",
+      includeDiagnosticsLabel: "Incluir diagnósticos",
+      includeDiagnosticsDescription:
+        "El contexto de navegador/usuario ayuda al soporte a reproducir el problema más rápido.",
+      submit: "Enviar reporte",
+      sending: "Enviando...",
+    },
+    validation: {
+      subjectMin: "El asunto debe tener al menos 4 caracteres",
+      messageMin: "El mensaje debe tener al menos 20 caracteres",
+    },
+    toasts: {
+      success: "Reporte enviado - Ticket {{ticketId}}",
+      error: "No se pudo enviar el reporte",
     },
   },
   plans: {

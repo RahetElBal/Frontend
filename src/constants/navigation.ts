@@ -144,7 +144,7 @@ export const USER_NAVIGATION: NavSection[] = [
       },
       {
         id: "support-report",
-        titleKey: "Report",
+        titleKey: "nav.report",
         href: ROUTES.REPORT,
         icon: LifeBuoy,
       },
@@ -253,7 +253,7 @@ export const ADMIN_SALON_NAVIGATION: NavSection[] = [
       },
       {
         id: "support-report",
-        titleKey: "Report",
+        titleKey: "nav.report",
         href: ROUTES.REPORT,
         icon: LifeBuoy,
       },

@@ -9,6 +9,7 @@ import {
   Sparkles,
   Wrench,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -60,50 +61,34 @@ interface CreateSupportReportResponse {
 
 const reportTypeOptions: Array<{
   value: SupportReportType;
-  label: string;
-  description: string;
   icon: ComponentType<{ className?: string }>;
 }> = [
   {
     value: "technical_issue",
-    label: "Technical issue",
-    description: "App behavior, performance, or sync issues.",
     icon: Wrench,
   },
   {
     value: "bug_report",
-    label: "Bug report",
-    description: "Unexpected error or broken flow.",
     icon: Bug,
   },
   {
     value: "billing",
-    label: "Billing",
-    description: "Subscription, invoice, or plan questions.",
     icon: CreditCard,
   },
   {
     value: "account_access",
-    label: "Account access",
-    description: "Login/access/permission issues.",
     icon: LockKeyhole,
   },
   {
     value: "incident",
-    label: "Critical incident",
-    description: "Urgent service interruption requiring fast response.",
     icon: AlertTriangle,
   },
   {
     value: "feature_request",
-    label: "Feature request",
-    description: "Suggest a product improvement.",
     icon: Sparkles,
   },
   {
     value: "other",
-    label: "Other",
-    description: "Any other support topic.",
     icon: LifeBuoy,
   },
 ];
@@ -158,6 +143,7 @@ const planStyles: Record<PlanTier, string> = {
 };
 
 export default function SupportReportPage() {
+  const { t } = useTranslation();
   const { user, salon } = useUser();
   const planTier = resolvePlanTier(salon?.planTier);
 
@@ -167,14 +153,24 @@ export default function SupportReportPage() {
   const [includeDiagnostics, setIncludeDiagnostics] = useState(true);
   const [lastTicket, setLastTicket] = useState<string | null>(null);
 
+  const localizedTypeOptions = useMemo(
+    () =>
+      reportTypeOptions.map((option) => ({
+        ...option,
+        label: t(`supportReport.types.${option.value}.label`),
+        description: t(`supportReport.types.${option.value}.description`),
+      })),
+    [t],
+  );
   const typeOption = useMemo(
-    () => reportTypeOptions.find((option) => option.value === type),
-    [type],
+    () => localizedTypeOptions.find((option) => option.value === type),
+    [localizedTypeOptions, type],
   );
   const predictedPriority = useMemo(
     () => computePriority(planTier, type),
     [planTier, type],
   );
+  const normalizedPlanKey = planTier === "all-in" ? "allIn" : planTier;
 
   const submitReport = usePost<
     CreateSupportReportResponse,
@@ -185,10 +181,10 @@ export default function SupportReportPage() {
       setLastTicket(response.ticketId);
       setSubject("");
       setMessage("");
-      toast.success(`Report sent - Ticket ${response.ticketId}`);
+      toast.success(t("supportReport.toasts.success", { ticketId: response.ticketId }));
     },
     onError: (error) => {
-      toast.error(error.message || "Failed to submit report");
+      toast.error(error.message || t("supportReport.toasts.error"));
     },
   });
 
@@ -197,11 +193,11 @@ export default function SupportReportPage() {
     const trimmedMessage = message.trim();
 
     if (trimmedSubject.length < 4) {
-      toast.error("Subject must contain at least 4 characters");
+      toast.error(t("supportReport.validation.subjectMin"));
       return;
     }
     if (trimmedMessage.length < 20) {
-      toast.error("Message must contain at least 20 characters");
+      toast.error(t("supportReport.validation.messageMin"));
       return;
     }
 
@@ -228,32 +224,37 @@ export default function SupportReportPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Support Report"
-        description="Send a structured support request directly to Beautiq support."
+        title={t("supportReport.title")}
+        description={t("supportReport.description")}
       />
 
       <Card className="border-accent-pink-200/70 bg-linear-to-r from-accent-pink-50 via-background to-accent-blue-50 shadow-sm">
         <CardHeader className="pb-2">
-          <CardTitle className="text-lg">Routing and Priority</CardTitle>
+          <CardTitle className="text-lg">{t("supportReport.routing.title")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3 text-sm">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-muted-foreground">Current offer:</span>
-            <span className={`rounded-full px-2.5 py-1 text-xs font-semibold uppercase ${planStyles[planTier]}`}>
-              {planTier}
+            <span className="text-muted-foreground">
+              {t("supportReport.routing.currentOffer")}
             </span>
-            <span className="text-muted-foreground">Predicted priority:</span>
+            <span className={`rounded-full px-2.5 py-1 text-xs font-semibold uppercase ${planStyles[planTier]}`}>
+              {t(`supportReport.planTier.${normalizedPlanKey}`)}
+            </span>
+            <span className="text-muted-foreground">
+              {t("supportReport.routing.predictedPriority")}
+            </span>
             <span className={`rounded-full px-2.5 py-1 text-xs font-semibold uppercase ${priorityStyles[predictedPriority]}`}>
-              {predictedPriority}
+              {t(`supportReport.priorities.${predictedPriority}`)}
             </span>
           </div>
           <p className="text-muted-foreground">
-            Reports are sent to <span className="font-medium text-foreground">support@beautiq-app.com</span> and
-            classified with a plan badge plus priority.
+            {t("supportReport.routing.description", {
+              email: "support@beautiq-app.com",
+            })}
           </p>
           {lastTicket ? (
             <p className="text-accent-pink-500 font-medium">
-              Last submitted ticket: {lastTicket}
+              {t("supportReport.routing.lastTicket", { ticketId: lastTicket })}
             </p>
           ) : null}
         </CardContent>
@@ -261,17 +262,17 @@ export default function SupportReportPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Create report</CardTitle>
+          <CardTitle className="text-lg">{t("supportReport.form.title")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-5">
           <div className="space-y-2">
-            <Label>Report type</Label>
+            <Label>{t("supportReport.form.typeLabel")}</Label>
             <Select value={type} onValueChange={(value) => setType(value as SupportReportType)}>
               <SelectTrigger>
-                <SelectValue placeholder="Select report type" />
+                <SelectValue placeholder={t("supportReport.form.typePlaceholder")} />
               </SelectTrigger>
               <SelectContent>
-                {reportTypeOptions.map((option) => (
+                {localizedTypeOptions.map((option) => (
                   <SelectItem key={option.value} value={option.value}>
                     {option.label}
                   </SelectItem>
@@ -284,34 +285,36 @@ export default function SupportReportPage() {
           </div>
 
           <div className="space-y-2">
-            <Label>Subject</Label>
+            <Label>{t("supportReport.form.subjectLabel")}</Label>
             <Input
               value={subject}
               onChange={(event) => setSubject(event.target.value)}
-              placeholder="Short summary of your issue"
+              placeholder={t("supportReport.form.subjectPlaceholder")}
               maxLength={140}
             />
           </div>
 
           <div className="space-y-2">
-            <Label>Message</Label>
+            <Label>{t("supportReport.form.messageLabel")}</Label>
             <Textarea
               value={message}
               onChange={(event) => setMessage(event.target.value)}
-              placeholder="Describe what happened, steps to reproduce, and expected result"
+              placeholder={t("supportReport.form.messagePlaceholder")}
               className="min-h-36"
               maxLength={4000}
             />
             <p className="text-xs text-muted-foreground">
-              {message.length}/4000
+              {t("supportReport.form.messageCount", { count: message.length })}
             </p>
           </div>
 
           <div className="flex items-center justify-between rounded-lg border border-border p-3">
             <div>
-              <p className="text-sm font-medium">Include diagnostics</p>
+              <p className="text-sm font-medium">
+                {t("supportReport.form.includeDiagnosticsLabel")}
+              </p>
               <p className="text-xs text-muted-foreground">
-                Browser/user context helps support reproduce the issue faster.
+                {t("supportReport.form.includeDiagnosticsDescription")}
               </p>
             </div>
             <Switch
@@ -327,7 +330,9 @@ export default function SupportReportPage() {
               className="min-w-42"
             >
               <Send className="h-4 w-4" />
-              {submitReport.isPending ? "Sending..." : "Send report"}
+              {submitReport.isPending
+                ? t("supportReport.form.sending")
+                : t("supportReport.form.submit")}
             </Button>
           </div>
         </CardContent>

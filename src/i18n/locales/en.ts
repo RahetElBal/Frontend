@@ -321,6 +321,7 @@ export interface TranslationKeys {
     marketing: string;
     analytics: string;
     notifications: string;
+    report: string;
     settings: string;
     sections: {
       management: string;
@@ -346,6 +347,85 @@ export interface TranslationKeys {
       profile: string;
       settings: string;
       logout: string;
+    };
+  };
+  landing: {
+    algeriaFlagLabel: string;
+    dzPioneer: string;
+    digitalizeOneClick: string;
+  };
+  supportReport: {
+    title: string;
+    description: string;
+    routing: {
+      title: string;
+      currentOffer: string;
+      predictedPriority: string;
+      description: string;
+      lastTicket: string;
+    };
+    planTier: {
+      standard: string;
+      pro: string;
+      allIn: string;
+    };
+    priorities: {
+      low: string;
+      normal: string;
+      high: string;
+      urgent: string;
+    };
+    types: {
+      technical_issue: {
+        label: string;
+        description: string;
+      };
+      bug_report: {
+        label: string;
+        description: string;
+      };
+      billing: {
+        label: string;
+        description: string;
+      };
+      account_access: {
+        label: string;
+        description: string;
+      };
+      incident: {
+        label: string;
+        description: string;
+      };
+      feature_request: {
+        label: string;
+        description: string;
+      };
+      other: {
+        label: string;
+        description: string;
+      };
+    };
+    form: {
+      title: string;
+      typeLabel: string;
+      typePlaceholder: string;
+      subjectLabel: string;
+      subjectPlaceholder: string;
+      messageLabel: string;
+      messagePlaceholder: string;
+      messageCount: string;
+      includeDiagnosticsLabel: string;
+      includeDiagnosticsDescription: string;
+      submit: string;
+      sending: string;
+    };
+    validation: {
+      subjectMin: string;
+      messageMin: string;
+    };
+    toasts: {
+      success: string;
+      error: string;
     };
   };
   notifications: {
@@ -806,6 +886,7 @@ export const en = {
     marketing: "Marketing",
     analytics: "Analytics",
     notifications: "Notifications",
+    report: "Support Report",
     salonSettings: "Salon Settings",
     settings: "Settings",
     sections: {
@@ -1643,6 +1724,90 @@ export const en = {
       price: "Price",
     },
   },
+  landing: {
+    algeriaFlagLabel: "Algerian flag",
+    dzPioneer:
+      "First DZ app for beauty salon and aesthetics management in Algeria.",
+    digitalizeOneClick: "Digitize your salon in one click.",
+  },
+  supportReport: {
+    title: "Support Report",
+    description:
+      "Send a structured support request directly to Beautiq support.",
+    routing: {
+      title: "Routing and Priority",
+      currentOffer: "Current offer:",
+      predictedPriority: "Predicted priority:",
+      description:
+        "Reports are sent to {{email}} and classified with an offer badge plus priority.",
+      lastTicket: "Last submitted ticket: {{ticketId}}",
+    },
+    planTier: {
+      standard: "Standard",
+      pro: "Pro",
+      allIn: "All-In",
+    },
+    priorities: {
+      low: "Low",
+      normal: "Normal",
+      high: "High",
+      urgent: "Urgent",
+    },
+    types: {
+      technical_issue: {
+        label: "Technical issue",
+        description: "App behavior, performance, or sync issues.",
+      },
+      bug_report: {
+        label: "Bug report",
+        description: "Unexpected error or broken flow.",
+      },
+      billing: {
+        label: "Billing",
+        description: "Subscription, invoice, or offer questions.",
+      },
+      account_access: {
+        label: "Account access",
+        description: "Login/access/permission issues.",
+      },
+      incident: {
+        label: "Critical incident",
+        description: "Urgent service interruption requiring fast response.",
+      },
+      feature_request: {
+        label: "Feature request",
+        description: "Suggest a product improvement.",
+      },
+      other: {
+        label: "Other",
+        description: "Any other support topic.",
+      },
+    },
+    form: {
+      title: "Create report",
+      typeLabel: "Report type",
+      typePlaceholder: "Select report type",
+      subjectLabel: "Subject",
+      subjectPlaceholder: "Short summary of your issue",
+      messageLabel: "Message",
+      messagePlaceholder:
+        "Describe what happened, steps to reproduce, and expected result",
+      messageCount: "{{count}}/4000",
+      includeDiagnosticsLabel: "Include diagnostics",
+      includeDiagnosticsDescription:
+        "Browser/user context helps support reproduce the issue faster.",
+      submit: "Send report",
+      sending: "Sending...",
+    },
+    validation: {
+      subjectMin: "Subject must contain at least 4 characters",
+      messageMin: "Message must contain at least 20 characters",
+    },
+    toasts: {
+      success: "Report sent - Ticket {{ticketId}}",
+      error: "Failed to submit report",
+    },
+  },
   plans: {
     badge: "Plan: {{plan}}",
     standard: "Standard",
@@ -1673,3 +1838,4 @@ export const en = {
     },
   },
 } as const;
+

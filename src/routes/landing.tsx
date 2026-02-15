@@ -11,6 +11,7 @@ import {
   Users,
   WalletCards,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 
 import { CONTACT_INFO } from "@/constants/auth";
@@ -126,6 +127,8 @@ const faqItems = [
 ];
 
 export default function LandingPage() {
+  const { t } = useTranslation();
+
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-linear-to-b from-accent-pink-50 via-background to-accent-blue-50 text-foreground">
       <div className="pointer-events-none absolute inset-0 -z-0">
@@ -175,10 +178,22 @@ export default function LandingPage() {
       <main id="top" className="relative z-10">
         <section className="mx-auto grid w-full max-w-7xl gap-12 px-4 pb-16 pt-16 sm:px-6 lg:grid-cols-[1.03fr_0.97fr] lg:items-center lg:px-8 lg:pb-24 lg:pt-24">
           <div className="space-y-8 animate-fade-up">
-            <p className="inline-flex items-center gap-2 rounded-full border border-accent-pink-200 bg-white/80 px-4 py-1.5 text-sm font-medium text-accent-pink-500 shadow-sm">
-              <Sparkles className="h-4 w-4" />
-              Solution tout-en-un pour salons & instituts
-            </p>
+            <div className="space-y-3">
+              <p className="inline-flex items-center gap-2 rounded-full border border-accent-pink-200 bg-white/80 px-4 py-1.5 text-sm font-medium text-accent-pink-500 shadow-sm">
+                <span
+                  role="img"
+                  aria-label={t("landing.algeriaFlagLabel")}
+                  className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-white text-sm shadow-sm animate-pulse"
+                >
+                  🇩🇿
+                </span>
+                <Sparkles className="h-4 w-4" />
+                {t("landing.dzPioneer")}
+              </p>
+              <p className="text-sm font-medium text-accent-blue-500 sm:text-base">
+                {t("landing.digitalizeOneClick")}
+              </p>
+            </div>
 
             <div className="space-y-5">
               <h1 className="text-balance text-4xl font-semibold leading-tight sm:text-5xl lg:text-6xl">
