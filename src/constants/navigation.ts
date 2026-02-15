@@ -12,6 +12,7 @@ import {
   UserCog,
   Sliders,
   Heart,
+  LifeBuoy,
 } from "lucide-react";
 import type { NavSection } from "@/types/navigation";
 
@@ -23,6 +24,9 @@ type NavRole = "superadmin" | "admin" | "user";
 // ============================================
 
 export const ROUTES = {
+  // Public
+  HOME: "/",
+
   // Auth
   LOGIN: "/login",
   AUTH_CALLBACK: "/auth/callback",
@@ -71,6 +75,7 @@ export const ROUTES = {
 
   // Promotions
   PROMOTIONS: "/promotions",
+  REPORT: "/report",
 
   // Settings
   SETTINGS: "/settings",
@@ -136,6 +141,12 @@ export const USER_NAVIGATION: NavSection[] = [
         titleKey: "nav.notifications",
         href: ROUTES.NOTIFICATIONS,
         icon: Bell,
+      },
+      {
+        id: "support-report",
+        titleKey: "Report",
+        href: ROUTES.REPORT,
+        icon: LifeBuoy,
       },
       {
         id: "settings",
@@ -239,6 +250,12 @@ export const ADMIN_SALON_NAVIGATION: NavSection[] = [
         titleKey: "nav.notifications",
         href: ROUTES.NOTIFICATIONS,
         icon: Bell,
+      },
+      {
+        id: "support-report",
+        titleKey: "Report",
+        href: ROUTES.REPORT,
+        icon: LifeBuoy,
       },
       {
         id: "settings",

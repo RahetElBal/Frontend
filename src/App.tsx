@@ -9,6 +9,7 @@ import {
 
 import { LoginPage } from "@/routes/login";
 import AuthCallback from "@/routes/auth-callback";
+import LandingPage from "@/routes/landing";
 import { UserLayout } from "@/layouts/user-layout";
 import { AdminLayout } from "@/layouts/admin-layout";
 import { ROUTES } from "@/constants/navigation";
@@ -92,6 +93,7 @@ const NotificationsPage = lazy(() =>
     default: module.NotificationsPage,
   })),
 );
+const SupportReportPage = lazy(() => import("./pages/user/report"));
 
 function AgendaPageWrapper() {
   const location = useLocation();
@@ -102,6 +104,9 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Public landing page */}
+        <Route path={ROUTES.HOME} element={<LandingPage />} />
+
         {/* Auth routes - no layout */}
         <Route path={ROUTES.LOGIN} element={<LoginPage />} />
         <Route path={ROUTES.AUTH_CALLBACK} element={<AuthCallback />} />
@@ -123,6 +128,7 @@ function App() {
           <Route path={ROUTES.SETTINGS} element={<SettingsPage />} />
           <Route path={ROUTES.PROFILE} element={<SettingsPage />} />
           <Route path={ROUTES.NOTIFICATIONS} element={<NotificationsPage />} />
+          <Route path={ROUTES.REPORT} element={<SupportReportPage />} />
         </Route>
 
         {/* Admin routes - with AdminLayout */}
@@ -134,11 +140,8 @@ function App() {
           <Route path={ROUTES.ADMIN_SETTINGS} element={<SettingsPage />} />
         </Route>
 
-        {/* Default redirect */}
-        <Route path="/" element={<Navigate to={ROUTES.LOGIN} replace />} />
-
-        {/* 404 - redirect to login */}
-        <Route path="*" element={<Navigate to={ROUTES.LOGIN} replace />} />
+        {/* 404 - redirect to home */}
+        <Route path="*" element={<Navigate to={ROUTES.HOME} replace />} />
       </Routes>
     </BrowserRouter>
   );

@@ -14,6 +14,7 @@ import type { SettingsSectionProps } from "../types";
 
 export function NotificationSettings({
   formData,
+  isReminderProEnabled = false,
   updateField,
 }: SettingsSectionProps) {
   const { t } = useTranslation();
@@ -50,16 +51,22 @@ export function NotificationSettings({
             <p className="text-sm text-muted-foreground">
               {t("salonSettings.appointmentReminderDescription")}
             </p>
+            {!isReminderProEnabled ? (
+              <p className="text-xs mt-1 text-amber-600">
+                WhatsApp reminders are available for Pro offer only.
+              </p>
+            ) : null}
           </div>
           <Switch
-            checked={formData.sendAppointmentReminder}
+            checked={isReminderProEnabled && formData.sendAppointmentReminder}
+            disabled={!isReminderProEnabled}
             onCheckedChange={(checked) =>
               updateField("sendAppointmentReminder", checked)
             }
           />
         </div>
 
-        {formData.sendAppointmentReminder && (
+        {isReminderProEnabled && formData.sendAppointmentReminder && (
           <div className="ps-4 space-y-2">
             <Label>{t("salonSettings.reminderTiming")}</Label>
             <Select

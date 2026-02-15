@@ -50,6 +50,12 @@ export function SalonSettingsPage() {
 
   // Use latest salon settings when available
   const currentSalon = fetchedSalon || userSalon;
+  const normalizedPlanTier = String(currentSalon?.planTier || "standard").toLowerCase();
+  const isReminderProEnabled =
+    normalizedPlanTier === "pro" ||
+    normalizedPlanTier === "all-in" ||
+    normalizedPlanTier === "all_in" ||
+    normalizedPlanTier === "allin";
 
   // Settings are stored within the salon entity
   const settings = currentSalon?.settings as SalonSettingsExtended | undefined;
@@ -110,7 +116,11 @@ export function SalonSettingsPage() {
   );
 
   const handleSave = () => {
-    saveSettings.mutate({ settings: formData });
+    saveSettings.mutate({
+      settings: isReminderProEnabled
+        ? formData
+        : { ...formData, sendAppointmentReminder: false },
+    });
   };
 
   const tabs: { id: SettingsTab; label: string; icon: React.ElementType }[] = [
@@ -194,6 +204,7 @@ export function SalonSettingsPage() {
               {activeTab === "notifications" && (
                 <NotificationSettings
                   formData={formData}
+                  isReminderProEnabled={isReminderProEnabled}
                   updateField={updateField}
                 />
               )}
