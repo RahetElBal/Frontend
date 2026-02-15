@@ -7,7 +7,6 @@ import {
   Megaphone,
   ShieldCheck,
   ShoppingBag,
-  Sparkles,
   Users,
   WalletCards,
 } from "lucide-react";
@@ -178,26 +177,34 @@ export default function LandingPage() {
       <main id="top" className="relative z-10">
         <section className="mx-auto grid w-full max-w-7xl gap-12 px-4 pb-16 pt-16 sm:px-6 lg:grid-cols-[1.03fr_0.97fr] lg:items-center lg:px-8 lg:pb-24 lg:pt-24">
           <div className="space-y-8 animate-fade-up">
-            <div className="space-y-3">
-              <p className="inline-flex items-center gap-2 rounded-full border border-accent-pink-200 bg-white/80 px-4 py-1.5 text-sm font-medium text-accent-pink-500 shadow-sm">
-                <span
+            <div className="space-y-4">
+              <div className="inline-flex items-center gap-4 rounded-2xl border border-accent-pink-200 bg-white/85 px-4 py-3 shadow-sm">
+                <svg
+                  viewBox="0 0 120 80"
                   role="img"
                   aria-label={t("landing.algeriaFlagLabel")}
-                  className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-white text-sm shadow-sm animate-pulse"
+                  className="h-12 w-20 overflow-hidden rounded-md border border-black/5 shadow-sm sm:h-14 sm:w-24"
                 >
-                  🇩🇿
-                </span>
-                <Sparkles className="h-4 w-4" />
-                {t("landing.dzPioneer")}
-              </p>
+                  <rect width="120" height="80" fill="#fff" />
+                  <rect width="60" height="80" fill="#006233" />
+                  <circle cx="66" cy="40" r="21" fill="#d21034" />
+                  <circle cx="71" cy="40" r="17" fill="#fff" />
+                  <polygon
+                    points="84,29 87,37 95,37 89,42 92,50 84,45 76,50 79,42 73,37 81,37"
+                    fill="#d21034"
+                  />
+                </svg>
+                <p className="max-w-md text-sm font-semibold text-accent-pink-500 sm:text-base">
+                  {t("landing.dzPioneer")}
+                </p>
+              </div>
               <p className="text-sm font-medium text-accent-blue-500 sm:text-base">
                 {t("landing.digitalizeOneClick")}
               </p>
             </div>
-
             <div className="space-y-5">
               <h1 className="text-balance text-4xl font-semibold leading-tight sm:text-5xl lg:text-6xl">
-                Pilotez votre salon en un seul endroit.
+                Premiere solution intelligente de gestion de salon de beaute.
               </h1>
               <p className="max-w-2xl text-base text-muted-foreground sm:text-lg">
                 De la prise de rendez-vous au paiement, Beautiq centralise CRM,
