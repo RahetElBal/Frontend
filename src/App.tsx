@@ -94,6 +94,7 @@ const NotificationsPage = lazy(() =>
   })),
 );
 const SupportReportPage = lazy(() => import("./pages/user/report"));
+const MobileAppDownloadPage = lazy(() => import("./routes/mobile-app"));
 
 function AgendaPageWrapper() {
   const location = useLocation();
@@ -106,6 +107,7 @@ function App() {
       <Routes>
         {/* Public landing page */}
         <Route path={ROUTES.HOME} element={<LandingPage />} />
+        <Route path={ROUTES.MOBILE_APP} element={<MobileAppDownloadPage />} />
 
         {/* Auth routes - no layout */}
         <Route path={ROUTES.LOGIN} element={<LoginPage />} />

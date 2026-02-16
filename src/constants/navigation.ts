@@ -30,6 +30,7 @@ export const ROUTES = {
   // Auth
   LOGIN: "/login",
   AUTH_CALLBACK: "/auth/callback",
+  MOBILE_APP: "/mobile-app",
 
   // Dashboard
   DASHBOARD: "/dashboard",

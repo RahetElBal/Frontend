@@ -7,6 +7,7 @@ import {
   Megaphone,
   ShieldCheck,
   ShoppingBag,
+  Smartphone,
   Users,
   WalletCards,
 } from "lucide-react";
@@ -161,6 +162,12 @@ export default function LandingPage() {
           </nav>
 
           <div className="flex items-center gap-2">
+            <Button asChild size="sm" variant="outline" className="hidden sm:inline-flex">
+              <Link to={ROUTES.MOBILE_APP}>
+                <Smartphone className="h-4 w-4" />
+                App mobile
+              </Link>
+            </Button>
             <Button asChild size="sm" className="shadow-lg shadow-accent-pink-300/40">
               <Link to={ROUTES.LOGIN}>
                 Se connecter
@@ -217,6 +224,17 @@ export default function LandingPage() {
                 <Link to={ROUTES.LOGIN}>
                   Accéder à mon espace
                   <ArrowRight className="h-4 w-4" />
+                </Link>
+              </Button>
+              <Button
+                asChild
+                variant="outline"
+                size="lg"
+                className="w-full border-accent-pink-200 bg-white/80 sm:w-auto"
+              >
+                <Link to={ROUTES.MOBILE_APP}>
+                  <Smartphone className="h-4 w-4" />
+                  Telecharger l'app mobile
                 </Link>
               </Button>
               <Button
@@ -490,6 +508,17 @@ export default function LandingPage() {
                   <Link to={ROUTES.LOGIN}>
                     Se connecter
                     <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </Button>
+                <Button
+                  asChild
+                  variant="outline"
+                  size="lg"
+                  className="border-white/60 bg-white/10 text-white hover:bg-white/20"
+                >
+                  <Link to={ROUTES.MOBILE_APP}>
+                    <Smartphone className="h-4 w-4" />
+                    Telecharger l'app mobile
                   </Link>
                 </Button>
                 <Button
