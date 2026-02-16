@@ -130,7 +130,7 @@ export function AgendaPage() {
   const openedAppointmentRef = useRef<string | null>(null);
   const [activeTab, setActiveTab] = useState<
     "appointments" | "availability"
-  >("appointments");
+  >(() => (queryParams.get("tab") === "availability" ? "availability" : "appointments"));
   const initialDate = useMemo(() => {
     const value = queryParams.get("date");
     if (!value) return getLocalDateString();
@@ -363,6 +363,11 @@ export function AgendaPage() {
     const nextParams = new URLSearchParams(location.search);
     nextParams.set("date", selectedDate);
     nextParams.set("view", viewMode);
+    if (activeTab === "availability") {
+      nextParams.set("tab", "availability");
+    } else {
+      nextParams.delete("tab");
+    }
     if (selectedStaffParam) {
       nextParams.set("staffId", selectedStaffParam);
     } else {
@@ -385,6 +390,7 @@ export function AgendaPage() {
     selectedDate,
     selectedStaffParam,
     viewMode,
+    activeTab,
     location.pathname,
     location.search,
     navigate,
