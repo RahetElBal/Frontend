@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { useAuthContext } from "@/contexts/AuthProvider";
-import { AUTH_STORAGE_KEY } from "@/constants/auth";
+import { AUTH_ROUTES, AUTH_STORAGE_KEY } from "@/constants/auth";
 import { get } from "@/lib/http";
 import type { User } from "@/types/entities";
 import type { AuthUser } from "@/types/user";
@@ -27,8 +27,10 @@ export function useAuthentication(): UseAuthenticationReturn {
     setIsLoading(true);
     setError(null);
 
-    // Regular user OAuth flow
-    window.location.href = `${API_BASE_URL}/auth/google`;
+    // Web login explicitly marks callback as web to avoid mobile-app deep-link fallback.
+    const callbackUrl = `${window.location.origin}${AUTH_ROUTES.CALLBACK}?web=1`;
+    const authUrl = `${API_BASE_URL}/auth/google?redirect=${encodeURIComponent(callbackUrl)}`;
+    window.location.href = authUrl;
   }, []);
 
   const checkAuth = useCallback(async () => {
