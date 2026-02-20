@@ -65,7 +65,7 @@ const features = [
 const planCards = [
   {
     name: "Standard",
-    price: "100 000 DA",
+    price: "70 000 DA",
     subtitle: "Par offre",
     highlighted: false,
     items: [
@@ -77,7 +77,7 @@ const planCards = [
   },
   {
     name: "Pro",
-    price: "150 000 DA",
+    price: "100 000 DA",
     subtitle: "Par offre",
     highlighted: true,
     items: [
@@ -90,7 +90,7 @@ const planCards = [
   },
   {
     name: "All-In",
-    price: "500 000 DA",
+    price: "SUR DEVIS",
     subtitle: "Projet complet",
     highlighted: false,
     items: [
