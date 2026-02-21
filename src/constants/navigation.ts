@@ -13,6 +13,7 @@ import {
   Sliders,
   Heart,
   LifeBuoy,
+  Megaphone,
 } from "lucide-react";
 import type { NavSection } from "@/types/navigation";
 
@@ -209,6 +210,12 @@ export const ADMIN_SALON_NAVIGATION: NavSection[] = [
         titleKey: "nav.loyalty",
         href: ROUTES.LOYALTY,
         icon: Heart,
+      },
+      {
+        id: "marketing",
+        titleKey: "nav.marketing",
+        href: ROUTES.MARKETING,
+        icon: Megaphone,
       },
     ],
   },
