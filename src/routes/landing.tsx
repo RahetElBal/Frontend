@@ -556,7 +556,15 @@ export default function LandingPage() {
       <footer className="border-t border-white/70 bg-white/60 backdrop-blur-sm">
         <div className="mx-auto flex w-full max-w-7xl flex-col gap-2 px-4 py-6 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
           <p>(c) 2026 Beautiq. Tous droits réservés.</p>
-          <p>CRM, agenda, ventes et marketing pour salons.</p>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+            <p>CRM, agenda, ventes et marketing pour salons.</p>
+            <Link to={ROUTES.TERMS} className="underline-offset-4 hover:underline">
+              Conditions
+            </Link>
+            <Link to={ROUTES.PRIVACY} className="underline-offset-4 hover:underline">
+              Confidentialité
+            </Link>
+          </div>
         </div>
       </footer>
     </div>

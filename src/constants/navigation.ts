@@ -27,6 +27,8 @@ type NavRole = "superadmin" | "admin" | "user";
 export const ROUTES = {
   // Public
   HOME: "/",
+  TERMS: "/terms",
+  PRIVACY: "/privacy",
 
   // Auth
   LOGIN: "/login",

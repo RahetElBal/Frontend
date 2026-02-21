@@ -10,6 +10,8 @@ import {
 import { LoginPage } from "@/routes/login";
 import AuthCallback from "@/routes/auth-callback";
 import LandingPage from "@/routes/landing";
+import TermsPage from "@/routes/terms";
+import PrivacyPage from "@/routes/privacy";
 import { UserLayout } from "@/layouts/user-layout";
 import { AdminLayout } from "@/layouts/admin-layout";
 import { ROUTES } from "@/constants/navigation";
@@ -112,6 +114,8 @@ function App() {
       <Routes>
         {/* Public landing page */}
         <Route path={ROUTES.HOME} element={<LandingPage />} />
+        <Route path={ROUTES.TERMS} element={<TermsPage />} />
+        <Route path={ROUTES.PRIVACY} element={<PrivacyPage />} />
         <Route path={ROUTES.MOBILE_APP} element={<MobileAppDownloadPage />} />
 
         {/* Auth routes - no layout */}
