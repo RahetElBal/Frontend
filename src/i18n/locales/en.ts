@@ -1666,6 +1666,8 @@ export const en = {
       address: "Address",
       phone: "Phone Number",
       email: "Email",
+      plan: "Plan",
+      selectPlan: "Select a plan",
       logo: "Salon image URL",
       defaultImage: "Default salon image",
       cropImage: "Crop image",

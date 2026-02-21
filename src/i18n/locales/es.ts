@@ -900,6 +900,8 @@ export const es = {
       address: "Dirección",
       phone: "Número de teléfono",
       email: "Correo electrónico",
+      plan: "Plan",
+      selectPlan: "Seleccionar plan",
       logo: "URL de la imagen del salón",
       defaultImage: "Imagen predeterminada del salón",
       cropImage: "Recortar imagen",

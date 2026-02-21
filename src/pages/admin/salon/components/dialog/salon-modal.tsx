@@ -91,6 +91,7 @@ export function SalonModals({
       phone: "",
       email: "",
       logo: "",
+      planTier: "standard",
     },
   });
 
@@ -364,7 +365,14 @@ export function SalonModals({
     if (isCreateMode && mode === "edit") {
       setTimeout(() => {
         form.reset(
-          { name: "", address: "", phone: "", email: "", logo: "" },
+          {
+            name: "",
+            address: "",
+            phone: "",
+            email: "",
+            logo: "",
+            planTier: "standard",
+          },
           {
             keepErrors: false,
             keepDirty: false,
@@ -384,6 +392,7 @@ export function SalonModals({
             phone: selectedSalon.phone || "",
             email: selectedSalon.email || "",
             logo: selectedSalon.logo || "",
+            planTier: selectedSalon.planTier === "pro" ? "pro" : "standard",
           },
           {
             keepErrors: false,
@@ -722,6 +731,35 @@ export function SalonModals({
                   </p>
                 )}
               </div>
+              {derived.isSuperadmin && derived.isCreateMode && (
+                <div>
+                  <Label htmlFor="planTier">{t("admin.salons.plan")} *</Label>
+                  <Controller
+                    name="planTier"
+                    control={form.control}
+                    render={({ field }) => (
+                      <Select
+                        value={field.value || "standard"}
+                        onValueChange={(value) =>
+                          field.onChange(value as "standard" | "pro")
+                        }
+                      >
+                        <SelectTrigger id="planTier">
+                          <SelectValue
+                            placeholder={t("admin.salons.selectPlan")}
+                          />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="standard">
+                            {t("plans.standard")}
+                          </SelectItem>
+                          <SelectItem value="pro">{t("plans.pro")}</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                </div>
+              )}
               {derived.isSuperadmin && (
                 <div>
                   <Label htmlFor="owner">{t("admin.salons.owner")} *</Label>

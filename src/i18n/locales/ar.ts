@@ -911,6 +911,8 @@ export const ar = {
       address: "العنوان",
       phone: "رقم الهاتف",
       email: "البريد الإلكتروني",
+      plan: "الخطة",
+      selectPlan: "اختر الخطة",
       logo: "رابط صورة الصالون",
       defaultImage: "صورة افتراضية للصالون",
       cropImage: "قص الصورة",

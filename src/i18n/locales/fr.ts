@@ -1139,6 +1139,8 @@ export const fr = {
       address: "Adresse",
       phone: "Numéro de téléphone",
       email: "Email",
+      plan: "Offre",
+      selectPlan: "Sélectionner une offre",
       logo: "URL de l'image du salon",
       defaultImage: "Image par défaut du salon",
       cropImage: "Recadrer l'image",

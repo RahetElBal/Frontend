@@ -32,6 +32,7 @@ export const createSalonFormSchema = (
           val.startsWith("/"),
         t("validation.url"),
       ),
+    planTier: z.enum(["standard", "pro"]).optional(),
   });
 
 export type SalonFormData = z.infer<ReturnType<typeof createSalonFormSchema>>;
