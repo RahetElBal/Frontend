@@ -1,5 +1,5 @@
-import { useMemo, useState, type FormEvent } from "react";
-import { Link, Navigate } from "react-router-dom";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
   AlertTriangle,
@@ -42,6 +42,22 @@ interface SocialCapabilitiesResponse {
   allowed: boolean;
   allowedPlatforms: SocialPlatform[];
   allowedContentTypes: SocialContentType[];
+  connectedPlatforms: SocialPlatform[];
+  connections: {
+    instagram: {
+      connected: boolean;
+      igUserId?: string;
+      username?: string;
+      connectedAt?: string;
+      expiresAt?: string;
+    };
+    tiktok: {
+      connected: boolean;
+      openId?: string;
+      connectedAt?: string;
+      expiresAt?: string;
+    };
+  };
 }
 
 interface SocialPublishResult {
@@ -67,15 +83,30 @@ interface PublishContentPayload {
   platforms: SocialPlatform[];
   mediaUrl: string;
   caption?: string;
-  instagram?: {
-    accessToken: string;
-    igUserId: string;
-  };
-  tiktok?: {
-    accessToken: string;
-    openId: string;
-    privacyLevel?: string;
-  };
+}
+
+interface StartOAuthPayload {
+  platform: SocialPlatform;
+  salonId?: string;
+}
+
+interface StartOAuthResponse {
+  salonId: string;
+  platform: SocialPlatform;
+  authUrl: string;
+  callbackUrl: string;
+}
+
+interface DisconnectSocialPayload {
+  platform: SocialPlatform;
+  salonId?: string;
+}
+
+interface DisconnectSocialResponse {
+  salonId: string;
+  platform: SocialPlatform;
+  disconnected: boolean;
+  connectedPlatforms: SocialPlatform[];
 }
 
 interface PublishFormState {
@@ -83,11 +114,6 @@ interface PublishFormState {
   mediaUrl: string;
   caption: string;
   platforms: SocialPlatform[];
-  instagramAccessToken: string;
-  instagramUserId: string;
-  tiktokAccessToken: string;
-  tiktokOpenId: string;
-  tiktokPrivacyLevel: string;
 }
 
 const PRO_LIKE_TIERS = new Set(["pro", "all-in", "all_in", "allin"]);
@@ -104,6 +130,8 @@ function getPlanLabel(planTier: string | undefined, t: (key: string) => string) 
 
 export function MarketingPage() {
   const { t } = useTranslation();
+  const location = useLocation();
+  const navigate = useNavigate();
   const {
     salon: currentSalon,
     isSuperadmin,
@@ -118,12 +146,7 @@ export function MarketingPage() {
     contentType: "post",
     mediaUrl: "",
     caption: "",
-    platforms: ["instagram"],
-    instagramAccessToken: "",
-    instagramUserId: "",
-    tiktokAccessToken: "",
-    tiktokOpenId: "",
-    tiktokPrivacyLevel: "SELF_ONLY",
+    platforms: [],
   });
   const [lastPublishResult, setLastPublishResult] =
     useState<SocialPublishResponse | null>(null);
@@ -162,6 +185,34 @@ export function MarketingPage() {
       },
     },
   );
+  const startOAuthMutation = usePost<StartOAuthResponse, StartOAuthPayload>(
+    "social-publishing/oauth/start",
+    {
+      onSuccess: (data) => {
+        window.location.assign(data.authUrl);
+      },
+      onError: (error) => {
+        toast.error(error.message || t("common.error"));
+      },
+    },
+  );
+  const disconnectMutation = usePost<
+    DisconnectSocialResponse,
+    DisconnectSocialPayload
+  >("social-publishing/oauth/disconnect", {
+    onSuccess: (_data, variables) => {
+      const label = variables.platform === "instagram" ? "Instagram" : "TikTok";
+      toast.success(`${label} disconnected.`);
+      setForm((prev) => ({
+        ...prev,
+        platforms: prev.platforms.filter((item) => item !== variables.platform),
+      }));
+      void refetchCapabilities();
+    },
+    onError: (error) => {
+      toast.error(error.message || t("common.error"));
+    },
+  });
 
   const allowedPlatforms = capabilities?.allowedPlatforms ?? [
     "instagram",
@@ -171,6 +222,81 @@ export function MarketingPage() {
     "post",
     "story",
   ];
+  const connections = capabilities?.connections;
+  const connectedPlatforms = capabilities?.connectedPlatforms ?? [];
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const status = params.get("socialOAuth");
+    if (!status) {
+      return;
+    }
+
+    const platformParam = params.get("platform");
+    const platformLabel =
+      platformParam === "instagram"
+        ? "Instagram"
+        : platformParam === "tiktok"
+          ? "TikTok"
+          : "Social account";
+    const message =
+      params.get("message") ||
+      (status === "success"
+        ? `${platformLabel} connected successfully.`
+        : `${platformLabel} connection failed.`);
+
+    if (status === "success") {
+      toast.success(message);
+    } else {
+      toast.error(message);
+    }
+
+    params.delete("socialOAuth");
+    params.delete("platform");
+    params.delete("message");
+
+    const nextSearch = params.toString();
+    navigate(
+      {
+        pathname: location.pathname,
+        search: nextSearch ? `?${nextSearch}` : "",
+      },
+      { replace: true },
+    );
+    void refetchCapabilities();
+  }, [location.pathname, location.search, navigate, refetchCapabilities]);
+
+  useEffect(() => {
+    if (!capabilities) {
+      return;
+    }
+
+    const selectable = (["instagram", "tiktok"] as SocialPlatform[]).filter(
+      (platform) =>
+        allowedPlatforms.includes(platform) && connectedPlatforms.includes(platform),
+    );
+
+    setForm((prev) => {
+      const filtered = prev.platforms.filter((platform) =>
+        selectable.includes(platform),
+      );
+      const nextPlatforms =
+        filtered.length > 0 ? filtered : selectable.length > 0 ? [selectable[0]] : [];
+
+      const unchanged =
+        nextPlatforms.length === prev.platforms.length &&
+        nextPlatforms.every((value, index) => value === prev.platforms[index]);
+
+      if (unchanged) {
+        return prev;
+      }
+
+      return {
+        ...prev,
+        platforms: nextPlatforms,
+      };
+    });
+  }, [capabilities, allowedPlatforms, connectedPlatforms]);
 
   const blockingReasons = useMemo(() => {
     if (!capabilities || capabilities.allowed) return [];
@@ -229,19 +355,35 @@ export function MarketingPage() {
     if (form.platforms.length === 0) {
       return "Select at least one platform.";
     }
-    if (
-      form.platforms.includes("instagram") &&
-      (!form.instagramAccessToken.trim() || !form.instagramUserId.trim())
-    ) {
-      return "Instagram token and Instagram user ID are required.";
+    if (form.platforms.includes("instagram") && !connections?.instagram.connected) {
+      return "Instagram is not connected.";
     }
-    if (
-      form.platforms.includes("tiktok") &&
-      (!form.tiktokAccessToken.trim() || !form.tiktokOpenId.trim())
-    ) {
-      return "TikTok token and open ID are required.";
+    if (form.platforms.includes("tiktok") && !connections?.tiktok.connected) {
+      return "TikTok is not connected.";
     }
     return null;
+  };
+
+  const handleConnectPlatform = (platform: SocialPlatform) => {
+    if (!targetSalonId) {
+      toast.error("Salon is required for this action.");
+      return;
+    }
+    startOAuthMutation.mutate({
+      platform,
+      ...(isSuperadmin && targetSalonId ? { salonId: targetSalonId } : {}),
+    });
+  };
+
+  const handleDisconnectPlatform = (platform: SocialPlatform) => {
+    if (!targetSalonId) {
+      toast.error("Salon is required for this action.");
+      return;
+    }
+    disconnectMutation.mutate({
+      platform,
+      ...(isSuperadmin && targetSalonId ? { salonId: targetSalonId } : {}),
+    });
   };
 
   const handlePublish = (event: FormEvent<HTMLFormElement>) => {
@@ -258,27 +400,13 @@ export function MarketingPage() {
       mediaUrl: form.mediaUrl.trim(),
       caption: form.caption.trim() || undefined,
       ...(isSuperadmin && targetSalonId ? { salonId: targetSalonId } : {}),
-      ...(form.platforms.includes("instagram")
-        ? {
-            instagram: {
-              accessToken: form.instagramAccessToken.trim(),
-              igUserId: form.instagramUserId.trim(),
-            },
-          }
-        : {}),
-      ...(form.platforms.includes("tiktok")
-        ? {
-            tiktok: {
-              accessToken: form.tiktokAccessToken.trim(),
-              openId: form.tiktokOpenId.trim(),
-              privacyLevel: form.tiktokPrivacyLevel.trim() || undefined,
-            },
-          }
-        : {}),
     };
 
     publishMutation.mutate(payload);
   };
+
+  const connectingPlatform = startOAuthMutation.variables?.platform;
+  const disconnectingPlatform = disconnectMutation.variables?.platform;
 
   return (
     <div className="space-y-6">
@@ -431,6 +559,108 @@ export function MarketingPage() {
           </div>
 
           <div className="space-y-3">
+            <Label>Connected accounts</Label>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-3 rounded-lg border p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-sm font-medium">Instagram</p>
+                  <Badge
+                    variant={connections?.instagram.connected ? "success" : "warning"}
+                  >
+                    {connections?.instagram.connected ? "Connected" : "Not connected"}
+                  </Badge>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {connections?.instagram.connected
+                    ? `IG user ID: ${connections.instagram.igUserId || "n/a"}`
+                    : "Required before publishing to Instagram."}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => handleConnectPlatform("instagram")}
+                    disabled={
+                      !capabilities?.allowed ||
+                      startOAuthMutation.isPending ||
+                      disconnectMutation.isPending
+                    }
+                  >
+                    {startOAuthMutation.isPending &&
+                    connectingPlatform === "instagram"
+                      ? "Redirecting..."
+                      : connections?.instagram.connected
+                        ? "Reconnect"
+                        : "Connect"}
+                  </Button>
+                  {connections?.instagram.connected ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => handleDisconnectPlatform("instagram")}
+                      disabled={
+                        disconnectMutation.isPending || startOAuthMutation.isPending
+                      }
+                    >
+                      {disconnectMutation.isPending &&
+                      disconnectingPlatform === "instagram"
+                        ? "Disconnecting..."
+                        : "Disconnect"}
+                    </Button>
+                  ) : null}
+                </div>
+              </div>
+
+              <div className="space-y-3 rounded-lg border p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-sm font-medium">TikTok</p>
+                  <Badge variant={connections?.tiktok.connected ? "success" : "warning"}>
+                    {connections?.tiktok.connected ? "Connected" : "Not connected"}
+                  </Badge>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {connections?.tiktok.connected
+                    ? `Open ID: ${connections.tiktok.openId || "n/a"}`
+                    : "Required before publishing to TikTok."}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => handleConnectPlatform("tiktok")}
+                    disabled={
+                      !capabilities?.allowed ||
+                      startOAuthMutation.isPending ||
+                      disconnectMutation.isPending
+                    }
+                  >
+                    {startOAuthMutation.isPending && connectingPlatform === "tiktok"
+                      ? "Redirecting..."
+                      : connections?.tiktok.connected
+                        ? "Reconnect"
+                        : "Connect"}
+                  </Button>
+                  {connections?.tiktok.connected ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => handleDisconnectPlatform("tiktok")}
+                      disabled={
+                        disconnectMutation.isPending || startOAuthMutation.isPending
+                      }
+                    >
+                      {disconnectMutation.isPending &&
+                      disconnectingPlatform === "tiktok"
+                        ? "Disconnecting..."
+                        : "Disconnect"}
+                    </Button>
+                  ) : null}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-3">
             <Label>Platforms</Label>
             <div className="grid gap-3 sm:grid-cols-2">
               <label className="flex items-center gap-3 rounded-lg border p-3">
@@ -439,7 +669,10 @@ export function MarketingPage() {
                   onCheckedChange={(checked) =>
                     togglePlatform("instagram", checked === true)
                   }
-                  disabled={!allowedPlatforms.includes("instagram")}
+                  disabled={
+                    !allowedPlatforms.includes("instagram") ||
+                    !connections?.instagram.connected
+                  }
                 />
                 <span className="text-sm font-medium">Instagram</span>
               </label>
@@ -449,107 +682,30 @@ export function MarketingPage() {
                   onCheckedChange={(checked) =>
                     togglePlatform("tiktok", checked === true)
                   }
-                  disabled={!allowedPlatforms.includes("tiktok")}
+                  disabled={
+                    !allowedPlatforms.includes("tiktok") ||
+                    !connections?.tiktok.connected
+                  }
                 />
                 <span className="text-sm font-medium">TikTok</span>
               </label>
             </div>
+            {connectedPlatforms.length === 0 ? (
+              <p className="text-xs text-amber-700">
+                Connect at least one social account to enable publishing.
+              </p>
+            ) : null}
           </div>
-
-          {form.platforms.includes("instagram") ? (
-            <div className="space-y-3 rounded-lg border p-4">
-              <p className="text-sm font-medium">Instagram credentials</p>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="instagramToken">Access token</Label>
-                  <Input
-                    id="instagramToken"
-                    type="password"
-                    value={form.instagramAccessToken}
-                    onChange={(event) =>
-                      setForm((prev) => ({
-                        ...prev,
-                        instagramAccessToken: event.target.value,
-                      }))
-                    }
-                    autoComplete="off"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="instagramUserId">Instagram user ID</Label>
-                  <Input
-                    id="instagramUserId"
-                    value={form.instagramUserId}
-                    onChange={(event) =>
-                      setForm((prev) => ({
-                        ...prev,
-                        instagramUserId: event.target.value,
-                      }))
-                    }
-                    placeholder="ig-user-id"
-                  />
-                </div>
-              </div>
-            </div>
-          ) : null}
-
-          {form.platforms.includes("tiktok") ? (
-            <div className="space-y-3 rounded-lg border p-4">
-              <p className="text-sm font-medium">TikTok credentials</p>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="tiktokToken">Access token</Label>
-                  <Input
-                    id="tiktokToken"
-                    type="password"
-                    value={form.tiktokAccessToken}
-                    onChange={(event) =>
-                      setForm((prev) => ({
-                        ...prev,
-                        tiktokAccessToken: event.target.value,
-                      }))
-                    }
-                    autoComplete="off"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="tiktokOpenId">Open ID</Label>
-                  <Input
-                    id="tiktokOpenId"
-                    value={form.tiktokOpenId}
-                    onChange={(event) =>
-                      setForm((prev) => ({
-                        ...prev,
-                        tiktokOpenId: event.target.value,
-                      }))
-                    }
-                    placeholder="creator open ID"
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="tiktokPrivacy">Privacy level</Label>
-                <Input
-                  id="tiktokPrivacy"
-                  value={form.tiktokPrivacyLevel}
-                  onChange={(event) =>
-                    setForm((prev) => ({
-                      ...prev,
-                      tiktokPrivacyLevel: event.target.value,
-                    }))
-                  }
-                  placeholder="SELF_ONLY or PUBLIC_TO_EVERYONE"
-                />
-              </div>
-            </div>
-          ) : null}
 
           <Button
             type="submit"
             disabled={
               publishMutation.isPending ||
+              startOAuthMutation.isPending ||
+              disconnectMutation.isPending ||
               capabilitiesLoading ||
-              !capabilities?.allowed
+              !capabilities?.allowed ||
+              form.platforms.length === 0
             }
           >
             <Send className="h-4 w-4" />
