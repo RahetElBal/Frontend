@@ -3,6 +3,7 @@ import type { SalonSettingsExtended } from "@/types/entities";
 export interface SettingsSectionProps {
   formData: Partial<SalonSettingsExtended>;
   isReminderProEnabled?: boolean;
+  isSocialPublishingProEnabled?: boolean;
   updateField: <K extends keyof SalonSettingsExtended>(
     field: K,
     value: SalonSettingsExtended[K],

@@ -16,6 +16,7 @@ export const defaultSettings: Partial<SalonSettingsExtended> = {
   depositPercentage: undefined,
   sendAppointmentConfirmation: true,
   sendAppointmentReminder: true,
+  socialPublishingEnabled: true,
   reminderHoursBefore: 2,
   sendBirthdayGreeting: false,
   sendReviewRequest: false,

@@ -83,6 +83,7 @@ const planCards = [
     items: [
       "Tout Standard +",
       "Automatisations marketing avancées (SMS, campagnes, rappels)",
+      "Publication directe Instagram & TikTok (posts + stories)",
       "Tableau analytique avancé (CA, rétention, performance équipe)",
       "Rôles et permissions avancés pour l'équipe",
       "Support prioritaire et accompagnement personnalisé",
