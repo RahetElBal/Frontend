@@ -27,6 +27,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -92,6 +93,7 @@ export function SalonModals({
       email: "",
       logo: "",
       planTier: "standard",
+      freeTrial: false,
     },
   });
 
@@ -372,6 +374,7 @@ export function SalonModals({
             email: "",
             logo: "",
             planTier: "standard",
+            freeTrial: false,
           },
           {
             keepErrors: false,
@@ -393,6 +396,7 @@ export function SalonModals({
             email: selectedSalon.email || "",
             logo: selectedSalon.logo || "",
             planTier: selectedSalon.planTier === "pro" ? "pro" : "standard",
+            freeTrial: selectedSalon.isOnFreeTrial === true,
           },
           {
             keepErrors: false,
@@ -758,6 +762,32 @@ export function SalonModals({
                       </Select>
                     )}
                   />
+                  <div className="mt-3 rounded-md border border-amber-200 bg-amber-50 px-3 py-2">
+                    <div className="flex items-start gap-2">
+                      <Checkbox
+                        id="freeTrial"
+                        checked={Boolean(form.watch("freeTrial"))}
+                        onCheckedChange={(checked) =>
+                          form.setValue("freeTrial", checked === true, {
+                            shouldDirty: true,
+                            shouldValidate: true,
+                          })
+                        }
+                      />
+                      <div className="space-y-1">
+                        <Label
+                          htmlFor="freeTrial"
+                          className="text-sm font-medium text-amber-900"
+                        >
+                          Essai gratuit (1 mois)
+                        </Label>
+                        <p className="text-xs text-amber-800">
+                          Offre limitée aux 20 premiers salons. Alertes
+                          automatiques 7 jours, 72h et 48h avant fin d’essai.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               )}
               {derived.isSuperadmin && (

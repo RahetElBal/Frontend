@@ -65,7 +65,7 @@ const features = [
 const planCards = [
   {
     name: "Standard",
-    price: "70 000 DA",
+    price: "69 000 DA",
     subtitle: "Par offre",
     highlighted: false,
     items: [
@@ -77,7 +77,7 @@ const planCards = [
   },
   {
     name: "Pro",
-    price: "100 000 DA",
+    price: "99 000 DA",
     subtitle: "Par offre",
     highlighted: true,
     items: [
@@ -405,6 +405,9 @@ export default function LandingPage() {
             <h2 className="mt-3 text-3xl font-semibold sm:text-4xl">
               Offres adaptées à votre niveau de croissance
             </h2>
+            <p className="mt-4 inline-flex rounded-full border border-amber-300 bg-amber-50 px-4 py-2 text-sm font-medium text-amber-900">
+              Offre limitée: essai gratuit 1 mois pour les 20 premiers salons.
+            </p>
           </div>
 
           <div className="mt-10 grid gap-5 lg:grid-cols-3">

@@ -62,6 +62,10 @@ export interface Salon extends BaseEntity {
   planUpdatedAt?: string | null;
   planUpdatedById?: string | null;
   planNotes?: string | null;
+  hasUsedFreeTrial?: boolean;
+  isOnFreeTrial?: boolean;
+  freeTrialStartAt?: string | null;
+  freeTrialEndAt?: string | null;
   slaAcceptedAt?: string | null;
   slaAcceptedById?: string | null;
   slaAcceptedVersion?: number | null;
