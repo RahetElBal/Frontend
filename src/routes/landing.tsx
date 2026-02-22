@@ -18,9 +18,21 @@ import { ROUTES } from "@/constants/navigation";
 import { Button } from "@/components/ui/button";
 
 const heroStats = [
-  { value: "+18%", label: "ventes en salon de beauté" },
-  { value: "40h", label: "gagnées / mois par équipe" },
-  { value: "x1.6", label: "retour client en esthétique" },
+  {
+    value: "-50%",
+    label: "coût d'acquisition client avec personnalisation (jusqu'à)",
+    source: "[1]",
+  },
+  {
+    value: "+5 à +15%",
+    label: "revenus avec personnalisation (benchmarks multi-secteurs)",
+    source: "[1]",
+  },
+  {
+    value: "+25 à +95%",
+    label: "profits avec +5% de rétention client",
+    source: "[2]",
+  },
 ];
 
 const features = [
@@ -259,9 +271,31 @@ export default function LandingPage() {
                     {stat.value}
                   </p>
                   <p className="text-sm text-muted-foreground">{stat.label}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">{stat.source}</p>
                 </div>
               ))}
             </div>
+            <p className="text-xs text-muted-foreground">
+              Sources:
+              {" "}
+              <a
+                href="https://www.mckinsey.com/capabilities/growth-marketing-and-sales/our-insights/the-value-of-getting-personalization-right-or-wrong-is-multiplying"
+                target="_blank"
+                rel="noreferrer"
+                className="underline-offset-4 hover:underline"
+              >
+                [1] McKinsey
+              </a>
+              {" · "}
+              <a
+                href="https://hbr.org/2014/10/the-value-of-keeping-the-right-customers"
+                target="_blank"
+                rel="noreferrer"
+                className="underline-offset-4 hover:underline"
+              >
+                [2] Harvard Business Review
+              </a>
+            </p>
           </div>
 
           <div
