@@ -1,10 +1,11 @@
-import { useMemo, useState, type ComponentType } from "react";
+import { useEffect, useMemo, useState, type ComponentType } from "react";
 import {
   AlertTriangle,
   Bug,
   CreditCard,
   LifeBuoy,
   LockKeyhole,
+  RefreshCcw,
   Send,
   Sparkles,
   Wrench,
@@ -26,6 +27,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "@/lib/toast";
+import { useGet } from "@/hooks/useGet";
 import { usePost } from "@/hooks/usePost";
 import { useUser } from "@/hooks/useUser";
 
@@ -40,6 +42,7 @@ type SupportReportType =
 
 type SupportPriority = "low" | "normal" | "high" | "urgent";
 type PlanTier = "standard" | "pro" | "all-in";
+type SupportTicketStatus = "open" | "awaiting_support" | "awaiting_user" | "closed";
 
 interface CreateSupportReportPayload {
   type: SupportReportType;
@@ -57,6 +60,33 @@ interface CreateSupportReportResponse {
   planTier: string;
   emailSent: boolean;
   storagePath: string;
+}
+
+interface SupportTicketMessage {
+  id: string;
+  authorRole: "user" | "support";
+  authorName: string;
+  content: string;
+  createdAt: string;
+}
+
+interface SupportTicket {
+  ticketId: string;
+  createdAt: string;
+  updatedAt: string;
+  priority: SupportPriority;
+  planTier: PlanTier;
+  status: SupportTicketStatus;
+  type: string;
+  subject: string;
+  pageUrl: string | null;
+  canReply: boolean;
+  messages: SupportTicketMessage[];
+}
+
+interface AddSupportReplyPayload {
+  ticketId: string;
+  message: string;
 }
 
 const reportTypeOptions: Array<{
@@ -142,16 +172,33 @@ const planStyles: Record<PlanTier, string> = {
   "all-in": "bg-emerald-100 text-emerald-700",
 };
 
+const statusStyles: Record<SupportTicketStatus, string> = {
+  open: "bg-slate-100 text-slate-700",
+  awaiting_support: "bg-amber-100 text-amber-700",
+  awaiting_user: "bg-emerald-100 text-emerald-700",
+  closed: "bg-zinc-200 text-zinc-700",
+};
+
+function formatDateTime(value?: string | null): string {
+  if (!value) return "-";
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return value;
+  return parsed.toLocaleString();
+}
+
 export default function SupportReportPage() {
   const { t } = useTranslation();
   const { user, salon } = useUser();
   const planTier = resolvePlanTier(salon?.planTier);
+  const supportResponder = user?.role === "superadmin";
 
   const [type, setType] = useState<SupportReportType>("technical_issue");
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
   const [includeDiagnostics, setIncludeDiagnostics] = useState(true);
   const [lastTicket, setLastTicket] = useState<string | null>(null);
+  const [activeTicketId, setActiveTicketId] = useState<string | null>(null);
+  const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({});
 
   const localizedTypeOptions = useMemo(
     () =>
@@ -171,6 +218,51 @@ export default function SupportReportPage() {
     [planTier, type],
   );
   const normalizedPlanKey = planTier === "all-in" ? "allIn" : planTier;
+  const ticketsQuery = useGet<SupportTicket[]>("support-reports/mine", {
+    refetchInterval: 15000,
+    staleTime: 5000,
+  });
+
+  const tickets = ticketsQuery.data ?? [];
+
+  useEffect(() => {
+    if (!tickets.length) {
+      setActiveTicketId(null);
+      return;
+    }
+    if (!activeTicketId || !tickets.some((ticket) => ticket.ticketId === activeTicketId)) {
+      setActiveTicketId(tickets[0].ticketId);
+    }
+  }, [tickets, activeTicketId]);
+
+  const activeTicket = useMemo(
+    () => tickets.find((ticket) => ticket.ticketId === activeTicketId) ?? null,
+    [tickets, activeTicketId],
+  );
+
+  const sendReply = usePost<SupportTicket, AddSupportReplyPayload>(
+    (payload) => `support-reports/${encodeURIComponent(payload.ticketId)}/replies`,
+    {
+      method: "POST",
+      onSuccess: (ticket) => {
+        setReplyDrafts((prev) => ({ ...prev, [ticket.ticketId]: "" }));
+        setActiveTicketId(ticket.ticketId);
+        toast.success(
+          t("supportReport.toasts.replySent", {
+            defaultValue: "Reply sent",
+          }),
+        );
+      },
+      onError: (error) => {
+        toast.error(
+          error.message ||
+            t("supportReport.toasts.replyError", {
+              defaultValue: "Failed to send reply",
+            }),
+        );
+      },
+    },
+  );
 
   const submitReport = usePost<
     CreateSupportReportResponse,
@@ -179,9 +271,19 @@ export default function SupportReportPage() {
     method: "POST",
     onSuccess: (response) => {
       setLastTicket(response.ticketId);
+      setActiveTicketId(response.ticketId);
       setSubject("");
       setMessage("");
       toast.success(t("supportReport.toasts.success", { ticketId: response.ticketId }));
+
+      if (!response.emailSent) {
+        toast.warning(
+          t("supportReport.toasts.emailDelayed", {
+            defaultValue:
+              "Ticket saved. Email delivery is delayed, follow updates directly in this page.",
+          }),
+        );
+      }
     },
     onError: (error) => {
       toast.error(error.message || t("supportReport.toasts.error"));
@@ -218,6 +320,25 @@ export default function SupportReportPage() {
             appPlanTier: planTier,
           }
         : undefined,
+    });
+  };
+
+  const handleReplySubmit = () => {
+    if (!activeTicket) return;
+
+    const draft = (replyDrafts[activeTicket.ticketId] ?? "").trim();
+    if (draft.length < 2) {
+      toast.error(
+        t("supportReport.validation.replyMin", {
+          defaultValue: "Reply must contain at least 2 characters",
+        }),
+      );
+      return;
+    }
+
+    sendReply.mutate({
+      ticketId: activeTicket.ticketId,
+      message: draft,
     });
   };
 
@@ -335,6 +456,211 @@ export default function SupportReportPage() {
                 : t("supportReport.form.submit")}
             </Button>
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="space-y-1">
+          <div className="flex items-center justify-between gap-2">
+            <CardTitle className="text-lg">
+              {t("supportReport.inbox.title", {
+                defaultValue: supportResponder
+                  ? "Support ticket inbox"
+                  : "Your support tickets",
+              })}
+            </CardTitle>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => void ticketsQuery.refetch()}
+              disabled={ticketsQuery.isFetching}
+            >
+              <RefreshCcw
+                className={`h-4 w-4 ${ticketsQuery.isFetching ? "animate-spin" : ""}`}
+              />
+              {t("supportReport.inbox.refresh", { defaultValue: "Refresh" })}
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {ticketsQuery.isLoading && tickets.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              {t("supportReport.inbox.loading", {
+                defaultValue: "Loading your tickets...",
+              })}
+            </p>
+          ) : null}
+
+          {!ticketsQuery.isLoading && tickets.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              {t("supportReport.inbox.empty", {
+                defaultValue: supportResponder
+                  ? "No tickets found."
+                  : "No tickets yet. Submit your first report above and it will appear here.",
+              })}
+            </p>
+          ) : null}
+
+          {tickets.length > 0 ? (
+            <div className="grid gap-4 lg:grid-cols-[320px_minmax(0,1fr)]">
+              <div className="space-y-2">
+                {tickets.map((ticket) => {
+                  const active = ticket.ticketId === activeTicketId;
+                  return (
+                    <button
+                      key={ticket.ticketId}
+                      type="button"
+                      onClick={() => setActiveTicketId(ticket.ticketId)}
+                      className={`w-full rounded-lg border p-3 text-left transition hover:border-accent-pink-300 ${
+                        active
+                          ? "border-accent-pink-400 bg-accent-pink-50/40"
+                          : "border-border bg-background"
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="line-clamp-2 text-sm font-semibold">{ticket.subject}</p>
+                        <span className="text-[11px] text-muted-foreground">
+                          {ticket.ticketId}
+                        </span>
+                      </div>
+                      <div className="mt-2 flex flex-wrap items-center gap-2">
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase ${priorityStyles[ticket.priority]}`}
+                        >
+                          {t(`supportReport.priorities.${ticket.priority}`)}
+                        </span>
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase ${statusStyles[ticket.status]}`}
+                        >
+                          {t(`supportReport.status.${ticket.status}`, {
+                            defaultValue: ticket.status.replace(/_/g, " "),
+                          })}
+                        </span>
+                      </div>
+                      <p className="mt-2 text-xs text-muted-foreground">
+                        {formatDateTime(ticket.updatedAt)}
+                      </p>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="space-y-4 rounded-lg border border-border p-4">
+                {activeTicket ? (
+                  <>
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <h3 className="text-base font-semibold">{activeTicket.subject}</h3>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase ${priorityStyles[activeTicket.priority]}`}
+                        >
+                          {t(`supportReport.priorities.${activeTicket.priority}`)}
+                        </span>
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase ${statusStyles[activeTicket.status]}`}
+                        >
+                          {t(`supportReport.status.${activeTicket.status}`, {
+                            defaultValue: activeTicket.status.replace(/_/g, " "),
+                          })}
+                        </span>
+                      </div>
+                    </div>
+
+                    <p className="text-xs text-muted-foreground">
+                      {t("supportReport.inbox.meta", {
+                        defaultValue: "Created: {{createdAt}} | Updated: {{updatedAt}}",
+                        createdAt: formatDateTime(activeTicket.createdAt),
+                        updatedAt: formatDateTime(activeTicket.updatedAt),
+                      })}
+                    </p>
+
+                    <div className="max-h-[360px] space-y-3 overflow-y-auto pr-1">
+                      {activeTicket.messages.map((entry) => {
+                        const supportMessage = entry.authorRole === "support";
+                        return (
+                          <div
+                            key={entry.id}
+                            className={`rounded-lg border p-3 ${
+                              supportMessage
+                                ? "border-accent-blue-200 bg-accent-blue-50/50"
+                                : "border-border bg-background"
+                            }`}
+                          >
+                            <div className="flex items-center justify-between gap-3 text-xs">
+                              <span className="font-semibold">
+                                {supportMessage
+                                  ? t("supportReport.inbox.support", {
+                                      defaultValue: "Beautiq Support",
+                                    })
+                                  : t("supportReport.inbox.you", {
+                                      defaultValue: "You",
+                                    })}
+                              </span>
+                              <span className="text-muted-foreground">
+                                {formatDateTime(entry.createdAt)}
+                              </span>
+                            </div>
+                            <p className="mt-2 whitespace-pre-wrap text-sm">{entry.content}</p>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {activeTicket.canReply && activeTicket.status !== "closed" ? (
+                      <div className="space-y-2">
+                        <Label>
+                          {t("supportReport.inbox.replyLabel", {
+                            defaultValue: "Add a follow-up message",
+                          })}
+                        </Label>
+                        <Textarea
+                          value={replyDrafts[activeTicket.ticketId] ?? ""}
+                          onChange={(event) =>
+                            setReplyDrafts((prev) => ({
+                              ...prev,
+                              [activeTicket.ticketId]: event.target.value,
+                            }))
+                          }
+                          placeholder={t("supportReport.inbox.replyPlaceholder", {
+                            defaultValue:
+                              "Share new details, screenshots context, or answer support questions...",
+                          })}
+                          className="min-h-24"
+                          maxLength={4000}
+                        />
+                        <div className="flex justify-end">
+                          <Button
+                            type="button"
+                            onClick={handleReplySubmit}
+                            disabled={
+                              sendReply.isPending ||
+                              (replyDrafts[activeTicket.ticketId] ?? "").trim().length < 2
+                            }
+                          >
+                            <Send className="h-4 w-4" />
+                            {sendReply.isPending
+                              ? t("supportReport.inbox.replySending", {
+                                  defaultValue: "Sending...",
+                                })
+                              : t("supportReport.inbox.replySubmit", {
+                                  defaultValue: "Send reply",
+                                })}
+                          </Button>
+                        </div>
+                      </div>
+                    ) : null}
+                  </>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    {t("supportReport.inbox.selectTicket", {
+                      defaultValue: "Select a ticket to view the full conversation.",
+                    })}
+                  </p>
+                )}
+              </div>
+            </div>
+          ) : null}
         </CardContent>
       </Card>
     </div>
