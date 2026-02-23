@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type ComponentType } from "react";
 import {
   AlertTriangle,
   Bug,
+  CheckCircle2,
   CreditCard,
   LifeBuoy,
   LockKeyhole,
@@ -87,6 +88,10 @@ interface SupportTicket {
 interface AddSupportReplyPayload {
   ticketId: string;
   message: string;
+}
+
+interface CloseSupportTicketPayload {
+  ticketId: string;
 }
 
 const reportTypeOptions: Array<{
@@ -190,7 +195,7 @@ export default function SupportReportPage() {
   const { t } = useTranslation();
   const { user, salon } = useUser();
   const planTier = resolvePlanTier(salon?.planTier);
-  const supportResponder = user?.role === "superadmin";
+  const supportResponder = Boolean(user?.isSuperadmin || user?.role === "superadmin");
 
   const [type, setType] = useState<SupportReportType>("technical_issue");
   const [subject, setSubject] = useState("");
@@ -258,6 +263,29 @@ export default function SupportReportPage() {
           error.message ||
             t("supportReport.toasts.replyError", {
               defaultValue: "Failed to send reply",
+            }),
+        );
+      },
+    },
+  );
+
+  const closeTicket = usePost<SupportTicket, CloseSupportTicketPayload>(
+    (payload) => `support-reports/${encodeURIComponent(payload.ticketId)}/close`,
+    {
+      method: "POST",
+      onSuccess: (ticket) => {
+        setActiveTicketId(ticket.ticketId);
+        toast.success(
+          t("supportReport.toasts.closed", {
+            defaultValue: "Ticket closed",
+          }),
+        );
+      },
+      onError: (error) => {
+        toast.error(
+          error.message ||
+            t("supportReport.toasts.closeError", {
+              defaultValue: "Failed to close ticket",
             }),
         );
       },
@@ -552,6 +580,28 @@ export default function SupportReportPage() {
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <h3 className="text-base font-semibold">{activeTicket.subject}</h3>
                       <div className="flex flex-wrap items-center gap-2">
+                        {supportResponder && activeTicket.status !== "closed" ? (
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            onClick={() =>
+                              closeTicket.mutate({
+                                ticketId: activeTicket.ticketId,
+                              })
+                            }
+                            disabled={closeTicket.isPending}
+                          >
+                            <CheckCircle2 className="h-4 w-4" />
+                            {closeTicket.isPending
+                              ? t("supportReport.inbox.closing", {
+                                  defaultValue: "Closing...",
+                                })
+                              : t("supportReport.inbox.close", {
+                                  defaultValue: "Close ticket",
+                                })}
+                          </Button>
+                        ) : null}
                         <span
                           className={`rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase ${priorityStyles[activeTicket.priority]}`}
                         >

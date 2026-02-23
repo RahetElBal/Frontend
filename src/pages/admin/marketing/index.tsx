@@ -154,6 +154,9 @@ export function MarketingPage() {
   const targetSalonId = isSuperadmin
     ? superadminSalonId.trim()
     : currentSalon?.id;
+  const isCurrentSalonProLike = PRO_LIKE_TIERS.has(
+    String(currentSalon?.planTier || "").toLowerCase(),
+  );
 
   const capabilitiesPath = useMemo(
     () =>
@@ -322,6 +325,10 @@ export function MarketingPage() {
   }
 
   if (!isAdmin && !isSuperadmin) {
+    return <Navigate to={ROUTES.DASHBOARD} replace />;
+  }
+
+  if (!isSuperadmin && currentSalon && !isCurrentSalonProLike) {
     return <Navigate to={ROUTES.DASHBOARD} replace />;
   }
 

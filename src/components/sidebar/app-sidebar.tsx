@@ -1,5 +1,4 @@
-// app-sidebar.tsx (minor updates)
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { PanelLeftClose, PanelLeft } from "lucide-react";
 
@@ -39,6 +38,26 @@ export function AppSidebar({
   const { t } = useTranslation();
   const [collapsed, setCollapsed] = useState(false);
   const navigation = getNavigationForRole(userRole, isInAdminPanel);
+  const isMarketingEnabled = useMemo(() => {
+    const normalized = String(currentSalon?.planTier || "").toLowerCase().trim();
+    return (
+      normalized === "pro" ||
+      normalized === "all-in" ||
+      normalized === "all_in" ||
+      normalized === "allin"
+    );
+  }, [currentSalon?.planTier]);
+
+  const visibleNavigation = useMemo(() => {
+    if (isInAdminPanel || isMarketingEnabled) {
+      return navigation;
+    }
+
+    return navigation.map((section) => ({
+      ...section,
+      items: section.items.filter((item) => item.id !== "marketing"),
+    }));
+  }, [navigation, isInAdminPanel, isMarketingEnabled]);
 
   useEffect(() => {
     const width = collapsed ? SIDEBAR_WIDTH_COLLAPSED : SIDEBAR_WIDTH;
@@ -131,7 +150,7 @@ export function AppSidebar({
         {/* Navigation - Automatically filtered by role! */}
         <div className="flex-1 overflow-y-auto px-3 py-4">
           <div className="space-y-6">
-            {navigation.map((section) => (
+            {visibleNavigation.map((section) => (
               <SidebarNavSection
                 key={section.id}
                 section={section}

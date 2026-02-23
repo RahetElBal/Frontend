@@ -93,6 +93,7 @@ export const ROUTES = {
   ADMIN_SALON: "/admin/salon",
   ADMIN_SERVICES: "/admin/services",
   ADMIN_SETTINGS: "/admin/settings",
+  ADMIN_REPORT: "/admin/report",
 } as const;
 
 // ============================================
@@ -323,6 +324,12 @@ export const ADMIN_NAVIGATION: NavSection[] = [
     titleKey: "nav.sections.account",
     items: [
       {
+        id: "admin-support-report",
+        titleKey: "nav.report",
+        href: ROUTES.ADMIN_REPORT,
+        icon: LifeBuoy,
+      },
+      {
         id: "admin-settings-page",
         titleKey: "nav.admin.settings",
         href: ROUTES.ADMIN_SETTINGS,
@@ -340,9 +347,14 @@ export function getNavigationForRole(
   isInAdminPanel: boolean = false
 ): NavSection[] {
   if (isInAdminPanel) {
-    // Admin panel is only for superadmin and admin
-    if (role === "superadmin" || role === "admin") {
+    if (role === "superadmin") {
       return ADMIN_NAVIGATION;
+    }
+    if (role === "admin") {
+      return ADMIN_NAVIGATION.map((section) => ({
+        ...section,
+        items: section.items.filter((item) => item.id !== "admin-support-report"),
+      }));
     }
     return [];
   }
