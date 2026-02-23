@@ -12,6 +12,7 @@ import {
   Wrench,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useLocation } from "react-router-dom";
 
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -193,6 +194,7 @@ function formatDateTime(value?: string | null): string {
 
 export default function SupportReportPage() {
   const { t } = useTranslation();
+  const location = useLocation();
   const { user, salon } = useUser();
   const planTier = resolvePlanTier(salon?.planTier);
   const supportResponder = Boolean(user?.isSuperadmin || user?.role === "superadmin");
@@ -235,10 +237,20 @@ export default function SupportReportPage() {
       setActiveTicketId(null);
       return;
     }
+
+    const requestedTicketId = new URLSearchParams(location.search).get("ticketId");
+    if (
+      requestedTicketId &&
+      tickets.some((ticket) => ticket.ticketId === requestedTicketId)
+    ) {
+      setActiveTicketId(requestedTicketId);
+      return;
+    }
+
     if (!activeTicketId || !tickets.some((ticket) => ticket.ticketId === activeTicketId)) {
       setActiveTicketId(tickets[0].ticketId);
     }
-  }, [tickets, activeTicketId]);
+  }, [tickets, activeTicketId, location.search]);
 
   const activeTicket = useMemo(
     () => tickets.find((ticket) => ticket.ticketId === activeTicketId) ?? null,
@@ -373,119 +385,136 @@ export default function SupportReportPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title={t("supportReport.title")}
-        description={t("supportReport.description")}
+        title={
+          supportResponder
+            ? t("supportReport.inbox.superadminTitle", {
+                defaultValue: "Support ticket inbox",
+              })
+            : t("supportReport.title")
+        }
+        description={
+          supportResponder
+            ? t("supportReport.inbox.superadminDescription", {
+                defaultValue:
+                  "Review incoming tickets from all salons, reply, and close them when resolved.",
+              })
+            : t("supportReport.description")
+        }
       />
 
-      <Card className="border-accent-pink-200/70 bg-linear-to-r from-accent-pink-50 via-background to-accent-blue-50 shadow-sm">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-lg">{t("supportReport.routing.title")}</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3 text-sm">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-muted-foreground">
-              {t("supportReport.routing.currentOffer")}
-            </span>
-            <span className={`rounded-full px-2.5 py-1 text-xs font-semibold uppercase ${planStyles[planTier]}`}>
-              {t(`supportReport.planTier.${normalizedPlanKey}`)}
-            </span>
-            <span className="text-muted-foreground">
-              {t("supportReport.routing.predictedPriority")}
-            </span>
-            <span className={`rounded-full px-2.5 py-1 text-xs font-semibold uppercase ${priorityStyles[predictedPriority]}`}>
-              {t(`supportReport.priorities.${predictedPriority}`)}
-            </span>
-          </div>
-          <p className="text-muted-foreground">
-            {t("supportReport.routing.description", {
-              email: "support@beautiq-app.com",
-            })}
-          </p>
-          {lastTicket ? (
-            <p className="text-accent-pink-500 font-medium">
-              {t("supportReport.routing.lastTicket", { ticketId: lastTicket })}
-            </p>
-          ) : null}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">{t("supportReport.form.title")}</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-5">
-          <div className="space-y-2">
-            <Label>{t("supportReport.form.typeLabel")}</Label>
-            <Select value={type} onValueChange={(value) => setType(value as SupportReportType)}>
-              <SelectTrigger>
-                <SelectValue placeholder={t("supportReport.form.typePlaceholder")} />
-              </SelectTrigger>
-              <SelectContent>
-                {localizedTypeOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {typeOption ? (
-              <p className="text-xs text-muted-foreground">{typeOption.description}</p>
-            ) : null}
-          </div>
-
-          <div className="space-y-2">
-            <Label>{t("supportReport.form.subjectLabel")}</Label>
-            <Input
-              value={subject}
-              onChange={(event) => setSubject(event.target.value)}
-              placeholder={t("supportReport.form.subjectPlaceholder")}
-              maxLength={140}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label>{t("supportReport.form.messageLabel")}</Label>
-            <Textarea
-              value={message}
-              onChange={(event) => setMessage(event.target.value)}
-              placeholder={t("supportReport.form.messagePlaceholder")}
-              className="min-h-36"
-              maxLength={4000}
-            />
-            <p className="text-xs text-muted-foreground">
-              {t("supportReport.form.messageCount", { count: message.length })}
-            </p>
-          </div>
-
-          <div className="flex items-center justify-between rounded-lg border border-border p-3">
-            <div>
-              <p className="text-sm font-medium">
-                {t("supportReport.form.includeDiagnosticsLabel")}
+      {!supportResponder ? (
+        <>
+          <Card className="border-accent-pink-200/70 bg-linear-to-r from-accent-pink-50 via-background to-accent-blue-50 shadow-sm">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg">{t("supportReport.routing.title")}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 text-sm">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-muted-foreground">
+                  {t("supportReport.routing.currentOffer")}
+                </span>
+                <span className={`rounded-full px-2.5 py-1 text-xs font-semibold uppercase ${planStyles[planTier]}`}>
+                  {t(`supportReport.planTier.${normalizedPlanKey}`)}
+                </span>
+                <span className="text-muted-foreground">
+                  {t("supportReport.routing.predictedPriority")}
+                </span>
+                <span className={`rounded-full px-2.5 py-1 text-xs font-semibold uppercase ${priorityStyles[predictedPriority]}`}>
+                  {t(`supportReport.priorities.${predictedPriority}`)}
+                </span>
+              </div>
+              <p className="text-muted-foreground">
+                {t("supportReport.routing.description", {
+                  email: "support@beautiq-app.com",
+                })}
               </p>
-              <p className="text-xs text-muted-foreground">
-                {t("supportReport.form.includeDiagnosticsDescription")}
-              </p>
-            </div>
-            <Switch
-              checked={includeDiagnostics}
-              onCheckedChange={setIncludeDiagnostics}
-            />
-          </div>
+              {lastTicket ? (
+                <p className="text-accent-pink-500 font-medium">
+                  {t("supportReport.routing.lastTicket", { ticketId: lastTicket })}
+                </p>
+              ) : null}
+            </CardContent>
+          </Card>
 
-          <div className="flex justify-end">
-            <Button
-              onClick={handleSubmit}
-              disabled={submitReport.isPending}
-              className="min-w-42"
-            >
-              <Send className="h-4 w-4" />
-              {submitReport.isPending
-                ? t("supportReport.form.sending")
-                : t("supportReport.form.submit")}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">{t("supportReport.form.title")}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-5">
+              <div className="space-y-2">
+                <Label>{t("supportReport.form.typeLabel")}</Label>
+                <Select value={type} onValueChange={(value) => setType(value as SupportReportType)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder={t("supportReport.form.typePlaceholder")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {localizedTypeOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {typeOption ? (
+                  <p className="text-xs text-muted-foreground">{typeOption.description}</p>
+                ) : null}
+              </div>
+
+              <div className="space-y-2">
+                <Label>{t("supportReport.form.subjectLabel")}</Label>
+                <Input
+                  value={subject}
+                  onChange={(event) => setSubject(event.target.value)}
+                  placeholder={t("supportReport.form.subjectPlaceholder")}
+                  maxLength={140}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>{t("supportReport.form.messageLabel")}</Label>
+                <Textarea
+                  value={message}
+                  onChange={(event) => setMessage(event.target.value)}
+                  placeholder={t("supportReport.form.messagePlaceholder")}
+                  className="min-h-36"
+                  maxLength={4000}
+                />
+                <p className="text-xs text-muted-foreground">
+                  {t("supportReport.form.messageCount", { count: message.length })}
+                </p>
+              </div>
+
+              <div className="flex items-center justify-between rounded-lg border border-border p-3">
+                <div>
+                  <p className="text-sm font-medium">
+                    {t("supportReport.form.includeDiagnosticsLabel")}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {t("supportReport.form.includeDiagnosticsDescription")}
+                  </p>
+                </div>
+                <Switch
+                  checked={includeDiagnostics}
+                  onCheckedChange={setIncludeDiagnostics}
+                />
+              </div>
+
+              <div className="flex justify-end">
+                <Button
+                  onClick={handleSubmit}
+                  disabled={submitReport.isPending}
+                  className="min-w-42"
+                >
+                  <Send className="h-4 w-4" />
+                  {submitReport.isPending
+                    ? t("supportReport.form.sending")
+                    : t("supportReport.form.submit")}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </>
+      ) : null}
 
       <Card>
         <CardHeader className="space-y-1">

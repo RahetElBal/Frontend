@@ -32,6 +32,7 @@ type NotificationPayload = {
   paymentStatus?: string;
   status?: string;
   actorName?: string;
+  ticketId?: string;
 };
 
 const formatNotificationTime = (value?: string | null) => {
@@ -269,6 +270,19 @@ export function NotificationsPage() {
 
   const handleNotificationNavigation = (notification: AdminNotification) => {
     const payload = toPayload(notification);
+    const isSupportTicketNotification =
+      notification.type === AdminNotificationType.SUPPORT_TICKET_CREATED ||
+      notification.type === AdminNotificationType.SUPPORT_TICKET_CLOSED;
+    if (isSupportTicketNotification) {
+      const target = isSuperadmin
+        ? payload.ticketId
+          ? `${ROUTES.ADMIN_REPORT}?ticketId=${encodeURIComponent(payload.ticketId)}`
+          : ROUTES.ADMIN_REPORT
+        : ROUTES.REPORT;
+      navigate(target);
+      return;
+    }
+
     const isPayment =
       (notification.type === AdminNotificationType.SALE_CREATED ||
         notification.type === AdminNotificationType.SALE_COMPLETED ||

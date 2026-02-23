@@ -255,6 +255,7 @@ export function AdminNotificationsBell() {
     paymentStatus?: string;
     status?: string;
     actorName?: string;
+    ticketId?: string;
   };
 
   const toPayload = (notification: AdminNotification): NotificationPayload =>
@@ -423,6 +424,20 @@ export function AdminNotificationsBell() {
 
   const handleNotificationNavigation = (notification: AdminNotification) => {
     const payload = toPayload(notification);
+    const isSupportTicketNotification =
+      notification.type === AdminNotificationType.SUPPORT_TICKET_CREATED ||
+      notification.type === AdminNotificationType.SUPPORT_TICKET_CLOSED;
+    if (isSupportTicketNotification) {
+      const target = isSuperadmin
+        ? payload.ticketId
+          ? `${ROUTES.ADMIN_REPORT}?ticketId=${encodeURIComponent(payload.ticketId)}`
+          : ROUTES.ADMIN_REPORT
+        : ROUTES.REPORT;
+      navigate(target);
+      setOpen(false);
+      return;
+    }
+
     const isPayment =
       (notification.type === AdminNotificationType.SALE_CREATED ||
         notification.type === AdminNotificationType.SALE_COMPLETED ||
