@@ -449,7 +449,7 @@ export default function LandingPage() {
               Offres adaptées à votre niveau de croissance
             </h2>
             <p className="mt-4 inline-flex rounded-full border border-amber-300 bg-amber-50 px-4 py-2 text-sm font-medium text-amber-900">
-              Offre limitée: essai gratuit 1 mois (10 premiers salons). Partenariat lancement: pour les 10 premiers partenaires payants, 2 ans d'abonnement inclus au 1er paiement.
+              Partenariat lancement: pour les 10 premiers partenaires payants, 2 ans d'abonnement inclus au 1er paiement.
             </p>
           </div>
 
