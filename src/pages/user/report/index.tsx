@@ -45,7 +45,12 @@ type SupportReportType =
 
 type SupportPriority = "low" | "normal" | "high" | "urgent";
 type PlanTier = "standard" | "pro" | "all-in";
-type SupportTicketStatus = "open" | "awaiting_support" | "awaiting_user" | "closed";
+type SupportTicketStatus =
+  | "open"
+  | "queued"
+  | "awaiting_support"
+  | "awaiting_user"
+  | "closed";
 
 interface CreateSupportReportPayload {
   type: SupportReportType;
@@ -61,6 +66,7 @@ interface CreateSupportReportResponse {
   ticketId: string;
   priority: SupportPriority;
   planTier: string;
+  status: SupportTicketStatus;
   emailSent: boolean;
   storagePath: string;
 }
@@ -181,6 +187,7 @@ const planStyles: Record<PlanTier, string> = {
 
 const statusStyles: Record<SupportTicketStatus, string> = {
   open: "bg-slate-100 text-slate-700",
+  queued: "bg-purple-100 text-purple-700",
   awaiting_support: "bg-amber-100 text-amber-700",
   awaiting_user: "bg-emerald-100 text-emerald-700",
   closed: "bg-zinc-200 text-zinc-700",
@@ -406,6 +413,9 @@ export default function SupportReportPage() {
     invalidate: ["support-reports/mine"],
     onMutate: (payload) => {
       const previousTickets = readTicketsCache();
+      const hasActiveTicket = previousTickets.some(
+        (ticket) => ticket.status !== "closed" && ticket.status !== "queued",
+      );
       const now = new Date().toISOString();
       const tempTicketId = `TMP-${Date.now()}`;
       const authorName =
@@ -419,11 +429,11 @@ export default function SupportReportPage() {
         updatedAt: now,
         priority: computePriority(planTier, payload.type),
         planTier,
-        status: "open",
+        status: hasActiveTicket ? "queued" : "open",
         type: payload.type,
         subject: payload.subject.trim(),
         pageUrl: payload.pageUrl ?? null,
-        canReply: true,
+        canReply: !hasActiveTicket,
         messages: [
           {
             id: `TMP-MSG-${Date.now()}`,
@@ -444,6 +454,7 @@ export default function SupportReportPage() {
         context as { tempTicketId?: string } | undefined
       )?.tempTicketId;
       const now = new Date().toISOString();
+      const resolvedStatus: SupportTicketStatus = response.status || "open";
 
       writeTicketsCache((current) => {
         const normalizedPlanTier = resolvePlanTier(response.planTier);
@@ -458,7 +469,8 @@ export default function SupportReportPage() {
             ticketId: response.ticketId,
             priority: response.priority,
             planTier: normalizedPlanTier,
-            status: "open" as SupportTicketStatus,
+            status: resolvedStatus,
+            canReply: resolvedStatus !== "queued",
             updatedAt: now,
           };
         });
@@ -471,11 +483,11 @@ export default function SupportReportPage() {
           updatedAt: now,
           priority: response.priority,
           planTier: normalizedPlanTier,
-          status: "open",
+          status: resolvedStatus,
           type: variables.type,
           subject: variables.subject.trim(),
           pageUrl: variables.pageUrl ?? null,
-          canReply: true,
+          canReply: resolvedStatus !== "queued",
           messages: [
             {
               id: `TMP-MSG-${Date.now()}`,
@@ -503,7 +515,14 @@ export default function SupportReportPage() {
       setMessage("");
       toast.success(t("supportReport.toasts.success", { ticketId: response.ticketId }));
 
-      if (!response.emailSent) {
+      if (resolvedStatus === "queued") {
+        toast.info(
+          t("supportReport.toasts.queued", {
+            defaultValue:
+              "Ticket queued. It will open automatically when your current open ticket is closed.",
+          }),
+        );
+      } else if (!response.emailSent) {
         toast.warning(
           t("supportReport.toasts.emailDelayed", {
             defaultValue:
