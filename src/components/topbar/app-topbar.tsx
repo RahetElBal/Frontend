@@ -14,8 +14,12 @@ export function AppTopbar({ className }: AppTopbarProps) {
         className,
       )}
     >
-      <PlanBadge />
-      <AdminNotificationsBell />
+      <div className="min-w-0 flex-1">
+        <PlanBadge />
+      </div>
+      <div className="ms-auto flex items-center">
+        <AdminNotificationsBell />
+      </div>
     </div>
   );
 }
