@@ -19,19 +19,19 @@ import { Button } from "@/components/ui/button";
 
 const heroStats = [
   {
-    value: "-50%",
-    label: "coût d'acquisition client avec personnalisation (jusqu'à)",
+    value: "+17,3 points",
+    label: "de croissance du chiffre d'affaires après digitalisation",
     source: "[1]",
   },
   {
-    value: "+5 à +15%",
-    label: "revenus avec personnalisation (benchmarks multi-secteurs)",
-    source: "[1]",
-  },
-  {
-    value: "+25 à +95%",
-    label: "profits avec +5% de rétention client",
+    value: "+10 à +20%",
+    label: "de bénéfice opérationnel en 2 à 3 ans",
     source: "[2]",
+  },
+  {
+    value: "-20% (et +)",
+    label: "de coûts de service, avec jusqu'à +15% de revenus",
+    source: "[3]",
   },
 ];
 
@@ -279,21 +279,30 @@ export default function LandingPage() {
               Sources:
               {" "}
               <a
-                href="https://www.mckinsey.com/capabilities/growth-marketing-and-sales/our-insights/the-value-of-getting-personalization-right-or-wrong-is-multiplying"
+                href="https://mitsloan.mit.edu/press/only-22-companies-have-undergone-significant-digital-business-transformation-and-they-have-higher-revenue-growth-and-net-margins"
                 target="_blank"
                 rel="noreferrer"
                 className="underline-offset-4 hover:underline"
               >
-                [1] McKinsey
+                [1] MIT Sloan (CISR, 2022)
               </a>
               {" · "}
               <a
-                href="https://hbr.org/2014/10/the-value-of-keeping-the-right-customers"
+                href="https://www.mckinsey.com/capabilities/tech-and-ai/our-insights/rewired-and-running-ahead-digital-and-ai-leaders-are-leaving-the-rest-behind"
                 target="_blank"
                 rel="noreferrer"
                 className="underline-offset-4 hover:underline"
               >
-                [2] Harvard Business Review
+                [2] McKinsey (2024)
+              </a>
+              {" · "}
+              <a
+                href="https://www.mckinsey.com/capabilities/operations/our-insights/mastering-the-digital-advantage-in-transforming-customer-experience"
+                target="_blank"
+                rel="noreferrer"
+                className="underline-offset-4 hover:underline"
+              >
+                [3] McKinsey (2017)
               </a>
             </p>
           </div>
