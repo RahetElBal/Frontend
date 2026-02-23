@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -185,6 +186,8 @@ const statusStyles: Record<SupportTicketStatus, string> = {
   closed: "bg-zinc-200 text-zinc-700",
 };
 
+const SUPPORT_TICKETS_QUERY_KEY = ["support-reports/mine"] as const;
+
 function formatDateTime(value?: string | null): string {
   if (!value) return "-";
   const parsed = new Date(value);
@@ -225,12 +228,25 @@ export default function SupportReportPage() {
     [planTier, type],
   );
   const normalizedPlanKey = planTier === "all-in" ? "allIn" : planTier;
+  const queryClient = useQueryClient();
   const ticketsQuery = useGet<SupportTicket[]>("support-reports/mine", {
     refetchInterval: 15000,
     staleTime: 5000,
   });
 
   const tickets = ticketsQuery.data ?? [];
+
+  const readTicketsCache = () =>
+    queryClient.getQueryData<SupportTicket[]>(SUPPORT_TICKETS_QUERY_KEY) ?? [];
+
+  const writeTicketsCache = (
+    updater: (current: SupportTicket[]) => SupportTicket[],
+  ) => {
+    queryClient.setQueryData<SupportTicket[]>(
+      SUPPORT_TICKETS_QUERY_KEY,
+      (existing) => updater(existing ?? []),
+    );
+  };
 
   useEffect(() => {
     if (!tickets.length) {
@@ -261,7 +277,47 @@ export default function SupportReportPage() {
     (payload) => `support-reports/${encodeURIComponent(payload.ticketId)}/replies`,
     {
       method: "POST",
+      invalidate: ["support-reports/mine"],
+      onMutate: (payload) => {
+        const previousTickets = readTicketsCache();
+        const now = new Date().toISOString();
+        const optimisticMessage: SupportTicketMessage = {
+          id: `TMP-MSG-${Date.now()}`,
+          authorRole: supportResponder ? "support" : "user",
+          authorName: supportResponder
+            ? t("supportReport.inbox.support", {
+                defaultValue: "Beautiq Support",
+              })
+            : t("supportReport.inbox.you", {
+                defaultValue: "You",
+              }),
+          content: payload.message.trim(),
+          createdAt: now,
+        };
+
+        writeTicketsCache((current) =>
+          current.map((ticket) =>
+            ticket.ticketId === payload.ticketId
+              ? {
+                  ...ticket,
+                  updatedAt: now,
+                  status: supportResponder ? "awaiting_user" : "awaiting_support",
+                  messages: [...ticket.messages, optimisticMessage],
+                }
+              : ticket,
+          ),
+        );
+
+        return { previousTickets };
+      },
       onSuccess: (ticket) => {
+        writeTicketsCache((current) => {
+          const exists = current.some((entry) => entry.ticketId === ticket.ticketId);
+          if (!exists) return [ticket, ...current];
+          return current.map((entry) =>
+            entry.ticketId === ticket.ticketId ? ticket : entry,
+          );
+        });
         setReplyDrafts((prev) => ({ ...prev, [ticket.ticketId]: "" }));
         setActiveTicketId(ticket.ticketId);
         toast.success(
@@ -270,7 +326,13 @@ export default function SupportReportPage() {
           }),
         );
       },
-      onError: (error) => {
+      onError: (error, _variables, context) => {
+        const previousTickets = (
+          context as { previousTickets?: SupportTicket[] } | undefined
+        )?.previousTickets;
+        if (previousTickets) {
+          queryClient.setQueryData(SUPPORT_TICKETS_QUERY_KEY, previousTickets);
+        }
         toast.error(
           error.message ||
             t("supportReport.toasts.replyError", {
@@ -285,7 +347,33 @@ export default function SupportReportPage() {
     (payload) => `support-reports/${encodeURIComponent(payload.ticketId)}/close`,
     {
       method: "POST",
+      invalidate: ["support-reports/mine"],
+      onMutate: (payload) => {
+        const previousTickets = readTicketsCache();
+        const now = new Date().toISOString();
+
+        writeTicketsCache((current) =>
+          current.map((ticket) =>
+            ticket.ticketId === payload.ticketId
+              ? {
+                  ...ticket,
+                  status: "closed",
+                  updatedAt: now,
+                }
+              : ticket,
+          ),
+        );
+
+        return { previousTickets };
+      },
       onSuccess: (ticket) => {
+        writeTicketsCache((current) => {
+          const exists = current.some((entry) => entry.ticketId === ticket.ticketId);
+          if (!exists) return [ticket, ...current];
+          return current.map((entry) =>
+            entry.ticketId === ticket.ticketId ? ticket : entry,
+          );
+        });
         setActiveTicketId(ticket.ticketId);
         toast.success(
           t("supportReport.toasts.closed", {
@@ -293,7 +381,13 @@ export default function SupportReportPage() {
           }),
         );
       },
-      onError: (error) => {
+      onError: (error, _variables, context) => {
+        const previousTickets = (
+          context as { previousTickets?: SupportTicket[] } | undefined
+        )?.previousTickets;
+        if (previousTickets) {
+          queryClient.setQueryData(SUPPORT_TICKETS_QUERY_KEY, previousTickets);
+        }
         toast.error(
           error.message ||
             t("supportReport.toasts.closeError", {
@@ -309,7 +403,100 @@ export default function SupportReportPage() {
     CreateSupportReportPayload
   >("support-reports", {
     method: "POST",
-    onSuccess: (response) => {
+    invalidate: ["support-reports/mine"],
+    onMutate: (payload) => {
+      const previousTickets = readTicketsCache();
+      const now = new Date().toISOString();
+      const tempTicketId = `TMP-${Date.now()}`;
+      const authorName =
+        user?.name?.trim() ||
+        t("supportReport.inbox.you", {
+          defaultValue: "You",
+        });
+      const optimisticTicket: SupportTicket = {
+        ticketId: tempTicketId,
+        createdAt: now,
+        updatedAt: now,
+        priority: computePriority(planTier, payload.type),
+        planTier,
+        status: "open",
+        type: payload.type,
+        subject: payload.subject.trim(),
+        pageUrl: payload.pageUrl ?? null,
+        canReply: true,
+        messages: [
+          {
+            id: `TMP-MSG-${Date.now()}`,
+            authorRole: "user",
+            authorName,
+            content: payload.message.trim(),
+            createdAt: now,
+          },
+        ],
+      };
+
+      writeTicketsCache((current) => [optimisticTicket, ...current]);
+      setActiveTicketId(tempTicketId);
+      return { previousTickets, tempTicketId };
+    },
+    onSuccess: (response, variables, context) => {
+      const tempTicketId = (
+        context as { tempTicketId?: string } | undefined
+      )?.tempTicketId;
+      const now = new Date().toISOString();
+
+      writeTicketsCache((current) => {
+        const normalizedPlanTier = resolvePlanTier(response.planTier);
+        let replaced = false;
+        const next = current.map((ticket) => {
+          if (!tempTicketId || ticket.ticketId !== tempTicketId) {
+            return ticket;
+          }
+          replaced = true;
+          return {
+            ...ticket,
+            ticketId: response.ticketId,
+            priority: response.priority,
+            planTier: normalizedPlanTier,
+            status: "open" as SupportTicketStatus,
+            updatedAt: now,
+          };
+        });
+
+        if (replaced) return next;
+
+        const fallbackTicket: SupportTicket = {
+          ticketId: response.ticketId,
+          createdAt: now,
+          updatedAt: now,
+          priority: response.priority,
+          planTier: normalizedPlanTier,
+          status: "open",
+          type: variables.type,
+          subject: variables.subject.trim(),
+          pageUrl: variables.pageUrl ?? null,
+          canReply: true,
+          messages: [
+            {
+              id: `TMP-MSG-${Date.now()}`,
+              authorRole: "user",
+              authorName:
+                user?.name?.trim() ||
+                t("supportReport.inbox.you", {
+                  defaultValue: "You",
+                }),
+              content: variables.message.trim(),
+              createdAt: now,
+            },
+          ],
+        };
+
+        return [
+          fallbackTicket,
+          ...next,
+        ];
+      });
+
       setLastTicket(response.ticketId);
       setActiveTicketId(response.ticketId);
       setSubject("");
@@ -324,8 +511,16 @@ export default function SupportReportPage() {
           }),
         );
       }
+
+      void ticketsQuery.refetch();
     },
-    onError: (error) => {
+    onError: (error, _variables, context) => {
+      const previousTickets = (
+        context as { previousTickets?: SupportTicket[] } | undefined
+      )?.previousTickets;
+      if (previousTickets) {
+        queryClient.setQueryData(SUPPORT_TICKETS_QUERY_KEY, previousTickets);
+      }
       toast.error(error.message || t("supportReport.toasts.error"));
     },
   });
