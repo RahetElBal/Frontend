@@ -73,16 +73,15 @@ export function SalesPage() {
   }
 
   const salonId = user?.salon?.id;
-  const salesStaleTime = 0;
+  const salesStaleTime = 1000 * 60 * 2;
 
   // Fetch data from API (scoped to current salon)
   const { data: salesResponse, isLoading } = useGet<SalesResponse>(
-    withParams("sales", { salonId, perPage: 100, sortBy: "createdAt", sortOrder: "desc" }),
+    withParams("sales", { salonId, perPage: 50, sortBy: "createdAt", sortOrder: "desc" }),
     {
       enabled: !!salonId,
       staleTime: salesStaleTime,
-      refetchOnMount: "always",
-      refetchOnWindowFocus: "always",
+      gcTime: 1000 * 60 * 20,
       select: normalizeSalesResponse,
     },
   );

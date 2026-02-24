@@ -27,15 +27,15 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { useUser } from "@/hooks/useUser";
 import { AUTH_STORAGE_KEY } from "@/constants/auth";
 import { ROUTES } from "@/constants/navigation";
-import { API_BASE_URL } from "@/lib/http";
+import { API_BASE_URL, get } from "@/lib/http";
 import type { PaginatedResponse } from "@/types";
 import {
   AdminNotificationType,
   type AdminNotification,
 } from "@/types/entities";
 
-const NOTIFICATIONS_POLL_MS = 30000;
-const UNREAD_POLL_MS = 15000;
+const NOTIFICATIONS_POLL_MS = 60000;
+const UNREAD_POLL_MS = 30000;
 const STREAM_RETRY_MS = 5000;
 const STREAM_INVALIDATE_DEBOUNCE_MS = 250;
 const NEW_PILL_DURATION_MS = 6000;
@@ -65,6 +65,11 @@ export function AdminNotificationsBell() {
   const pillTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const invalidateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastSoundAtRef = useRef(0);
+  const isOpenRef = useRef(open);
+
+  useEffect(() => {
+    isOpenRef.current = open;
+  }, [open]);
 
   const triggerNewNotificationFeedback = useCallback(() => {
     setShowNewPill(true);
@@ -87,7 +92,9 @@ export function AdminNotificationsBell() {
     if (invalidateTimerRef.current) return;
     invalidateTimerRef.current = setTimeout(() => {
       invalidateTimerRef.current = null;
-      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      if (isOpenRef.current) {
+        queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      }
       queryClient.invalidateQueries({
         queryKey: ["notifications/unread-count"],
       });
@@ -103,24 +110,41 @@ export function AdminNotificationsBell() {
     [salonId],
   );
   const unreadParams = useMemo(() => ({ salonId }), [salonId]);
+  const notificationsPath = useMemo(
+    () => withParams("notifications", notificationsParams),
+    [notificationsParams],
+  );
+  const unreadPath = useMemo(
+    () => withParams("notifications/unread-count", unreadParams),
+    [unreadParams],
+  );
 
   const { data: notificationsData, isLoading: isNotificationsLoading } =
     useGet<PaginatedResponse<AdminNotification>>(
-      withParams("notifications", notificationsParams),
+      notificationsPath,
       {
-        enabled: canShow,
-        staleTime: 5000,
-        refetchInterval: NOTIFICATIONS_POLL_MS,
+        enabled: canShow && open,
+        staleTime: 1000 * 30,
+        refetchInterval: open ? NOTIFICATIONS_POLL_MS : false,
       },
     );
 
   const { data: unreadData, isLoading: isUnreadLoading } = useGet<{
     count: number;
-  }>(withParams("notifications/unread-count", unreadParams), {
+  }>(unreadPath, {
     enabled: canShow,
-    staleTime: 5000,
+    staleTime: 1000 * 15,
     refetchInterval: UNREAD_POLL_MS,
   });
+
+  useEffect(() => {
+    if (!canShow || !open) return;
+    void queryClient.prefetchQuery({
+      queryKey: [notificationsPath.base, notificationsPath.params],
+      queryFn: () => get<PaginatedResponse<AdminNotification>>(notificationsPath.url),
+      staleTime: 1000 * 30,
+    });
+  }, [canShow, notificationsPath, open, queryClient]);
 
   const notifications = notificationsData?.data ?? [];
   const unreadCountFromList = notifications.reduce(
@@ -495,7 +519,7 @@ export function AdminNotificationsBell() {
     setOpen(false);
   };
 
-  const isLoading = isNotificationsLoading || isUnreadLoading;
+  const isLoading = isUnreadLoading || (open && isNotificationsLoading);
   const hasUnread = unreadCount > 0;
   const shouldShowPill = showNewPill && !open;
 

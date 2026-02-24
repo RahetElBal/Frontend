@@ -19,7 +19,7 @@ import {
   type AdminNotification,
 } from "@/types/entities";
 
-const NOTIFICATIONS_POLL_MS = 30000;
+const NOTIFICATIONS_POLL_MS = 60000;
 
 type NotificationPayload = {
   clientName?: string;
@@ -60,7 +60,7 @@ export function NotificationsPage() {
       withParams("notifications", notificationsParams),
       {
         enabled: !!salonId,
-        staleTime: 5000,
+        staleTime: 1000 * 30,
         refetchInterval: NOTIFICATIONS_POLL_MS,
       },
     );
