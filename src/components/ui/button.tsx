@@ -10,14 +10,14 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          'bg-accent-pink-500 text-white hover:bg-accent-pink-400 shadow-sm',
+          'bg-accent-pink-500 text-white hover:bg-accent-pink-600 shadow-sm',
         destructive:
           'bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-sm',
         outline:
-          'border border-border bg-background hover:bg-muted hover:text-foreground',
+          'border border-border bg-background hover:border-accent-pink-300 hover:bg-accent-pink-50 hover:text-accent-pink-700',
         secondary:
-          'bg-accent-blue-100 text-accent-blue-500 hover:bg-accent-blue-200',
-        ghost: 'hover:bg-muted hover:text-foreground',
+          'bg-accent-blue-100 text-accent-blue-600 hover:bg-accent-blue-200',
+        ghost: 'hover:bg-accent-pink-50 hover:text-accent-pink-700',
         link: 'text-accent-pink-500 underline-offset-4 hover:underline',
       },
       size: {

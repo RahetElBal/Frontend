@@ -26,9 +26,9 @@ export function SidebarNavItem({ item, collapsed }: SidebarNavItemProps) {
       to={item.href}
       className={cn(
         'group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200',
-        'hover:bg-accent-pink-50 hover:text-accent-pink-500',
+        'hover:bg-accent-pink-100 hover:text-accent-pink-700',
         isActive
-          ? 'bg-accent-pink-50 text-accent-pink-500'
+          ? 'bg-accent-pink-200/80 text-accent-pink-800 shadow-sm ring-1 ring-accent-pink-300/70'
           : 'text-muted-foreground',
         collapsed && 'justify-center px-2'
       )}
@@ -37,8 +37,8 @@ export function SidebarNavItem({ item, collapsed }: SidebarNavItemProps) {
         className={cn(
           'h-5 w-5 shrink-0 transition-colors',
           isActive
-            ? 'text-accent-pink-500'
-            : 'text-muted-foreground group-hover:text-accent-pink-500'
+            ? 'text-accent-pink-800'
+            : 'text-muted-foreground group-hover:text-accent-pink-700'
         )}
       />
       {!collapsed && (

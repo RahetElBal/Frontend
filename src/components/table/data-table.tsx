@@ -120,7 +120,7 @@ export function DataTable<T extends { id: string }>({
                 <TableHead key={column.key} className={column.className}>
                   {column.sortable ? (
                     <button
-                      className="flex items-center hover:text-foreground"
+                      className="flex items-center transition-colors hover:text-accent-pink-700"
                       onClick={() => table.setSort(column.key)}
                     >
                       {column.header}
