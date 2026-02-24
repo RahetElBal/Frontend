@@ -34,8 +34,7 @@ import {
   type AdminNotification,
 } from "@/types/entities";
 
-const NOTIFICATIONS_POLL_MS = 30000;
-const UNREAD_POLL_MS = 15000;
+const NOTIFICATIONS_POLL_MS = 15000;
 const STREAM_RETRY_MS = 5000;
 const STREAM_INVALIDATE_DEBOUNCE_MS = 250;
 const NEW_PILL_DURATION_MS = 6000;
@@ -88,9 +87,6 @@ export function AdminNotificationsBell() {
     invalidateTimerRef.current = setTimeout(() => {
       invalidateTimerRef.current = null;
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
-      queryClient.invalidateQueries({
-        queryKey: ["notifications/unread-count"],
-      });
     }, STREAM_INVALIDATE_DEBOUNCE_MS);
   }, [queryClient]);
 
@@ -99,13 +95,22 @@ export function AdminNotificationsBell() {
   const salonId = user?.salon?.id;
 
   const notificationsParams = useMemo(
-    () => ({ perPage: 8, sortOrder: "desc", salonId }),
+    () => ({ perPage: 8, sortOrder: "desc", salonId, includeUnreadCount: true }),
     [salonId],
   );
-  const unreadParams = useMemo(() => ({ salonId }), [salonId]);
 
   const { data: notificationsData, isLoading: isNotificationsLoading } =
-    useGet<PaginatedResponse<AdminNotification>>(
+    useGet<
+      PaginatedResponse<AdminNotification> & {
+        meta?: {
+          currentPage: number;
+          lastPage: number;
+          perPage: number;
+          total: number;
+          unreadCount?: number;
+        };
+      }
+    >(
       withParams("notifications", notificationsParams),
       {
         enabled: canShow,
@@ -114,20 +119,16 @@ export function AdminNotificationsBell() {
       },
     );
 
-  const { data: unreadData, isLoading: isUnreadLoading } = useGet<{
-    count: number;
-  }>(withParams("notifications/unread-count", unreadParams), {
-    enabled: canShow,
-    staleTime: 5000,
-    refetchInterval: UNREAD_POLL_MS,
-  });
-
   const notifications = notificationsData?.data ?? [];
   const unreadCountFromList = notifications.reduce(
     (count, notification) => count + (notification.readAt ? 0 : 1),
     0,
   );
-  const unreadCount = Math.max(unreadData?.count ?? 0, unreadCountFromList);
+  const unreadCountFromMeta =
+    typeof notificationsData?.meta?.unreadCount === "number"
+      ? notificationsData.meta.unreadCount
+      : 0;
+  const unreadCount = Math.max(unreadCountFromMeta, unreadCountFromList);
 
   const { mutate: markRead, isPending: isMarkingRead } = usePost<
     void,
@@ -136,7 +137,7 @@ export function AdminNotificationsBell() {
     (vars) => `notifications/${vars.id}/read`,
     {
       method: "PATCH",
-      invalidate: ["notifications", "notifications/unread-count"],
+      invalidate: ["notifications"],
     },
   );
 
@@ -144,7 +145,7 @@ export function AdminNotificationsBell() {
     void,
     { salonId?: string }
   >("notifications/read-all", {
-    invalidate: ["notifications", "notifications/unread-count"],
+    invalidate: ["notifications"],
   });
 
   useEffect(() => {
@@ -230,7 +231,7 @@ export function AdminNotificationsBell() {
       setShowNewPill(false);
       return;
     }
-    if (isUnreadLoading) {
+    if (isNotificationsLoading) {
       return;
     }
     if (prevUnreadRef.current === null) {
@@ -243,7 +244,12 @@ export function AdminNotificationsBell() {
     }
 
     prevUnreadRef.current = unreadCount;
-  }, [canShow, isUnreadLoading, triggerNewNotificationFeedback, unreadCount]);
+  }, [
+    canShow,
+    isNotificationsLoading,
+    triggerNewNotificationFeedback,
+    unreadCount,
+  ]);
 
   useEffect(() => {
     if (!canShow) return;
@@ -495,7 +501,7 @@ export function AdminNotificationsBell() {
     setOpen(false);
   };
 
-  const isLoading = isNotificationsLoading || isUnreadLoading;
+  const isLoading = isNotificationsLoading;
   const hasUnread = unreadCount > 0;
   const shouldShowPill = showNewPill && !open;
 

@@ -75,7 +75,7 @@ export function NotificationsPage() {
     (vars) => `notifications/${vars.id}/read`,
     {
       method: "PATCH",
-      invalidate: ["notifications", "notifications/unread-count"],
+      invalidate: ["notifications"],
     },
   );
 
@@ -83,7 +83,7 @@ export function NotificationsPage() {
     void,
     { salonId?: string }
   >("notifications/read-all", {
-    invalidate: ["notifications", "notifications/unread-count"],
+    invalidate: ["notifications"],
   });
 
   const toPayload = (notification: AdminNotification): NotificationPayload =>
