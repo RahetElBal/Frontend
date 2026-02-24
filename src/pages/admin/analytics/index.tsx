@@ -67,7 +67,7 @@ export function AnalyticsPage() {
   >(
     withParams("sales", {
       salonId,
-      perPage: 100,
+      perPage: 10,
       sortBy: "createdAt",
       sortOrder: "desc",
       summary: true,
@@ -84,7 +84,7 @@ export function AnalyticsPage() {
   const { data: appointmentsResponse, isLoading: loadingAppointments } = useGet<
     PaginatedResponse<Appointment>
   >(
-    withParams("appointments", { salonId, perPage: 100, summary: true }),
+    withParams("appointments", { salonId, perPage: 10, summary: true }),
     {
       enabled: !!salonId && canViewAnalytics,
       staleTime: listStaleTime,
@@ -96,7 +96,7 @@ export function AnalyticsPage() {
   const { data: clientsResponse, isLoading: loadingClients } = useGet<
     PaginatedResponse<Client>
   >(
-    withParams("clients", { salonId, perPage: 100 }),
+    withParams("clients", { salonId, perPage: 10 }),
     {
       enabled: !!salonId && canViewAnalytics,
       staleTime: listStaleTime,
@@ -108,7 +108,7 @@ export function AnalyticsPage() {
   const { data: servicesResponse, isLoading: loadingServices } = useGet<
     PaginatedResponse<Service>
   >(
-    withParams("services", { salonId, perPage: 100, compact: true }),
+    withParams("services", { salonId, perPage: 10, compact: true }),
     {
       enabled: !!salonId && canViewAnalytics,
       staleTime: listStaleTime,

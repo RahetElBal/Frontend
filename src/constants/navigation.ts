@@ -44,7 +44,7 @@ export const ROUTES = {
 
   // Agenda
   AGENDA: "/agenda",
-  AGENDA_HISTORY: "/agenda/history",
+  AGENDA_HISTORY: "/history",
 
   // Services
   SERVICES: "/services",

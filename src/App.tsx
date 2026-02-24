@@ -148,6 +148,10 @@ function App() {
         <Route path={ROUTES.DASHBOARD} element={<DashboardPage />} />
         <Route path={ROUTES.CLIENTS} element={<ClientsPage />} />
         <Route path={ROUTES.AGENDA} element={<AgendaPageWrapper />} />
+        <Route
+          path="/agenda/history"
+          element={<Navigate to={ROUTES.AGENDA_HISTORY} replace />}
+        />
         <Route path={ROUTES.AGENDA_HISTORY} element={<AgendaHistoryPage />} />
         <Route path={ROUTES.SERVICES} element={<ServicesPage />} />
           <Route path={ROUTES.STAFF} element={<StaffPage />} />

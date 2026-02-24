@@ -72,7 +72,7 @@ export function LoyaltyPage() {
 
   const { data: clientsData, isLoading: isClientsLoading } =
     useGet<PaginatedResponse<Client>>(
-    withParams("clients", { salonId, perPage: 100 }),
+    withParams("clients", { salonId, perPage: 10 }),
     { enabled: !!salonId, staleTime: 1000 * 60 * 5 },
   );
 
@@ -80,7 +80,7 @@ export function LoyaltyPage() {
     useGet<PaginatedResponse<Sale>>(
     withParams("sales", {
       salonId,
-      perPage: 100,
+      perPage: 10,
       sortBy: "createdAt",
       sortOrder: "desc",
       compact: true,
@@ -90,7 +90,7 @@ export function LoyaltyPage() {
 
   const { data: servicesData, isLoading: isServicesLoading } =
     useGet<PaginatedResponse<Service>>(
-    withParams("services", { salonId, perPage: 100, compact: true }),
+    withParams("services", { salonId, perPage: 10, compact: true }),
     { enabled: shouldLoadServices, staleTime: 1000 * 60 * 10 },
   );
 

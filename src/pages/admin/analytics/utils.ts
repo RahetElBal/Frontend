@@ -63,7 +63,22 @@ export const filterAppointmentsByRange = (
   end: Date,
 ) =>
   appointments.filter((appointment) => {
-    const appointmentDate = new Date(`${appointment.date}T00:00:00`);
+    // Prefer creation time for analytics period consistency with sales/clients.
+    const createdAt = new Date(appointment.createdAt);
+    if (!Number.isNaN(createdAt.getTime())) {
+      return isWithinRange(createdAt, start, end);
+    }
+
+    const rawDate =
+      typeof appointment.date === "string"
+        ? appointment.date.split("T")[0]
+        : "";
+    const appointmentDate = /^\d{4}-\d{2}-\d{2}$/.test(rawDate)
+      ? new Date(`${rawDate}T12:00:00`)
+      : new Date(rawDate);
+    if (Number.isNaN(appointmentDate.getTime())) {
+      return false;
+    }
     return isWithinRange(appointmentDate, start, end);
   });
 

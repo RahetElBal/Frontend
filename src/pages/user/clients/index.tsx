@@ -37,7 +37,7 @@ export function ClientsPage() {
   } = useGet<PaginatedResponse<Client>>(
     withParams("clients", {
       salonId,
-      perPage: 100,
+      perPage: 10,
       includeMetrics: true,
     }),
     { enabled: !!salonId, staleTime: clientsStaleTime },

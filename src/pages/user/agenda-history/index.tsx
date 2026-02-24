@@ -58,7 +58,7 @@ export function AgendaHistoryPage() {
         : status;
     return {
       salonId,
-      perPage: 200,
+      perPage: 10,
       staffId: staffFilterId || undefined,
       dateFrom: dateFrom || undefined,
       dateTo: dateTo || undefined,

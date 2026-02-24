@@ -24,7 +24,7 @@ export function DashboardPage() {
   const appointmentsParams = useMemo(
     () => ({
       salonId,
-      perPage: 100,
+      perPage: 10,
       date: today,
       staffId: isUser ? user?.id : undefined,
     }),
@@ -47,7 +47,7 @@ export function DashboardPage() {
   );
 
   const { data: clientsData, isLoading: isClientsLoading } = useGet<PaginatedResponse<Client>>(
-    withParams("clients", { salonId, perPage: 100 }),
+    withParams("clients", { salonId, perPage: 10 }),
     { enabled: !!salonId },
   );
 

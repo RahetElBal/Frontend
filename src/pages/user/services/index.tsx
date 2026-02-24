@@ -90,7 +90,7 @@ export function ServicesPage() {
     isLoading,
     refetch,
     } = useGet<PaginatedResponse<Service>>(
-      withParams("services", { salonId, perPage: 100 }),
+      withParams("services", { salonId, perPage: 10 }),
       { enabled: !!salonId, staleTime: servicesStaleTime },
     );
   const services = servicesResponse?.data ?? [];

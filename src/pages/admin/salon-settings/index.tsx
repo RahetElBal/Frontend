@@ -64,7 +64,7 @@ export function SalonSettingsPage() {
   const { data: servicesData, isLoading: servicesLoading } = useGet<
     PaginatedResponse<Service>
   >(
-    withParams("services", { salonId: currentSalon?.id, perPage: 100, compact: true }),
+    withParams("services", { salonId: currentSalon?.id, perPage: 10, compact: true }),
     {
       enabled: activeTab === "loyalty" && !!currentSalon?.id,
       staleTime: 1000 * 60 * 30,

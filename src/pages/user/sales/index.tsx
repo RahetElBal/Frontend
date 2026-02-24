@@ -71,7 +71,7 @@ export function SalesPage() {
   const { data: salesResponse, isLoading } = useGet<PaginatedResponse<Sale>>(
     withParams("sales", {
       salonId,
-      perPage: 100,
+      perPage: 10,
       sortBy: "createdAt",
       sortOrder: "desc",
       compact: true,
