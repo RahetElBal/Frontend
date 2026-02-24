@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { PageHeader } from "@/components/page-header";
 import { Card } from "@/components/ui/card";
@@ -21,15 +21,8 @@ import type { Sale, SaleItem } from "@/types/entities";
 import { useGet, withParams } from "@/hooks/useGet";
 import { getSalesColumns } from "./list/columns";
 import { saleStatusColors, formatSaleTime, toNumber } from "./utils";
-import { normalizeSalesResponse } from "@/utils/normalize-sales";
-
-// API response types
-interface SalesResponse {
-  data: Sale[];
-  total: number;
-  page: number;
-  perPage: number;
-}
+import { normalizeSale, normalizeSalesResponse } from "@/utils/normalize-sales";
+import type { PaginatedResponse } from "@/types";
 
 const getSaleItemPricing = (item: SaleItem) => {
   const quantity = Math.max(1, toNumber(item.quantity, 1));
@@ -66,28 +59,48 @@ export function SalesPage() {
   const { t } = useTranslation();
   const { formatCurrency } = useLanguage();
   const { user, isAdmin, isSuperadmin } = useUser();
-  const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
+  const [selectedSaleId, setSelectedSaleId] = useState<string | null>(null);
 
   if (!isAdmin && !isSuperadmin) {
     return <Navigate to={ROUTES.DASHBOARD} replace />;
   }
 
   const salonId = user?.salon?.id;
-  const salesStaleTime = 0;
+  const salesStaleTime = 1000 * 10;
 
-  // Fetch data from API (scoped to current salon)
-  const { data: salesResponse, isLoading } = useGet<SalesResponse>(
-    withParams("sales", { salonId, perPage: 100, sortBy: "createdAt", sortOrder: "desc" }),
+  const { data: salesResponse, isLoading } = useGet<PaginatedResponse<Sale>>(
+    withParams("sales", {
+      salonId,
+      perPage: 100,
+      sortBy: "createdAt",
+      sortOrder: "desc",
+      compact: true,
+    }),
     {
       enabled: !!salonId,
       staleTime: salesStaleTime,
-      refetchOnMount: "always",
-      refetchOnWindowFocus: "always",
+      refetchInterval: 1000 * 15,
+      refetchIntervalInBackground: true,
+      refetchOnWindowFocus: false,
       select: normalizeSalesResponse,
     },
   );
-  const sales = salesResponse?.data || [];
+  const sales = salesResponse?.data ?? [];
   const showSalesLoading = isLoading && sales.length === 0;
+
+  const { data: selectedSaleDetails } = useGet<Sale>(`sales/${selectedSaleId}`, {
+    enabled: !!selectedSaleId,
+    staleTime: 1000 * 60,
+    select: normalizeSale,
+  });
+
+  const selectedSale = useMemo(() => {
+    if (!selectedSaleId) return null;
+    if (selectedSaleDetails?.id === selectedSaleId) return selectedSaleDetails;
+    return sales.find((sale) => sale.id === selectedSaleId) || null;
+  }, [selectedSaleDetails, sales, selectedSaleId]);
+
+  const isSaleDetailsLoading = !!selectedSaleId && !selectedSaleDetails;
 
   const table = useTable<Sale>({
     data: sales,
@@ -102,7 +115,7 @@ export function SalesPage() {
   const columns = getSalesColumns({
     t,
     formatCurrency,
-    onView: (sale) => setSelectedSale(sale),
+    onView: (sale) => setSelectedSaleId(sale.id),
   });
 
   const paymentMethodLabel = (method?: string) => {
@@ -192,9 +205,9 @@ export function SalesPage() {
       />
 
       <Dialog
-        open={!!selectedSale}
+        open={!!selectedSaleId}
         onOpenChange={(open) => {
-          if (!open) setSelectedSale(null);
+          if (!open) setSelectedSaleId(null);
         }}
       >
         <DialogContent className="max-w-2xl">
@@ -202,7 +215,11 @@ export function SalesPage() {
             <DialogTitle>{t("sales.viewPayment")}</DialogTitle>
           </DialogHeader>
 
-          {selectedSale && (
+          {isSaleDetailsLoading ? (
+            <div className="py-10 flex justify-center">
+              <Spinner size="lg" />
+            </div>
+          ) : selectedSale ? (
             <div className="space-y-4">
               <div className="flex items-start justify-between gap-4">
                 <div>
@@ -340,7 +357,7 @@ export function SalesPage() {
                 </div>
               )}
             </div>
-          )}
+          ) : null}
         </DialogContent>
       </Dialog>
     </div>

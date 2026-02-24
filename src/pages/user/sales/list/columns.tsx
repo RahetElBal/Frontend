@@ -73,6 +73,13 @@ export function getSalesColumns({
       header: t("fields.items"),
       render: (sale) => {
         const items = sale.items ?? [];
+        if (items.length === 0) {
+          return (
+            <span className="text-sm text-muted-foreground">
+              {t("common.view")}
+            </span>
+          );
+        }
         return (
           <div>
             <p className="text-sm">

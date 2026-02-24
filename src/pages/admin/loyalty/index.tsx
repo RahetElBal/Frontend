@@ -68,23 +68,30 @@ export function LoyaltyPage() {
   const [redeemServiceId, setRedeemServiceId] = useState("");
   const salonId = salon?.id;
   const canRedeem = isAdmin || isSuperadmin;
+  const shouldLoadServices = !!salonId && canRedeem && isRedeemModalOpen;
 
   const { data: clientsData, isLoading: isClientsLoading } =
     useGet<PaginatedResponse<Client>>(
     withParams("clients", { salonId, perPage: 100 }),
-    { enabled: !!salonId },
+    { enabled: !!salonId, staleTime: 1000 * 60 * 5 },
   );
 
   const { data: salesData, isLoading: isSalesLoading } =
     useGet<PaginatedResponse<Sale>>(
-    withParams("sales", { salonId, perPage: 100, sortBy: "createdAt", sortOrder: "desc" }),
+    withParams("sales", {
+      salonId,
+      perPage: 100,
+      sortBy: "createdAt",
+      sortOrder: "desc",
+      compact: true,
+    }),
     { enabled: !!salonId, staleTime: 1000 * 60, select: normalizeSalesResponse },
   );
 
   const { data: servicesData, isLoading: isServicesLoading } =
     useGet<PaginatedResponse<Service>>(
-    withParams("services", { salonId, perPage: 100 }),
-    { enabled: !!salonId },
+    withParams("services", { salonId, perPage: 100, compact: true }),
+    { enabled: shouldLoadServices, staleTime: 1000 * 60 * 10 },
   );
 
   const clients = useMemo(
@@ -98,10 +105,9 @@ export function LoyaltyPage() {
     [servicesData],
   );
   const showLoyaltyLoading =
-    (isClientsLoading || isSalesLoading || isServicesLoading) &&
+    (isClientsLoading || isSalesLoading) &&
     clients.length === 0 &&
-    salesStats.length === 0 &&
-    services.length === 0;
+    salesStats.length === 0;
 
   const derivedSettings = useMemo(() => deriveLoyaltySettings(salon), [salon]);
 
@@ -493,7 +499,11 @@ export function LoyaltyPage() {
                   />
                 </SelectTrigger>
                 <SelectContent>
-                  {redeemableServices.length === 0 ? (
+                  {isServicesLoading ? (
+                    <div className="p-2 text-sm text-muted-foreground">
+                      {t("common.loading")}
+                    </div>
+                  ) : redeemableServices.length === 0 ? (
                     <div className="p-2 text-sm text-muted-foreground">
                       {t("services.services")} - {t("common.noResults")}
                     </div>
