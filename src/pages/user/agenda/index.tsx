@@ -219,6 +219,11 @@ export function AgendaPage() {
   const activeStaffFilterId =
     activeTab === "availability" ? availabilityStaffFilterId : staffFilterId;
   const activeStaffScopeId = activeStaffFilterId ?? ALL_STAFF_ID;
+  const shouldScopeAppointmentsToDate =
+    activeTab === "availability" || viewMode === "day";
+  const shouldLoadReferenceData =
+    !!salonId && modalState?.mode === "edit";
+  const hasSalonSettingsInAuth = !!user?.salon?.settings;
   const appointmentsStaleTime = 1000 * 30; // 30s for near real-time
   const clientsStaleTime = 1000 * 60 * 10; // 10m
   const servicesStaleTime = 1000 * 60 * 10; // 10m
@@ -227,8 +232,9 @@ export function AgendaPage() {
       salonId,
       perPage: 100,
       staffId: activeStaffFilterId || undefined,
+      ...(shouldScopeAppointmentsToDate ? { date: selectedDate } : {}),
     }),
-    [salonId, activeStaffFilterId],
+    [salonId, activeStaffFilterId, selectedDate, shouldScopeAppointmentsToDate],
   );
   const appointmentsQueryKey = useMemo(
     () => ["appointments", appointmentsParams].filter(Boolean),
@@ -240,7 +246,6 @@ export function AgendaPage() {
   const {
     data: appointmentsData,
     isLoading: isAppointmentsLoading,
-    refetch,
   } = useGet<PaginatedResponse<Appointment>>(
     withParams("appointments", appointmentsParams),
     {
@@ -249,20 +254,20 @@ export function AgendaPage() {
     },
   );
 
-  const { data: clientsData } = useGet<PaginatedResponse<Client>>(
+  const { data: clientsData, isLoading: isClientsLoading } = useGet<PaginatedResponse<Client>>(
     withParams("clients", { salonId, perPage: 100 }),
-    { enabled: !!salonId, staleTime: clientsStaleTime },
+    { enabled: shouldLoadReferenceData, staleTime: clientsStaleTime },
   );
 
   const { data: salonData } = useGet<Salon>(`salons/${salonId}`, {
-    enabled: !!salonId,
+    enabled: !!salonId && !hasSalonSettingsInAuth,
     staleTime: 1000 * 60 * 2,
     refetchOnWindowFocus: true,
   });
 
-  const { data: servicesData } = useGet<PaginatedResponse<Service>>(
-    withParams("services", { salonId, perPage: 100 }),
-    { enabled: !!salonId, staleTime: servicesStaleTime },
+  const { data: servicesData, isLoading: isServicesLoading } = useGet<PaginatedResponse<Service>>(
+    withParams("services", { salonId, perPage: 100, compact: true }),
+    { enabled: shouldLoadReferenceData, staleTime: servicesStaleTime },
   );
 
   const { data: staffResponse } = useGet<PaginatedResponse<User>>(
@@ -301,6 +306,8 @@ export function AgendaPage() {
   );
   const showAppointmentsLoading =
     isAppointmentsLoading && appointments.length === 0;
+  const isReferenceDataLoading =
+    shouldLoadReferenceData && (isClientsLoading || isServicesLoading);
   const clients = safeExtractArray<Client>(clientsData);
   const services = safeExtractArray<Service>(servicesData);
   const staffMembers = safeExtractArray<User>(staffResponse);
@@ -792,7 +799,6 @@ export function AgendaPage() {
     onSuccess: () => {
       toast.success(t("agenda.newAppointment") + " - " + t("common.success"));
       setModalState(null);
-      refetch();
     },
     onError: (error) => {
       toast.error(error.message || t("common.error"));
@@ -808,7 +814,6 @@ export function AgendaPage() {
     onSuccess: () => {
       toast.success(t("common.edit") + " - " + t("common.success"));
       setModalState(null);
-      refetch();
     },
     onError: (error) => {
       toast.error(error.message || t("common.error"));
@@ -829,7 +834,6 @@ export function AgendaPage() {
       onSuccess: () => {
         toast.success(t("common.statusUpdated"));
         queryClient.invalidateQueries({ queryKey: ["appointments"] });
-        refetch();
       },
       onError: (error) => {
         toast.error(error.message || t("common.error"));
@@ -845,7 +849,6 @@ export function AgendaPage() {
     onSuccess: () => {
       toast.success(t("common.delete") + " - " + t("common.success"));
       setModalState(null);
-      refetch();
     },
     onError: (error) => {
       toast.error(error.message || t("common.error"));
@@ -908,7 +911,6 @@ export function AgendaPage() {
           });
         }
         setModalState(null);
-        refetch();
       },
       onError: (error) => {
         toast.error(error.message || t("common.error"));
@@ -976,6 +978,10 @@ export function AgendaPage() {
   const handleSubmit = async (data: AppointmentFormData) => {
     if (!salonId) {
       toast.error("No salon assigned to user");
+      return;
+    }
+    if (isReferenceDataLoading) {
+      toast.error(t("common.loading"));
       return;
     }
     const effectiveStaffId = data.staffId || staffFilterId || user?.id;
@@ -1593,6 +1599,7 @@ export function AgendaPage() {
             isCreatingSale ||
             isCreatingWalkIn
           }
+          isReferenceDataLoading={isReferenceDataLoading}
           salonSettings={salonSettings}
         />
       )}

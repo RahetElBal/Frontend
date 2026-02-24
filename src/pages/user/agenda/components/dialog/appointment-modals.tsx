@@ -155,6 +155,7 @@ interface AppointmentModalsProps {
   onUpdateStatus?: (appointment: Appointment, status: AppointmentStatus) => void;
   isCreatingSale?: boolean;
   isUpdatingStatus?: boolean;
+  isReferenceDataLoading?: boolean;
   isPending: boolean;
 }
 
@@ -174,6 +175,7 @@ export function AppointmentModals({
   onUpdateStatus,
   isCreatingSale = false,
   isUpdatingStatus = false,
+  isReferenceDataLoading = false,
   isPending,
 }: AppointmentModalsProps) {
   const { t } = useTranslation();
@@ -558,6 +560,9 @@ export function AppointmentModals({
   const handleClose = () => setModalState(null);
 
   const handleFormSubmit = (data: AppointmentFormData) => {
+    if (isReferenceDataLoading) {
+      return;
+    }
     if (data.walkInEnabled && emailConflict) {
       form.setError("walkInEmail", {
         type: "custom",
@@ -987,6 +992,11 @@ export function AppointmentModals({
           </DialogHeader>
           <form onSubmit={form.handleSubmit(handleFormSubmit)}>
             <div className="space-y-4 py-4">
+              {isReferenceDataLoading && (
+                <div className="rounded-lg border border-border/60 bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
+                  {t("common.loading")}
+                </div>
+              )}
               {canAssignStaff && staffOptions.length > 0 && (
                 <div className="space-y-2">
                   <Label>{t("fields.staff")} *</Label>
@@ -1038,7 +1048,7 @@ export function AppointmentModals({
                 <Select
                   value={form.watch("clientId")}
                   onValueChange={(value) => form.setValue("clientId", value)}
-                  disabled={!!walkInEnabled}
+                  disabled={!!walkInEnabled || isReferenceDataLoading}
                 >
                 <SelectTrigger className="bg-white text-black">
                   <SelectValue placeholder={t("agenda.selectClient")} />
@@ -1133,6 +1143,7 @@ export function AppointmentModals({
                 <Select
                   value={form.watch("serviceId")}
                   onValueChange={(value) => form.setValue("serviceId", value)}
+                  disabled={isReferenceDataLoading}
                 >
                   <SelectTrigger className="bg-white text-black">
                     <SelectValue placeholder={t("agenda.selectService")} />
@@ -1365,8 +1376,10 @@ export function AppointmentModals({
               <Button type="button" variant="outline" onClick={handleClose}>
                 {t("common.cancel")}
               </Button>
-              <Button type="submit" disabled={isPending}>
-                {isPending ? t("common.loading") : t("common.save")}
+              <Button type="submit" disabled={isPending || isReferenceDataLoading}>
+                {isPending || isReferenceDataLoading
+                  ? t("common.loading")
+                  : t("common.save")}
               </Button>
             </DialogFooter>
           </form>
