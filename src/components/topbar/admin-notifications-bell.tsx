@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Bell, BellRing, Check } from "lucide-react";
@@ -37,6 +37,9 @@ import {
 const NOTIFICATIONS_POLL_MS = 30000;
 const UNREAD_POLL_MS = 15000;
 const STREAM_RETRY_MS = 5000;
+const STREAM_INVALIDATE_DEBOUNCE_MS = 250;
+const NEW_PILL_DURATION_MS = 6000;
+const SOUND_COOLDOWN_MS = 1500;
 
 const buildStreamUrl = () => {
   const base = API_BASE_URL.replace(/\/$/, "");
@@ -60,6 +63,36 @@ export function AdminNotificationsBell() {
   const [showNewPill, setShowNewPill] = useState(false);
   const prevUnreadRef = useRef<number | null>(null);
   const pillTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const invalidateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastSoundAtRef = useRef(0);
+
+  const triggerNewNotificationFeedback = useCallback(() => {
+    setShowNewPill(true);
+    if (pillTimerRef.current) {
+      clearTimeout(pillTimerRef.current);
+    }
+    pillTimerRef.current = setTimeout(() => {
+      setShowNewPill(false);
+    }, NEW_PILL_DURATION_MS);
+
+    const now = Date.now();
+    if (now - lastSoundAtRef.current < SOUND_COOLDOWN_MS) {
+      return;
+    }
+    lastSoundAtRef.current = now;
+    void playNotificationSound();
+  }, []);
+
+  const scheduleNotificationsRefresh = useCallback(() => {
+    if (invalidateTimerRef.current) return;
+    invalidateTimerRef.current = setTimeout(() => {
+      invalidateTimerRef.current = null;
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      queryClient.invalidateQueries({
+        queryKey: ["notifications/unread-count"],
+      });
+    }, STREAM_INVALIDATE_DEBOUNCE_MS);
+  }, [queryClient]);
 
   const canShow = !!user?.id;
   const canViewAmounts = isAdmin || isSuperadmin;
@@ -156,10 +189,7 @@ export function AdminNotificationsBell() {
               try {
                 const parsed = JSON.parse(payload) as { type?: string };
                 if (parsed?.type === "keepalive") return;
-                queryClient.invalidateQueries({ queryKey: ["notifications"] });
-                queryClient.invalidateQueries({
-                  queryKey: ["notifications/unread-count"],
-                });
+                scheduleNotificationsRefresh();
               } catch {
                 // ignore invalid payloads
               }
@@ -179,15 +209,20 @@ export function AdminNotificationsBell() {
     return () => {
       isActive = false;
       controller?.abort();
+      if (invalidateTimerRef.current) {
+        clearTimeout(invalidateTimerRef.current);
+        invalidateTimerRef.current = null;
+      }
       if (retryTimer) {
         clearTimeout(retryTimer);
       }
     };
-  }, [canShow, queryClient]);
+  }, [canShow, scheduleNotificationsRefresh]);
 
   useEffect(() => {
     if (!canShow) {
       prevUnreadRef.current = null;
+      lastSoundAtRef.current = 0;
       if (pillTimerRef.current) {
         clearTimeout(pillTimerRef.current);
         pillTimerRef.current = null;
@@ -200,32 +235,15 @@ export function AdminNotificationsBell() {
     }
     if (prevUnreadRef.current === null) {
       prevUnreadRef.current = unreadCount;
-      if (unreadCount > 0) {
-        setShowNewPill(true);
-        playNotificationSound();
-        if (pillTimerRef.current) {
-          clearTimeout(pillTimerRef.current);
-        }
-        pillTimerRef.current = setTimeout(() => {
-          setShowNewPill(false);
-        }, 6000);
-      }
       return;
     }
 
     if (unreadCount > prevUnreadRef.current) {
-      setShowNewPill(true);
-      playNotificationSound();
-      if (pillTimerRef.current) {
-        clearTimeout(pillTimerRef.current);
-      }
-      pillTimerRef.current = setTimeout(() => {
-        setShowNewPill(false);
-      }, 6000);
+      triggerNewNotificationFeedback();
     }
 
     prevUnreadRef.current = unreadCount;
-  }, [canShow, isUnreadLoading, unreadCount]);
+  }, [canShow, isUnreadLoading, triggerNewNotificationFeedback, unreadCount]);
 
   useEffect(() => {
     if (!canShow) return;
@@ -236,6 +254,9 @@ export function AdminNotificationsBell() {
     return () => {
       if (pillTimerRef.current) {
         clearTimeout(pillTimerRef.current);
+      }
+      if (invalidateTimerRef.current) {
+        clearTimeout(invalidateTimerRef.current);
       }
     };
   }, []);
@@ -476,7 +497,7 @@ export function AdminNotificationsBell() {
 
   const isLoading = isNotificationsLoading || isUnreadLoading;
   const hasUnread = unreadCount > 0;
-  const shouldShowPill = unreadCount > 0 && !open;
+  const shouldShowPill = showNewPill && !open;
 
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
