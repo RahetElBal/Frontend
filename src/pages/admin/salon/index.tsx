@@ -9,18 +9,16 @@ import { useGet, withParams } from "@/hooks/useGet";
 import { useUser } from "@/hooks/useUser";
 import { useTable } from "@/hooks/useTable";
 import { toast } from "@/lib/toast";
-import type { PaginatedResponse } from "@/types";
-import type { Salon, User, Service, Client, Sale } from "@/types/entities";
-import { normalizeSalesResponse } from "@/utils/normalize-sales";
+import type { Salon, User } from "@/types/entities";
 import {
   canModifySalon,
   getSalonsList,
   getCurrentSalon,
-  extractDataArray,
   areAdminsLoaded,
   calculateAllStats,
   getDashboardDescription,
   type SalonModalState,
+  type SalonSummaryStats,
 } from "./utils";
 import { StatsGrid } from "./components/stats-grid";
 import { useSalonsColumns } from "./list/columns";
@@ -43,6 +41,14 @@ export default function SalonsPage() {
     [userIsSuperadmin, adminSalon],
   );
   const salonId = currentSalon?.id;
+  const summaryPath = useMemo(
+    () =>
+      withParams(
+        "salons/stats/summary",
+        userIsSuperadmin ? {} : { salonId },
+      ),
+    [userIsSuperadmin, salonId],
+  );
 
   // Fetch data - only superadmin needs to fetch all salons
   const {
@@ -65,43 +71,18 @@ export default function SalonsPage() {
     staleTime: adminStatsStaleTime,
   });
 
-  // Users endpoint returns paginated data
-  const { data: allUsersResponse, isLoading: isUsersLoading } = useGet<{ data: User[] }>(
-    withParams("users", userIsSuperadmin ? {} : { salonId }),
-    { enabled: userIsSuperadmin || !!salonId, staleTime: adminStatsStaleTime },
-  );
+  const {
+    data: summaryStats,
+    isLoading: isSummaryLoading,
+    refetch: refetchSummaryStats,
+  } = useGet<SalonSummaryStats>(summaryPath, {
+    enabled: userIsSuperadmin || !!salonId,
+    staleTime: adminStatsStaleTime,
+  });
 
-  const { data: servicesResponse, isLoading: isServicesLoading } = useGet<PaginatedResponse<Service>>(
-    withParams("services", { salonId, perPage: 1 }),
-    { enabled: !!salonId, staleTime: adminStatsStaleTime },
-  );
-
-  const { data: clientsResponse, isLoading: isClientsLoading } = useGet<{ data: Client[] }>(
-    withParams("clients", { salonId, perPage: 100 }),
-    { enabled: !!salonId, staleTime: adminStatsStaleTime },
-  );
-
-  const { data: salesResponse, isLoading: isSalesLoading } = useGet<{ data: Sale[] }>(
-    withParams("sales", { salonId, perPage: 100 }),
-    { enabled: !!salonId, staleTime: adminStatsStaleTime, select: normalizeSalesResponse },
-  );
-
-  // Extract data arrays using utility function
-  const allUsers = useMemo(
-    () => extractDataArray(allUsersResponse),
-    [allUsersResponse],
-  );
-  const servicesData = useMemo(
-    () => extractDataArray(servicesResponse),
-    [servicesResponse],
-  );
-  const clientsData = useMemo(
-    () => extractDataArray(clientsResponse),
-    [clientsResponse],
-  );
-  const salesData = useMemo(
-    () => extractDataArray(salesResponse),
-    [salesResponse],
+  const isStatsLoading = useMemo(
+    () => isSummaryLoading || (userIsSuperadmin && (isLoading || isAdminsLoading)),
+    [isSummaryLoading, userIsSuperadmin, isLoading, isAdminsLoading],
   );
 
   // Salons - superadmin sees all, admin sees only their own
@@ -129,24 +110,14 @@ export default function SalonsPage() {
       calculateAllStats(
         userIsSuperadmin,
         salons,
-        allUsers,
         admins,
-        currentSalon,
-        servicesResponse,
-        servicesData,
-        clientsData,
-        salesData,
+        summaryStats,
       ),
     [
       userIsSuperadmin,
       salons,
-      allUsers,
       admins,
-      currentSalon,
-      servicesResponse,
-      servicesData,
-      clientsData,
-      salesData,
+      summaryStats,
     ],
   );
 
@@ -237,7 +208,7 @@ export default function SalonsPage() {
         activeUsers={stats.activeUsers}
         totalAdmins={stats.totalAdmins}
         isSuperadmin={userIsSuperadmin}
-        loading={isLoading || isUsersLoading || isServicesLoading || isClientsLoading || isSalesLoading || isAdminsLoading}
+        loading={isStatsLoading}
         totalRevenue={stats.totalRevenue}
         monthlyRevenue={stats.monthlyRevenue}
         totalServices={stats.totalServices}
@@ -265,7 +236,10 @@ export default function SalonsPage() {
           admins={admins}
           adminsLoaded={adminsLoaded}
           onRefreshAdmins={refetchAdmins}
-          onSuccess={refetch}
+          onSuccess={() => {
+            void refetch();
+            void refetchSummaryStats();
+          }}
         />
       )}
     </div>
