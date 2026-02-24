@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 
 export type SortDirection = 'asc' | 'desc';
 
@@ -223,21 +223,9 @@ export function useTable<T extends { id: string }>(
 
   // Pagination
   const totalItems = sortedData.length;
-  const totalPages = Math.max(1, Math.ceil(totalItems / perPage));
+  const totalPages = Math.ceil(totalItems / perPage);
   const startIndex = (page - 1) * perPage;
   const items = sortedData.slice(startIndex, startIndex + perPage);
-
-  useEffect(() => {
-    setPage((prevPage) => {
-      const nextPage = Math.min(Math.max(prevPage, 1), totalPages);
-      return prevPage === nextPage ? prevPage : nextPage;
-    });
-  }, [totalPages]);
-
-  useEffect(() => {
-    const validIds = new Set(data.map((item) => item.id));
-    setSelectedIds((prev) => prev.filter((id) => validIds.has(id)));
-  }, [data]);
 
   const canNextPage = page < totalPages;
   const canPrevPage = page > 1;

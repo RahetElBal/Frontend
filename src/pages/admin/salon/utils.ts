@@ -205,7 +205,6 @@ export const calculateAllStats = (
   currentSalon: Salon | null,
   servicesResponse: PaginatedResponse<Service> | undefined,
   servicesData: Service[],
-  clientsResponse: PaginatedResponse<Client> | undefined,
   clientsData: Client[],
   salesData: Sale[],
 ): SalonStats => {
@@ -218,6 +217,6 @@ export const calculateAllStats = (
     totalRevenue: calculateTotalRevenue(salesData),
     monthlyRevenue: calculateMonthlyRevenue(salesData),
     totalServices: calculateTotalServices(servicesResponse, servicesData),
-    totalClients: clientsResponse?.meta?.total ?? calculateTotalClients(clientsData),
+    totalClients: calculateTotalClients(clientsData),
   };
 };

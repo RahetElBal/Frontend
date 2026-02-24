@@ -12,13 +12,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Spinner } from "@/components/spinner";
 import { cn } from "@/lib/utils";
 import type { UseTableReturn, SortDirection } from "@/hooks/useTable";
@@ -217,42 +210,19 @@ export function TablePagination<T extends { id: string }>({
   table,
 }: TablePaginationProps<T>) {
   const { t } = useTranslation();
-  const hasItems = table.totalItems > 0;
-  const from = hasItems ? (table.page - 1) * table.perPage + 1 : 0;
-  const to = hasItems ? Math.min(table.page * table.perPage, table.totalItems) : 0;
-  const pageSizeOptions = React.useMemo(() => {
-    const base = [10, 25, 50, 100];
-    if (base.includes(table.perPage)) return base;
-    return [...base, table.perPage].sort((a, b) => a - b);
-  }, [table.perPage]);
 
   return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex items-center justify-between">
       <p className="text-sm text-muted-foreground">
         {table.selectedCount > 0
           ? t("common.selectedCount", { count: table.selectedCount })
           : t("common.showingCount", {
-              from,
-              to,
+              from: (table.page - 1) * table.perPage + 1,
+              to: Math.min(table.page * table.perPage, table.totalItems),
               total: table.totalItems,
             })}
       </p>
-      <div className="flex items-center gap-2 self-end sm:self-auto">
-        <Select
-          value={String(table.perPage)}
-          onValueChange={(value) => table.setPerPage(Number(value))}
-        >
-          <SelectTrigger className="h-8 w-20">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {pageSizeOptions.map((size) => (
-              <SelectItem key={size} value={String(size)}>
-                {size}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      <div className="flex items-center gap-2">
         <Button
           variant="outline"
           size="sm"

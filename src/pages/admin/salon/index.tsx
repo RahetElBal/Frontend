@@ -76,13 +76,13 @@ export default function SalonsPage() {
     { enabled: !!salonId, staleTime: adminStatsStaleTime },
   );
 
-  const { data: clientsResponse, isLoading: isClientsLoading } = useGet<PaginatedResponse<Client>>(
-    withParams("clients", { salonId, perPage: 1 }),
+  const { data: clientsResponse, isLoading: isClientsLoading } = useGet<{ data: Client[] }>(
+    withParams("clients", { salonId, perPage: 100 }),
     { enabled: !!salonId, staleTime: adminStatsStaleTime },
   );
 
   const { data: salesResponse, isLoading: isSalesLoading } = useGet<{ data: Sale[] }>(
-    withParams("sales", { salonId, perPage: 50 }),
+    withParams("sales", { salonId, perPage: 100 }),
     { enabled: !!salonId, staleTime: adminStatsStaleTime, select: normalizeSalesResponse },
   );
 
@@ -134,7 +134,6 @@ export default function SalonsPage() {
         currentSalon,
         servicesResponse,
         servicesData,
-        clientsResponse,
         clientsData,
         salesData,
       ),
@@ -146,7 +145,6 @@ export default function SalonsPage() {
       currentSalon,
       servicesResponse,
       servicesData,
-      clientsResponse,
       clientsData,
       salesData,
     ],

@@ -1,9 +1,4 @@
-import {
-  keepPreviousData,
-  useQuery,
-  type UseQueryOptions,
-  type UseQueryResult,
-} from "@tanstack/react-query";
+import { useQuery, type UseQueryOptions, type UseQueryResult } from "@tanstack/react-query";
 import { get } from "@/lib/http";
 import { buildUrl } from "@/lib/http";
 import type { ApiError } from "@/types/api";
@@ -54,7 +49,6 @@ export function useGet<TData, TSelect = TData>(
   return useQuery<TData, ApiError, TSelect>({
     queryKey,
     queryFn: () => get<TData>(url),
-    placeholderData: keepPreviousData,
     ...options,
   });
 }
