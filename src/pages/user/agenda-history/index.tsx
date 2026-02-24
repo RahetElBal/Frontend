@@ -9,7 +9,7 @@ import { useGet, withParams } from "@/hooks/useGet";
 import { useUser } from "@/hooks/useUser";
 import { useLanguage } from "@/hooks/useLanguage";
 import { ROUTES } from "@/constants/navigation";
-import type { Appointment, PaginatedResponse, User } from "@/types";
+import type { Appointment, PaginatedResponse } from "@/types";
 import { AppointmentStatus } from "@/types/entities";
 
 import { HistoryView } from "../agenda/components/history-view";
@@ -63,6 +63,8 @@ export function AgendaHistoryPage() {
       dateFrom: dateFrom || undefined,
       dateTo: dateTo || undefined,
       status: statusParam,
+      compact: true,
+      includeStaff: true,
       sortBy: "date",
       sortOrder: "desc",
     };
@@ -77,13 +79,51 @@ export function AgendaHistoryPage() {
       },
     );
 
-  const { data: staffResponse } = useGet<PaginatedResponse<User>>(
-    withParams("users", { salonId, role: "user", perPage: 100 }),
-    { enabled: !!salonId, staleTime: 1000 * 60 * 5 },
-  );
-
   const appointments = safeExtractArray<Appointment>(appointmentsData);
-  const staffMembers = safeExtractArray<User>(staffResponse);
+  const staffMembers = useMemo(() => {
+    const byId = new Map<
+      string,
+      {
+        id: string;
+        firstName?: string | null;
+        lastName?: string | null;
+        name?: string | null;
+        email?: string | null;
+      }
+    >();
+
+    appointments.forEach((appointment) => {
+      if (!appointment.staffId) return;
+
+      const existing = byId.get(appointment.staffId);
+      const staff = appointment.staff;
+
+      if (staff?.id) {
+        byId.set(appointment.staffId, {
+          id: appointment.staffId,
+          firstName: staff.firstName ?? existing?.firstName ?? null,
+          lastName: staff.lastName ?? existing?.lastName ?? null,
+          name: staff.name ?? existing?.name ?? null,
+          email: staff.email ?? existing?.email ?? null,
+        });
+        return;
+      }
+
+      if (!existing) {
+        byId.set(appointment.staffId, {
+          id: appointment.staffId,
+          name: appointment.staffId,
+        });
+      }
+    });
+
+    if (staffFilterId && !byId.has(staffFilterId)) {
+      byId.set(staffFilterId, { id: staffFilterId, name: staffFilterId });
+    }
+
+    return Array.from(byId.values());
+  }, [appointments, staffFilterId]);
+
   const staffOptions = useMemo(
     () =>
       buildStaffOptions({
