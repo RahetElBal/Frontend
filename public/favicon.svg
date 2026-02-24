@@ -1,19 +1,21 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
   <defs>
-    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#5b1f2a" />
-      <stop offset="100%" stop-color="#c65b6c" />
+    <linearGradient id="ring" x1="7" y1="7" x2="25" y2="25" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#E4C4B4" />
+      <stop offset="48%" stop-color="#C99682" />
+      <stop offset="100%" stop-color="#B47764" />
     </linearGradient>
   </defs>
-  <rect width="32" height="32" rx="7" fill="url(#grad)" />
+  <rect width="32" height="32" rx="8" fill="#FBF7F4" />
+  <circle cx="16" cy="15.5" r="8.1" fill="none" stroke="url(#ring)" stroke-width="1.6" />
   <text
-    x="16"
-    y="22"
-    font-family="Arial, sans-serif"
-    font-size="16"
-    font-weight="700"
-    fill="#fdf6f7"
+    x="15.8"
+    y="20.6"
     text-anchor="middle"
+    font-family="Playfair Display, Cormorant Garamond, Times New Roman, serif"
+    font-size="14.2"
+    font-weight="600"
+    fill="#BC7D69"
   >
     B
   </text>

@@ -2,56 +2,66 @@
 
 @theme {
   --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
-  
-  /* Brand rose accent */
-  --color-accent-pink-50: #fbf4f5;
-  --color-accent-pink-100: #f7e7ea;
-  --color-accent-pink-200: #f0cfd6;
-  --color-accent-pink-300: #e2a9b7;
-  --color-accent-pink-400: #cf7c91;
-  --color-accent-pink-500: #c05f73;
-  
-  /* Warm mauve accent */
-  --color-accent-blue-50: #f6f0f2;
-  --color-accent-blue-100: #efe3e7;
-  --color-accent-blue-200: #e0c8d1;
-  --color-accent-blue-300: #c79fb0;
-  --color-accent-blue-400: #ad748f;
-  --color-accent-blue-500: #8f526c;
-  
-  /* Primary (using pale pink as primary) */
+
+  /* Brand copper rose scale */
+  --color-accent-pink-50: #fcf8f6;
+  --color-accent-pink-100: #f7ece6;
+  --color-accent-pink-200: #edd8ce;
+  --color-accent-pink-300: #dfbcad;
+  --color-accent-pink-400: #cf9b88;
+  --color-accent-pink-500: #bc7d69;
+  --color-accent-pink-600: #a66656;
+  --color-accent-pink-700: #895245;
+  --color-accent-pink-800: #73453b;
+  --color-accent-pink-900: #623c34;
+  --color-accent-pink: var(--color-accent-pink-500);
+
+  /* Warm taupe companion scale */
+  --color-accent-blue-50: #faf8f7;
+  --color-accent-blue-100: #f2ece9;
+  --color-accent-blue-200: #e4d8d1;
+  --color-accent-blue-300: #d0beb3;
+  --color-accent-blue-400: #b59d8d;
+  --color-accent-blue-500: #9b7f6c;
+  --color-accent-blue-600: #806756;
+  --color-accent-blue-700: #6a5548;
+  --color-accent-blue-800: #58473d;
+  --color-accent-blue-900: #4d3e36;
+  --color-accent-blue: var(--color-accent-blue-500);
+
+  /* Primary */
   --color-primary: var(--color-accent-pink-500);
-  --color-primary-foreground: oklch(0.99 0 0);
-  
+  --color-primary-foreground: #fffaf8;
+
   /* Background */
-  --color-background: oklch(1 0 0);
-  --color-foreground: oklch(0.15 0 0);
-  
+  --color-background: #fffcf9;
+  --color-foreground: #2f2520;
+
   /* Muted */
-  --color-muted: oklch(0.96 0 0);
-  --color-muted-foreground: oklch(0.45 0 0);
-  
+  --color-muted: #f5eeea;
+  --color-muted-foreground: #7f6a62;
+
   /* Card */
-  --color-card: oklch(1 0 0);
-  --color-card-foreground: oklch(0.15 0 0);
+  --color-card: #fffcfa;
+  --color-card-foreground: #2f2520;
 
   /* Popover */
-  --color-popover: oklch(1 0 0);
-  --color-popover-foreground: oklch(0.15 0 0);
-  
+  --color-popover: #fffcfa;
+  --color-popover-foreground: #2f2520;
+
   /* Border */
-  --color-border: oklch(0.90 0 0);
-  
+  --color-border: #e7d8d0;
+
   /* Input */
-  --color-input: oklch(0.90 0 0);
-  
+  --color-input: #e7d8d0;
+
   /* Ring */
   --color-ring: var(--color-accent-pink-400);
-  
+
   /* Destructive */
   --color-destructive: oklch(0.55 0.2 25);
   --color-destructive-foreground: oklch(0.99 0 0);
-  
+
   /* Radius */
   --radius-sm: 0.25rem;
   --radius-md: 0.375rem;

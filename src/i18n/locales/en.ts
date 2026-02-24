@@ -1728,9 +1728,87 @@ export const en = {
   },
   landing: {
     algeriaFlagLabel: "Algerian flag",
+    heroImageAlt: "Portrait of an Algerian woman in a modern beauty salon",
+    nav: {
+      discover: "Discover",
+      services: "Services",
+      pricing: "Pricing",
+      algeria: "Algeria",
+      mobile: "Mobile",
+      contact: "Contact",
+      login: "Login",
+    },
+    badge: "100% Algerian",
+    titleLine1: "Elevate Your Salon",
+    titleLine2: "Management",
+    description:
+      "Beautiq centralizes CRM, scheduling, sales and marketing for beauty salons in Algeria. Manage web and mobile from one platform.",
+    ctaLogin: "Access login",
+    ctaMobile: "Mobile app",
+    highlights: {
+      growthLabel: "revenue growth after digitalization",
+      costLabel: "service cost reduction with unified process",
+      dzLabel: "platform built for the Algerian market",
+    },
+    features: {
+      badge: "Operate faster",
+      crmTitle: "Client CRM",
+      crmDescription: "Client records, history and preferences in one place.",
+      agendaTitle: "Smart scheduling",
+      agendaDescription: "Appointments, staff availability and reminders.",
+      cashTitle: "Checkout + marketing",
+      cashDescription: "Payments, campaigns and real-time performance.",
+    },
+    pricing: {
+      badge: "Pricing",
+      title: "Plans for every growth stage",
+      launchNote:
+        "Launch partnership: first 10 paying partners get 2 years of subscription included.",
+      recommended: "Recommended",
+      start: "Get started",
+    },
+    plans: {
+      standard: {
+        name: "Standard",
+        subtitle: "Per offer",
+        item1: "Admin user included",
+        item2: "5 seats for the mobile app",
+        item3: "Fast setup",
+        item4: "Onboarding support",
+      },
+      pro: {
+        name: "Pro",
+        subtitle: "Per offer",
+        item1: "Everything in Standard +",
+        item2: "Advanced marketing automations",
+        item3: "Instagram and TikTok publishing",
+        item4: "Advanced analytics",
+        item5: "Advanced team roles and permissions",
+        item6: "Priority support",
+      },
+      allIn: {
+        name: "All-In",
+        subtitle: "Full project",
+        item1: "SaaS installed in the salon",
+        item2: "Intranet deployment",
+        item3: "Full technical support",
+        item4: "Personalized assistance",
+      },
+    },
+    algeria: {
+      badge: "Algerian identity",
+      title: "Built for Algerian beauty salons",
+      description:
+        "Local DZD pricing, local workflows and close support for beauty professionals in Algeria.",
+    },
     dzPioneer:
       "First DZ app for beauty salon and aesthetics management in Algeria.",
     digitalizeOneClick: "Digitize your salon in one click.",
+    footer: {
+      rights: "(c) 2026 Beautiq. All rights reserved.",
+      terms: "Terms",
+      privacy: "Privacy",
+    },
   },
   supportReport: {
     title: "Support Report",

@@ -1,189 +1,122 @@
-import {
-  ArrowRight,
-  CalendarCheck2,
-  Check,
-  CircleHelp,
-  LineChart,
-  Megaphone,
-  ShieldCheck,
-  ShoppingBag,
-  Smartphone,
-  Users,
-  WalletCards,
-} from "lucide-react";
+import { ArrowRight, Check, ShieldCheck, Smartphone, Sparkles } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 
 import { CONTACT_INFO } from "@/constants/auth";
 import { ROUTES } from "@/constants/navigation";
 import { Button } from "@/components/ui/button";
 
-const heroStats = [
-  {
-    value: "+17,3 points",
-    label: "de croissance du chiffre d'affaires après digitalisation",
-    source: "[1]",
-  },
-  {
-    value: "+10 à +20%",
-    label: "de bénéfice opérationnel en 2 à 3 ans",
-    source: "[2]",
-  },
-  {
-    value: "-20% (et +)",
-    label: "de coûts de service, avec jusqu'à +15% de revenus",
-    source: "[3]",
-  },
-];
-
-const features = [
-  {
-    icon: Users,
-    title: "CRM clients",
-    description:
-      "Centralisez les fiches clients, préférences et historique de ventes dans un espace unique.",
-  },
-  {
-    icon: CalendarCheck2,
-    title: "Agenda intelligent",
-    description:
-      "Organisez vos rendez-vous, réduisez les oublis et suivez la charge de votre équipe en temps réel.",
-  },
-  {
-    icon: ShoppingBag,
-    title: "Stock & produits",
-    description:
-      "Contrôlez les niveaux de stock avec alertes automatiques pour éviter les ruptures.",
-  },
-  {
-    icon: WalletCards,
-    title: "Caisse intégrée",
-    description:
-      "Facturez rapidement, suivez les paiements et gardez une trace claire de chaque transaction.",
-  },
-  {
-    icon: Megaphone,
-    title: "Marketing automatisé",
-    description:
-      "Lancez des rappels et campagnes sans effort pour faire revenir vos clients.",
-  },
-  {
-    icon: LineChart,
-    title: "Pilotage business",
-    description:
-      "Visualisez vos indicateurs clés en un coup d'œil pour prendre les bonnes décisions.",
-  },
-];
-
-const planCards = [
-  {
-    name: "Standard",
-    price: "69 000 DA",
-    subtitle: "Par offre",
-    highlighted: false,
-    items: [
-      "Admin user inclus",
-      "5 sièges pour l'application mobile",
-      "Mise en place rapide",
-      "Support de démarrage",
-    ],
-  },
-  {
-    name: "Pro",
-    price: "99 000 DA",
-    subtitle: "Par offre",
-    highlighted: true,
-    items: [
-      "Tout Standard +",
-      "Automatisations marketing avancées (SMS, campagnes, rappels)",
-      "Publication directe Instagram & TikTok (posts + stories)",
-      "Tableau analytique avancé (CA, rétention, performance équipe)",
-      "Rôles et permissions avancés pour l'équipe",
-      "Support prioritaire et accompagnement personnalisé",
-    ],
-  },
-  {
-    name: "All-In",
-    price: "SUR DEVIS",
-    subtitle: "Projet complet",
-    highlighted: false,
-    items: [
-      "SaaS installé dans le salon",
-      "Déploiement en intranet",
-      "Support complet et suivi technique",
-      "Accompagnement personnalisé",
-    ],
-  },
-];
-
-const faqItems = [
-  {
-    question: "Combien de temps pour démarrer ?",
-    answer:
-      "La mise en place initiale est rapide. Une fois votre offre validée, nous configurons votre espace et vous pouvez commencer sans attente.",
-  },
-  {
-    question: "Puis-je faire évoluer mon offre plus tard ?",
-    answer:
-      "Oui. Vous pouvez passer vers une offre supérieure à tout moment selon la croissance de votre salon.",
-  },
-  {
-    question: "Le support est-il inclus ?",
-    answer:
-      "Oui. Chaque offre inclut un niveau de support. L'offre All-In inclut un accompagnement complet et continu.",
-  },
-  {
-    question: "Comment accéder à mon espace ?",
-    answer:
-      "Vous pouvez accéder à l'application via le bouton Connexion en haut de page.",
-  },
-];
+const highlightValues = [
+  { key: "growth", value: "+17,3 points" },
+  { key: "cost", value: "-20%" },
+  { key: "dz", value: "100% DZ" },
+] as const;
 
 export default function LandingPage() {
+  const { t } = useTranslation();
+
+  const navLeft = [
+    { label: t("landing.nav.discover"), href: "#top" },
+    { label: t("landing.nav.services"), href: "#features" },
+    { label: t("landing.nav.pricing"), href: "#pricing" },
+  ];
+
+  const navRight = [
+    { label: t("landing.nav.algeria"), href: "#algeria" },
+    { label: t("landing.nav.mobile"), href: "#mobile" },
+    { label: t("landing.nav.contact"), href: "#contact" },
+  ];
+
+  const planCards = [
+    {
+      name: t("landing.plans.standard.name"),
+      price: "69 000 DA",
+      subtitle: t("landing.plans.standard.subtitle"),
+      highlighted: false,
+      items: [
+        t("landing.plans.standard.item1"),
+        t("landing.plans.standard.item2"),
+        t("landing.plans.standard.item3"),
+        t("landing.plans.standard.item4"),
+      ],
+    },
+    {
+      name: t("landing.plans.pro.name"),
+      price: "99 000 DA",
+      subtitle: t("landing.plans.pro.subtitle"),
+      highlighted: true,
+      items: [
+        t("landing.plans.pro.item1"),
+        t("landing.plans.pro.item2"),
+        t("landing.plans.pro.item3"),
+        t("landing.plans.pro.item4"),
+        t("landing.plans.pro.item5"),
+        t("landing.plans.pro.item6"),
+      ],
+    },
+    {
+      name: t("landing.plans.allIn.name"),
+      price: "SUR DEVIS",
+      subtitle: t("landing.plans.allIn.subtitle"),
+      highlighted: false,
+      items: [
+        t("landing.plans.allIn.item1"),
+        t("landing.plans.allIn.item2"),
+        t("landing.plans.allIn.item3"),
+        t("landing.plans.allIn.item4"),
+      ],
+    },
+  ];
+
   return (
-    <div className="relative min-h-screen overflow-x-hidden bg-linear-to-b from-accent-pink-50 via-background to-accent-blue-50 text-foreground">
-      <div className="pointer-events-none absolute inset-0 -z-0">
-        <div className="absolute -top-36 left-[-8rem] h-[28rem] w-[28rem] rounded-full bg-accent-pink-200/55 blur-3xl animate-float-slow" />
-        <div className="absolute right-[-8rem] top-[12rem] h-[30rem] w-[30rem] rounded-full bg-accent-blue-200/45 blur-3xl animate-float-slower" />
-        <div className="absolute inset-0 bg-brand-grid opacity-45" />
-      </div>
+    <div className="min-h-screen bg-linear-to-b from-accent-pink-100 via-accent-blue-50 to-accent-pink-100 text-foreground">
+      <header className="border-b border-accent-pink-200/80 bg-white/85 backdrop-blur-md">
+        <div className="mx-auto flex h-20 w-full max-w-[1600px] items-center justify-between px-4 sm:px-6 lg:px-10">
+          <div className="flex items-center gap-6 lg:gap-10">
+            <a
+              href="#top"
+              className="inline-flex items-center gap-3 text-accent-pink-700 transition-transform hover:scale-[1.01]"
+            >
+              <img
+                src="/branding/beautiq-logo.svg"
+                alt="Beautiq"
+                className="h-10 w-10 rounded-xl object-contain"
+                decoding="async"
+              />
+              <span
+                className="text-3xl leading-none"
+                style={{ fontFamily: '"Playfair Display", "Times New Roman", serif' }}
+              >
+                Beautiq
+              </span>
+            </a>
 
-      <header className="sticky top-0 z-50 border-b border-white/70 bg-white/75 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-          <a
-            href="#top"
-            className="inline-flex items-center gap-3 text-foreground transition-transform duration-300 hover:scale-[1.01]"
-          >
-            <img
-              src="/branding/beautiq-logo.svg"
-              alt="Beautiq"
-              className="h-10 w-10 rounded-2xl object-contain"
-              decoding="async"
-            />
-            <span className="text-lg font-semibold tracking-tight">Beautiq</span>
-          </a>
-
-          <nav className="hidden items-center gap-6 text-sm text-muted-foreground md:flex">
-            <a href="#features" className="hover:text-foreground transition-colors">
-              Fonctionnalités
-            </a>
-            <a href="#pricing" className="hover:text-foreground transition-colors">
-              Tarifs
-            </a>
-            <a href="#faq" className="hover:text-foreground transition-colors">
-              FAQ
-            </a>
-          </nav>
+            <nav className="hidden items-center gap-8 text-sm text-accent-pink-700 lg:flex">
+              {navLeft.map((item) => (
+                <a key={item.label} href={item.href} className="hover:text-accent-pink-500 transition-colors">
+                  {item.label}
+                </a>
+              ))}
+            </nav>
+          </div>
 
           <div className="flex items-center gap-2">
-            <Button asChild size="sm" variant="outline" className="hidden sm:inline-flex">
-              <Link to={ROUTES.MOBILE_APP}>
+            <nav className="hidden items-center gap-8 text-sm text-accent-pink-700 xl:flex">
+              {navRight.map((item) => (
+                <a key={item.label} href={item.href} className="hover:text-accent-pink-500 transition-colors">
+                  {item.label}
+                </a>
+              ))}
+            </nav>
+            <Button asChild size="sm" variant="outline" className="hidden border-accent-pink-200 sm:inline-flex">
+              <Link id="mobile" to={ROUTES.MOBILE_APP}>
                 <Smartphone className="h-4 w-4" />
-                App mobile
+                {t("landing.ctaMobile")}
               </Link>
             </Button>
-            <Button asChild size="sm" className="shadow-lg shadow-accent-pink-300/40">
+            <Button asChild size="sm" className="min-w-28">
               <Link to={ROUTES.LOGIN}>
-                Se connecter
+                {t("landing.nav.login")}
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </Button>
@@ -191,16 +124,17 @@ export default function LandingPage() {
         </div>
       </header>
 
-      <main id="top" className="relative z-10">
-        <section className="mx-auto grid w-full max-w-7xl gap-12 px-4 pb-16 pt-16 sm:px-6 lg:grid-cols-[1.03fr_0.97fr] lg:items-center lg:px-8 lg:pb-24 lg:pt-24">
-          <div className="space-y-8 animate-fade-up">
-            <div className="space-y-4">
-              <div className="inline-flex items-center gap-4 rounded-2xl border border-accent-pink-200 bg-white/85 px-4 py-3 shadow-sm">
+      <main>
+        <section id="top" className="px-4 pb-12 pt-10 sm:px-6 lg:px-10 lg:pt-14">
+          <div className="mx-auto max-w-[1600px]">
+            <div className="mx-auto max-w-5xl text-center">
+              <p className="inline-flex items-center gap-2 rounded-full border border-accent-pink-200 bg-accent-pink-50 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-accent-pink-600">
+                <ShieldCheck className="h-4 w-4" />
                 <svg
                   viewBox="0 0 120 80"
                   role="img"
-                  aria-label="Drapeau algérien"
-                  className="h-12 w-20 overflow-hidden rounded-md border border-black/5 shadow-sm sm:h-14 sm:w-24"
+                  aria-label={t("landing.algeriaFlagLabel")}
+                  className="h-4 w-6 overflow-hidden rounded-sm border border-black/10"
                 >
                   <rect width="120" height="80" fill="#fff" />
                   <rect width="60" height="80" fill="#006233" />
@@ -211,404 +145,182 @@ export default function LandingPage() {
                     fill="#d21034"
                   />
                 </svg>
-                <p className="text-sm font-semibold uppercase tracking-wide text-accent-pink-500 sm:text-base">
-                  100% Algérien
-                </p>
-              </div>
-            </div>
-            <div className="space-y-5">
-              <h1 className="text-balance text-3xl font-extrabold leading-tight tracking-tight sm:text-4xl lg:text-5xl">
-                <span className="block bg-linear-to-r from-accent-pink-500 via-accent-pink-400 to-accent-blue-500 bg-clip-text text-transparent">
-                  Logiciel 100% Algérien pour salons de beauté
-                </span>
-                <span className="mt-1 block bg-linear-to-r from-accent-pink-500 via-accent-pink-400 to-accent-blue-500 bg-clip-text text-[0.7em] text-transparent">
-                  Onglerie, esthétique, spa.
-                </span>
+                {t("landing.badge")}
+              </p>
+              <h1
+                className="mx-auto mt-6 max-w-4xl text-balance text-5xl leading-[0.95] tracking-tight text-accent-pink-700 sm:text-6xl lg:text-8xl"
+                style={{ fontFamily: '"Playfair Display", "Times New Roman", serif' }}
+              >
+                {t("landing.titleLine1")}
+                <br />
+                {t("landing.titleLine2")}
               </h1>
-              <p className="max-w-2xl text-base text-muted-foreground sm:text-lg">
-                De la prise de rendez-vous au paiement, Beautiq centralise CRM,
-                agenda, ventes et marketing pour vous faire gagner du temps et
-                développer votre chiffre.
+              <p className="mx-auto mt-5 max-w-3xl text-base text-muted-foreground sm:text-lg">
+                {t("landing.description")}
               </p>
-            </div>
 
-            <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center">
-              <Button asChild size="lg" className="w-full sm:w-auto">
-                <Link to={ROUTES.LOGIN}>
-                  Accéder à mon espace
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-              </Button>
-              <Button
-                asChild
-                variant="outline"
-                size="lg"
-                className="w-full border-accent-pink-200 bg-white/80 sm:w-auto"
-              >
-                <Link to={ROUTES.MOBILE_APP}>
-                  <Smartphone className="h-4 w-4" />
-                  Telecharger l'app mobile
-                </Link>
-              </Button>
-              <Button
-                asChild
-                variant="outline"
-                size="lg"
-                className="w-full border-accent-blue-200 bg-white/80 sm:w-auto"
-              >
-                <a href="#features">Voir les fonctionnalités</a>
-              </Button>
-            </div>
-
-            <div className="grid gap-3 sm:grid-cols-3">
-              {heroStats.map((stat, index) => (
-                <div
-                  key={stat.label}
-                  className="rounded-2xl border border-white/70 bg-white/85 p-4 shadow-lg shadow-accent-blue-100/40 animate-fade-up"
-                  style={{ animationDelay: `${100 + index * 90}ms` }}
-                >
-                  <p className="text-2xl font-semibold tracking-tight text-accent-pink-500">
-                    {stat.value}
-                  </p>
-                  <p className="text-sm text-muted-foreground">{stat.label}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">{stat.source}</p>
-                </div>
-              ))}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Sources:
-              {" "}
-              <a
-                href="https://mitsloan.mit.edu/press/only-22-companies-have-undergone-significant-digital-business-transformation-and-they-have-higher-revenue-growth-and-net-margins"
-                target="_blank"
-                rel="noreferrer"
-                className="underline-offset-4 hover:underline"
-              >
-                [1] MIT Sloan (CISR, 2022)
-              </a>
-              {" · "}
-              <a
-                href="https://www.mckinsey.com/capabilities/tech-and-ai/our-insights/rewired-and-running-ahead-digital-and-ai-leaders-are-leaving-the-rest-behind"
-                target="_blank"
-                rel="noreferrer"
-                className="underline-offset-4 hover:underline"
-              >
-                [2] McKinsey (2024)
-              </a>
-              {" · "}
-              <a
-                href="https://www.mckinsey.com/capabilities/operations/our-insights/mastering-the-digital-advantage-in-transforming-customer-experience"
-                target="_blank"
-                rel="noreferrer"
-                className="underline-offset-4 hover:underline"
-              >
-                [3] McKinsey (2017)
-              </a>
-            </p>
-          </div>
-
-          <div
-            className="relative rounded-3xl border border-white/80 bg-white/90 p-5 shadow-2xl shadow-accent-blue-200/45 animate-fade-up"
-            style={{ animationDelay: "180ms" }}
-          >
-            <div className="mb-4 flex items-center justify-between rounded-2xl bg-linear-to-r from-accent-pink-50 to-accent-blue-50 px-4 py-3">
-              <div>
-                <p className="text-sm text-muted-foreground">Tableau de bord</p>
-                <p className="text-lg font-semibold">Vue salon en direct</p>
-              </div>
-              <span className="rounded-full bg-accent-pink-500 px-3 py-1 text-xs font-semibold text-white">
-                En ligne
-              </span>
-            </div>
-
-            <div className="space-y-3">
-              {[
-                { title: "CRM", meta: "247 clients actifs", tone: "pink" },
-                { title: "Agenda", meta: "12 RDV aujourd'hui", tone: "blue" },
-                { title: "Ventes", meta: "2 340 000 DA ce mois", tone: "pink" },
-                { title: "Marketing", meta: "68% d'ouverture campagne", tone: "blue" },
-              ].map((item, index) => (
-                <div
-                  key={item.title}
-                  className="flex items-center justify-between rounded-xl border border-border/80 bg-white p-3 transition-transform duration-300 hover:-translate-y-0.5"
-                  style={{ animationDelay: `${260 + index * 70}ms` }}
-                >
-                  <div>
-                    <p className="font-medium">{item.title}</p>
-                    <p className="text-sm text-muted-foreground">{item.meta}</p>
-                  </div>
-                  <div
-                    className={
-                      item.tone === "pink"
-                        ? "h-2.5 w-2.5 rounded-full bg-accent-pink-500"
-                        : "h-2.5 w-2.5 rounded-full bg-accent-blue-500"
-                    }
-                  />
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-5 rounded-2xl border border-accent-pink-100 bg-accent-pink-50/80 p-4">
-              <p className="text-sm font-medium text-accent-pink-500">
-                Tout est synchronisé
-              </p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Vos données, votre équipe et vos clients restent alignés sur web
-                et mobile.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        <section className="mx-auto w-full max-w-7xl px-4 pb-10 sm:px-6 lg:px-8">
-          <div className="grid gap-4 rounded-3xl border border-white/70 bg-white/80 p-5 shadow-xl shadow-accent-blue-100/35 md:grid-cols-2">
-            <article className="rounded-2xl border border-red-100 bg-red-50/70 p-5">
-              <p className="text-xs uppercase tracking-wide text-red-500">
-                Avant
-              </p>
-              <h2 className="mt-2 text-2xl font-semibold">
-                Gestion manuelle et dispersée
-              </h2>
-              <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
-                <li className="flex gap-2">
-                  <span>-</span> Rendez-vous perdus ou doublés
-                </li>
-                <li className="flex gap-2">
-                  <span>-</span> Fiches clients incomplètes
-                </li>
-                <li className="flex gap-2">
-                  <span>-</span> Ruptures de stock fréquentes
-                </li>
-              </ul>
-            </article>
-
-            <article className="rounded-2xl border border-emerald-100 bg-emerald-50/80 p-5">
-              <p className="text-xs uppercase tracking-wide text-emerald-600">
-                Après
-              </p>
-              <h2 className="mt-2 text-2xl font-semibold">
-                Une opération unifiée dans Beautiq
-              </h2>
-              <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
-                <li className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-emerald-600" />
-                  Agenda intelligent avec rappels
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-emerald-600" />
-                  CRM centralisé et historique complet
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-emerald-600" />
-                  Stock, ventes et marketing connectés
-                </li>
-              </ul>
-            </article>
-          </div>
-        </section>
-
-        <section id="features" className="mx-auto w-full max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-3xl text-center">
-            <p className="text-sm font-medium uppercase tracking-[0.2em] text-accent-pink-500">
-              Fonctionnalités
-            </p>
-            <h2 className="mt-3 text-3xl font-semibold sm:text-4xl">
-              Tout ce qu'il faut pour présenter et faire tourner votre activité
-            </h2>
-          </div>
-
-          <div className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {features.map((feature, index) => {
-              const Icon = feature.icon;
-
-              return (
-                <article
-                  key={feature.title}
-                  className="group rounded-2xl border border-white/75 bg-white/85 p-5 shadow-lg shadow-accent-blue-100/35 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl animate-fade-up"
-                  style={{ animationDelay: `${120 + index * 70}ms` }}
-                >
-                  <div className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-xl bg-linear-to-br from-accent-pink-100 to-accent-blue-100 text-accent-pink-500 transition-transform duration-300 group-hover:scale-105">
-                    <Icon className="h-5 w-5" />
-                  </div>
-                  <h3 className="text-lg font-semibold">{feature.title}</h3>
-                  <p className="mt-2 text-sm text-muted-foreground">
-                    {feature.description}
-                  </p>
-                </article>
-              );
-            })}
-          </div>
-        </section>
-
-        <section id="pricing" className="mx-auto w-full max-w-7xl px-4 pb-18 pt-10 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-3xl text-center">
-            <p className="text-sm font-medium uppercase tracking-[0.2em] text-accent-blue-500">
-              Tarifs
-            </p>
-            <h2 className="mt-3 text-3xl font-semibold sm:text-4xl">
-              Offres adaptées à votre niveau de croissance
-            </h2>
-            <p className="mt-4 inline-flex rounded-full border border-amber-300 bg-amber-50 px-4 py-2 text-sm font-medium text-amber-900">
-              Partenariat lancement: pour les 10 premiers partenaires payants, 2 ans d'abonnement inclus au 1er paiement.
-            </p>
-          </div>
-
-          <div className="mt-10 grid gap-5 lg:grid-cols-3">
-            {planCards.map((plan, index) => (
-              <article
-                key={plan.name}
-                className={
-                  plan.highlighted
-                    ? "relative rounded-3xl border border-accent-pink-300 bg-white p-6 shadow-2xl shadow-accent-pink-200/50 animate-fade-up"
-                    : "relative rounded-3xl border border-white/80 bg-white/90 p-6 shadow-xl shadow-accent-blue-100/40 animate-fade-up"
-                }
-                style={{ animationDelay: `${80 + index * 90}ms` }}
-              >
-                {plan.highlighted ? (
-                  <span className="absolute right-5 top-5 rounded-full bg-accent-pink-500 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-white">
-                    Recommandé
-                  </span>
-                ) : null}
-
-                <p className="text-sm uppercase tracking-wide text-muted-foreground">
-                  {plan.name}
-                </p>
-                <p className="mt-3 text-4xl font-semibold text-accent-pink-500">
-                  {plan.price}
-                </p>
-                <p className="mt-1 text-sm text-muted-foreground">{plan.subtitle}</p>
-
-                <ul className="mt-6 space-y-3">
-                  {plan.items.map((item) => (
-                    <li key={item} className="flex items-start gap-2 text-sm">
-                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-accent-pink-500" />
-                      <span className="text-muted-foreground">{item}</span>
-                    </li>
-                  ))}
-                </ul>
-
-                <Button
-                  asChild
-                  variant={plan.highlighted ? "default" : "outline"}
-                  className={
-                    plan.highlighted
-                      ? "mt-6 w-full"
-                      : "mt-6 w-full border-accent-pink-200 bg-accent-pink-50 hover:bg-accent-pink-100"
-                  }
-                >
-                  <Link to={ROUTES.LOGIN}>Démarrer</Link>
-                </Button>
-              </article>
-            ))}
-          </div>
-        </section>
-
-        <section id="faq" className="mx-auto w-full max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
-          <div className="rounded-3xl border border-white/80 bg-white/85 p-6 shadow-xl shadow-accent-blue-100/35 sm:p-8">
-            <div className="mx-auto max-w-3xl text-center">
-              <p className="inline-flex items-center gap-2 rounded-full border border-accent-blue-200 bg-accent-blue-50 px-3 py-1 text-sm font-medium text-accent-blue-500">
-                <CircleHelp className="h-4 w-4" />
-                FAQ
-              </p>
-              <h2 className="mt-4 text-3xl font-semibold">Questions fréquentes</h2>
-            </div>
-
-            <div className="mx-auto mt-8 max-w-4xl space-y-3">
-              {faqItems.map((item, index) => (
-                <details
-                  key={item.question}
-                  className="group rounded-2xl border border-border/70 bg-white p-4 animate-fade-up"
-                  style={{ animationDelay: `${90 + index * 80}ms` }}
-                >
-                  <summary className="cursor-pointer list-none font-medium text-foreground">
-                    {item.question}
-                  </summary>
-                  <p className="mt-3 text-sm text-muted-foreground">{item.answer}</p>
-                </details>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="mx-auto w-full max-w-7xl px-4 pb-18 sm:px-6 lg:px-8">
-          <div className="overflow-hidden rounded-3xl border border-accent-pink-200 bg-linear-to-r from-accent-pink-500 to-accent-blue-500 p-8 text-white shadow-2xl shadow-accent-pink-300/45 sm:p-10 animate-gradient-flow">
-            <div className="grid gap-6 lg:grid-cols-[1fr_auto] lg:items-center">
-              <div className="space-y-3">
-                <p className="inline-flex items-center gap-2 rounded-full border border-white/35 bg-white/15 px-3 py-1 text-xs uppercase tracking-wide">
-                  <ShieldCheck className="h-4 w-4" />
-                  Prêt à passer à l'action
-                </p>
-                <h2 className="text-3xl font-semibold sm:text-4xl">
-                  Présentez vos offres et connectez vos équipes rapidement.
-                </h2>
-                <p className="max-w-2xl text-white/90">
-                  Contact: {CONTACT_INFO.PHONE} - support@beautiq-app.com
-                </p>
-              </div>
-
-              <div className="flex flex-col gap-3 sm:flex-row lg:flex-col">
-                <Button
-                  asChild
-                  size="lg"
-                  className="bg-white text-accent-pink-500 hover:bg-white/90"
-                >
+              <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+                <Button asChild size="lg" className="min-w-52">
                   <Link to={ROUTES.LOGIN}>
-                    Se connecter
+                    {t("landing.ctaLogin")}
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                 </Button>
-                <Button
-                  asChild
-                  variant="outline"
-                  size="lg"
-                  className="border-white/60 bg-white/10 text-white hover:bg-white/20"
-                >
+                <Button asChild size="lg" variant="outline" className="min-w-52 border-accent-pink-200">
                   <Link to={ROUTES.MOBILE_APP}>
                     <Smartphone className="h-4 w-4" />
-                    Telecharger l'app mobile
+                    {t("landing.ctaMobile")}
                   </Link>
                 </Button>
-                <Button
-                  asChild
-                  variant="outline"
-                  size="lg"
-                  className="border-white/60 bg-white/10 text-white hover:bg-white/20"
+              </div>
+            </div>
+
+            <div className="mx-auto mt-10 max-w-[1280px] overflow-hidden rounded-[1.75rem] border border-accent-pink-200/80 bg-accent-pink-50/50">
+              <img
+                src="/branding/hero-salon-photo.jpg"
+                alt={t("landing.heroImageAlt")}
+                className="h-[56vh] min-h-[360px] w-full object-cover object-center"
+                decoding="async"
+              />
+            </div>
+
+            <div className="mt-6 grid gap-3 sm:grid-cols-3">
+              {highlightValues.map((item) => (
+                <article
+                  key={item.key}
+                  className="rounded-2xl border border-accent-blue-200/70 bg-accent-blue-50/40 px-4 py-4 text-left"
                 >
-                  <a href={`tel:${CONTACT_INFO.PHONE.replace(/\s/g, "")}`}>
-                    Parler à un conseiller
-                  </a>
-                </Button>
+                  <p className="text-xl font-semibold text-accent-pink-600">{item.value}</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {t(`landing.highlights.${item.key}Label`)}
+                  </p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section id="features" className="px-4 py-14 sm:px-6 lg:px-10">
+          <div className="mx-auto max-w-[1600px]">
+            <div className="rounded-3xl border border-accent-blue-200/70 bg-accent-blue-50/45 p-6 sm:p-8">
+              <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-accent-blue-600">
+                <Sparkles className="h-4 w-4" />
+                {t("landing.features.badge")}
+              </p>
+              <div className="mt-4 grid gap-4 md:grid-cols-3">
+                <article className="rounded-2xl border border-white/80 bg-white/90 p-4">
+                  <p className="font-semibold">{t("landing.features.crmTitle")}</p>
+                  <p className="mt-1 text-sm text-muted-foreground">{t("landing.features.crmDescription")}</p>
+                </article>
+                <article className="rounded-2xl border border-white/80 bg-white/90 p-4">
+                  <p className="font-semibold">{t("landing.features.agendaTitle")}</p>
+                  <p className="mt-1 text-sm text-muted-foreground">{t("landing.features.agendaDescription")}</p>
+                </article>
+                <article className="rounded-2xl border border-white/80 bg-white/90 p-4">
+                  <p className="font-semibold">{t("landing.features.cashTitle")}</p>
+                  <p className="mt-1 text-sm text-muted-foreground">{t("landing.features.cashDescription")}</p>
+                </article>
               </div>
             </div>
           </div>
         </section>
 
-        <section className="mx-auto w-full max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
-          <div className="rounded-3xl border border-accent-pink-200 bg-white/90 p-6 text-center shadow-xl shadow-accent-pink-100/40 sm:p-8">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent-blue-600">
-              Identité algérienne
+        <section id="pricing" className="px-4 pb-12 pt-2 sm:px-6 lg:px-10">
+          <div className="mx-auto max-w-[1600px]">
+            <div className="text-center">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-accent-blue-600">
+                {t("landing.pricing.badge")}
+              </p>
+              <h2
+                className="mt-3 text-4xl text-accent-pink-700 sm:text-5xl"
+                style={{ fontFamily: '"Playfair Display", "Times New Roman", serif' }}
+              >
+                {t("landing.pricing.title")}
+              </h2>
+              <p className="mt-4 inline-flex rounded-full border border-amber-300 bg-amber-50 px-4 py-2 text-sm font-medium text-amber-900">
+                {t("landing.pricing.launchNote")}
+              </p>
+            </div>
+
+            <div className="mt-8 grid gap-5 lg:grid-cols-3">
+              {planCards.map((plan) => (
+                <article
+                  key={plan.name}
+                  className={
+                    plan.highlighted
+                      ? "relative rounded-3xl border border-accent-pink-300 bg-white p-6 shadow-2xl shadow-accent-pink-200/50"
+                      : "relative rounded-3xl border border-accent-blue-200/70 bg-white/95 p-6 shadow-xl shadow-accent-blue-100/45"
+                  }
+                >
+                  {plan.highlighted ? (
+                    <span className="absolute right-5 top-5 rounded-full bg-accent-pink-500 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-white">
+                      {t("landing.pricing.recommended")}
+                    </span>
+                  ) : null}
+
+                  <p className="text-sm uppercase tracking-wide text-muted-foreground">{plan.name}</p>
+                  <p className="mt-2 text-4xl font-semibold text-accent-pink-600">{plan.price}</p>
+                  <p className="mt-1 text-sm text-muted-foreground">{plan.subtitle}</p>
+
+                  <ul className="mt-6 space-y-3">
+                    {plan.items.map((item) => (
+                      <li key={item} className="flex items-start gap-2 text-sm">
+                        <Check className="mt-0.5 h-4 w-4 shrink-0 text-accent-pink-500" />
+                        <span className="text-muted-foreground">{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+
+                  <Button
+                    asChild
+                    variant={plan.highlighted ? "default" : "outline"}
+                    className={
+                      plan.highlighted
+                        ? "mt-6 w-full"
+                        : "mt-6 w-full border-accent-pink-200 bg-accent-pink-50 hover:bg-accent-pink-100"
+                    }
+                  >
+                    <Link to={ROUTES.LOGIN}>{t("landing.pricing.start")}</Link>
+                  </Button>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section id="algeria" className="px-4 pb-12 pt-2 sm:px-6 lg:px-10">
+          <div className="mx-auto max-w-[1600px] rounded-3xl border border-accent-pink-200 bg-linear-to-r from-accent-pink-50 via-white to-accent-blue-50 p-6 sm:p-8">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-accent-blue-600">
+              {t("landing.algeria.badge")}
             </p>
-            <p className="mt-3 text-balance text-2xl font-semibold leading-tight text-accent-pink-500 sm:text-3xl">
-              Première application DZ de gestion pour salons de beauté et instituts
-              esthétiques en Algérie.
+            <h3
+              className="mt-2 text-3xl text-accent-pink-700 sm:text-4xl"
+              style={{ fontFamily: '"Playfair Display", "Times New Roman", serif' }}
+            >
+              {t("landing.algeria.title")}
+            </h3>
+            <p className="mt-3 max-w-3xl text-muted-foreground">
+              {t("landing.algeria.description")}
             </p>
-            <p className="mt-2 text-sm text-muted-foreground sm:text-base">
-              Digitalisez votre salon en un clic.
+            <p className="mt-2 max-w-3xl text-muted-foreground">
+              {t("landing.dzPioneer")} {t("landing.digitalizeOneClick")}
+            </p>
+            <p className="mt-2 text-muted-foreground">
+              Contact: {CONTACT_INFO.PHONE} - support@beautiq-app.com
             </p>
           </div>
         </section>
       </main>
 
-      <footer className="border-t border-white/70 bg-white/60 backdrop-blur-sm">
-        <div className="mx-auto flex w-full max-w-7xl flex-col gap-2 px-4 py-6 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
-          <p>(c) 2026 Beautiq. Tous droits réservés.</p>
+      <footer id="contact" className="border-t border-accent-pink-200/80 bg-accent-pink-50/40 px-4 py-6 sm:px-6 lg:px-10">
+        <div className="mx-auto flex max-w-[1600px] flex-col gap-2 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+          <p>{t("landing.footer.rights")}</p>
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-            <p>CRM, agenda, ventes et marketing pour salons.</p>
             <Link to={ROUTES.TERMS} className="underline-offset-4 hover:underline">
-              Conditions
+              {t("landing.footer.terms")}
             </Link>
             <Link to={ROUTES.PRIVACY} className="underline-offset-4 hover:underline">
-              Confidentialité
+              {t("landing.footer.privacy")}
             </Link>
           </div>
         </div>

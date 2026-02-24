@@ -1,0 +1,98 @@
+<svg width="1600" height="900" viewBox="0 0 1600 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1600" y2="900" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#F6E8DF" />
+      <stop offset="52%" stop-color="#F1E2D8" />
+      <stop offset="100%" stop-color="#EBD7CB" />
+    </linearGradient>
+    <linearGradient id="floor" x1="800" y1="540" x2="800" y2="900" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#D9C2B3" />
+      <stop offset="100%" stop-color="#BA9A86" />
+    </linearGradient>
+    <linearGradient id="mirror" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#F7F2EE" />
+      <stop offset="100%" stop-color="#EADDD4" />
+    </linearGradient>
+    <linearGradient id="skin" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#E5BEA7" />
+      <stop offset="100%" stop-color="#C99179" />
+    </linearGradient>
+    <linearGradient id="hair" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#2E201C" />
+      <stop offset="100%" stop-color="#4B322B" />
+    </linearGradient>
+    <linearGradient id="dress" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1C1F25" />
+      <stop offset="100%" stop-color="#2F3640" />
+    </linearGradient>
+    <radialGradient id="vignette" cx="0" cy="0" r="1" gradientTransform="translate(800 440) rotate(90) scale(560 960)" gradientUnits="userSpaceOnUse">
+      <stop offset="62%" stop-color="#00000000" />
+      <stop offset="100%" stop-color="#3E271D33" />
+    </radialGradient>
+    <filter id="blur24" x="-120" y="-120" width="1840" height="1140" filterUnits="userSpaceOnUse">
+      <feGaussianBlur stdDeviation="24" />
+    </filter>
+    <filter id="blur10" x="-40" y="-40" width="1680" height="980" filterUnits="userSpaceOnUse">
+      <feGaussianBlur stdDeviation="10" />
+    </filter>
+  </defs>
+
+  <rect width="1600" height="900" fill="url(#bg)" />
+  <rect y="540" width="1600" height="360" fill="url(#floor)" />
+
+  <g opacity="0.65">
+    <rect x="70" y="80" width="430" height="470" rx="24" fill="url(#mirror)" stroke="#D8B9A8" stroke-width="8" />
+    <rect x="585" y="80" width="430" height="470" rx="24" fill="url(#mirror)" stroke="#D8B9A8" stroke-width="8" />
+    <rect x="1100" y="80" width="430" height="470" rx="24" fill="url(#mirror)" stroke="#D8B9A8" stroke-width="8" />
+  </g>
+
+  <g opacity="0.5" filter="url(#blur24)">
+    <circle cx="254" cy="615" r="128" fill="#2B211C" />
+    <circle cx="1310" cy="635" r="152" fill="#2B211C" />
+    <circle cx="1188" cy="432" r="95" fill="#4E382F" />
+    <circle cx="382" cy="430" r="105" fill="#4E382F" />
+  </g>
+
+  <g opacity="0.75">
+    <circle cx="212" cy="156" r="15" fill="#FFF5EF" />
+    <circle cx="448" cy="156" r="15" fill="#FFF5EF" />
+    <circle cx="725" cy="156" r="15" fill="#FFF5EF" />
+    <circle cx="965" cy="156" r="15" fill="#FFF5EF" />
+    <circle cx="1240" cy="156" r="15" fill="#FFF5EF" />
+    <circle cx="1484" cy="156" r="15" fill="#FFF5EF" />
+  </g>
+
+  <g opacity="0.95">
+    <rect x="165" y="450" width="272" height="18" rx="8" fill="#B38772" />
+    <rect x="680" y="450" width="272" height="18" rx="8" fill="#B38772" />
+    <rect x="1198" y="450" width="272" height="18" rx="8" fill="#B38772" />
+  </g>
+
+  <g filter="url(#blur10)" opacity="0.4">
+    <ellipse cx="800" cy="702" rx="285" ry="88" fill="#4A2F26" />
+  </g>
+
+  <g transform="translate(0 20)">
+    <path d="M559 740C575 632 664 580 800 580C936 580 1025 632 1041 740V860H559V740Z" fill="url(#dress)" />
+    <path d="M675 655C691 770 911 770 925 655L901 607H699L675 655Z" fill="url(#skin)" />
+    <ellipse cx="800" cy="462" rx="182" ry="196" fill="url(#hair)" />
+    <path d="M667 445C667 355 726 285 800 285C874 285 933 355 933 445V506C933 596 874 666 800 666C726 666 667 596 667 506V445Z" fill="url(#skin)" />
+
+    <path d="M648 476C648 351 721 252 800 252C879 252 952 351 952 476V520C952 420 917 341 866 295C832 264 767 264 733 295C682 341 648 420 648 520V476Z" fill="url(#hair)" />
+    <path d="M640 520C664 474 719 442 779 442H821C881 442 936 474 960 520C946 604 885 673 800 673C715 673 654 604 640 520Z" fill="#00000011" />
+
+    <ellipse cx="742" cy="470" rx="15" ry="9" fill="#36241E" />
+    <ellipse cx="858" cy="470" rx="15" ry="9" fill="#36241E" />
+    <path d="M724 430C739 418 760 415 778 423" stroke="#7B4F41" stroke-width="8" stroke-linecap="round" />
+    <path d="M822 423C840 415 861 418 876 430" stroke="#7B4F41" stroke-width="8" stroke-linecap="round" />
+    <path d="M800 495C792 521 792 526 804 533" stroke="#B17A62" stroke-width="6" stroke-linecap="round" />
+    <path d="M748 563C776 581 824 581 852 563" stroke="#A55F51" stroke-width="8" stroke-linecap="round" />
+    <ellipse cx="708" cy="536" rx="22" ry="12" fill="#D08773" fill-opacity="0.35" />
+    <ellipse cx="892" cy="536" rx="22" ry="12" fill="#D08773" fill-opacity="0.35" />
+
+    <path d="M612 725C645 657 700 620 752 611C721 670 706 740 706 860H600L612 725Z" fill="#1C1F25" />
+    <path d="M988 725C955 657 900 620 848 611C879 670 894 740 894 860H1000L988 725Z" fill="#1C1F25" />
+  </g>
+
+  <rect width="1600" height="900" fill="url(#vignette)" />
+</svg>
