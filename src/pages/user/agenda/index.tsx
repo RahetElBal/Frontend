@@ -76,6 +76,10 @@ import { MonthlySummaryView } from "./components/monthly-summary-view";
 import { AppointmentModals } from "./components/dialog/appointment-modals";
 import { translateServiceName } from "@/common/service-translations";
 
+const WALK_IN_EMAIL_PREFIX = "walkin+";
+const isWalkInClientEmail = (email?: string | null) =>
+  (email ?? "").trim().toLowerCase().startsWith(WALK_IN_EMAIL_PREFIX);
+
 export function AgendaPage() {
   const { t } = useTranslation();
   const location = useLocation();
@@ -86,6 +90,16 @@ export function AgendaPage() {
   const canRecordPayment = isAdmin || isSuperadmin;
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [modalState, setModalState] = useState<AppointmentModalState>(null);
+  const getSaleClientIdForAppointment = useCallback(
+    (appointment: Appointment): string | undefined => {
+      if (isWalkInClientEmail(appointment.client?.email)) {
+        return undefined;
+      }
+      const clientId = appointment.clientId?.trim();
+      return clientId ? clientId : undefined;
+    },
+    [],
+  );
   const queryParams = useMemo(
     () => new URLSearchParams(location.search),
     [location.search],
@@ -1507,7 +1521,7 @@ export function AgendaPage() {
                     createSaleFromAppointment({
                       salonId,
                       appointmentId: appointment.id,
-                      clientId: appointment.clientId,
+                      clientId: getSaleClientIdForAppointment(appointment),
                       redeemLoyalty: false,
                       items: [
                         {
@@ -1555,7 +1569,7 @@ export function AgendaPage() {
                   createSaleFromAppointment({
                     salonId,
                     appointmentId: appointment.id,
-                    clientId: appointment.clientId,
+                    clientId: getSaleClientIdForAppointment(appointment),
                     redeemLoyalty: options?.redeemLoyalty ?? false,
                     items: [
                       {
