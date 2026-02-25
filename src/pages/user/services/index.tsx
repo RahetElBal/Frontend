@@ -489,6 +489,12 @@ export function ServicesPage() {
                     step={String(SERVICE_DURATION_STEP_MINUTES)}
                     {...form.register("duration")}
                   />
+                  <p className="text-xs text-muted-foreground">
+                    {t("validation.number.multipleOf", {
+                      field: t("fields.duration"),
+                      value: SERVICE_DURATION_STEP_MINUTES,
+                    })}
+                  </p>
                   {form.hasError("duration") && (
                     <p className="text-sm text-destructive">
                       {form.getError("duration")}

@@ -834,6 +834,12 @@ export default function AdminServicesPage() {
                     handleFormChange("duration", event.target.value)
                   }
                 />
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {t("validation.number.multipleOf", {
+                    field: t("fields.duration"),
+                    value: SERVICE_DURATION_STEP_MINUTES,
+                  })}
+                </p>
               </div>
               {formValues.isPack ? (
                 <div>

@@ -72,7 +72,7 @@ export const timeSlots = [
 
 export const DEFAULT_OPEN_TIME = "09:00";
 export const DEFAULT_CLOSE_TIME = "19:00";
-export const DEFAULT_SLOT_MINUTES = 30;
+export const DEFAULT_SLOT_MINUTES = 15;
 
 const dayKeys = [
   "sunday",
@@ -165,7 +165,10 @@ export function buildTimeSlotsForHours(options: {
   breakStart?: string;
   breakEnd?: string;
 }) {
-  const slotMinutes = Math.max(5, Math.min(120, options.slotMinutes || 30));
+  const slotMinutes = Math.max(
+    5,
+    Math.min(120, options.slotMinutes || DEFAULT_SLOT_MINUTES),
+  );
   const openMinutes = timeToMinutes(options.openTime);
   const closeMinutes = timeToMinutes(options.closeTime);
   const breakStartMinutes = options.breakStart

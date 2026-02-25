@@ -402,9 +402,7 @@ export function AppointmentModals({
       ? priceOverridePreview.finalPrice
       : selectedServiceBasePrice;
 
-  const bookingSlotMinutes = Number(
-    effectiveSalonSettings?.bookingSlotDuration || DEFAULT_SLOT_MINUTES,
-  );
+  const bookingSlotMinutes = DEFAULT_SLOT_MINUTES;
   const workingHoursForDate = useMemo(
     () => getWorkingHoursForDate(effectiveSalonSettings, selectedDate),
     [effectiveSalonSettings, selectedDate],

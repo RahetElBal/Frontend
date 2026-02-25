@@ -359,9 +359,7 @@ export function AgendaPage() {
   const salonSettings = (salonData?.settings ?? user?.salon?.settings) as
     | SalonSettingsLike
     | undefined;
-  const bookingSlotMinutes = Number(
-    salonSettings?.bookingSlotDuration || DEFAULT_SLOT_MINUTES,
-  );
+  const bookingSlotMinutes = DEFAULT_SLOT_MINUTES;
   const workingHoursForSelectedDate = useMemo(
     () => getWorkingHoursForDate(salonSettings, selectedDate),
     [salonSettings, selectedDate],
@@ -842,8 +840,8 @@ export function AgendaPage() {
 
   const { mutate: deleteAppointment, isPending: isDeleting } = usePost<
     void,
-    string
-  >(`appointments/${selectedAppointment?.id}`, {
+    { id: string }
+  >((variables) => `appointments/${variables.id}`, {
     method: "DELETE",
     invalidate: ["appointments"],
     onSuccess: () => {
@@ -1245,7 +1243,7 @@ export function AgendaPage() {
       return;
     }
     markAppointmentDeleted(selectedAppointment.id);
-    deleteAppointment(selectedAppointment.id);
+    deleteAppointment({ id: selectedAppointment.id });
   };
 
   const handleStatusUpdate = useCallback(
