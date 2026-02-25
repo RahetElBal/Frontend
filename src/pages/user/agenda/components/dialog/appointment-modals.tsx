@@ -66,6 +66,7 @@ import {
   DEFAULT_SLOT_MINUTES,
   addMinutesToTime,
   timeToMinutes,
+  resolveDynamicSlotMinutes,
   findConflictingAppointment,
 } from "../../utils";
 import { getValidationErrorMessage } from "@/pages/user/utils";
@@ -405,10 +406,82 @@ export function AppointmentModals({
   const bookingSlotMinutes = Number(
     effectiveSalonSettings?.bookingSlotDuration || DEFAULT_SLOT_MINUTES,
   );
+  const parsedBookingLeadTimeHours = Number(effectiveSalonSettings?.bookingLeadTime);
+  const bookingLeadTimeHours =
+    Number.isFinite(parsedBookingLeadTimeHours) && parsedBookingLeadTimeHours > 0
+      ? parsedBookingLeadTimeHours
+      : 0;
+  const parsedBookingWindowDays = Number(effectiveSalonSettings?.bookingWindowDays);
+  const bookingWindowDays =
+    Number.isFinite(parsedBookingWindowDays) && parsedBookingWindowDays > 0
+      ? parsedBookingWindowDays
+      : 30;
+  const allowOnlineBooking = effectiveSalonSettings?.allowOnlineBooking !== false;
+  const requireDeposit = !!effectiveSalonSettings?.requireDeposit;
+  const depositAmount = toNumber(effectiveSalonSettings?.depositAmount, 0);
+  const depositPercentage = toNumber(
+    effectiveSalonSettings?.depositPercentage,
+    0,
+  );
+  const bookingWindowMaxDate = useMemo(() => {
+    const nowDate = new Date();
+    const maxDate = new Date(
+      nowDate.getFullYear(),
+      nowDate.getMonth(),
+      nowDate.getDate() + bookingWindowDays,
+      23,
+      59,
+      59,
+      999,
+    );
+    return getLocalDateString(maxDate);
+  }, [bookingWindowDays]);
+  const bookingWindowMinDate = useMemo(() => {
+    if (bookingLeadTimeHours <= 0) return getLocalDateString();
+    const minDate = new Date();
+    minDate.setMinutes(minDate.getMinutes() + bookingLeadTimeHours * 60);
+    return getLocalDateString(minDate);
+  }, [bookingLeadTimeHours]);
+  const isCreateMode = !!derived?.isCreateMode;
+  const isBookingCreationBlocked =
+    isCreateMode &&
+    (!allowOnlineBooking || selectedDate > bookingWindowMaxDate);
+  const depositPolicyLabel = useMemo(() => {
+    if (!requireDeposit || !isCreateMode) return null;
+    if (depositPercentage > 0) return `${depositPercentage}%`;
+    if (depositAmount > 0) return formatCurrency(depositAmount);
+    return t("salonSettings.requireDeposit");
+  }, [
+    depositAmount,
+    depositPercentage,
+    formatCurrency,
+    isCreateMode,
+    requireDeposit,
+    t,
+  ]);
   const workingHoursForDate = useMemo(
     () => getWorkingHoursForDate(effectiveSalonSettings, selectedDate),
     [effectiveSalonSettings, selectedDate],
   );
+  const slotMinutesForSelectedDate = useMemo(() => {
+    const durationCandidates: number[] = [];
+
+    services.forEach((service) => {
+      if (service.isActive === false) return;
+      if (!Number.isFinite(service.duration) || service.duration <= 0) return;
+      durationCandidates.push(service.duration);
+    });
+
+    appointments.forEach((appointment) => {
+      if (appointment.date !== selectedDate) return;
+      const duration =
+        timeToMinutes(appointment.endTime) - timeToMinutes(appointment.startTime);
+      if (!Number.isFinite(duration) || duration <= 0) return;
+      durationCandidates.push(duration);
+    });
+
+    return resolveDynamicSlotMinutes(bookingSlotMinutes, durationCandidates);
+  }, [appointments, bookingSlotMinutes, selectedDate, services]);
   const { slots: availableSlots, blocked: blockedSlots } = useMemo(() => {
     if (!workingHoursForDate.isOpen) {
       return { slots: [] as string[], blocked: new Set<string>() };
@@ -416,7 +489,7 @@ export function AppointmentModals({
     return buildTimeSlotsForHours({
       openTime: workingHoursForDate.openTime,
       closeTime: workingHoursForDate.closeTime,
-      slotMinutes: bookingSlotMinutes,
+      slotMinutes: slotMinutesForSelectedDate,
       breakStart: workingHoursForDate.breakStart || undefined,
       breakEnd: workingHoursForDate.breakEnd || undefined,
     });
@@ -426,9 +499,40 @@ export function AppointmentModals({
     workingHoursForDate.closeTime,
     workingHoursForDate.breakStart,
     workingHoursForDate.breakEnd,
-    bookingSlotMinutes,
+    slotMinutesForSelectedDate,
   ]);
   const isClosedDay = !workingHoursForDate.isOpen;
+  const bookableSlotSet = useMemo(() => {
+    const next = new Set<string>();
+    if (!isCreateMode) {
+      availableSlots.forEach((slot) => next.add(slot));
+      return next;
+    }
+    if (!allowOnlineBooking) return next;
+    if (selectedDate > bookingWindowMaxDate) return next;
+    const minDateTime = new Date();
+    minDateTime.setMinutes(minDateTime.getMinutes() + bookingLeadTimeHours * 60);
+    availableSlots.forEach((time) => {
+      if (blockedSlots.has(time)) return;
+      if (bookingLeadTimeHours <= 0) {
+        next.add(time);
+        return;
+      }
+      const slotDateTime = new Date(`${selectedDate}T${time}:00`);
+      if (Number.isNaN(slotDateTime.getTime())) return;
+      if (slotDateTime.getTime() < minDateTime.getTime()) return;
+      next.add(time);
+    });
+    return next;
+  }, [
+    allowOnlineBooking,
+    availableSlots,
+    blockedSlots,
+    bookingLeadTimeHours,
+    bookingWindowMaxDate,
+    isCreateMode,
+    selectedDate,
+  ]);
 
   const conflict = useMemo(() => {
     if (!derived?.isEditMode) return null;
@@ -1288,7 +1392,8 @@ export function AppointmentModals({
                   <Input
                     id="date"
                     type="date"
-                    min={todayStr}
+                    min={isCreateMode ? bookingWindowMinDate : undefined}
+                    max={isCreateMode ? bookingWindowMaxDate : undefined}
                     {...form.register("date")}
                   />
                   <FormErrorMessage message={getErrorMessage("date")} />
@@ -1298,7 +1403,11 @@ export function AppointmentModals({
                   <Select
                     value={form.watch("startTime")}
                     onValueChange={(value) => form.setValue("startTime", value)}
-                    disabled={isClosedDay || availableSlots.length === 0}
+                    disabled={
+                      isClosedDay ||
+                      availableSlots.length === 0 ||
+                      isBookingCreationBlocked
+                    }
                   >
                   <SelectTrigger className="bg-white text-black">
                     <SelectValue />
@@ -1315,7 +1424,10 @@ export function AppointmentModals({
                           const isPastSlot =
                             isPastDate ||
                             (isToday && slotMinutesValue < currentMinutes);
-                          const isDisabled = isBlocked || isPastSlot;
+                          const isDisabled =
+                            isBlocked ||
+                            isPastSlot ||
+                            !bookableSlotSet.has(time);
                           return (
                             <SelectItem
                               key={time}
@@ -1343,6 +1455,22 @@ export function AppointmentModals({
               {isClosedDay && (
                 <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
                   {t("agenda.closedDay")}
+                </div>
+              )}
+              {isCreateMode && !allowOnlineBooking && (
+                <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+                  {t("salonSettings.allowOnlineBooking")}
+                </div>
+              )}
+              {isCreateMode && selectedDate > bookingWindowMaxDate && (
+                <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+                  {t("salonSettings.bookingWindow")}: {bookingWindowDays}{" "}
+                  {t(bookingWindowDays === 1 ? "common.day" : "common.days")}
+                </div>
+              )}
+              {depositPolicyLabel && (
+                <div className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-800">
+                  {t("salonSettings.requireDeposit")}: {depositPolicyLabel}
                 </div>
               )}
 
@@ -1376,7 +1504,14 @@ export function AppointmentModals({
               <Button type="button" variant="outline" onClick={handleClose}>
                 {t("common.cancel")}
               </Button>
-              <Button type="submit" disabled={isPending || isReferenceDataLoading}>
+              <Button
+                type="submit"
+                disabled={
+                  isPending ||
+                  isReferenceDataLoading ||
+                  (isCreateMode && isBookingCreationBlocked)
+                }
+              >
                 {isPending || isReferenceDataLoading
                   ? t("common.loading")
                   : t("common.save")}

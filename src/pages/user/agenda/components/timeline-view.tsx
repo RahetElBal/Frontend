@@ -34,6 +34,8 @@ interface TimelineViewProps {
   isLoading: boolean;
   timeSlots: string[];
   blockedSlots?: Set<string>;
+  bookableSlots?: Set<string>;
+  baseSlotMinutes?: number;
   isClosed?: boolean;
   onTimeSlotClick: (time: string) => void;
   onAppointmentClick: (appointment: Appointment) => void;
@@ -47,6 +49,8 @@ export function TimelineView({
   isLoading,
   timeSlots,
   blockedSlots,
+  bookableSlots,
+  baseSlotMinutes: baseSlotMinutesProp,
   isClosed = false,
   onTimeSlotClick,
   onAppointmentClick,
@@ -58,7 +62,6 @@ export function TimelineView({
   const currentHour = new Date().getHours();
   const currentMinutes = new Date().getMinutes();
   const currentTotalMinutes = currentHour * 60 + currentMinutes;
-  const slotHeight = 60;
   const slotMinutes =
     timeSlots.length >= 2
       ? Math.max(
@@ -66,6 +69,16 @@ export function TimelineView({
           timeToMinutes(timeSlots[1]) - timeToMinutes(timeSlots[0]),
         )
       : 30;
+  const baseSlotMinutes = Math.max(
+    5,
+    Number.isFinite(baseSlotMinutesProp) && (baseSlotMinutesProp || 0) > 0
+      ? (baseSlotMinutesProp as number)
+      : slotMinutes,
+  );
+  const slotHeight = Math.max(
+    20,
+    Math.round((slotMinutes / baseSlotMinutes) * 60),
+  );
   const firstSlotMinutes = timeSlots.length
     ? timeToMinutes(timeSlots[0])
     : 0;
@@ -121,6 +134,7 @@ export function TimelineView({
                 isPastDate ||
                 (isToday && slotMinutesValue < currentTotalMinutes);
               const isBlocked = blockedSlots?.has(time) ?? false;
+              const isBookableStart = bookableSlots ? bookableSlots.has(time) : true;
               const appointment = dayAppointments.find((apt) => {
                 const start = timeToMinutes(normalizeTime(apt.startTime));
                 const end = timeToMinutes(normalizeTime(apt.endTime));
@@ -135,7 +149,8 @@ export function TimelineView({
               const isStartSlot =
                 appointment && normalizeTime(appointment.startTime) === time;
               const isOccupied = !!appointment && !isStartSlot;
-              const isBookingDisabled = isPastTime && !appointment;
+              const isBookingDisabled =
+                (isPastTime || !isBookableStart) && !appointment;
               const isSlotDisabled = isBlocked || (isBookingDisabled && !appointment);
               const durationMinutes = appointment
                 ? Math.max(
@@ -147,12 +162,13 @@ export function TimelineView({
               const slotSpan = appointment
                 ? Math.max(1, Math.ceil(durationMinutes / slotMinutes))
                 : 1;
-              const cellPadding = 8;
+              const cellPadding = slotHeight >= 40 ? 8 : 4;
               const isCompact = slotSpan === 1;
               const cardHeight = Math.max(
                 slotHeight - cellPadding * 2,
                 slotSpan * slotHeight - cellPadding * 2,
               );
+              const isTiny = cardHeight < 34;
 
               return (
                 <div
@@ -179,6 +195,7 @@ export function TimelineView({
                       !appointment &&
                         !isSlotDisabled &&
                         !isBookingDisabled &&
+                        isBookableStart &&
                         "border-l-4 border-l-transparent hover:border-l-accent-pink/30",
                       (isSlotDisabled || (isBookingDisabled && !appointment)) && "bg-muted/40 cursor-not-allowed",
                       isOccupied && "bg-muted/20",
@@ -188,7 +205,7 @@ export function TimelineView({
                         onAppointmentClick(appointment);
                         return;
                       }
-                      if (isSlotDisabled || isBookingDisabled) return;
+                      if (isSlotDisabled || isBookingDisabled || !isBookableStart) return;
                       onTimeSlotClick(time);
                     }}
                   >
@@ -217,7 +234,19 @@ export function TimelineView({
                           height: `${cardHeight}px`,
                         }}
                       >
-                        {isCompact ? (
+                        {isTiny ? (
+                          <div className="flex items-center justify-between gap-1 h-full px-1.5">
+                            <span className="font-medium text-[10px] leading-none truncate flex-1 min-w-0">
+                              {appointment.client?.firstName ||
+                                appointment.client?.lastName ||
+                                t("agenda.walkIn")}
+                            </span>
+                            <span className="text-[10px] leading-none text-muted-foreground shrink-0">
+                              {normalizeTime(appointment.startTime)}-
+                              {normalizeTime(appointment.endTime)}
+                            </span>
+                          </div>
+                        ) : isCompact ? (
                           <div className="flex items-center justify-between gap-2 h-full">
                             <div className="min-w-0 flex-1 space-y-0.5">
                               <div className="flex items-center gap-1.5 min-w-0">
@@ -382,6 +411,8 @@ export function TimelineView({
                     ) : isBookingDisabled ? (
                       <div className="h-full" />
                     ) : isOccupied ? (
+                      <div className="h-full" />
+                    ) : !isBookableStart ? (
                       <div className="h-full" />
                     ) : (
                       <div className="h-full flex items-center justify-center text-muted-foreground/50 text-sm">

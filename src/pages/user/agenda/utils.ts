@@ -158,6 +158,35 @@ export function addMinutesToTime(time: string, minutes: number): string {
   return minutesToTime(timeToMinutes(time) + minutes);
 }
 
+export function getGreatestCommonDivisor(a: number, b: number): number {
+  let x = Math.abs(Math.round(a));
+  let y = Math.abs(Math.round(b));
+  while (y !== 0) {
+    const next = x % y;
+    x = y;
+    y = next;
+  }
+  return x || 1;
+}
+
+export function resolveDynamicSlotMinutes(
+  baseSlotMinutes: number,
+  durationCandidates: number[],
+): number {
+  const safeBase =
+    Number.isFinite(baseSlotMinutes) && baseSlotMinutes > 0
+      ? Math.round(baseSlotMinutes)
+      : DEFAULT_SLOT_MINUTES;
+  let nextMinutes = safeBase;
+
+  durationCandidates.forEach((candidate) => {
+    if (!Number.isFinite(candidate) || candidate <= 0) return;
+    nextMinutes = getGreatestCommonDivisor(nextMinutes, candidate);
+  });
+
+  return Math.max(5, Math.min(safeBase, nextMinutes));
+}
+
 export function buildTimeSlotsForHours(options: {
   openTime: string;
   closeTime: string;
