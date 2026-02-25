@@ -58,7 +58,6 @@ import {
   addMinutesToTime,
   normalizeTime,
   timeToMinutes,
-  resolveDynamicSlotMinutes,
   findConflictingAppointment,
 } from "./utils";
 
@@ -268,7 +267,7 @@ export function AgendaPage() {
 
   const { data: servicesData, isLoading: isServicesLoading } = useGet<PaginatedResponse<Service>>(
     withParams("services", { salonId, perPage: 100, compact: true }),
-    { enabled: !!salonId, staleTime: servicesStaleTime },
+    { enabled: shouldLoadReferenceData, staleTime: servicesStaleTime },
   );
 
   const { data: staffResponse } = useGet<PaginatedResponse<User>>(
@@ -365,136 +364,22 @@ export function AgendaPage() {
     Number.isFinite(parsedBookingSlotMinutes) && parsedBookingSlotMinutes > 0
       ? parsedBookingSlotMinutes
       : DEFAULT_SLOT_MINUTES;
-  const parsedBookingLeadTimeHours = Number(salonSettings?.bookingLeadTime);
-  const bookingLeadTimeHours =
-    Number.isFinite(parsedBookingLeadTimeHours) && parsedBookingLeadTimeHours > 0
-      ? parsedBookingLeadTimeHours
-      : 0;
-  const parsedBookingWindowDays = Number(salonSettings?.bookingWindowDays);
-  const bookingWindowDays =
-    Number.isFinite(parsedBookingWindowDays) && parsedBookingWindowDays > 0
-      ? parsedBookingWindowDays
-      : 30;
-  const parsedCancellationDeadlineHours = Number(
-    salonSettings?.cancellationDeadline,
-  );
-  const cancellationDeadlineHours =
-    Number.isFinite(parsedCancellationDeadlineHours) &&
-    parsedCancellationDeadlineHours > 0
-      ? parsedCancellationDeadlineHours
-      : 0;
-  const allowOnlineBooking = salonSettings?.allowOnlineBooking !== false;
   const workingHoursForSelectedDate = useMemo(
     () => getWorkingHoursForDate(salonSettings, selectedDate),
     [salonSettings, selectedDate],
   );
-  const getSlotMinutesForDate = useCallback(
-    (date: string) => {
-      const durationCandidates: number[] = [];
-
-      services.forEach((service) => {
-        if (service.isActive === false) return;
-        if (!Number.isFinite(service.duration) || service.duration <= 0) return;
-        durationCandidates.push(service.duration);
-      });
-
-      appointments.forEach((appointment) => {
-        if (appointment.date !== date) return;
-        const start = timeToMinutes(normalizeTime(appointment.startTime));
-        const end = timeToMinutes(normalizeTime(appointment.endTime));
-        const duration = end - start;
-        if (!Number.isFinite(duration) || duration <= 0) return;
-        durationCandidates.push(duration);
-      });
-
-      return resolveDynamicSlotMinutes(bookingSlotMinutes, durationCandidates);
-    },
-    [appointments, bookingSlotMinutes, services],
-  );
-  const timelineSlotMinutes = useMemo(() => {
-    if (!workingHoursForSelectedDate.isOpen) {
-      return bookingSlotMinutes;
-    }
-    return getSlotMinutesForDate(selectedDate);
-  }, [
-    bookingSlotMinutes,
-    getSlotMinutesForDate,
-    selectedDate,
-    workingHoursForSelectedDate.isOpen,
-  ]);
-  const bookingSlots = useMemo(() => {
+  const timelineSlots = useMemo(() => {
     if (!workingHoursForSelectedDate.isOpen) {
       return { slots: [] as string[], blocked: new Set<string>() };
     }
     return buildTimeSlotsForHours({
       openTime: workingHoursForSelectedDate.openTime,
       closeTime: workingHoursForSelectedDate.closeTime,
-      slotMinutes: timelineSlotMinutes,
+      slotMinutes: bookingSlotMinutes,
       breakStart: workingHoursForSelectedDate.breakStart || undefined,
       breakEnd: workingHoursForSelectedDate.breakEnd || undefined,
     });
-  }, [workingHoursForSelectedDate, timelineSlotMinutes]);
-  const timelineSlots = bookingSlots;
-  const bookingWindowMaxDate = useMemo(() => {
-    const now = new Date();
-    const maxDate = new Date(
-      now.getFullYear(),
-      now.getMonth(),
-      now.getDate() + bookingWindowDays,
-      23,
-      59,
-      59,
-      999,
-    );
-    return getLocalDateString(maxDate);
-  }, [bookingWindowDays]);
-  const bookingWindowMinDate = useMemo(() => {
-    if (bookingLeadTimeHours <= 0) return getLocalDateString();
-    const minDate = new Date();
-    minDate.setMinutes(minDate.getMinutes() + bookingLeadTimeHours * 60);
-    return getLocalDateString(minDate);
-  }, [bookingLeadTimeHours]);
-  const isWithinBookingWindow = useCallback(
-    (date: string) => date >= getLocalDateString() && date <= bookingWindowMaxDate,
-    [bookingWindowMaxDate],
-  );
-  const isAfterLeadTime = useCallback(
-    (date: string, time: string) => {
-      if (bookingLeadTimeHours <= 0) return true;
-      const normalized = normalizeTime(time);
-      const slotDateTime = new Date(`${date}T${normalized}:00`);
-      if (Number.isNaN(slotDateTime.getTime())) return false;
-      const minDateTime = new Date();
-      minDateTime.setMinutes(minDateTime.getMinutes() + bookingLeadTimeHours * 60);
-      return slotDateTime.getTime() >= minDateTime.getTime();
-    },
-    [bookingLeadTimeHours],
-  );
-  const isSlotBookable = useCallback(
-    (date: string, time: string) =>
-      allowOnlineBooking &&
-      isWithinBookingWindow(date) &&
-      isAfterLeadTime(date, time),
-    [allowOnlineBooking, isAfterLeadTime, isWithinBookingWindow],
-  );
-  const bookableSlots = useMemo(() => {
-    const next = new Set<string>();
-    bookingSlots.slots.forEach((time) => {
-      if (bookingSlots.blocked.has(time)) return;
-      if (!isSlotBookable(selectedDate, time)) return;
-      next.add(time);
-    });
-    return next;
-  }, [
-    bookingSlots.blocked,
-    bookingSlots.slots,
-    isSlotBookable,
-    selectedDate,
-  ]);
-  const availabilitySlots = useMemo(
-    () => bookingSlots.slots.filter((time) => bookableSlots.has(time)),
-    [bookingSlots.slots, bookableSlots],
-  );
+  }, [workingHoursForSelectedDate, bookingSlotMinutes]);
 
   useEffect(() => {
     if (!selectedDate) return;
@@ -673,42 +558,6 @@ export function AgendaPage() {
 
   const today = useMemo(() => getLocalDateString(), []);
   const isSelectedDatePast = selectedDate < today;
-  const isSelectedDateOutsideBookingWindow =
-    !isSelectedDatePast && !isWithinBookingWindow(selectedDate);
-  const formatHoursLabel = useCallback(
-    (value: number) =>
-      `${value} ${t(value === 1 ? "common.hour" : "common.hours")}`,
-    [t],
-  );
-  const formatDaysLabel = useCallback(
-    (value: number) => `${value} ${t(value === 1 ? "common.day" : "common.days")}`,
-    [t],
-  );
-  const newAppointmentDisabledReason = useMemo(() => {
-    if (!allowOnlineBooking) {
-      return t("salonSettings.allowOnlineBooking");
-    }
-    if (isSelectedDatePast) {
-      return t("agenda.pastAppointmentNotAllowed");
-    }
-    if (isSelectedDateOutsideBookingWindow) {
-      return `${t("salonSettings.bookingWindow")}: ${formatDaysLabel(
-        bookingWindowDays,
-      )}`;
-    }
-    return undefined;
-  }, [
-    allowOnlineBooking,
-    bookingWindowDays,
-    formatDaysLabel,
-    isSelectedDateOutsideBookingWindow,
-    isSelectedDatePast,
-    t,
-  ]);
-  const isNewAppointmentDisabled =
-    !allowOnlineBooking ||
-    isSelectedDatePast ||
-    isSelectedDateOutsideBookingWindow;
   const selectedDateObj = useMemo(
     () => new Date(`${selectedDate}T00:00:00`),
     [selectedDate],
@@ -1073,42 +922,6 @@ export function AgendaPage() {
   const { mutateAsync: createWalkInClient, isPending: isCreatingWalkIn } =
     usePost<Client, Partial<Client>>("clients");
 
-  const showBookingPolicyToast = useCallback(
-    (date: string, time?: string) => {
-      if (!allowOnlineBooking) {
-        toast.error(t("salonSettings.allowOnlineBooking"));
-        return;
-      }
-      if (!isWithinBookingWindow(date)) {
-        toast.error(
-          `${t("salonSettings.bookingWindow")}: ${formatDaysLabel(
-            bookingWindowDays,
-          )}`,
-        );
-        return;
-      }
-      if (time && !isAfterLeadTime(date, time)) {
-        toast.error(
-          `${t("salonSettings.leadTime")}: ${formatHoursLabel(
-            bookingLeadTimeHours,
-          )}`,
-        );
-        return;
-      }
-      toast.error(t("common.error"));
-    },
-    [
-      allowOnlineBooking,
-      bookingLeadTimeHours,
-      bookingWindowDays,
-      formatDaysLabel,
-      formatHoursLabel,
-      isAfterLeadTime,
-      isWithinBookingWindow,
-      t,
-    ],
-  );
-
   const handleSelectSlot = useCallback(
     ({ start }: { start: Date; end: Date }) => {
       const date = getLocalDateString(start);
@@ -1117,10 +930,6 @@ export function AgendaPage() {
       const time = `${hours.toString().padStart(2, "0")}:${minutes
         .toString()
         .padStart(2, "0")}`;
-      if (!isSlotBookable(date, time)) {
-        showBookingPolicyToast(date, time);
-        return;
-      }
 
       setModalState({
         appointmentId: "create",
@@ -1131,15 +940,11 @@ export function AgendaPage() {
         nonce: Date.now(),
       });
     },
-    [isSlotBookable, showBookingPolicyToast, staffFilterId, user?.id],
+    [staffFilterId, user?.id],
   );
 
   const handleMakeAvailabilityAppointment = useCallback(
     (staffId: string, time: string) => {
-      if (!isSlotBookable(selectedDate, time)) {
-        showBookingPolicyToast(selectedDate, time);
-        return;
-      }
       setModalState({
         appointmentId: "create",
         mode: "edit",
@@ -1149,7 +954,7 @@ export function AgendaPage() {
         nonce: Date.now(),
       });
     },
-    [isSlotBookable, selectedDate, showBookingPolicyToast],
+    [selectedDate],
   );
 
   const handleSelectEvent = useCallback((event: CalendarEvent) => {
@@ -1190,26 +995,6 @@ export function AgendaPage() {
     const today = getLocalDateString(now);
     const selectedStartMinutes = timeToMinutes(normalizeTime(data.startTime));
     const currentMinutes = now.getHours() * 60 + now.getMinutes();
-    if (isCreateMode && !allowOnlineBooking) {
-      toast.error(t("salonSettings.allowOnlineBooking"));
-      return;
-    }
-    if (isCreateMode && !isWithinBookingWindow(data.date)) {
-      toast.error(
-        `${t("salonSettings.bookingWindow")}: ${formatDaysLabel(
-          bookingWindowDays,
-        )}`,
-      );
-      return;
-    }
-    if (isCreateMode && !isAfterLeadTime(data.date, data.startTime)) {
-      toast.error(
-        `${t("salonSettings.leadTime")}: ${formatHoursLabel(
-          bookingLeadTimeHours,
-        )}`,
-      );
-      return;
-    }
     if (
       data.date < today ||
       (data.date === today && selectedStartMinutes < currentMinutes)
@@ -1229,7 +1014,7 @@ export function AgendaPage() {
     const daySlots = buildTimeSlotsForHours({
       openTime: workingHoursForDate.openTime,
       closeTime: workingHoursForDate.closeTime,
-      slotMinutes: getSlotMinutesForDate(data.date),
+      slotMinutes: bookingSlotMinutes,
       breakStart: workingHoursForDate.breakStart || undefined,
       breakEnd: workingHoursForDate.breakEnd || undefined,
     });
@@ -1461,25 +1246,6 @@ export function AgendaPage() {
       toast.error(t("common.error"));
       return;
     }
-    if (cancellationDeadlineHours > 0) {
-      const startAt = new Date(
-        `${selectedAppointment.date}T${normalizeTime(selectedAppointment.startTime)}:00`,
-      );
-      if (!Number.isNaN(startAt.getTime())) {
-        const cancellationCutoff = new Date(startAt);
-        cancellationCutoff.setMinutes(
-          cancellationCutoff.getMinutes() - cancellationDeadlineHours * 60,
-        );
-        if (new Date().getTime() > cancellationCutoff.getTime()) {
-          toast.error(
-            `${t("salonSettings.cancellationDeadline")}: ${formatHoursLabel(
-              cancellationDeadlineHours,
-            )}`,
-          );
-          return;
-        }
-      }
-    }
     markAppointmentDeleted(selectedAppointment.id);
     deleteAppointment(selectedAppointment.id);
   };
@@ -1543,8 +1309,8 @@ export function AgendaPage() {
           pendingCount={pendingCount}
           totalCount={appointments.length}
           loading={showAppointmentsLoading}
-          isNewAppointmentDisabled={isNewAppointmentDisabled}
-          newAppointmentDisabledReason={newAppointmentDisabledReason}
+          isNewAppointmentDisabled={isSelectedDatePast}
+          newAppointmentDisabledReason={t("agenda.pastAppointmentNotAllowed")}
         />
 
         <div className="grid gap-3 sm:grid-cols-2">
@@ -1585,8 +1351,6 @@ export function AgendaPage() {
             </span>
             <Input
               type="date"
-              min={bookingWindowMinDate}
-              max={bookingWindowMaxDate}
               value={selectedDate}
               onChange={(event) => setSelectedDate(event.target.value)}
               className="w-40"
@@ -1703,8 +1467,8 @@ export function AgendaPage() {
         {activeTab === "availability" ? (
           <AvailabilityView
             selectedDate={selectedDate}
-            timeSlots={availabilitySlots}
-            blockedSlots={bookingSlots.blocked}
+            timeSlots={timelineSlots.slots}
+            blockedSlots={timelineSlots.blocked}
             isClosed={!workingHoursForSelectedDate.isOpen}
             appointments={appointments}
             staffMembers={availabilityStaffToShow}
@@ -1730,8 +1494,6 @@ export function AgendaPage() {
             isLoading={showAppointmentsLoading}
             timeSlots={timelineSlots.slots}
             blockedSlots={timelineSlots.blocked}
-            bookableSlots={bookableSlots}
-            baseSlotMinutes={bookingSlotMinutes}
             isClosed={!workingHoursForSelectedDate.isOpen}
             onTimeSlotClick={(time) =>
               handleSelectSlot({
