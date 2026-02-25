@@ -84,6 +84,10 @@ export const ROUTES = {
   // Settings
   SETTINGS: "/settings",
   SALON_SETTINGS: "/salon-settings",
+  SALON_SETTINGS_GENERAL: "/salon-settings/general",
+  SALON_SETTINGS_HOURS: "/salon-settings/hours",
+  SALON_SETTINGS_NOTIFICATIONS: "/salon-settings/notifications",
+  SALON_SETTINGS_LOYALTY: "/salon-settings/loyalty",
   PROFILE: "/settings/profile",
   NOTIFICATIONS: "/notifications",
 

@@ -2,7 +2,11 @@ import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { Plus, Clock, Edit, DollarSign } from "lucide-react";
-import { requiredString, optionalString } from "@/common/validator/zodI18n";
+import {
+  requiredString,
+  optionalString,
+  validationMsg,
+} from "@/common/validator/zodI18n";
 
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
@@ -58,11 +62,33 @@ type ServiceModalState = {
   mode: "view" | "edit" | "delete";
 } | null;
 
+const SERVICE_DURATION_STEP_MINUTES = 15;
+
 // Zod schema for service form
 const serviceFormSchema = z.object({
   name: requiredString("Nom"),
   description: optionalString(),
-  duration: z.coerce.number().min(5, "validation.number.min"),
+  duration: z.coerce
+    .number()
+    .int(
+      validationMsg("validation.number.integer", {
+        field: "Duration",
+      }),
+    )
+    .min(
+      SERVICE_DURATION_STEP_MINUTES,
+      validationMsg("validation.number.min", {
+        field: "Duration",
+        min: SERVICE_DURATION_STEP_MINUTES,
+      }),
+    )
+    .refine(
+      (value) => value % SERVICE_DURATION_STEP_MINUTES === 0,
+      validationMsg("validation.number.multipleOf", {
+        field: "Duration",
+        value: SERVICE_DURATION_STEP_MINUTES,
+      }),
+    ),
   price: z.coerce.number().min(0, "validation.number.positive"),
   category: requiredString("Category"),
   isActive: z.boolean().optional(),
@@ -459,8 +485,8 @@ export function ServicesPage() {
                   <Input
                     id="duration"
                     type="number"
-                    min="5"
-                    step="5"
+                    min={String(SERVICE_DURATION_STEP_MINUTES)}
+                    step={String(SERVICE_DURATION_STEP_MINUTES)}
                     {...form.register("duration")}
                   />
                   {form.hasError("duration") && (

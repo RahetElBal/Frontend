@@ -64,6 +64,7 @@ type ServicePayload = {
 };
 
 const PACK_CATEGORY = "PACK";
+const SERVICE_DURATION_STEP_MINUTES = 15;
 
 export default function AdminServicesPage() {
   const { t } = useTranslation();
@@ -385,10 +386,11 @@ export default function AdminServicesPage() {
   };
 
   const handleSubmitService = async () => {
-    const duration = Number(formValues.duration);
+    const rawDuration = Number(formValues.duration);
     const price = Number(formValues.price);
     const discount = Number(formValues.packDiscount);
     const resolvedDiscount = Number.isFinite(discount) ? discount : 0;
+    const duration = formValues.isPack ? packTotals.totalDuration : rawDuration;
     const resolvedPrice = formValues.isPack
       ? Math.max(0, packTotals.totalPrice - resolvedDiscount)
       : price;
@@ -400,7 +402,12 @@ export default function AdminServicesPage() {
       toast.error(t("admin.services.categoryRequired"));
       return;
     }
-    if (!Number.isFinite(duration) || duration <= 0) {
+    if (
+      !Number.isFinite(duration) ||
+      duration < SERVICE_DURATION_STEP_MINUTES ||
+      !Number.isInteger(duration) ||
+      duration % SERVICE_DURATION_STEP_MINUTES !== 0
+    ) {
       toast.error(t("admin.services.durationInvalid"));
       return;
     }
@@ -820,7 +827,8 @@ export default function AdminServicesPage() {
                 <Label>{t("admin.services.durationLabel")}</Label>
                 <Input
                   type="number"
-                  min="1"
+                  min={String(SERVICE_DURATION_STEP_MINUTES)}
+                  step={String(SERVICE_DURATION_STEP_MINUTES)}
                   value={formValues.duration}
                   onChange={(event) =>
                     handleFormChange("duration", event.target.value)

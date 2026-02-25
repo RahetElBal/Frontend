@@ -161,7 +161,26 @@ function App() {
           <Route path={ROUTES.MARKETING} element={<MarketingPage />} />
           <Route path={ROUTES.ANALYTICS} element={<AnalyticsPage />} />
           <Route path={ROUTES.LOYALTY} element={<LoyaltyPage />} />
-          <Route path={ROUTES.SALON_SETTINGS} element={<SalonSettingsPage />} />
+          <Route
+            path={ROUTES.SALON_SETTINGS}
+            element={<Navigate to={ROUTES.SALON_SETTINGS_GENERAL} replace />}
+          />
+          <Route
+            path={ROUTES.SALON_SETTINGS_GENERAL}
+            element={<SalonSettingsPage />}
+          />
+          <Route
+            path={ROUTES.SALON_SETTINGS_HOURS}
+            element={<SalonSettingsPage />}
+          />
+          <Route
+            path={ROUTES.SALON_SETTINGS_NOTIFICATIONS}
+            element={<SalonSettingsPage />}
+          />
+          <Route
+            path={ROUTES.SALON_SETTINGS_LOYALTY}
+            element={<SalonSettingsPage />}
+          />
           <Route path={ROUTES.SETTINGS} element={<SettingsPage />} />
           <Route path={ROUTES.PROFILE} element={<SettingsPage />} />
           <Route path={ROUTES.NOTIFICATIONS} element={<NotificationsPage />} />

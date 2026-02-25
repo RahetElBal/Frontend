@@ -630,12 +630,12 @@ export interface SalonSettingsExtended extends BaseEntity {
   timeFormat: "12h" | "24h";
 
   // Booking Settings
-  bookingSlotDuration: number;
-  bookingLeadTime: number;
-  bookingWindowDays: number;
-  cancellationDeadline: number;
-  allowOnlineBooking: boolean;
-  requireDeposit: boolean;
+  bookingSlotDuration?: number;
+  bookingLeadTime?: number;
+  bookingWindowDays?: number;
+  cancellationDeadline?: number;
+  allowOnlineBooking?: boolean;
+  requireDeposit?: boolean;
   depositAmount?: number;
   depositPercentage?: number;
 

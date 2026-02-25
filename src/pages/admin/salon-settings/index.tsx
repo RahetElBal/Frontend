@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Building2, Clock, Save, Calendar, Heart, Bell } from "lucide-react";
+import { Building2, Clock, Save, Heart, Bell } from "lucide-react";
+import { useLocation, useNavigate } from "react-router-dom";
 
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
@@ -13,9 +14,9 @@ import type { PaginatedResponse } from "@/types";
 import { usePost } from "@/hooks/usePost";
 import { useUser } from "@/hooks/useUser";
 import { useGet, withParams } from "@/hooks/useGet";
+import { ROUTES } from "@/constants/navigation";
 import { GeneralSettings } from "./components/general-settings";
 import { WorkingHoursSettings } from "./components/working-hours-settings";
-import { BookingSettings } from "./components/booking-settings";
 import { LoyaltySettings } from "./components/loyalty-settings";
 import { NotificationSettings } from "./components/notification-settings";
 import {
@@ -25,18 +26,31 @@ import {
   mergeFormData,
 } from "./utils";
 
-type SettingsTab =
+type SettingsPage =
   | "general"
-  | "booking"
   | "hours"
-  | "loyalty"
-  | "notifications";
+  | "notifications"
+  | "loyalty";
 
 export function SalonSettingsPage() {
   const { t } = useTranslation();
   const { salon: userSalon } = useUser();
-  const [activeTab, setActiveTab] = useState<SettingsTab>("general");
+  const location = useLocation();
+  const navigate = useNavigate();
   const [hasChanges, setHasChanges] = useState(false);
+  const activePage = useMemo<SettingsPage>(() => {
+    switch (location.pathname) {
+      case ROUTES.SALON_SETTINGS_HOURS:
+        return "hours";
+      case ROUTES.SALON_SETTINGS_NOTIFICATIONS:
+        return "notifications";
+      case ROUTES.SALON_SETTINGS_LOYALTY:
+        return "loyalty";
+      case ROUTES.SALON_SETTINGS_GENERAL:
+      default:
+        return "general";
+    }
+  }, [location.pathname]);
 
   const { data: fetchedSalon } = useGet<Salon>(
     `salons/${userSalon?.id}`,
@@ -66,7 +80,7 @@ export function SalonSettingsPage() {
   >(
     withParams("services", { salonId: currentSalon?.id, perPage: 10, compact: true }),
     {
-      enabled: activeTab === "loyalty" && !!currentSalon?.id,
+      enabled: activePage === "loyalty" && !!currentSalon?.id,
       staleTime: 1000 * 60 * 30,
       refetchOnMount: false,
       refetchOnWindowFocus: false,
@@ -128,16 +142,36 @@ export function SalonSettingsPage() {
     });
   };
 
-  const tabs: { id: SettingsTab; label: string; icon: React.ElementType }[] = [
-    { id: "general", label: t("salonSettings.tabs.general"), icon: Building2 },
-    { id: "hours", label: t("salonSettings.tabs.hours"), icon: Clock },
-    { id: "booking", label: t("salonSettings.tabs.booking"), icon: Calendar },
+  const tabs: {
+    id: SettingsPage;
+    href: string;
+    label: string;
+    icon: React.ElementType;
+  }[] = [
+    {
+      id: "general",
+      href: ROUTES.SALON_SETTINGS_GENERAL,
+      label: t("salonSettings.tabs.general"),
+      icon: Building2,
+    },
+    {
+      id: "hours",
+      href: ROUTES.SALON_SETTINGS_HOURS,
+      label: t("salonSettings.tabs.hours"),
+      icon: Clock,
+    },
     {
       id: "notifications",
+      href: ROUTES.SALON_SETTINGS_NOTIFICATIONS,
       label: t("salonSettings.tabs.notifications"),
       icon: Bell,
     },
-    { id: "loyalty", label: t("salonSettings.tabs.loyalty"), icon: Heart },
+    {
+      id: "loyalty",
+      href: ROUTES.SALON_SETTINGS_LOYALTY,
+      label: t("salonSettings.tabs.loyalty"),
+      icon: Heart,
+    },
   ];
 
   return (
@@ -166,10 +200,10 @@ export function SalonSettingsPage() {
           {tabs.map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => navigate(tab.href)}
               className={cn(
                 "w-full flex items-center gap-3 px-4 py-3 rounded-lg text-start transition-colors",
-                activeTab === tab.id
+                activePage === tab.id
                   ? "bg-accent-pink/10 text-accent-pink"
                   : "hover:bg-muted text-muted-foreground hover:text-foreground",
               )}
@@ -188,25 +222,19 @@ export function SalonSettingsPage() {
             </Card>
           ) : (
             <>
-              {activeTab === "general" && (
+              {activePage === "general" && (
                 <GeneralSettings
                   formData={formData}
                   updateField={updateField}
                 />
               )}
-              {activeTab === "hours" && (
+              {activePage === "hours" && (
                 <WorkingHoursSettings
                   formData={formData}
                   updateWorkingHours={updateWorkingHours}
                 />
               )}
-              {activeTab === "booking" && (
-                <BookingSettings
-                  formData={formData}
-                  updateField={updateField}
-                />
-              )}
-              {activeTab === "notifications" && (
+              {activePage === "notifications" && (
                 <NotificationSettings
                   formData={formData}
                   isReminderProEnabled={isReminderProEnabled}
@@ -214,7 +242,7 @@ export function SalonSettingsPage() {
                   updateField={updateField}
                 />
               )}
-              {activeTab === "loyalty" && (
+              {activePage === "loyalty" && (
                 <LoyaltySettings
                   formData={formData}
                   updateField={updateField}
