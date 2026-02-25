@@ -223,7 +223,6 @@ export function AgendaPage() {
     activeTab === "availability" || viewMode === "day";
   const shouldLoadReferenceData =
     !!salonId && modalState?.mode === "edit";
-  const hasSalonSettingsInAuth = !!user?.salon?.settings;
   const appointmentsStaleTime = 1000 * 30; // 30s for near real-time
   const clientsStaleTime = 1000 * 60 * 10; // 10m
   const servicesStaleTime = 1000 * 60 * 10; // 10m
@@ -260,8 +259,9 @@ export function AgendaPage() {
   );
 
   const { data: salonData } = useGet<Salon>(`salons/${salonId}`, {
-    enabled: !!salonId && !hasSalonSettingsInAuth,
-    staleTime: 1000 * 60 * 2,
+    enabled: !!salonId,
+    staleTime: 0,
+    refetchOnMount: "always",
     refetchOnWindowFocus: true,
   });
 
@@ -359,9 +359,11 @@ export function AgendaPage() {
   const salonSettings = (salonData?.settings ?? user?.salon?.settings) as
     | SalonSettingsLike
     | undefined;
-  const bookingSlotMinutes = Number(
-    salonSettings?.bookingSlotDuration || DEFAULT_SLOT_MINUTES,
-  );
+  const parsedBookingSlotMinutes = Number(salonSettings?.bookingSlotDuration);
+  const bookingSlotMinutes =
+    Number.isFinite(parsedBookingSlotMinutes) && parsedBookingSlotMinutes > 0
+      ? parsedBookingSlotMinutes
+      : DEFAULT_SLOT_MINUTES;
   const workingHoursForSelectedDate = useMemo(
     () => getWorkingHoursForDate(salonSettings, selectedDate),
     [salonSettings, selectedDate],
