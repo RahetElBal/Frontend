@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useUser } from "@/hooks/useUser";
 import { Spinner } from "@/components/spinner";
 import { PageHeader } from "@/components/page-header";
+import { useSalonBusinessSummary } from "@/contexts/BusinessSummaryProvider";
 import { TodaysAppointments } from "./components/todays-appointments";
 import { TopServices } from "./components/top-services";
 import { StatsGrid } from "./components/stats-grid";
@@ -10,7 +11,6 @@ import type {
   Appointment,
   Client,
   PaginatedResponse,
-  RevenueData,
 } from "@/types";
 import { useGet, withParams } from "@/hooks/useGet";
 import { getLocalDateString } from "./utils";
@@ -21,6 +21,11 @@ export function DashboardPage() {
 
   const salonId = user?.salon?.id;
   const today = useMemo(() => getLocalDateString(), []);
+  const lastWeekDate = useMemo(() => {
+    const date = new Date();
+    date.setDate(date.getDate() - 7);
+    return getLocalDateString(date);
+  }, []);
   const appointmentsParams = useMemo(
     () => ({
       salonId,
@@ -30,15 +35,26 @@ export function DashboardPage() {
     }),
     [salonId, today, isUser, user?.id],
   );
-
-  const { data: todaysRevenue, isLoading: isRevenueLoading } = useGet<RevenueData>(
-    withParams("sales/today/revenue", { salonId }),
+  const { summary, isLoading: isSummaryLoading } = useSalonBusinessSummary(
+    salonId,
     { enabled: !!salonId },
   );
 
-  const { data: lastWeekRevenue, isLoading: isLastWeekLoading } = useGet<RevenueData>(
-    withParams("sales/last-week/revenue", { salonId }),
-    { enabled: !!salonId },
+  const todaysRevenue = useMemo(
+    () => ({
+      date: today,
+      revenue: summary.todayRevenue,
+      appointments: 0,
+    }),
+    [today, summary.todayRevenue],
+  );
+  const lastWeekRevenue = useMemo(
+    () => ({
+      date: lastWeekDate,
+      revenue: summary.lastWeekRevenue,
+      appointments: 0,
+    }),
+    [lastWeekDate, summary.lastWeekRevenue],
   );
 
   const { data: appointmentsData } = useGet<PaginatedResponse<Appointment>>(
@@ -51,7 +67,7 @@ export function DashboardPage() {
     { enabled: !!salonId },
   );
 
-  const statsLoading = isRevenueLoading || isLastWeekLoading || isClientsLoading;
+  const statsLoading = isSummaryLoading || isClientsLoading;
 
   if (isLoading) {
     return (

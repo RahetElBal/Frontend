@@ -11,26 +11,26 @@ import {
 } from "react";
 import { useAuthContext } from "@/contexts/AuthProvider";
 import { buildUrl, get } from "@/lib/http";
-import type { PaginatedResponse } from "@/types/api";
-import { SaleStatus, type Salon } from "@/types/entities";
+import type { Salon } from "@/types/entities";
 import type { AuthUser } from "@/types/user";
 
 const SUMMARY_CACHE_TTL_MS = 1000 * 60;
-const CANCELED_PAGE_SIZE = 200;
-const MAX_CANCELED_PAGES = 8;
 
 type SummaryMap = Record<string, BusinessSummary>;
 type LoadingMap = Record<string, boolean>;
 type ErrorMap = Record<string, string | null>;
 type TimestampMap = Record<string, number>;
 
-interface SalonSummaryResponse {
-  totalRevenue?: number | string;
+interface BusinessSummaryApiResponse {
+  grossRevenue?: number | string;
+  netRevenue?: number | string;
   monthlyRevenue?: number | string;
-}
-
-interface SaleSummaryRow {
-  total?: number | string;
+  transactionCount?: number | string;
+  canceledCount?: number | string;
+  canceledRevenueImpact?: number | string;
+  todayRevenue?: number | string;
+  lastWeekRevenue?: number | string;
+  updatedAt?: string;
 }
 
 export interface BusinessSummary {
@@ -40,6 +40,8 @@ export interface BusinessSummary {
   transactionCount: number;
   canceledCount: number;
   canceledRevenueImpact: number;
+  todayRevenue: number;
+  lastWeekRevenue: number;
   updatedAt: number;
 }
 
@@ -73,6 +75,8 @@ const EMPTY_SUMMARY: BusinessSummary = {
   transactionCount: 0,
   canceledCount: 0,
   canceledRevenueImpact: 0,
+  todayRevenue: 0,
+  lastWeekRevenue: 0,
   updatedAt: 0,
 };
 
@@ -107,9 +111,6 @@ const resolvePrimarySalonId = (user: AuthUser | null): string | null => {
   return null;
 };
 
-const sumTotals = (rows: SaleSummaryRow[] | undefined) =>
-  (rows ?? []).reduce((sum, row) => sum + toNumber(row.total), 0);
-
 export function BusinessSummaryProvider({ children }: BusinessSummaryProviderProps) {
   const { user, isAuthenticated } = useAuthContext();
   const [summaryBySalon, setSummaryBySalon] = useState<SummaryMap>({});
@@ -128,49 +129,6 @@ export function BusinessSummaryProvider({ children }: BusinessSummaryProviderPro
   useEffect(() => {
     fetchedAtBySalonRef.current = fetchedAtBySalon;
   }, [fetchedAtBySalon]);
-
-  const fetchCanceledImpact = useCallback(async (salonId: string) => {
-    const firstPage = await get<PaginatedResponse<SaleSummaryRow>>(
-      buildUrl("sales", {
-        salonId,
-        status: SaleStatus.CANCELLED,
-        summary: true,
-        perPage: CANCELED_PAGE_SIZE,
-        page: 1,
-      }),
-    );
-
-    const canceledCount = toNumber(firstPage?.meta?.total, firstPage?.data?.length ?? 0);
-    let canceledRevenueImpact = sumTotals(firstPage?.data);
-    const lastPage = Math.max(1, toNumber(firstPage?.meta?.lastPage, 1));
-    const cappedLastPage = Math.min(lastPage, MAX_CANCELED_PAGES);
-
-    if (cappedLastPage > 1) {
-      const remaining = await Promise.all(
-        Array.from({ length: cappedLastPage - 1 }).map((_, index) =>
-          get<PaginatedResponse<SaleSummaryRow>>(
-            buildUrl("sales", {
-              salonId,
-              status: SaleStatus.CANCELLED,
-              summary: true,
-              perPage: CANCELED_PAGE_SIZE,
-              page: index + 2,
-            }),
-          ),
-        ),
-      );
-
-      canceledRevenueImpact += remaining.reduce(
-        (sum, page) => sum + sumTotals(page?.data),
-        0,
-      );
-    }
-
-    return {
-      canceledCount,
-      canceledRevenueImpact,
-    };
-  }, []);
 
   const ensureBusinessSummary = useCallback(
     async (salonId: string, options?: { force?: boolean }) => {
@@ -193,35 +151,23 @@ export function BusinessSummaryProvider({ children }: BusinessSummaryProviderPro
 
       const request = (async () => {
         try {
-          const [salonSummary, completedSalesPage, canceledSummary] =
-            await Promise.all([
-              get<SalonSummaryResponse>(
-                buildUrl("salons/stats/summary", { salonId: normalizedSalonId }),
-              ),
-              get<PaginatedResponse<SaleSummaryRow>>(
-                buildUrl("sales", {
-                  salonId: normalizedSalonId,
-                  status: SaleStatus.COMPLETED,
-                  summary: true,
-                  perPage: 1,
-                  page: 1,
-                }),
-              ),
-              fetchCanceledImpact(normalizedSalonId),
-            ]);
-
-          const grossRevenue = toNumber(salonSummary?.totalRevenue);
-          const monthlyRevenue = toNumber(salonSummary?.monthlyRevenue);
-          const transactionCount = toNumber(
-            completedSalesPage?.meta?.total,
-            completedSalesPage?.data?.length ?? 0,
+          const response = await get<BusinessSummaryApiResponse>(
+            buildUrl("sales/business-summary", {
+              salonId: normalizedSalonId,
+            }),
           );
-          const canceledCount = canceledSummary.canceledCount;
-          const canceledRevenueImpact = canceledSummary.canceledRevenueImpact;
-          const rawNetRevenue = grossRevenue + canceledRevenueImpact;
-          const netRevenue = Number.isFinite(rawNetRevenue)
-            ? Math.max(0, rawNetRevenue)
-            : grossRevenue;
+
+          const grossRevenue = toNumber(response?.grossRevenue);
+          const netRevenue = toNumber(response?.netRevenue, grossRevenue);
+          const monthlyRevenue = toNumber(response?.monthlyRevenue);
+          const transactionCount = toNumber(response?.transactionCount);
+          const canceledCount = toNumber(response?.canceledCount);
+          const canceledRevenueImpact = toNumber(response?.canceledRevenueImpact);
+          const todayRevenue = toNumber(response?.todayRevenue);
+          const lastWeekRevenue = toNumber(response?.lastWeekRevenue);
+          const updatedAt = response?.updatedAt
+            ? Date.parse(response.updatedAt)
+            : Date.now();
 
           const summary: BusinessSummary = {
             grossRevenue,
@@ -230,7 +176,9 @@ export function BusinessSummaryProvider({ children }: BusinessSummaryProviderPro
             transactionCount,
             canceledCount,
             canceledRevenueImpact,
-            updatedAt: Date.now(),
+            todayRevenue,
+            lastWeekRevenue,
+            updatedAt: Number.isFinite(updatedAt) ? updatedAt : Date.now(),
           };
 
           setSummaryBySalon((prev) => ({ ...prev, [normalizedSalonId]: summary }));
@@ -255,7 +203,7 @@ export function BusinessSummaryProvider({ children }: BusinessSummaryProviderPro
       inFlightRef.current.set(normalizedSalonId, request);
       return request;
     },
-    [fetchCanceledImpact],
+    [],
   );
 
   const invalidateBusinessSummary = useCallback((salonId?: string) => {
@@ -350,4 +298,3 @@ export function useSalonBusinessSummary(
 
   return { summary, isLoading, error, refresh };
 }
-
