@@ -199,7 +199,6 @@ export function ServicesPage() {
     onSuccess: () => {
       toast.success(t("services.addService") + " - " + t("common.success"));
       setModalState(null);
-      refetch();
     },
     onError: (error) => {
       toast.error(error.message || t("common.error"));
@@ -216,7 +215,6 @@ export function ServicesPage() {
     onSuccess: () => {
       toast.success(t("common.edit") + " - " + t("common.success"));
       setModalState(null);
-      refetch();
     },
     onError: (error) => {
       toast.error(error.message || t("common.error"));
@@ -232,7 +230,6 @@ export function ServicesPage() {
       onSuccess: () => {
         toast.success(t("common.delete") + " - " + t("common.success"));
         setModalState(null);
-        refetch();
       },
       onError: (error) => {
         toast.error(error.message || t("common.error"));

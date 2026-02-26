@@ -95,7 +95,6 @@ export function ProductsPage() {
   const {
     data: productsResponse,
     isLoading,
-    refetch,
   } = useGet<ProductsResponse>(
     withParams("products", { salonId }),
     { enabled: !!salonId, staleTime: productsStaleTime },
@@ -185,7 +184,6 @@ export function ProductsPage() {
     onSuccess: () => {
       toast.success(t("products.addProduct") + " - " + t("common.success"));
       setModalState(null);
-      refetch();
     },
     onError: (error) => {
       toast.error(error.message || t("common.error"));
@@ -202,7 +200,6 @@ export function ProductsPage() {
     onSuccess: () => {
       toast.success(t("common.edit") + " - " + t("common.success"));
       setModalState(null);
-      refetch();
     },
     onError: (error) => {
       toast.error(error.message || t("common.error"));
@@ -218,7 +215,6 @@ export function ProductsPage() {
       onSuccess: () => {
         toast.success(t("common.delete") + " - " + t("common.success"));
         setModalState(null);
-        refetch();
       },
       onError: (error) => {
         toast.error(error.message || t("common.error"));
@@ -233,9 +229,6 @@ export function ProductsPage() {
   >(`products/${selectedProduct?.id}/stock`, {
     invalidate: ["products", "products/low-stock"],
     successToast: t("products.stockUpdated"),
-    onSuccess: () => {
-      refetch();
-    },
   });
 
   // Stock adjustment state

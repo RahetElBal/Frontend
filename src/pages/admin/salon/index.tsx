@@ -54,30 +54,30 @@ export default function SalonsPage() {
   const {
     data: allSalons = [],
     isLoading,
-    refetch,
   } = useGet<Salon[]>("salons", {
     enabled: userIsSuperadmin,
     staleTime: adminStatsStaleTime,
+    refetchOnWindowFocus: false,
   });
 
   const {
     data: admins = [],
     isLoading: isAdminsLoading,
     isError: isAdminsError,
-    refetch: refetchAdmins,
   } = useGet<User[]>("users/admins", {
     enabled: userIsSuperadmin,
     retry: 1,
     staleTime: adminStatsStaleTime,
+    refetchOnWindowFocus: false,
   });
 
   const {
     data: summaryStats,
     isLoading: isSummaryLoading,
-    refetch: refetchSummaryStats,
   } = useGet<SalonSummaryStats>(summaryPath, {
     enabled: userIsSuperadmin || !!salonId,
     staleTime: adminStatsStaleTime,
+    refetchOnWindowFocus: false,
   });
 
   const isStatsLoading = useMemo(
@@ -235,11 +235,6 @@ export default function SalonsPage() {
           user={user as User | null}
           admins={admins}
           adminsLoaded={adminsLoaded}
-          onRefreshAdmins={refetchAdmins}
-          onSuccess={() => {
-            void refetch();
-            void refetchSummaryStats();
-          }}
         />
       )}
     </div>

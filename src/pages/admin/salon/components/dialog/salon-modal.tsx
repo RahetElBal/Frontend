@@ -53,8 +53,6 @@ interface SalonModalProps {
   user: User | null;
   admins: User[];
   adminsLoaded: boolean;
-  onRefreshAdmins?: () => void;
-  onSuccess: () => void;
 }
 
 export function SalonModals({
@@ -64,8 +62,6 @@ export function SalonModals({
   user,
   admins,
   adminsLoaded,
-  onRefreshAdmins,
-  onSuccess,
 }: SalonModalProps) {
   const { t } = useTranslation();
   const getErrorMessage = (message?: string): string | undefined => {
@@ -123,10 +119,10 @@ export function SalonModals({
     Salon,
     SalonFormData & { ownerId?: string }
   >("salons", {
+    invalidate: ["salons", "salons/stats/summary"],
     onSuccess: () => {
       toast.success(t("admin.salons.addSalon") + " - " + t("common.success"));
       setModalState(null);
-      onSuccess();
     },
     onError: (error) => {
       toast.error(error.message || t("common.error"));
@@ -138,11 +134,10 @@ export function SalonModals({
     SalonFormData & { ownerId?: string }
   >(`salons/${selectedSalon?.id}`, {
     method: "PATCH",
-    invalidate: ["salons"],
+    invalidate: ["salons", "salons/stats/summary"],
     onSuccess: () => {
       toast.success(t("common.edit") + " - " + t("common.success"));
       setModalState(null);
-      onSuccess();
     },
     onError: (error) => {
       toast.error(error.message || t("common.error"));
@@ -156,11 +151,10 @@ export function SalonModals({
     (variables) => `salons/${variables.salonId}`,
     {
       method: "DELETE",
-      invalidate: ["salons"],
+      invalidate: ["salons", "salons/stats/summary"],
       onSuccess: () => {
         toast.success(t("common.delete") + " - " + t("common.success"));
         setModalState(null);
-        onSuccess();
       },
       onError: (error) => {
         toast.error(error.message || t("common.error"));
@@ -419,12 +413,6 @@ export function SalonModals({
       }
     };
   }, [logoPreview]);
-
-  useEffect(() => {
-    if (!modalState || modalState.salonId !== "create") return;
-    if (user?.isSuperadmin !== true) return;
-    onRefreshAdmins?.();
-  }, [modalState?.salonId, user?.isSuperadmin, onRefreshAdmins]);
 
   useEffect(() => {
     if (!modalState || modalState.salonId !== "create") return;
