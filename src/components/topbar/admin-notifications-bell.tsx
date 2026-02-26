@@ -528,7 +528,10 @@ export function AdminNotificationsBell() {
         <Button
           variant="ghost"
           size="icon"
-          className="relative overflow-visible"
+          className={cn(
+            "relative overflow-visible transition-transform duration-200",
+            open && "scale-105",
+          )}
           aria-label={t("settings.notifications")}
           onClick={() => {
             initAudio();
@@ -558,7 +561,10 @@ export function AdminNotificationsBell() {
         </Button>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent className="w-96" align="end">
+      <DropdownMenuContent
+        className="w-96 overflow-hidden border-accent-pink/10 data-[state=open]:duration-300 data-[state=closed]:duration-200 data-[state=open]:ease-out data-[state=closed]:ease-in"
+        align="end"
+      >
         <DropdownMenuLabel className="flex items-center justify-between">
           <span>{t("settings.notifications")}</span>
           <Button
@@ -584,7 +590,7 @@ export function AdminNotificationsBell() {
           </div>
         ) : (
           <div className="max-h-[360px] overflow-y-auto">
-            {notificationsForDropdown.map((notification) => {
+            {notificationsForDropdown.map((notification, index) => {
               const isUnread = !notification.readAt;
               const payload = toPayload(notification);
               const actorName =
@@ -603,9 +609,19 @@ export function AdminNotificationsBell() {
                     handleNotificationNavigation(notification);
                   }}
                   className={cn(
-                    "items-start gap-3 whitespace-normal py-3",
+                    "items-start gap-3 whitespace-normal py-3 transition-all duration-200",
+                    open && "animate-in fade-in-0 slide-in-from-top-1",
                     isUnread && "bg-accent-pink/5",
                   )}
+                  style={
+                    open
+                      ? {
+                          animationDelay: `${index * 35}ms`,
+                          animationDuration: "220ms",
+                          animationFillMode: "both",
+                        }
+                      : undefined
+                  }
                 >
                   <span
                     className={cn(

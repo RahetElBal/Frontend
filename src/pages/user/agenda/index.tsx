@@ -559,29 +559,6 @@ export function AgendaPage() {
     if (!appointmentFocusKey) return;
     if (!shouldApplyQueryFocus) return;
     if (openedAppointmentRef.current === appointmentFocusKey) return;
-    if (appointmentIdParam && modalState?.appointmentId === appointmentIdParam) {
-      openedAppointmentRef.current = appointmentFocusKey;
-      triggerAppointmentFocus(appointmentIdParam);
-      const nextParams = new URLSearchParams(location.search);
-      nextParams.delete("focus");
-      nextParams.delete("appointmentId");
-      nextParams.delete("time");
-      nextParams.delete("appointmentTime");
-      const nextSearch = nextParams.toString();
-      const currentSearch = location.search.startsWith("?")
-        ? location.search.slice(1)
-        : location.search;
-      if (nextSearch !== currentSearch) {
-        navigate(
-          {
-            pathname: location.pathname,
-            search: nextSearch ? `?${nextSearch}` : "",
-          },
-          { replace: true },
-        );
-      }
-      return;
-    }
 
     const appointmentById = appointmentIdParam
       ? appointments.find((item) => item.id === appointmentIdParam)
@@ -613,11 +590,6 @@ export function AgendaPage() {
       setActiveTab("appointments");
     }
 
-    setModalState({
-      appointmentId: appointment.id,
-      mode: "view",
-      nonce: Date.now(),
-    });
     triggerAppointmentFocus(appointment.id);
     openedAppointmentRef.current = appointmentFocusKey;
 
@@ -647,7 +619,6 @@ export function AgendaPage() {
     appointmentTimeParam,
     appointments,
     activeTab,
-    modalState,
     location.pathname,
     location.search,
     navigate,

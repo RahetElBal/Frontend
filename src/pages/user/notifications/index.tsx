@@ -343,7 +343,7 @@ export function NotificationsPage() {
           </div>
         ) : (
           <div className="divide-y">
-            {notifications.map((notification) => {
+            {notifications.map((notification, index) => {
               const isUnread = !notification.readAt;
               const payload = toPayload(notification);
               const actorName =
@@ -364,9 +364,14 @@ export function NotificationsPage() {
                     handleNotificationNavigation(notification);
                   }}
                   className={cn(
-                    "w-full text-left flex items-start gap-3 py-4",
+                    "w-full text-left flex items-start gap-3 py-4 transition-all duration-200 animate-in fade-in-0 slide-in-from-bottom-1",
                     isUnread && "bg-accent-pink/5",
                   )}
+                  style={{
+                    animationDelay: `${Math.min(index, 12) * 20}ms`,
+                    animationDuration: "220ms",
+                    animationFillMode: "both",
+                  }}
                 >
                   <span
                     className={cn(
