@@ -430,6 +430,11 @@ export function AdminNotificationsBell() {
               })
             : clientName,
         };
+      case AdminNotificationType.SALE_REFUNDED:
+        return {
+          title: notification.title,
+          message: canViewAmounts ? notification.message : clientName,
+        };
       case AdminNotificationType.WHATSAPP_CONFIRMATION_SENT:
         return {
           title: t("notifications.types.whatsappConfirmationSent.title"),
@@ -485,6 +490,7 @@ export function AdminNotificationsBell() {
     const isPayment =
       (notification.type === AdminNotificationType.SALE_CREATED ||
         notification.type === AdminNotificationType.SALE_COMPLETED ||
+        notification.type === AdminNotificationType.SALE_REFUNDED ||
         String(payload.paymentStatus || "").toLowerCase() === "paid") &&
       notification.type !== AdminNotificationType.APPOINTMENT_PAYMENT_RECORDED;
 

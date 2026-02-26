@@ -461,6 +461,7 @@ export const AdminNotificationType = {
   WHATSAPP_CONFIRMATION_SENT: "whatsapp.confirmation.sent",
   SALE_CREATED: "sale.created",
   SALE_COMPLETED: "sale.completed",
+  SALE_REFUNDED: "sale.refunded",
   SUPPORT_TICKET_CREATED: "support.ticket.created",
   SUPPORT_TICKET_CLOSED: "support.ticket.closed",
 } as const;
