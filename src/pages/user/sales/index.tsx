@@ -12,6 +12,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/badge";
 import { DataTable } from "@/components/table/data-table";
 import { useTable } from "@/hooks/useTable";
@@ -70,6 +80,7 @@ export function SalesPage() {
   const { invalidateBusinessSummary } = useBusinessSummaryContext();
   const [selectedSaleId, setSelectedSaleId] = useState<string | null>(null);
   const [refundingSaleId, setRefundingSaleId] = useState<string | null>(null);
+  const [salePendingRefund, setSalePendingRefund] = useState<Sale | null>(null);
 
   if (!isAdmin && !isSuperadmin) {
     return <Navigate to={ROUTES.DASHBOARD} replace />;
@@ -120,10 +131,12 @@ export function SalesPage() {
         if (salonId) {
           invalidateBusinessSummary(salonId);
         }
+        setSalePendingRefund(null);
         setRefundingSaleId(null);
         toast.success(t("sales.refundSuccess"));
       },
       onError: (error) => {
+        setSalePendingRefund(null);
         setRefundingSaleId(null);
         toast.error(error?.message || t("sales.refundError"));
       },
@@ -192,11 +205,23 @@ export function SalesPage() {
     (sale: Sale) => {
       if (!salonId) return;
       if (sale.status !== "completed") return;
-      if (!window.confirm(t("sales.refundConfirm"))) return;
-      setRefundingSaleId(sale.id);
-      refundSale({ id: sale.id });
+      setSalePendingRefund(sale);
     },
-    [refundSale, salonId, t],
+    [salonId],
+  );
+
+  const handleConfirmRefund = useCallback(() => {
+    if (!salonId || !salePendingRefund) return;
+    setRefundingSaleId(salePendingRefund.id);
+    refundSale({ id: salePendingRefund.id });
+  }, [refundSale, salePendingRefund, salonId]);
+
+  const handleRefundDialogChange = useCallback(
+    (open: boolean) => {
+      if (isRefunding) return;
+      if (!open) setSalePendingRefund(null);
+    },
+    [isRefunding],
   );
 
   const columns = getSalesColumns({
@@ -322,6 +347,35 @@ export function SalesPage() {
         emptyMessage={t("sales.noSales")}
         loading={isLoading}
       />
+
+      <AlertDialog
+        open={!!salePendingRefund}
+        onOpenChange={handleRefundDialogChange}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("sales.refund")}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("sales.refundConfirm")}
+              {salePendingRefund
+                ? ` (${formatCurrency(Math.abs(toNumber(salePendingRefund.total)))})`
+                : ""}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isRefunding}>
+              {t("common.cancel")}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmRefund}
+              disabled={isRefunding}
+              className="bg-rose-600 hover:bg-rose-700"
+            >
+              {isRefunding ? t("common.loading") : t("sales.refund")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <Dialog
         open={!!selectedSaleId}
