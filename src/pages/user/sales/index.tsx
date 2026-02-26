@@ -158,7 +158,9 @@ export function SalesPage() {
 
   const fallbackGrossRevenue = (sales ?? []).reduce(
     (sum, sale) =>
-      sale?.status === "completed" ? sum + toNumber(sale?.total) : sum,
+      sale?.status === "completed" || sale?.status === "refunded"
+        ? sum + toNumber(sale?.total)
+        : sum,
     0,
   );
   const fallbackTransactions = sales.filter(

@@ -221,7 +221,9 @@ export function AnalyticsPage() {
 
   const periodRevenue = salesInRange.reduce(
     (sum, sale) =>
-      sale.status === "completed" ? sum + toNumber(sale.total) : sum,
+      sale.status === "completed" || sale.status === "refunded"
+        ? sum + toNumber(sale.total)
+        : sum,
     0,
   );
   const periodCanceledRevenueImpact = salesInRange.reduce(
