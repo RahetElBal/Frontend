@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Plus,
@@ -35,6 +36,7 @@ interface TimelineViewProps {
   timeSlots: string[];
   blockedSlots?: Set<string>;
   isClosed?: boolean;
+  focusedAppointmentId?: string | null;
   onTimeSlotClick: (time: string) => void;
   onAppointmentClick: (appointment: Appointment) => void;
   onRecordPayment?: (appointment: Appointment) => void;
@@ -48,12 +50,14 @@ export function TimelineView({
   timeSlots,
   blockedSlots,
   isClosed = false,
+  focusedAppointmentId = null,
   onTimeSlotClick,
   onAppointmentClick,
   onRecordPayment,
   isRecordingPayment = false,
 }: TimelineViewProps) {
   const { t } = useTranslation();
+  const appointmentNodeRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const currentTimeString = getCurrentTimeString();
   const currentHour = new Date().getHours();
   const currentMinutes = new Date().getMinutes();
@@ -89,6 +93,13 @@ export function TimelineView({
   const dayAppointments = appointments.filter(
     (apt) => apt.date === selectedDateStr,
   );
+
+  useEffect(() => {
+    if (!focusedAppointmentId) return;
+    const node = appointmentNodeRefs.current[focusedAppointmentId];
+    if (!node) return;
+    node.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [focusedAppointmentId, selectedDateStr, dayAppointments.length]);
 
   if (isLoading) {
     return (
@@ -153,6 +164,8 @@ export function TimelineView({
                 slotHeight - cellPadding * 2,
                 slotSpan * slotHeight - cellPadding * 2,
               );
+              const isFocusedAppointment =
+                !!appointment && focusedAppointmentId === appointment.id;
 
               return (
                 <div
@@ -194,10 +207,17 @@ export function TimelineView({
                   >
                     {appointment && isStartSlot ? (
                       <div
+                        ref={(node) => {
+                          appointmentNodeRefs.current[appointment.id] = node;
+                        }}
+                        data-appointment-id={appointment.id}
                         className={cn(
                           "rounded-lg cursor-pointer hover:shadow-md transition-all absolute left-2 right-2 z-10",
                           isCompact ? "p-1.5" : "p-3",
                           "border-l-4",
+                          "duration-300",
+                          isFocusedAppointment &&
+                            "ring-2 ring-accent-pink/60 ring-offset-1 shadow-lg scale-[1.01]",
                           displayStatus === AppointmentStatus.CONFIRMED &&
                             "bg-green-50 border-l-green-500",
                           displayStatus === AppointmentStatus.PENDING &&

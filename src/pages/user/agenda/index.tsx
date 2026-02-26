@@ -93,6 +93,30 @@ export function AgendaPage() {
   const canRecordPayment = isAdmin || isSuperadmin;
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [modalState, setModalState] = useState<AppointmentModalState>(null);
+  const [focusedAppointmentId, setFocusedAppointmentId] = useState<string | null>(
+    null,
+  );
+  const focusClearTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const triggerAppointmentFocus = useCallback((appointmentId: string) => {
+    setFocusedAppointmentId(appointmentId);
+    if (focusClearTimerRef.current) {
+      clearTimeout(focusClearTimerRef.current);
+    }
+    focusClearTimerRef.current = setTimeout(() => {
+      setFocusedAppointmentId((current) =>
+        current === appointmentId ? null : current,
+      );
+      focusClearTimerRef.current = null;
+    }, 2600);
+  }, []);
+  useEffect(
+    () => () => {
+      if (focusClearTimerRef.current) {
+        clearTimeout(focusClearTimerRef.current);
+      }
+    },
+    [],
+  );
   const getSaleClientIdForAppointment = useCallback(
     (appointment: Appointment): string | undefined => {
       if (isWalkInClientEmail(appointment.client?.email)) {
@@ -145,6 +169,7 @@ export function AgendaPage() {
     appointmentTimeParam,
   ]);
   const openedAppointmentRef = useRef<string | null>(null);
+  const appliedQueryFocusRef = useRef<string | null>(null);
   const [activeTab, setActiveTab] = useState<
     "appointments" | "availability"
   >(() => (queryParams.get("tab") === "availability" ? "availability" : "appointments"));
@@ -382,8 +407,68 @@ export function AgendaPage() {
     });
   }, [workingHoursForSelectedDate, bookingSlotMinutes]);
 
+  const shouldApplyQueryFocus = useMemo(() => {
+    if (!appointmentFocusKey) return false;
+    if (appointmentFocusSource === "notification") return true;
+    return Boolean(
+      appointmentIdParam || (appointmentDateParam && appointmentTimeParam),
+    );
+  }, [
+    appointmentDateParam,
+    appointmentFocusKey,
+    appointmentFocusSource,
+    appointmentIdParam,
+    appointmentTimeParam,
+  ]);
+
+  useEffect(() => {
+    if (!appointmentFocusKey || !shouldApplyQueryFocus) {
+      if (!appointmentFocusKey) {
+        appliedQueryFocusRef.current = null;
+      }
+      return;
+    }
+    if (appliedQueryFocusRef.current === appointmentFocusKey) return;
+
+    if (appointmentDateParam && appointmentDateParam !== selectedDate) {
+      setSelectedDate(appointmentDateParam);
+    }
+    if (initialViewMode !== viewMode) {
+      setViewMode(initialViewMode);
+    }
+    if (initialStaffId !== selectedStaffId) {
+      setSelectedStaffId(initialStaffId);
+    }
+    if (activeTab !== "appointments") {
+      setActiveTab("appointments");
+    }
+    if (filter !== "all") {
+      setFilter("all");
+    }
+
+    appliedQueryFocusRef.current = appointmentFocusKey;
+  }, [
+    activeTab,
+    appointmentDateParam,
+    appointmentFocusKey,
+    filter,
+    initialStaffId,
+    initialViewMode,
+    selectedDate,
+    selectedStaffId,
+    shouldApplyQueryFocus,
+    viewMode,
+  ]);
+
   useEffect(() => {
     if (!selectedDate) return;
+    if (
+      shouldApplyQueryFocus &&
+      appointmentFocusKey &&
+      appliedQueryFocusRef.current !== appointmentFocusKey
+    ) {
+      return;
+    }
     const nextParams = new URLSearchParams(location.search);
     nextParams.set("date", selectedDate);
     nextParams.set("view", viewMode);
@@ -418,6 +503,8 @@ export function AgendaPage() {
     location.pathname,
     location.search,
     navigate,
+    shouldApplyQueryFocus,
+    appointmentFocusKey,
   ]);
 
   const form = useForm<AppointmentFormData>({
@@ -470,10 +557,29 @@ export function AgendaPage() {
 
   useEffect(() => {
     if (!appointmentFocusKey) return;
-    if (appointmentFocusSource !== "notification") return;
+    if (!shouldApplyQueryFocus) return;
     if (openedAppointmentRef.current === appointmentFocusKey) return;
     if (appointmentIdParam && modalState?.appointmentId === appointmentIdParam) {
       openedAppointmentRef.current = appointmentFocusKey;
+      triggerAppointmentFocus(appointmentIdParam);
+      const nextParams = new URLSearchParams(location.search);
+      nextParams.delete("focus");
+      nextParams.delete("appointmentId");
+      nextParams.delete("time");
+      nextParams.delete("appointmentTime");
+      const nextSearch = nextParams.toString();
+      const currentSearch = location.search.startsWith("?")
+        ? location.search.slice(1)
+        : location.search;
+      if (nextSearch !== currentSearch) {
+        navigate(
+          {
+            pathname: location.pathname,
+            search: nextSearch ? `?${nextSearch}` : "",
+          },
+          { replace: true },
+        );
+      }
       return;
     }
 
@@ -512,10 +618,14 @@ export function AgendaPage() {
       mode: "view",
       nonce: Date.now(),
     });
+    triggerAppointmentFocus(appointment.id);
     openedAppointmentRef.current = appointmentFocusKey;
 
     const nextParams = new URLSearchParams(location.search);
     nextParams.delete("focus");
+    nextParams.delete("appointmentId");
+    nextParams.delete("time");
+    nextParams.delete("appointmentTime");
     const nextSearch = nextParams.toString();
     const currentSearch = location.search.startsWith("?")
       ? location.search.slice(1)
@@ -532,7 +642,6 @@ export function AgendaPage() {
   }, [
     appointmentDateParam,
     appointmentFocusKey,
-    appointmentFocusSource,
     appointmentIdParam,
     appointmentStaffParam,
     appointmentTimeParam,
@@ -542,6 +651,8 @@ export function AgendaPage() {
     location.pathname,
     location.search,
     navigate,
+    shouldApplyQueryFocus,
+    triggerAppointmentFocus,
   ]);
 
   const isOverdue = useCallback(
@@ -676,9 +787,18 @@ export function AgendaPage() {
 
   const handleReminder = useCallback(
     (reminder: AppointmentReminder) => {
+      const params = new URLSearchParams();
+      params.set("date", reminder.date);
+      params.set("time", reminder.time);
+      params.set("appointmentId", reminder.appointmentId);
+      params.set("view", "day");
+      params.set("focus", "notification");
       showNotification(`${t("agenda.reminderTitle")} - ${reminder.time}`, {
         body: `${reminder.clientName} - ${reminder.serviceName}`,
         playSound: true,
+        onClick: () => {
+          navigate(`/agenda?${params.toString()}`);
+        },
       });
       toast.info(
         `${t("agenda.upcomingAppointment")}: ${reminder.clientName} - ${
@@ -686,7 +806,7 @@ export function AgendaPage() {
         } à ${reminder.time}`,
       );
     },
-    [t],
+    [navigate, t],
   );
 
   useEffect(() => {
@@ -778,13 +898,25 @@ export function AgendaPage() {
       playNotificationSound("/sounds/delayed.mp3");
 
       if (notificationsEnabled) {
+        const params = new URLSearchParams();
+        params.set("date", apt.date);
+        params.set("time", apt.startTime);
+        params.set("appointmentId", apt.id);
+        params.set("view", "day");
+        params.set("focus", "notification");
+        if (apt.staffId) {
+          params.set("staffId", apt.staffId);
+        }
         showNotification(t("agenda.overdueUnpaidTitle"), {
           body: `${clientName} - ${serviceName} (${apt.date} ${apt.startTime})`,
           playSound: false,
+          onClick: () => {
+            navigate(`/agenda?${params.toString()}`);
+          },
         });
       }
     });
-  }, [appointments, notificationsEnabled, t]);
+  }, [appointments, navigate, notificationsEnabled, t]);
 
   type AppointmentPayload = Omit<
     AppointmentFormData,
@@ -834,29 +966,18 @@ export function AgendaPage() {
           `appointments/${id}`,
           { status },
         ),
-      onSuccess: () => {
-        toast.success(t("common.statusUpdated"));
+      onSuccess: (_data, variables) => {
+        if (variables.status === AppointmentStatus.CANCELLED) {
+          toast.success(t("agenda.appointmentCancelled"));
+        } else {
+          toast.success(t("common.statusUpdated"));
+        }
         queryClient.invalidateQueries({ queryKey: ["appointments"] });
       },
       onError: (error) => {
         toast.error(error.message || t("common.error"));
       },
     });
-
-  const { mutate: deleteAppointment, isPending: isDeleting } = usePost<
-    void,
-    { id: string }
-  >((variables) => `appointments/${variables.id}`, {
-    method: "DELETE",
-    invalidate: ["appointments"],
-    onSuccess: () => {
-      toast.success(t("common.delete") + " - " + t("common.success"));
-      setModalState(null);
-    },
-    onError: (error) => {
-      toast.error(error.message || t("common.error"));
-    },
-  });
 
   const { mutate: createSaleFromAppointment, isPending: isCreatingSale } =
     usePost<
@@ -946,8 +1067,9 @@ export function AgendaPage() {
   );
 
   const handleSelectEvent = useCallback((event: CalendarEvent) => {
+    triggerAppointmentFocus(event.id);
     setModalState({ appointmentId: event.id, mode: "view", nonce: Date.now() });
-  }, []);
+  }, [triggerAppointmentFocus]);
 
   const toAppointmentPayload = (
     data: AppointmentFormData,
@@ -1233,8 +1355,26 @@ export function AgendaPage() {
       toast.error(t("common.error"));
       return;
     }
-    markAppointmentDeleted(selectedAppointment.id);
-    deleteAppointment({ id: selectedAppointment.id });
+    if (isOptimisticAppointmentId(selectedAppointment.id)) {
+      markAppointmentDeleted(selectedAppointment.id);
+      setModalState(null);
+      return;
+    }
+    if (selectedAppointment.status === AppointmentStatus.CANCELLED) {
+      setModalState(null);
+      return;
+    }
+    const optimisticCancelled = {
+      ...selectedAppointment,
+      status: AppointmentStatus.CANCELLED,
+      updatedAt: new Date().toISOString(),
+    };
+    upsertVisibleAppointment(optimisticCancelled);
+    updateAppointmentStatus({
+      id: selectedAppointment.id,
+      status: AppointmentStatus.CANCELLED,
+    });
+    setModalState(null);
   };
 
   const handleStatusUpdate = useCallback(
@@ -1482,6 +1622,7 @@ export function AgendaPage() {
             timeSlots={timelineSlots.slots}
             blockedSlots={timelineSlots.blocked}
             isClosed={!workingHoursForSelectedDate.isOpen}
+            focusedAppointmentId={focusedAppointmentId}
             onTimeSlotClick={(time) =>
               handleSelectSlot({
                 start: timeToDate(time, selectedDate),
@@ -1584,7 +1725,6 @@ export function AgendaPage() {
           isPending={
             isCreating ||
             isUpdating ||
-            isDeleting ||
             isCreatingSale ||
             isCreatingWalkIn
           }
