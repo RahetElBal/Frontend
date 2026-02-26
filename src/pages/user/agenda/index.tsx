@@ -1185,7 +1185,6 @@ export function AgendaPage() {
             lastName,
             email,
             phone,
-            notes: t("agenda.walkInNote"),
             isMarried: !!data.walkInIsMarried,
           });
           const optimisticAppointment = buildOptimisticAppointment({
