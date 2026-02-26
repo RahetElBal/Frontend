@@ -11,7 +11,11 @@ export interface SalonSummaryStats {
   totalUsers: number;
   activeUsers: number;
   totalAdmins: number;
+  grossRevenue: number;
+  netRevenue: number;
   totalRevenue: number;
+  monthlyGrossRevenue: number;
+  monthlyNetRevenue: number;
   monthlyRevenue: number;
   totalServices: number;
   totalClients: number;
@@ -23,7 +27,11 @@ export interface SalonStats {
   totalUsers: number;
   activeUsers: number;
   totalAdmins: number;
+  grossRevenue: number;
+  netRevenue: number;
   totalRevenue: number;
+  monthlyGrossRevenue: number;
+  monthlyNetRevenue: number;
   monthlyRevenue: number;
   totalServices: number;
   totalClients: number;
@@ -111,7 +119,11 @@ export const calculateAllStats = (
     totalUsers: summary?.totalUsers ?? 0,
     activeUsers: summary?.activeUsers ?? 0,
     totalAdmins: isSuperadmin ? (summary?.totalAdmins ?? admins.length) : 0,
+    grossRevenue: summary?.grossRevenue ?? summary?.totalRevenue ?? 0,
+    netRevenue: summary?.netRevenue ?? summary?.totalRevenue ?? 0,
     totalRevenue: summary?.totalRevenue ?? 0,
+    monthlyGrossRevenue: summary?.monthlyGrossRevenue ?? summary?.monthlyRevenue ?? 0,
+    monthlyNetRevenue: summary?.monthlyNetRevenue ?? summary?.monthlyRevenue ?? 0,
     monthlyRevenue: summary?.monthlyRevenue ?? 0,
     totalServices: summary?.totalServices ?? 0,
     totalClients: summary?.totalClients ?? 0,

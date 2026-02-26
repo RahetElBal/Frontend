@@ -20,7 +20,11 @@ interface StatsGridProps {
   isSuperadmin: boolean;
   loading?: boolean;
   // Admin-specific stats
+  grossRevenue?: number;
+  netRevenue?: number;
   totalRevenue?: number;
+  monthlyGrossRevenue?: number;
+  monthlyNetRevenue?: number;
   monthlyRevenue?: number;
   totalServices?: number;
   totalClients?: number;
@@ -34,7 +38,11 @@ export function StatsGrid({
   totalAdmins = 0,
   isSuperadmin,
   loading = false,
+  grossRevenue = 0,
+  netRevenue = 0,
   totalRevenue = 0,
+  monthlyGrossRevenue = 0,
+  monthlyNetRevenue = 0,
   monthlyRevenue = 0,
   totalServices = 0,
   totalClients = 0,
@@ -116,22 +124,38 @@ export function StatsGrid({
   return (
     <div className="space-y-4">
       {/* Revenue Stats - Top Row */}
-      <AdminStatsGrid className="sm:grid-cols-2">
+      <AdminStatsGrid className="sm:grid-cols-2 lg:grid-cols-4">
         <StatsCard
-          title="Revenu total"
-          value={formatCurrency(totalRevenue)}
+          title={t("sales.grossRevenue")}
+          value={formatCurrency(grossRevenue || totalRevenue)}
           loading={loading}
           icon={DollarSign}
           iconColor="text-green-600"
           iconBgColor="bg-green-100"
         />
         <StatsCard
-          title="Revenu ce mois"
-          value={formatCurrency(monthlyRevenue)}
+          title={t("sales.netRevenue")}
+          value={formatCurrency(netRevenue || totalRevenue)}
           loading={loading}
           icon={DollarSign}
           iconColor="text-accent-pink"
           iconBgColor="bg-accent-pink/10"
+        />
+        <StatsCard
+          title={`${t("sales.grossRevenue")} (${t("analytics.monthly")})`}
+          value={formatCurrency(monthlyGrossRevenue || monthlyRevenue)}
+          loading={loading}
+          icon={DollarSign}
+          iconColor="text-emerald-600"
+          iconBgColor="bg-emerald-100"
+        />
+        <StatsCard
+          title={`${t("sales.netRevenue")} (${t("analytics.monthly")})`}
+          value={formatCurrency(monthlyNetRevenue || monthlyRevenue)}
+          loading={loading}
+          icon={DollarSign}
+          iconColor="text-rose-600"
+          iconBgColor="bg-rose-100"
         />
       </AdminStatsGrid>
 

@@ -209,7 +209,11 @@ export default function SalonsPage() {
         totalAdmins={stats.totalAdmins}
         isSuperadmin={userIsSuperadmin}
         loading={isStatsLoading}
+        grossRevenue={stats.grossRevenue}
+        netRevenue={stats.netRevenue}
         totalRevenue={stats.totalRevenue}
+        monthlyGrossRevenue={stats.monthlyGrossRevenue}
+        monthlyNetRevenue={stats.monthlyNetRevenue}
         monthlyRevenue={stats.monthlyRevenue}
         totalServices={stats.totalServices}
         totalClients={stats.totalClients}

@@ -11,7 +11,8 @@ interface StatsGridProps {
   usersData?: PaginatedResponse<User>;
   loading?: boolean;
   revenueData?: {
-    total: number;
+    gross: number;
+    net: number;
     bySalon?: Record<string, number>;
   };
 }
@@ -28,11 +29,12 @@ export function StatsGrid({
   const totalSalons = salonsData?.length || 0;
   const totalUsers = usersData?.meta.total || 0;
   const activeSubscriptions = salonsData?.filter((s) => s.isActive).length || 0;
-  const totalRevenue = revenueData?.total || 0;
+  const grossRevenue = revenueData?.gross || 0;
+  const netRevenue = revenueData?.net || 0;
 
   return (
     <AdminStatsGrid
-      className={`sm:grid-cols-2 ${isSuperadmin ? "lg:grid-cols-4" : "lg:grid-cols-2"}`}
+      className={`sm:grid-cols-2 ${isSuperadmin ? "lg:grid-cols-5" : "lg:grid-cols-3"}`}
     >
       {isSuperadmin && (
         <StatsCard
@@ -53,12 +55,20 @@ export function StatsGrid({
         iconBgColor="bg-accent-blue/10"
       />
       <StatsCard
-        title={t("admin.stats.totalRevenue")}
-        value={formatCurrency(totalRevenue)}
+        title={t("sales.grossRevenue")}
+        value={formatCurrency(grossRevenue)}
         loading={loading}
         icon={DollarSign}
         iconColor="text-green-600"
         iconBgColor="bg-green-100"
+      />
+      <StatsCard
+        title={t("sales.netRevenue")}
+        value={formatCurrency(netRevenue)}
+        loading={loading}
+        icon={DollarSign}
+        iconColor="text-accent-pink"
+        iconBgColor="bg-accent-pink/10"
       />
       {isSuperadmin && (
         <StatsCard

@@ -21,11 +21,6 @@ export function DashboardPage() {
 
   const salonId = user?.salon?.id;
   const today = useMemo(() => getLocalDateString(), []);
-  const lastWeekDate = useMemo(() => {
-    const date = new Date();
-    date.setDate(date.getDate() - 7);
-    return getLocalDateString(date);
-  }, []);
   const appointmentsParams = useMemo(
     () => ({
       salonId,
@@ -38,23 +33,6 @@ export function DashboardPage() {
   const { summary, isLoading: isSummaryLoading } = useSalonBusinessSummary(
     salonId,
     { enabled: !!salonId },
-  );
-
-  const todaysRevenue = useMemo(
-    () => ({
-      date: today,
-      revenue: summary.todayRevenue,
-      appointments: 0,
-    }),
-    [today, summary.todayRevenue],
-  );
-  const lastWeekRevenue = useMemo(
-    () => ({
-      date: lastWeekDate,
-      revenue: summary.lastWeekRevenue,
-      appointments: 0,
-    }),
-    [lastWeekDate, summary.lastWeekRevenue],
   );
 
   const { data: appointmentsData } = useGet<PaginatedResponse<Appointment>>(
@@ -87,8 +65,8 @@ export function DashboardPage() {
         description={t("nav.dashboard")}
       />
       <StatsGrid
-        todaysRevenue={todaysRevenue}
-        lastWeekRevenue={lastWeekRevenue}
+        grossRevenue={summary.grossRevenue}
+        netRevenue={summary.netRevenue}
         clients={clients}
         loading={statsLoading}
       />

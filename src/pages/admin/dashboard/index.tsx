@@ -18,6 +18,8 @@ import {
 } from "./utils";
 
 interface DashboardSummaryStats {
+  grossRevenue: number;
+  netRevenue: number;
   totalRevenue: number;
 }
 
@@ -84,8 +86,11 @@ export default function AdminDashboardPage() {
     user?.id,
   );
   const recentUsers = getRecentItems(filteredUsers, 5);
-  const totalRevenue = isSuperadmin
-    ? summaryStats?.totalRevenue ?? 0
+  const grossRevenue = isSuperadmin
+    ? summaryStats?.grossRevenue ?? summaryStats?.totalRevenue ?? 0
+    : adminBusinessSummary.grossRevenue;
+  const netRevenue = isSuperadmin
+    ? summaryStats?.netRevenue ?? summaryStats?.totalRevenue ?? 0
     : adminBusinessSummary.netRevenue;
 
   return (
@@ -106,7 +111,8 @@ export default function AdminDashboardPage() {
         usersData={usersData}
         loading={isLoading}
         revenueData={{
-          total: totalRevenue,
+          gross: grossRevenue,
+          net: netRevenue,
         }}
       />
 
