@@ -19,8 +19,11 @@ import {
 } from "@/components/ui/select";
 import { toast } from "@/lib/toast";
 import { useGet, withParams } from "@/hooks/useGet";
+import { useBusinessSummaryContext } from "@/contexts/BusinessSummaryProvider";
 import { usePost } from "@/hooks/usePost";
+import { useSalonSettings } from "@/contexts/SalonSettingsProvider";
 import { useSalonServices } from "@/contexts/ServicesProvider";
+import { useSalonStaff } from "@/contexts/StaffProvider";
 import { useForm } from "@/hooks/useForm";
 import { useUser } from "@/hooks/useUser";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -33,7 +36,6 @@ import type {
   Client,
   PaginatedResponse,
   Sale,
-  Salon,
   SalonSettings,
   SalonSettingsExtended,
   User,
@@ -87,6 +89,7 @@ export function AgendaPage() {
   const { user, isAdmin, isSuperadmin } = useUser();
   const { formatCurrency } = useLanguage();
   const queryClient = useQueryClient();
+  const { invalidateBusinessSummary } = useBusinessSummaryContext();
   const canRecordPayment = isAdmin || isSuperadmin;
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [modalState, setModalState] = useState<AppointmentModalState>(null);
@@ -223,7 +226,6 @@ export function AgendaPage() {
     activeTab === "availability" || viewMode === "day";
   const shouldLoadReferenceData =
     !!salonId && modalState?.mode === "edit";
-  const hasSalonSettingsInAuth = !!user?.salon?.settings;
   const appointmentsStaleTime = 1000 * 30; // 30s for near real-time
   const clientsStaleTime = 1000 * 60 * 10; // 10m
   const appointmentsParams = useMemo(
@@ -258,19 +260,19 @@ export function AgendaPage() {
     { enabled: shouldLoadReferenceData, staleTime: clientsStaleTime },
   );
 
-  const { data: salonData } = useGet<Salon>(`salons/${salonId}`, {
-    enabled: !!salonId && !hasSalonSettingsInAuth,
-    staleTime: 1000 * 60 * 2,
-    refetchOnWindowFocus: true,
+  const { settings: salonSettingsData } = useSalonSettings(salonId, {
+    enabled: !!salonId,
   });
 
   const { services, isLoading: isServicesLoading } = useSalonServices(salonId, {
     enabled: shouldLoadReferenceData,
   });
 
-  const { data: staffResponse } = useGet<PaginatedResponse<User>>(
-    withParams("users", { salonId, role: "user", perPage: 100 }),
-    { enabled: !!salonId && canSelectStaff, staleTime: 1000 * 60 * 5 },
+  const { staff: staffMembers, isLoading: isStaffLoading } = useSalonStaff(
+    salonId,
+    {
+      enabled: !!salonId && canSelectStaff,
+    },
   );
 
   const [optimisticState, setOptimisticState] = useState(() => ({
@@ -305,9 +307,9 @@ export function AgendaPage() {
   const showAppointmentsLoading =
     isAppointmentsLoading && appointments.length === 0;
   const isReferenceDataLoading =
-    shouldLoadReferenceData && (isClientsLoading || isServicesLoading);
+    shouldLoadReferenceData &&
+    (isClientsLoading || isServicesLoading || (canSelectStaff && isStaffLoading));
   const clients = safeExtractArray<Client>(clientsData);
-  const staffMembers = safeExtractArray<User>(staffResponse);
   const staffOptions = useMemo(() => {
     return buildStaffOptions({
       user,
@@ -353,10 +355,16 @@ export function AgendaPage() {
     );
   }, [availabilityStaffMembers, availabilityStaffId]);
   type SalonSettingsLike = SalonSettings & Partial<SalonSettingsExtended>;
-  const salonSettings = (salonData?.settings ?? user?.salon?.settings) as
+  const salonSettings = (salonSettingsData ?? user?.salon?.settings) as
     | SalonSettingsLike
     | undefined;
-  const bookingSlotMinutes = DEFAULT_SLOT_MINUTES;
+  const bookingSlotMinutes = useMemo(() => {
+    const configured = Number(salonSettings?.bookingSlotDuration);
+    if (Number.isFinite(configured) && configured > 0) {
+      return configured;
+    }
+    return DEFAULT_SLOT_MINUTES;
+  }, [salonSettings?.bookingSlotDuration]);
   const workingHoursForSelectedDate = useMemo(
     () => getWorkingHoursForDate(salonSettings, selectedDate),
     [salonSettings, selectedDate],
@@ -871,6 +879,9 @@ export function AgendaPage() {
         toast.success(
           t("agenda.paymentRecorded") + " - " + t("common.success"),
         );
+        if (variables?.salonId) {
+          invalidateBusinessSummary(variables.salonId);
+        }
         queryClient.setQueryData<PaginatedResponse<Appointment> | undefined>(
           appointmentsQueryKey,
           (current) => {

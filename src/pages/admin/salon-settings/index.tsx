@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 import type { SalonSettingsExtended, Salon } from "@/types/entities";
 import { usePost } from "@/hooks/usePost";
 import { useUser } from "@/hooks/useUser";
-import { useGet } from "@/hooks/useGet";
+import { useSalonSettings } from "@/contexts/SalonSettingsProvider";
 import { useSalonServices } from "@/contexts/ServicesProvider";
 import { ROUTES } from "@/constants/navigation";
 import { GeneralSettings } from "./components/general-settings";
@@ -52,18 +52,17 @@ export function SalonSettingsPage() {
     }
   }, [location.pathname]);
 
-  const { data: fetchedSalon } = useGet<Salon>(
-    `salons/${userSalon?.id}`,
-    {
-      enabled: !!userSalon?.id,
-      staleTime: 1000 * 60 * 10,
-      refetchOnMount: false,
-      refetchOnWindowFocus: false,
-    },
-  );
+  const {
+    salon: cachedSalon,
+    isLoading: isSalonLoading,
+    refresh: refreshSalon,
+    applyOptimisticSettings,
+  } = useSalonSettings(userSalon?.id, {
+    enabled: !!userSalon?.id,
+  });
 
   // Use latest salon settings when available
-  const currentSalon = fetchedSalon || userSalon;
+  const currentSalon = cachedSalon || userSalon;
   const normalizedPlanTier = String(currentSalon?.planTier || "standard").toLowerCase();
   const isReminderProEnabled =
     normalizedPlanTier === "pro" ||
@@ -74,7 +73,7 @@ export function SalonSettingsPage() {
 
   // Settings are stored within the salon entity
   const settings = currentSalon?.settings as SalonSettingsExtended | undefined;
-  const isLoading = !currentSalon;
+  const isLoading = isSalonLoading && !currentSalon;
   const { services, isLoading: servicesLoading } = useSalonServices(
     currentSalon?.id,
     {
@@ -121,15 +120,23 @@ export function SalonSettingsPage() {
   );
 
   const handleSave = () => {
-    saveSettings.mutate({
-      settings: isReminderProEnabled
-        ? formData
-        : {
-            ...formData,
-            sendAppointmentReminder: false,
-            socialPublishingEnabled: false,
-          },
-    });
+    const nextSettings = isReminderProEnabled
+      ? formData
+      : {
+          ...formData,
+          sendAppointmentReminder: false,
+          socialPublishingEnabled: false,
+        };
+
+    applyOptimisticSettings(nextSettings);
+    saveSettings.mutate(
+      { settings: nextSettings },
+      {
+        onError: () => {
+          void refreshSalon();
+        },
+      },
+    );
   };
 
   const tabs: {

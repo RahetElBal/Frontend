@@ -47,6 +47,10 @@ import { cn } from "@/lib/utils";
 import { usePost } from "@/hooks/usePost";
 import { usePostAction } from "@/hooks/usePostAction";
 import { useGet, withParams } from "@/hooks/useGet";
+import {
+  useCategoriesContext,
+  useSalonCategories,
+} from "@/contexts/CategoriesProvider";
 import { getProductColumns } from "./list/columns";
 
 // Modal state type
@@ -83,8 +87,8 @@ export function ProductsPage() {
   const { formatCurrency } = useLanguage();
   const { user } = useUser();
   const productsStaleTime = 1000 * 60 * 10;
-  const categoriesStaleTime = 1000 * 60 * 30;
   const lowStockStaleTime = 1000 * 60 * 2;
+  const { invalidateCategories } = useCategoriesContext();
 
   // Unified modal state
   const [modalState, setModalState] = useState<ProductModalState>(null);
@@ -102,10 +106,10 @@ export function ProductsPage() {
   
   const products = productsResponse?.data || [];
 
-  const { data: productCategories = [] } = useGet<string[]>(
-    withParams("products/categories", { salonId }),
-    { enabled: !!salonId, staleTime: categoriesStaleTime },
-  );
+  const { productCategories = [] } = useSalonCategories(salonId, {
+    enabled: !!salonId,
+    includeServices: false,
+  });
 
   // Fetch low stock products - GET /products/low-stock
   const { data: lowStockProducts = [] } = useGet<Product[]>(
@@ -183,6 +187,9 @@ export function ProductsPage() {
     invalidate: ["products"],
     onSuccess: () => {
       toast.success(t("products.addProduct") + " - " + t("common.success"));
+      if (salonId) {
+        invalidateCategories(salonId);
+      }
       setModalState(null);
     },
     onError: (error) => {
@@ -199,6 +206,9 @@ export function ProductsPage() {
     invalidate: ["products"],
     onSuccess: () => {
       toast.success(t("common.edit") + " - " + t("common.success"));
+      if (salonId) {
+        invalidateCategories(salonId);
+      }
       setModalState(null);
     },
     onError: (error) => {
@@ -211,11 +221,14 @@ export function ProductsPage() {
     `products/${selectedProduct?.id}`,
     {
       method: "DELETE",
-      invalidate: ["products"],
-      onSuccess: () => {
-        toast.success(t("common.delete") + " - " + t("common.success"));
-        setModalState(null);
-      },
+    invalidate: ["products"],
+    onSuccess: () => {
+      toast.success(t("common.delete") + " - " + t("common.success"));
+      if (salonId) {
+        invalidateCategories(salonId);
+      }
+      setModalState(null);
+    },
       onError: (error) => {
         toast.error(error.message || t("common.error"));
       },

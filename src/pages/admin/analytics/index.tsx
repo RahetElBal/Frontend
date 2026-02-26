@@ -27,6 +27,7 @@ import {
 import { useLanguage } from "@/hooks/useLanguage";
 import { useUser } from "@/hooks/useUser";
 import { useGet, withParams } from "@/hooks/useGet";
+import { useSalonBusinessSummary } from "@/contexts/BusinessSummaryProvider";
 import { useSalonServices } from "@/contexts/ServicesProvider";
 import {
   translateServiceCategory,
@@ -59,6 +60,9 @@ export function AnalyticsPage() {
   const canViewAnalytics = isAdmin || isSuperadmin;
   /* cSpell:enable */
   const salonId = user?.salon?.id;
+  const { summary: businessSummary } = useSalonBusinessSummary(salonId, {
+    enabled: !!salonId && canViewAnalytics,
+  });
 
   const listStaleTime = 1000 * 60 * 5;
   const listCacheTime = 1000 * 60 * 30;
@@ -211,11 +215,23 @@ export function AnalyticsPage() {
     return <Navigate to={ROUTES.DASHBOARD} replace />;
   }
 
-  const totalRevenue = salesInRange.reduce(
+  const periodRevenue = salesInRange.reduce(
     (sum, sale) => sum + toNumber(sale.total),
     0,
   );
-  const totalTransactions = salesInRange.length;
+  const periodTransactions = salesInRange.length;
+  const hasBusinessSummary =
+    businessSummary.updatedAt > 0 ||
+    businessSummary.grossRevenue !== 0 ||
+    businessSummary.netRevenue !== 0 ||
+    businessSummary.transactionCount !== 0 ||
+    businessSummary.canceledCount !== 0;
+  const totalRevenue = hasBusinessSummary
+    ? businessSummary.netRevenue
+    : periodRevenue;
+  const totalTransactions = hasBusinessSummary
+    ? businessSummary.transactionCount
+    : periodTransactions;
   const averageTicket =
     totalTransactions > 0 ? totalRevenue / totalTransactions : 0;
   const totalAppointments = appointmentsInRange.length;

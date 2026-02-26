@@ -17,6 +17,7 @@ import { useTable } from "@/hooks/useTable";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useUser } from "@/hooks/useUser";
 import { ROUTES } from "@/constants/navigation";
+import { useSalonBusinessSummary } from "@/contexts/BusinessSummaryProvider";
 import type { Sale, SaleItem } from "@/types/entities";
 import { useGet, withParams } from "@/hooks/useGet";
 import { getSalesColumns } from "./list/columns";
@@ -67,6 +68,12 @@ export function SalesPage() {
 
   const salonId = user?.salon?.id;
   const salesStaleTime = 1000 * 60;
+  const { summary, isLoading: isSummaryLoading } = useSalonBusinessSummary(
+    salonId,
+    {
+      enabled: !!salonId,
+    },
+  );
 
   const { data: salesResponse, isLoading } = useGet<PaginatedResponse<Sale>>(
     withParams("sales", {
@@ -86,7 +93,6 @@ export function SalesPage() {
     },
   );
   const sales = salesResponse?.data ?? [];
-  const showSalesLoading = isLoading && sales.length === 0;
 
   const { data: selectedSaleDetails } = useGet<Sale>(`sales/${selectedSaleId}`, {
     enabled: !!selectedSaleId,
@@ -107,11 +113,26 @@ export function SalesPage() {
     searchKeys: ["id"],
   });
 
-  const todayTotal = (sales ?? []).reduce(
+  const fallbackTotal = (sales ?? []).reduce(
     (sum, sale) => sum + toNumber(sale?.total),
     0,
   );
-  const averageTicket = sales.length > 0 ? todayTotal / sales.length : 0;
+  const fallbackTransactions = sales.length;
+  const fallbackAverage =
+    fallbackTransactions > 0 ? fallbackTotal / fallbackTransactions : 0;
+  const hasSummaryData =
+    summary.updatedAt > 0 ||
+    summary.grossRevenue !== 0 ||
+    summary.netRevenue !== 0 ||
+    summary.transactionCount !== 0 ||
+    summary.canceledCount !== 0;
+  const todayTotal = hasSummaryData ? summary.netRevenue : fallbackTotal;
+  const transactionsCount = hasSummaryData
+    ? summary.transactionCount
+    : fallbackTransactions;
+  const averageTicket =
+    transactionsCount > 0 ? todayTotal / transactionsCount : fallbackAverage;
+  const showSummaryLoading = isSummaryLoading && !hasSummaryData;
   const columns = getSalesColumns({
     t,
     formatCurrency,
@@ -158,7 +179,7 @@ export function SalesPage() {
           <p className="text-sm text-muted-foreground">
             {t("sales.todayTotal")}
           </p>
-          {showSalesLoading ? (
+          {showSummaryLoading ? (
             <div className="flex items-center h-8">
               <Spinner size="sm" />
             </div>
@@ -172,19 +193,19 @@ export function SalesPage() {
           <p className="text-sm text-muted-foreground">
             {t("sales.transactions")}
           </p>
-          {showSalesLoading ? (
+          {showSummaryLoading ? (
             <div className="flex items-center h-8">
               <Spinner size="sm" />
             </div>
           ) : (
-            <p className="text-2xl font-bold">{sales.length}</p>
+            <p className="text-2xl font-bold">{transactionsCount}</p>
           )}
         </Card>
         <Card className="p-4">
           <p className="text-sm text-muted-foreground">
             {t("sales.averageTicket")}
           </p>
-          {showSalesLoading ? (
+          {showSummaryLoading ? (
             <div className="flex items-center h-8">
               <Spinner size="sm" />
             </div>

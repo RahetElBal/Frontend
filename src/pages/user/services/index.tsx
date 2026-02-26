@@ -42,6 +42,10 @@ import type { PaginatedResponse } from "@/types";
 import type { ApiError } from "@/types/api";
 import { useGet, withParams } from "@/hooks/useGet";
 import { usePost } from "@/hooks/usePost";
+import {
+  useCategoriesContext,
+  useSalonCategories,
+} from "@/contexts/CategoriesProvider";
 import { useServicesContext } from "@/contexts/ServicesProvider";
 import { post } from "@/lib/http";
 import { ServiceCard } from "./components/service-card";
@@ -50,12 +54,6 @@ import {
   translateServiceCategory,
   translateServiceName,
 } from "@/common/service-translations";
-
-// Category type from API
-interface ServiceCategory {
-  category: string;
-  count: number;
-}
 
 // Modal state type
 type ServiceModalState = {
@@ -102,8 +100,8 @@ export function ServicesPage() {
   const { formatCurrency } = useLanguage();
   const { user, isSuperadmin } = useUser();
   const { invalidateServices } = useServicesContext();
+  const { invalidateCategories } = useCategoriesContext();
   const servicesStaleTime = 1000 * 60 * 10;
-  const categoriesStaleTime = 1000 * 60 * 30;
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   // Unified modal state
@@ -122,15 +120,17 @@ export function ServicesPage() {
       { enabled: !!salonId, staleTime: servicesStaleTime },
     );
   const services = servicesResponse?.data ?? [];
-  
-  const { data: categoriesData = [] } = useGet<ServiceCategory[] | string[]>(
-    withParams("services/categories", { salonId }),
-    { enabled: !!salonId, staleTime: categoriesStaleTime },
+
+  const { serviceCategories: categoriesData = [] } = useSalonCategories(
+    salonId,
+    {
+      enabled: !!salonId,
+      includeProducts: false,
+    },
   );
   
   // Transform categories data for display
-  const categories = categoriesData.map((cat) => {
-    const name = typeof cat === "string" ? cat : cat.category;
+  const categories = categoriesData.map((name) => {
     return {
       id: name,
       name,
@@ -202,6 +202,7 @@ export function ServicesPage() {
       toast.success(t("services.addService") + " - " + t("common.success"));
       if (salonId) {
         invalidateServices(salonId);
+        invalidateCategories(salonId);
       }
       setModalState(null);
     },
@@ -221,6 +222,7 @@ export function ServicesPage() {
       toast.success(t("common.edit") + " - " + t("common.success"));
       if (salonId) {
         invalidateServices(salonId);
+        invalidateCategories(salonId);
       }
       setModalState(null);
     },
@@ -236,12 +238,13 @@ export function ServicesPage() {
       method: "DELETE",
       invalidate: ["services"],
       onSuccess: () => {
-        toast.success(t("common.delete") + " - " + t("common.success"));
-        if (salonId) {
-          invalidateServices(salonId);
-        }
-        setModalState(null);
-      },
+      toast.success(t("common.delete") + " - " + t("common.success"));
+      if (salonId) {
+        invalidateServices(salonId);
+        invalidateCategories(salonId);
+      }
+      setModalState(null);
+    },
       onError: (error) => {
         toast.error(error.message || t("common.error"));
       },
@@ -255,6 +258,7 @@ export function ServicesPage() {
         toast.success(t("common.success"));
         if (salonId) {
           invalidateServices(salonId);
+          invalidateCategories(salonId);
         }
         refetch();
       })

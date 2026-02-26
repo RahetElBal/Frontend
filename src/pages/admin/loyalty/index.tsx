@@ -35,12 +35,15 @@ import {
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { toast } from "@/lib/toast";
+import { useBusinessSummaryContext } from "@/contexts/BusinessSummaryProvider";
+import { useSalonSettings } from "@/contexts/SalonSettingsProvider";
 import { useSalonServices } from "@/contexts/ServicesProvider";
 import { useLoyaltyContext, useSalonLoyaltyData } from "@/contexts/LoyaltyProvider";
 import { usePost } from "@/hooks/usePost";
 import { useUser } from "@/hooks/useUser";
 import { useLanguage } from "@/hooks/useLanguage";
 import type { Sale } from "@/types/entities";
+import type { Salon } from "@/types/entities";
 import {
   deriveLoyaltySettings,
   calculateTotalPointsIssued,
@@ -62,6 +65,7 @@ export function LoyaltyPage() {
   const { salon, isAdmin, isSuperadmin } = useUser();
   const { formatCurrency } = useLanguage();
   const { invalidateLoyaltyData } = useLoyaltyContext();
+  const { invalidateBusinessSummary } = useBusinessSummaryContext();
   const [isRedeemModalOpen, setIsRedeemModalOpen] = useState(false);
   const [redeemClientId, setRedeemClientId] = useState("");
   const [redeemServiceId, setRedeemServiceId] = useState("");
@@ -69,6 +73,9 @@ export function LoyaltyPage() {
   const canRedeem = isAdmin || isSuperadmin;
   const shouldLoadData = !!salonId;
   const shouldLoadServices = !!salonId && canRedeem && isRedeemModalOpen;
+  const { settings: salonSettings } = useSalonSettings(salonId, {
+    enabled: shouldLoadData,
+  });
 
   const { services, isLoading: isServicesLoading } = useSalonServices(salonId, {
     enabled: shouldLoadServices,
@@ -89,7 +96,24 @@ export function LoyaltyPage() {
     clients.length === 0 &&
     salesStats.length === 0;
 
-  const derivedSettings = useMemo(() => deriveLoyaltySettings(salon), [salon]);
+  const salonWithLatestSettings = useMemo(
+    () =>
+      salon
+        ? {
+            ...salon,
+            settings: {
+              ...(salon.settings || {}),
+              ...(salonSettings || {}),
+            },
+          }
+        : null,
+    [salon, salonSettings],
+  );
+
+  const derivedSettings = useMemo(
+    () => deriveLoyaltySettings(salonWithLatestSettings as Salon | null),
+    [salonWithLatestSettings],
+  );
 
   const totalPointsIssued = useMemo(
     () => calculateTotalPointsIssued(clients),
@@ -157,6 +181,9 @@ export function LoyaltyPage() {
   >("sales", {
     invalidate: ["sales", "clients"],
     onSuccess: () => {
+      if (salonId) {
+        invalidateBusinessSummary(salonId);
+      }
       if (salonId) {
         invalidateLoyaltyData(salonId);
       }

@@ -5,10 +5,10 @@ import { Plus, User } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/lib/toast";
-import type { User as UserType, StaffSchedule } from "@/types/entities";
-import type { PaginatedResponse } from "@/types";
+import type { StaffSchedule } from "@/types/entities";
 import { useGet, withParams } from "@/hooks/useGet";
 import { usePost } from "@/hooks/usePost";
+import { useSalonStaff } from "@/contexts/StaffProvider";
 import { useUser } from "@/hooks/useUser";
 import { SchedulesView } from "./components/schedules-view";
 import { ScheduleModal } from "./components/dialog/schedule-modal";
@@ -26,11 +26,9 @@ export function StaffPage() {
   const salonId = user?.salon?.id;
 
   // Fetch staff members (users) for the current salon
-  const { data: staffMembersResponse } = useGet<PaginatedResponse<UserType>>(
-    withParams("users", { salonId, role: "user" }),
-    { enabled: !!salonId },
-  );
-  const staffMembers = staffMembersResponse?.data ?? [];
+  const { staff: staffMembers } = useSalonStaff(salonId, {
+    enabled: !!salonId,
+  });
 
   // NOTE: These endpoints are not yet implemented in the backend API
   // For now, we'll use empty arrays as fallback

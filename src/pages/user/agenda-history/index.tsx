@@ -5,7 +5,9 @@ import { useTranslation } from "react-i18next";
 import { PageHeader } from "@/components/page-header";
 import { Card } from "@/components/ui/card";
 import { Spinner } from "@/components/spinner";
+import { useSalonBusinessSummary } from "@/contexts/BusinessSummaryProvider";
 import { useGet, withParams } from "@/hooks/useGet";
+import { useSalonStaff } from "@/contexts/StaffProvider";
 import { useUser } from "@/hooks/useUser";
 import { useLanguage } from "@/hooks/useLanguage";
 import { ROUTES } from "@/constants/navigation";
@@ -41,6 +43,9 @@ export function AgendaHistoryPage() {
   }
 
   const salonId = user?.salon?.id;
+  const { summary: businessSummary } = useSalonBusinessSummary(salonId, {
+    enabled: !!salonId,
+  });
   const [dateFrom, setDateFrom] = useState(() => {
     const date = new Date();
     date.setDate(date.getDate() - 30);
@@ -64,7 +69,6 @@ export function AgendaHistoryPage() {
       dateTo: dateTo || undefined,
       status: statusParam,
       compact: true,
-      includeStaff: true,
       sortBy: "date",
       sortOrder: "desc",
     };
@@ -80,49 +84,9 @@ export function AgendaHistoryPage() {
     );
 
   const appointments = safeExtractArray<Appointment>(appointmentsData);
-  const staffMembers = useMemo(() => {
-    const byId = new Map<
-      string,
-      {
-        id: string;
-        firstName?: string | null;
-        lastName?: string | null;
-        name?: string | null;
-        email?: string | null;
-      }
-    >();
-
-    appointments.forEach((appointment) => {
-      if (!appointment.staffId) return;
-
-      const existing = byId.get(appointment.staffId);
-      const staff = appointment.staff;
-
-      if (staff?.id) {
-        byId.set(appointment.staffId, {
-          id: appointment.staffId,
-          firstName: staff.firstName ?? existing?.firstName ?? null,
-          lastName: staff.lastName ?? existing?.lastName ?? null,
-          name: staff.name ?? existing?.name ?? null,
-          email: staff.email ?? existing?.email ?? null,
-        });
-        return;
-      }
-
-      if (!existing) {
-        byId.set(appointment.staffId, {
-          id: appointment.staffId,
-          name: appointment.staffId,
-        });
-      }
-    });
-
-    if (staffFilterId && !byId.has(staffFilterId)) {
-      byId.set(staffFilterId, { id: staffFilterId, name: staffFilterId });
-    }
-
-    return Array.from(byId.values());
-  }, [appointments, staffFilterId]);
+  const { staff: staffMembers } = useSalonStaff(salonId, {
+    enabled: !!salonId,
+  });
 
   const staffOptions = useMemo(
     () =>
@@ -176,6 +140,19 @@ export function AgendaHistoryPage() {
     base.averageTicket = paidCount > 0 ? base.revenue / paidCount : 0;
     return base;
   }, [statsAppointments]);
+  const hasBusinessSummary =
+    businessSummary.updatedAt > 0 ||
+    businessSummary.grossRevenue !== 0 ||
+    businessSummary.netRevenue !== 0 ||
+    businessSummary.transactionCount !== 0 ||
+    businessSummary.canceledCount !== 0;
+  const historyRevenue = hasBusinessSummary
+    ? businessSummary.netRevenue
+    : stats.revenue;
+  const historyAverageTicket =
+    hasBusinessSummary && businessSummary.transactionCount > 0
+      ? businessSummary.netRevenue / businessSummary.transactionCount
+      : stats.averageTicket;
 
   const showStatsLoading = isAppointmentsLoading && appointments.length === 0;
 
@@ -257,7 +234,7 @@ export function AgendaHistoryPage() {
             </div>
           ) : (
             <p className="text-2xl font-bold text-accent-pink">
-              {formatCurrency(stats.revenue)}
+              {formatCurrency(historyRevenue)}
             </p>
           )}
         </Card>
@@ -271,7 +248,7 @@ export function AgendaHistoryPage() {
             </div>
           ) : (
             <p className="text-2xl font-bold">
-              {formatCurrency(stats.averageTicket)}
+              {formatCurrency(historyAverageTicket)}
             </p>
           )}
         </Card>

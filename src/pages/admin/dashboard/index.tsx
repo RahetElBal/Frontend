@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { useUser } from "@/hooks/useUser";
 import { useGet, withParams } from "@/hooks/useGet";
+import { useSalonBusinessSummary } from "@/contexts/BusinessSummaryProvider";
 import { Spinner } from "@/components/spinner";
 import { PageHeader } from "@/components/page-header";
 import type { PaginatedResponse, Salon, User } from "@/types";
@@ -25,10 +26,11 @@ export default function AdminDashboardPage() {
   const { user, isLoading: userLoading, isSuperadmin } = useUser();
   const adminSalons = getAdminSalons(user as User | null);
   const adminSalonId = adminSalons[0]?.id;
-  const summaryPath = withParams(
-    "salons/stats/summary",
-    isSuperadmin ? {} : { salonId: adminSalonId },
-  );
+
+  const { summary: adminBusinessSummary, isLoading: adminSummaryLoading } =
+    useSalonBusinessSummary(adminSalonId, {
+      enabled: !isSuperadmin && !!adminSalonId,
+    });
 
   const { data: usersData, isLoading: usersLoading } = useGet<
     PaginatedResponse<User>
@@ -43,16 +45,19 @@ export default function AdminDashboardPage() {
     },
   );
   const { data: summaryStats, isLoading: summaryLoading } =
-    useGet<DashboardSummaryStats>(summaryPath, {
-      enabled: isSuperadmin || !!adminSalonId,
+    useGet<DashboardSummaryStats>(withParams("salons/stats/summary"), {
+      enabled: isSuperadmin,
       staleTime: 1000 * 60 * 5,
       refetchOnWindowFocus: true,
     });
 
+  const effectiveSummaryLoading = isSuperadmin
+    ? summaryLoading
+    : adminSummaryLoading;
   const isLoading =
     userLoading ||
     usersLoading ||
-    summaryLoading ||
+    effectiveSummaryLoading ||
     (isSuperadmin && salonsLoading);
 
   if (isLoading) {
@@ -79,6 +84,9 @@ export default function AdminDashboardPage() {
     user?.id,
   );
   const recentUsers = getRecentItems(filteredUsers, 5);
+  const totalRevenue = isSuperadmin
+    ? summaryStats?.totalRevenue ?? 0
+    : adminBusinessSummary.grossRevenue;
 
   return (
     <div className="space-y-8">
@@ -98,7 +106,7 @@ export default function AdminDashboardPage() {
         usersData={usersData}
         loading={isLoading}
         revenueData={{
-          total: summaryStats?.totalRevenue ?? 0,
+          total: totalRevenue,
         }}
       />
 
