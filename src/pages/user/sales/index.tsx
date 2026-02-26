@@ -66,7 +66,7 @@ export function SalesPage() {
   }
 
   const salonId = user?.salon?.id;
-  const salesStaleTime = 1000 * 10;
+  const salesStaleTime = 1000 * 60;
 
   const { data: salesResponse, isLoading } = useGet<PaginatedResponse<Sale>>(
     withParams("sales", {
@@ -79,9 +79,9 @@ export function SalesPage() {
     {
       enabled: !!salonId,
       staleTime: salesStaleTime,
-      refetchInterval: 1000 * 15,
-      refetchIntervalInBackground: true,
-      refetchOnWindowFocus: false,
+      refetchOnMount: "always",
+      refetchOnWindowFocus: true,
+      refetchOnReconnect: true,
       select: normalizeSalesResponse,
     },
   );

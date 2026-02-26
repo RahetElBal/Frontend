@@ -24,7 +24,7 @@ import { useForm } from "@/hooks/useForm";
 import { useUser } from "@/hooks/useUser";
 import { useLanguage } from "@/hooks/useLanguage";
 import { normalizePhone } from "@/common/phone";
-import { buildUrl, get, patch } from "@/lib/http";
+import { patch } from "@/lib/http";
 import type { ApiError } from "@/types/api";
 
 import type {
@@ -892,22 +892,6 @@ export function AgendaPage() {
             };
           },
         );
-        if (salonId) {
-          const salesParams = {
-            salonId,
-            perPage: 100,
-            sortBy: "createdAt",
-            sortOrder: "desc",
-          };
-          const salesQueryKey = ["sales", salesParams];
-          void queryClient.prefetchQuery({
-            queryKey: salesQueryKey,
-            queryFn: () =>
-              get(buildUrl("sales", salesParams)) as Promise<
-                PaginatedResponse<Sale>
-              >,
-          });
-        }
         setModalState(null);
       },
       onError: (error) => {

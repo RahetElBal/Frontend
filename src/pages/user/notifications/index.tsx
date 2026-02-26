@@ -19,8 +19,6 @@ import {
   type AdminNotification,
 } from "@/types/entities";
 
-const NOTIFICATIONS_POLL_MS = 30000;
-
 type NotificationPayload = {
   clientName?: string;
   serviceName?: string;
@@ -51,7 +49,7 @@ export function NotificationsPage() {
 
   const salonId = user?.salon?.id;
   const notificationsParams = useMemo(
-    () => ({ perPage: 30, sortOrder: "desc", salonId }),
+    () => ({ perPage: 30, sortOrder: "desc", salonId, includeUnreadCount: true }),
     [salonId],
   );
 
@@ -60,8 +58,8 @@ export function NotificationsPage() {
       withParams("notifications", notificationsParams),
       {
         enabled: !!salonId,
-        staleTime: 5000,
-        refetchInterval: NOTIFICATIONS_POLL_MS,
+        staleTime: 1000 * 30,
+        refetchOnMount: "always",
       },
     );
 

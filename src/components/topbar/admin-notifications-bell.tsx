@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Bell, BellRing, Check } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -57,9 +57,11 @@ export function AdminNotificationsBell() {
   const { user, isAdmin, isSuperadmin } = useUser();
   const { formatCurrency } = useLanguage();
   const queryClient = useQueryClient();
+  const location = useLocation();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [showNewPill, setShowNewPill] = useState(false);
+  const [isStreamConnected, setIsStreamConnected] = useState(false);
   const prevUnreadRef = useRef<number | null>(null);
   const pillTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const invalidateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -93,10 +95,17 @@ export function AdminNotificationsBell() {
   const canShow = !!user?.id;
   const canViewAmounts = isAdmin || isSuperadmin;
   const salonId = user?.salon?.id;
+  const isOnNotificationsPage = location.pathname === ROUTES.NOTIFICATIONS;
+  const notificationsPerPage = isOnNotificationsPage ? 30 : 8;
 
   const notificationsParams = useMemo(
-    () => ({ perPage: 8, sortOrder: "desc", salonId, includeUnreadCount: true }),
-    [salonId],
+    () => ({
+      perPage: notificationsPerPage,
+      sortOrder: "desc",
+      salonId,
+      includeUnreadCount: true,
+    }),
+    [notificationsPerPage, salonId],
   );
 
   const { data: notificationsData, isLoading: isNotificationsLoading } =
@@ -114,8 +123,8 @@ export function AdminNotificationsBell() {
       withParams("notifications", notificationsParams),
       {
         enabled: canShow,
-        staleTime: 5000,
-        refetchInterval: NOTIFICATIONS_POLL_MS,
+        staleTime: 1000 * 30,
+        refetchInterval: !isStreamConnected ? NOTIFICATIONS_POLL_MS : false,
       },
     );
 
@@ -129,6 +138,7 @@ export function AdminNotificationsBell() {
       ? notificationsData.meta.unreadCount
       : 0;
   const unreadCount = Math.max(unreadCountFromMeta, unreadCountFromList);
+  const notificationsForDropdown = notifications.slice(0, 8);
 
   const { mutate: markRead, isPending: isMarkingRead } = usePost<
     void,
@@ -168,6 +178,7 @@ export function AdminNotificationsBell() {
         if (!response.ok || !response.body) {
           throw new Error(`Stream failed: ${response.status}`);
         }
+        setIsStreamConnected(true);
 
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
@@ -199,8 +210,13 @@ export function AdminNotificationsBell() {
             boundaryIndex = buffer.indexOf("\n\n");
           }
         }
+        if (isActive) {
+          setIsStreamConnected(false);
+          retryTimer = setTimeout(connect, STREAM_RETRY_MS);
+        }
       } catch {
         if (!isActive) return;
+        setIsStreamConnected(false);
         retryTimer = setTimeout(connect, STREAM_RETRY_MS);
       }
     };
@@ -210,6 +226,7 @@ export function AdminNotificationsBell() {
     return () => {
       isActive = false;
       controller?.abort();
+      setIsStreamConnected(false);
       if (invalidateTimerRef.current) {
         clearTimeout(invalidateTimerRef.current);
         invalidateTimerRef.current = null;
@@ -561,13 +578,13 @@ export function AdminNotificationsBell() {
           <div className="flex items-center justify-center py-6">
             <Spinner size="sm" />
           </div>
-        ) : notifications.length === 0 ? (
+        ) : notificationsForDropdown.length === 0 ? (
           <div className="py-6 text-center text-sm text-muted-foreground">
             {t("common.noNotifications")}
           </div>
         ) : (
           <div className="max-h-[360px] overflow-y-auto">
-            {notifications.map((notification) => {
+            {notificationsForDropdown.map((notification) => {
               const isUnread = !notification.readAt;
               const payload = toPayload(notification);
               const actorName =
