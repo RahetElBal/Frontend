@@ -1,7 +1,8 @@
 import { useTranslation } from "react-i18next";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Navigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { PageHeader } from "@/components/page-header";
 import { Card } from "@/components/ui/card";
 import { Spinner } from "@/components/spinner";
@@ -17,9 +18,14 @@ import { useTable } from "@/hooks/useTable";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useUser } from "@/hooks/useUser";
 import { ROUTES } from "@/constants/navigation";
-import { useSalonBusinessSummary } from "@/contexts/BusinessSummaryProvider";
+import {
+  useBusinessSummaryContext,
+  useSalonBusinessSummary,
+} from "@/contexts/BusinessSummaryProvider";
 import type { Sale, SaleItem } from "@/types/entities";
 import { useGet, withParams } from "@/hooks/useGet";
+import { usePost } from "@/hooks/usePost";
+import { toast } from "@/lib/toast";
 import { getSalesColumns } from "./list/columns";
 import { saleStatusColors, formatSaleTime, toNumber } from "./utils";
 import { normalizeSale, normalizeSalesResponse } from "@/utils/normalize-sales";
@@ -60,7 +66,10 @@ export function SalesPage() {
   const { t } = useTranslation();
   const { formatCurrency } = useLanguage();
   const { user, isAdmin, isSuperadmin } = useUser();
+  const queryClient = useQueryClient();
+  const { invalidateBusinessSummary } = useBusinessSummaryContext();
   const [selectedSaleId, setSelectedSaleId] = useState<string | null>(null);
+  const [refundingSaleId, setRefundingSaleId] = useState<string | null>(null);
 
   if (!isAdmin && !isSuperadmin) {
     return <Navigate to={ROUTES.DASHBOARD} replace />;
@@ -100,6 +109,27 @@ export function SalesPage() {
     select: normalizeSale,
   });
 
+  const { mutate: refundSale, isPending: isRefunding } = usePost<Sale, { id: string }>(
+    ({ id }) => `sales/${id}/refund`,
+    {
+      invalidate: ["sales", "appointments"],
+      onSuccess: (_sale, variables) => {
+        queryClient.invalidateQueries({
+          queryKey: [`sales/${variables.id}`],
+        });
+        if (salonId) {
+          invalidateBusinessSummary(salonId);
+        }
+        setRefundingSaleId(null);
+        toast.success(t("sales.refundSuccess"));
+      },
+      onError: (error) => {
+        setRefundingSaleId(null);
+        toast.error(error?.message || t("sales.refundError"));
+      },
+    },
+  );
+
   const selectedSale = useMemo(() => {
     if (!selectedSaleId) return null;
     if (selectedSaleDetails?.id === selectedSaleId) return selectedSaleDetails;
@@ -113,29 +143,67 @@ export function SalesPage() {
     searchKeys: ["id"],
   });
 
-  const fallbackTotal = (sales ?? []).reduce(
-    (sum, sale) => sum + toNumber(sale?.total),
+  const fallbackGrossRevenue = (sales ?? []).reduce(
+    (sum, sale) =>
+      sale?.status === "completed" ? sum + toNumber(sale?.total) : sum,
     0,
   );
-  const fallbackTransactions = sales.length;
+  const fallbackTransactions = sales.filter(
+    (sale) => sale.status === "completed",
+  ).length;
+  const fallbackRefundedCount = sales.filter(
+    (sale) => sale.status === "refunded",
+  ).length;
+  const fallbackRefundedRevenueImpact = sales.reduce((sum, sale) => {
+    if (sale.status !== "refunded") return sum;
+    return sum - Math.abs(toNumber(sale?.total));
+  }, 0);
   const fallbackAverage =
-    fallbackTransactions > 0 ? fallbackTotal / fallbackTransactions : 0;
+    fallbackTransactions > 0
+      ? fallbackGrossRevenue / fallbackTransactions
+      : 0;
   const hasSummaryData =
     summary.updatedAt > 0 ||
     summary.grossRevenue !== 0 ||
     summary.netRevenue !== 0 ||
     summary.transactionCount !== 0 ||
-    summary.canceledCount !== 0;
-  const todayTotal = hasSummaryData ? summary.netRevenue : fallbackTotal;
+    summary.canceledCount !== 0 ||
+    summary.refundedCount !== 0;
+  const grossRevenue = hasSummaryData
+    ? summary.grossRevenue
+    : fallbackGrossRevenue;
+  const netRevenue = hasSummaryData
+    ? summary.netRevenue
+    : Math.max(0, fallbackGrossRevenue + fallbackRefundedRevenueImpact);
   const transactionsCount = hasSummaryData
     ? summary.transactionCount
     : fallbackTransactions;
+  const refundedCount = hasSummaryData
+    ? summary.refundedCount
+    : fallbackRefundedCount;
+  const refundedAmount = Math.abs(
+    hasSummaryData ? summary.refundedRevenueImpact : fallbackRefundedRevenueImpact,
+  );
   const averageTicket =
-    transactionsCount > 0 ? todayTotal / transactionsCount : fallbackAverage;
+    transactionsCount > 0 ? netRevenue / transactionsCount : fallbackAverage;
   const showSummaryLoading = isSummaryLoading && !hasSummaryData;
+
+  const handleRefund = useCallback(
+    (sale: Sale) => {
+      if (!salonId) return;
+      if (sale.status !== "completed") return;
+      if (!window.confirm(t("sales.refundConfirm"))) return;
+      setRefundingSaleId(sale.id);
+      refundSale({ id: sale.id });
+    },
+    [refundSale, salonId, t],
+  );
+
   const columns = getSalesColumns({
     t,
     formatCurrency,
+    onRefund: handleRefund,
+    isRefunding: (sale) => isRefunding && refundingSaleId === sale.id,
     onView: (sale) => setSelectedSaleId(sale.id),
   });
 
@@ -173,11 +241,10 @@ export function SalesPage() {
         description={t("sales.paymentsDescription")}
       />
 
-      {/* Today's Summary */}
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <Card className="p-4">
           <p className="text-sm text-muted-foreground">
-            {t("sales.todayTotal")}
+            {t("sales.grossRevenue")}
           </p>
           {showSummaryLoading ? (
             <div className="flex items-center h-8">
@@ -185,7 +252,21 @@ export function SalesPage() {
             </div>
           ) : (
             <p className="text-2xl font-bold text-green-600">
-              {formatCurrency(todayTotal)}
+              {formatCurrency(grossRevenue)}
+            </p>
+          )}
+        </Card>
+        <Card className="p-4">
+          <p className="text-sm text-muted-foreground">
+            {t("sales.netRevenue")}
+          </p>
+          {showSummaryLoading ? (
+            <div className="flex items-center h-8">
+              <Spinner size="sm" />
+            </div>
+          ) : (
+            <p className="text-2xl font-bold text-accent-pink">
+              {formatCurrency(netRevenue)}
             </p>
           )}
         </Card>
@@ -199,6 +280,23 @@ export function SalesPage() {
             </div>
           ) : (
             <p className="text-2xl font-bold">{transactionsCount}</p>
+          )}
+        </Card>
+        <Card className="p-4">
+          <p className="text-sm text-muted-foreground">
+            {t("sales.refundedPayments")}
+          </p>
+          {showSummaryLoading ? (
+            <div className="flex items-center h-8">
+              <Spinner size="sm" />
+            </div>
+          ) : (
+            <>
+              <p className="text-2xl font-bold text-rose-600">{refundedCount}</p>
+              <p className="text-xs text-muted-foreground">
+                {t("sales.refundedAmount")}: {formatCurrency(refundedAmount)}
+              </p>
+            </>
           )}
         </Card>
         <Card className="p-4">

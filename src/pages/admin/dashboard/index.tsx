@@ -86,7 +86,7 @@ export default function AdminDashboardPage() {
   const recentUsers = getRecentItems(filteredUsers, 5);
   const totalRevenue = isSuperadmin
     ? summaryStats?.totalRevenue ?? 0
-    : adminBusinessSummary.grossRevenue;
+    : adminBusinessSummary.netRevenue;
 
   return (
     <div className="space-y-8">

@@ -1,4 +1,11 @@
-import { Receipt, MoreHorizontal, Eye, FileText, CheckCircle } from "lucide-react";
+import {
+  Receipt,
+  MoreHorizontal,
+  Eye,
+  FileText,
+  CheckCircle,
+  RotateCcw,
+} from "lucide-react";
 import type { TFunction } from "i18next";
 
 import { Button } from "@/components/ui/button";
@@ -17,6 +24,8 @@ interface GetSalesColumnsProps {
   t: TFunction;
   formatCurrency: (value: number) => string;
   onComplete?: (sale: Sale) => void;
+  onRefund?: (sale: Sale) => void;
+  isRefunding?: (sale: Sale) => boolean;
   onView?: (sale: Sale) => void;
 }
 
@@ -24,6 +33,8 @@ export function getSalesColumns({
   t,
   formatCurrency,
   onComplete,
+  onRefund,
+  isRefunding,
   onView,
 }: GetSalesColumnsProps): Column<Sale>[] {
   return [
@@ -139,6 +150,15 @@ export function getSalesColumns({
               <DropdownMenuItem onClick={() => onComplete(sale)}>
                 <CheckCircle className="h-4 w-4 me-2 text-green-600" />
                 {t("sales.complete")}
+              </DropdownMenuItem>
+            )}
+            {onRefund && sale.status === "completed" && (
+              <DropdownMenuItem
+                onClick={() => onRefund(sale)}
+                disabled={isRefunding?.(sale)}
+              >
+                <RotateCcw className="h-4 w-4 me-2 text-rose-600" />
+                {t("sales.refund")}
               </DropdownMenuItem>
             )}
           </DropdownMenuContent>

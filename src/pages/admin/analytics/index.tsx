@@ -147,6 +147,10 @@ export function AnalyticsPage() {
     () => filterSalesByRange(sales, start, end),
     [sales, start, end],
   );
+  const completedSalesInRange = useMemo(
+    () => salesInRange.filter((sale) => sale.status === "completed"),
+    [salesInRange],
+  );
   const appointmentsInRange = useMemo(
     () => filterAppointmentsByRange(appointments, start, end),
     [appointments, start, end],
@@ -165,7 +169,7 @@ export function AnalyticsPage() {
       string,
       { name: string; count: number; revenue: number; itemId: string; type: "service" }
     > = {};
-    salesInRange.forEach((sale) => {
+    completedSalesInRange.forEach((sale) => {
       const items = Array.isArray(sale.items) ? sale.items : [];
       items.forEach((item) => {
         if (item.type !== "service") return;
@@ -195,7 +199,7 @@ export function AnalyticsPage() {
       });
     });
     return Object.values(totals);
-  }, [packServiceIds, packServices, salesInRange, t]);
+  }, [packServiceIds, packServices, completedSalesInRange, t]);
 
   const getServiceDisplayName = (item: AggregatedItem) => {
     if (item.type !== "service" || !item.itemId) return item.name;
@@ -216,35 +220,68 @@ export function AnalyticsPage() {
   }
 
   const periodRevenue = salesInRange.reduce(
-    (sum, sale) => sum + toNumber(sale.total),
+    (sum, sale) =>
+      sale.status === "completed" ? sum + toNumber(sale.total) : sum,
     0,
   );
-  const periodTransactions = salesInRange.length;
+  const periodCanceledRevenueImpact = salesInRange.reduce(
+    (sum, sale) =>
+      sale.status === "cancelled" ? sum - Math.abs(toNumber(sale.total)) : sum,
+    0,
+  );
+  const periodRefundedRevenueImpact = salesInRange.reduce(
+    (sum, sale) =>
+      sale.status === "refunded" ? sum - Math.abs(toNumber(sale.total)) : sum,
+    0,
+  );
+  const periodNetRevenue = Math.max(
+    0,
+    periodRevenue + periodCanceledRevenueImpact + periodRefundedRevenueImpact,
+  );
+  const periodTransactions = salesInRange.filter(
+    (sale) => sale.status === "completed",
+  ).length;
+  const periodRefundedCount = salesInRange.filter(
+    (sale) => sale.status === "refunded",
+  ).length;
+  const periodRefundedAmount = Math.abs(periodRefundedRevenueImpact);
   const hasBusinessSummary =
     businessSummary.updatedAt > 0 ||
     businessSummary.grossRevenue !== 0 ||
     businessSummary.netRevenue !== 0 ||
     businessSummary.transactionCount !== 0 ||
-    businessSummary.canceledCount !== 0;
-  const totalRevenue = hasBusinessSummary
+    businessSummary.canceledCount !== 0 ||
+    businessSummary.refundedCount !== 0;
+  const totalNetRevenue = hasBusinessSummary
     ? businessSummary.netRevenue
+    : periodNetRevenue;
+  const totalGrossRevenue = hasBusinessSummary
+    ? businessSummary.grossRevenue
     : periodRevenue;
   const totalTransactions = hasBusinessSummary
     ? businessSummary.transactionCount
     : periodTransactions;
+  const refundedPaymentsCount = hasBusinessSummary
+    ? businessSummary.refundedCount
+    : periodRefundedCount;
+  const refundedRevenueAmount = Math.abs(
+    hasBusinessSummary
+      ? businessSummary.refundedRevenueImpact
+      : periodRefundedAmount,
+  );
   const averageTicket =
-    totalTransactions > 0 ? totalRevenue / totalTransactions : 0;
+    totalTransactions > 0 ? totalNetRevenue / totalTransactions : 0;
   const totalAppointments = appointmentsInRange.length;
   const newClients = clientsInRange.length;
 
-  const allServiceItems = aggregateSalesItems(salesInRange, "service");
+  const allServiceItems = aggregateSalesItems(completedSalesInRange, "service");
   const bestSeller = getTopItemsBy(allServiceItems, "count", 1)[0];
 
   const topServices = getTopItemsBy(allServiceItems, "count", 5);
 
   const topCategories = getTopItemsBy(
     aggregateCategorySales(
-      salesInRange,
+      completedSalesInRange,
       services,
       [],
       t("common.other"),
@@ -254,22 +291,22 @@ export function AnalyticsPage() {
     5,
   );
 
-  const serviceRevenue = allServiceItems.reduce(
+  const safeServiceRevenue = allServiceItems.reduce(
     (sum, item) => sum + item.revenue,
     0,
   );
-  const serviceShare = serviceRevenue > 0 ? 100 : 0;
+  const serviceShare = safeServiceRevenue > 0 ? 100 : 0;
   const packRevenue = packItems.reduce(
     (sum, item) => sum + item.revenue,
     0,
   );
   const packCount = packItems.reduce((sum, item) => sum + item.count, 0);
   const packShare =
-    serviceRevenue > 0 ? (packRevenue / serviceRevenue) * 100 : 0;
+    safeServiceRevenue > 0 ? (packRevenue / safeServiceRevenue) * 100 : 0;
   const topPacks = getTopItemsBy(packItems, "revenue", 5);
 
   const hasData =
-    salesInRange.length > 0 ||
+    completedSalesInRange.length > 0 ||
     appointmentsInRange.length > 0 ||
     clientsInRange.length > 0;
 
@@ -301,12 +338,20 @@ export function AnalyticsPage() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <StatsCard
-          title={t("analytics.totalRevenue")}
-          value={formatCurrency(toNumber(totalRevenue))}
+          title={t("analytics.netRevenue")}
+          value={formatCurrency(toNumber(totalNetRevenue))}
           loading={isLoading}
           icon={DollarSign}
           iconColor="text-green-600"
           iconBgColor="bg-green-100"
+        />
+        <StatsCard
+          title={t("analytics.grossRevenue")}
+          value={formatCurrency(toNumber(totalGrossRevenue))}
+          loading={isLoading}
+          icon={DollarSign}
+          iconColor="text-emerald-700"
+          iconBgColor="bg-emerald-100"
         />
         <StatsCard
           title={t("sales.transactions")}
@@ -316,6 +361,36 @@ export function AnalyticsPage() {
           iconColor="text-blue-600"
           iconBgColor="bg-blue-100"
         />
+        <Card className="p-4">
+          <div className="flex items-start justify-between gap-3">
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">
+                {t("analytics.refundedPayments")}
+              </p>
+              <p className="text-2xl font-bold text-rose-600">
+                {refundedPaymentsCount}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {t("analytics.refundedAmount")}:{" "}
+                {formatCurrency(refundedRevenueAmount)}
+              </p>
+            </div>
+            <div className="rounded-lg bg-rose-100 p-3">
+              <DollarSign className="h-5 w-5 text-rose-600" />
+            </div>
+          </div>
+        </Card>
+        <StatsCard
+          title={t("analytics.averageTicket")}
+          value={formatCurrency(toNumber(averageTicket))}
+          loading={isLoading}
+          icon={TrendingUp}
+          iconColor="text-accent-pink"
+          iconBgColor="bg-accent-pink/10"
+        />
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
         <StatsCard
           title={t("analytics.totalAppointments")}
           value={totalAppointments}
@@ -332,17 +407,6 @@ export function AnalyticsPage() {
           iconColor="text-amber-600"
           iconBgColor="bg-amber-100"
         />
-        <StatsCard
-          title={t("analytics.averageTicket")}
-          value={formatCurrency(toNumber(averageTicket))}
-          loading={isLoading}
-          icon={TrendingUp}
-          iconColor="text-accent-pink"
-          iconBgColor="bg-accent-pink/10"
-        />
-      </div>
-
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatsCard
           title={t("analytics.marriedClients")}
           value={marriedClientsInRange.length}
@@ -469,7 +533,7 @@ export function AnalyticsPage() {
                   <div className="flex items-center justify-between text-sm mb-1.5">
                     <span className="font-medium">{t("nav.services")}</span>
                     <span className="font-semibold">
-                      {formatCurrency(serviceRevenue)}
+                      {formatCurrency(safeServiceRevenue)}
                     </span>
                   </div>
                   <div className="h-2 rounded-full bg-muted">

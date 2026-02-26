@@ -28,6 +28,8 @@ interface BusinessSummaryApiResponse {
   transactionCount?: number | string;
   canceledCount?: number | string;
   canceledRevenueImpact?: number | string;
+  refundedCount?: number | string;
+  refundedRevenueImpact?: number | string;
   todayRevenue?: number | string;
   lastWeekRevenue?: number | string;
   updatedAt?: string;
@@ -40,6 +42,8 @@ export interface BusinessSummary {
   transactionCount: number;
   canceledCount: number;
   canceledRevenueImpact: number;
+  refundedCount: number;
+  refundedRevenueImpact: number;
   todayRevenue: number;
   lastWeekRevenue: number;
   updatedAt: number;
@@ -75,6 +79,8 @@ const EMPTY_SUMMARY: BusinessSummary = {
   transactionCount: 0,
   canceledCount: 0,
   canceledRevenueImpact: 0,
+  refundedCount: 0,
+  refundedRevenueImpact: 0,
   todayRevenue: 0,
   lastWeekRevenue: 0,
   updatedAt: 0,
@@ -163,6 +169,8 @@ export function BusinessSummaryProvider({ children }: BusinessSummaryProviderPro
           const transactionCount = toNumber(response?.transactionCount);
           const canceledCount = toNumber(response?.canceledCount);
           const canceledRevenueImpact = toNumber(response?.canceledRevenueImpact);
+          const refundedCount = toNumber(response?.refundedCount);
+          const refundedRevenueImpact = toNumber(response?.refundedRevenueImpact);
           const todayRevenue = toNumber(response?.todayRevenue);
           const lastWeekRevenue = toNumber(response?.lastWeekRevenue);
           const updatedAt = response?.updatedAt
@@ -176,6 +184,8 @@ export function BusinessSummaryProvider({ children }: BusinessSummaryProviderPro
             transactionCount,
             canceledCount,
             canceledRevenueImpact,
+            refundedCount,
+            refundedRevenueImpact,
             todayRevenue,
             lastWeekRevenue,
             updatedAt: Number.isFinite(updatedAt) ? updatedAt : Date.now(),
