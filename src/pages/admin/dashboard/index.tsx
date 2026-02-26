@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { useUser } from "@/hooks/useUser";
-import { useGet } from "@/hooks/useGet";
+import { useGet, withParams } from "@/hooks/useGet";
 import { Spinner } from "@/components/spinner";
 import { PageHeader } from "@/components/page-header";
 import type { PaginatedResponse, Salon, User } from "@/types";
@@ -16,9 +16,19 @@ import {
   getDashboardDescription,
 } from "./utils";
 
+interface DashboardSummaryStats {
+  totalRevenue: number;
+}
+
 export default function AdminDashboardPage() {
   const { t } = useTranslation();
   const { user, isLoading: userLoading, isSuperadmin } = useUser();
+  const adminSalons = getAdminSalons(user as User | null);
+  const adminSalonId = adminSalons[0]?.id;
+  const summaryPath = withParams(
+    "salons/stats/summary",
+    isSuperadmin ? {} : { salonId: adminSalonId },
+  );
 
   const { data: usersData, isLoading: usersLoading } = useGet<
     PaginatedResponse<User>
@@ -32,9 +42,18 @@ export default function AdminDashboardPage() {
       enabled: isSuperadmin,
     },
   );
+  const { data: summaryStats, isLoading: summaryLoading } =
+    useGet<DashboardSummaryStats>(summaryPath, {
+      enabled: isSuperadmin || !!adminSalonId,
+      staleTime: 1000 * 60 * 5,
+      refetchOnWindowFocus: true,
+    });
 
   const isLoading =
-    userLoading || usersLoading || (isSuperadmin && salonsLoading);
+    userLoading ||
+    usersLoading ||
+    summaryLoading ||
+    (isSuperadmin && salonsLoading);
 
   if (isLoading) {
     return (
@@ -45,7 +64,6 @@ export default function AdminDashboardPage() {
   }
 
   const displayName = getUserDisplayName(user as User | null);
-  const adminSalons = getAdminSalons(user as User | null);
   const adminSalon = adminSalons[0];
   const salonsToDisplay = getSalonsToDisplay(
     isSuperadmin,
@@ -75,7 +93,14 @@ export default function AdminDashboardPage() {
         )}
       />
 
-      <StatsGrid salonsData={salonsToDisplay} usersData={usersData} loading={isLoading} />
+      <StatsGrid
+        salonsData={salonsToDisplay}
+        usersData={usersData}
+        loading={isLoading}
+        revenueData={{
+          total: summaryStats?.totalRevenue ?? 0,
+        }}
+      />
 
       <div
         className={`grid gap-6 ${isSuperadmin ? "lg:grid-cols-2" : "lg:grid-cols-1"}`}

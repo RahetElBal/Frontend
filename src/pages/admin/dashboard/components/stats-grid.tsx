@@ -28,7 +28,7 @@ export function StatsGrid({
   const totalSalons = salonsData?.length || 0;
   const totalUsers = usersData?.meta.total || 0;
   const activeSubscriptions = salonsData?.filter((s) => s.isActive).length || 0;
-  const totalRevenue = isSuperadmin ? revenueData?.total || 0 : 0;
+  const totalRevenue = revenueData?.total || 0;
 
   return (
     <AdminStatsGrid

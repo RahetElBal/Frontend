@@ -31,7 +31,14 @@ export const getUserDisplayName = (user: AuthUser | User | null): string => {
  */
 export const getAdminSalons = (user: AuthUser | User | null): Salon[] => {
   if (!user?.salon) return [];
-  return (user.salon as unknown as Salon[]) || [];
+  const salonData = user.salon as unknown;
+  if (Array.isArray(salonData)) {
+    return salonData as Salon[];
+  }
+  if (typeof salonData === "object" && salonData !== null) {
+    return [salonData as Salon];
+  }
+  return [];
 };
 
 /**
