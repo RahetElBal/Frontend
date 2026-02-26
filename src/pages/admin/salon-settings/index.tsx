@@ -9,11 +9,11 @@ import { Card } from "@/components/ui/card";
 import { LoadingPanel } from "@/components/loading-panel";
 import { toast } from "@/lib/toast";
 import { cn } from "@/lib/utils";
-import type { SalonSettingsExtended, Salon, Service } from "@/types/entities";
-import type { PaginatedResponse } from "@/types";
+import type { SalonSettingsExtended, Salon } from "@/types/entities";
 import { usePost } from "@/hooks/usePost";
 import { useUser } from "@/hooks/useUser";
-import { useGet, withParams } from "@/hooks/useGet";
+import { useGet } from "@/hooks/useGet";
+import { useSalonServices } from "@/contexts/ServicesProvider";
 import { ROUTES } from "@/constants/navigation";
 import { GeneralSettings } from "./components/general-settings";
 import { WorkingHoursSettings } from "./components/working-hours-settings";
@@ -75,22 +75,12 @@ export function SalonSettingsPage() {
   // Settings are stored within the salon entity
   const settings = currentSalon?.settings as SalonSettingsExtended | undefined;
   const isLoading = !currentSalon;
-  const { data: servicesData, isLoading: servicesLoading } = useGet<
-    PaginatedResponse<Service>
-  >(
-    withParams("services", { salonId: currentSalon?.id, perPage: 10, compact: true }),
+  const { services, isLoading: servicesLoading } = useSalonServices(
+    currentSalon?.id,
     {
       enabled: activePage === "loyalty" && !!currentSalon?.id,
-      staleTime: 1000 * 60 * 30,
-      refetchOnMount: false,
-      refetchOnWindowFocus: false,
     },
   );
-  const services = Array.isArray(servicesData?.data)
-    ? servicesData.data
-    : Array.isArray(servicesData)
-      ? servicesData
-      : [];
 
   const baseSettings = useMemo(
     () => mergeWithDefaultSettings(settings),

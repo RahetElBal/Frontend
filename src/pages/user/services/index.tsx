@@ -42,6 +42,7 @@ import type { PaginatedResponse } from "@/types";
 import type { ApiError } from "@/types/api";
 import { useGet, withParams } from "@/hooks/useGet";
 import { usePost } from "@/hooks/usePost";
+import { useServicesContext } from "@/contexts/ServicesProvider";
 import { post } from "@/lib/http";
 import { ServiceCard } from "./components/service-card";
 import { getServiceCategoryName } from "./utils";
@@ -100,6 +101,7 @@ export function ServicesPage() {
   const { t } = useTranslation();
   const { formatCurrency } = useLanguage();
   const { user, isSuperadmin } = useUser();
+  const { invalidateServices } = useServicesContext();
   const servicesStaleTime = 1000 * 60 * 10;
   const categoriesStaleTime = 1000 * 60 * 30;
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -198,6 +200,9 @@ export function ServicesPage() {
     invalidate: ["services"],
     onSuccess: () => {
       toast.success(t("services.addService") + " - " + t("common.success"));
+      if (salonId) {
+        invalidateServices(salonId);
+      }
       setModalState(null);
     },
     onError: (error) => {
@@ -214,6 +219,9 @@ export function ServicesPage() {
     invalidate: ["services"],
     onSuccess: () => {
       toast.success(t("common.edit") + " - " + t("common.success"));
+      if (salonId) {
+        invalidateServices(salonId);
+      }
       setModalState(null);
     },
     onError: (error) => {
@@ -229,6 +237,9 @@ export function ServicesPage() {
       invalidate: ["services"],
       onSuccess: () => {
         toast.success(t("common.delete") + " - " + t("common.success"));
+        if (salonId) {
+          invalidateServices(salonId);
+        }
         setModalState(null);
       },
       onError: (error) => {
@@ -242,12 +253,15 @@ export function ServicesPage() {
     post<Service, undefined>(`services/${serviceId}/toggle`, undefined)
       .then(() => {
         toast.success(t("common.success"));
+        if (salonId) {
+          invalidateServices(salonId);
+        }
         refetch();
       })
       .catch((error: ApiError) => {
         toast.error(error.message || t("common.error"));
       });
-  }, [t, refetch]);
+  }, [t, refetch, salonId, invalidateServices]);
 
   const filteredServices = selectedCategory
     ? services.filter((s) => getServiceCategoryName(s) === selectedCategory)

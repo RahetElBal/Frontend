@@ -36,6 +36,7 @@ import {
 } from "@/components/ui/table";
 import { toast } from "@/lib/toast";
 import { useGet, withParams } from "@/hooks/useGet";
+import { useServicesContext } from "@/contexts/ServicesProvider";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useUser } from "@/hooks/useUser";
 import { ROUTES } from "@/constants/navigation";
@@ -70,6 +71,7 @@ export default function AdminServicesPage() {
   const { t } = useTranslation();
   const { formatCurrency } = useLanguage();
   const { isSuperadmin, isAdmin, isLoading, user } = useUser();
+  const { invalidateServices } = useServicesContext();
   const salonsStaleTime = 1000 * 60 * 10;
   const servicesStaleTime = 1000 * 60 * 5;
   const adminSalonId = !isSuperadmin ? (user?.salon?.id ?? "") : "";
@@ -234,6 +236,9 @@ export default function AdminServicesPage() {
         price,
       });
       toast.success(t("admin.services.priceUpdated"));
+      if (selectedSalonId) {
+        invalidateServices(selectedSalonId);
+      }
       refetch();
     } catch (error) {
       const message =
@@ -270,6 +275,9 @@ export default function AdminServicesPage() {
         }),
       );
       toast.success(t("admin.services.bulkUpdated"));
+      if (selectedSalonId) {
+        invalidateServices(selectedSalonId);
+      }
       refetch();
     } catch (error) {
       const message =
@@ -461,6 +469,9 @@ export default function AdminServicesPage() {
             : [],
         });
         toast.success(t("admin.services.updated"));
+      }
+      if (selectedSalonId) {
+        invalidateServices(selectedSalonId);
       }
       setIsModalOpen(false);
       refetch();

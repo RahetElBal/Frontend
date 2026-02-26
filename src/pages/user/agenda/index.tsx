@@ -20,6 +20,7 @@ import {
 import { toast } from "@/lib/toast";
 import { useGet, withParams } from "@/hooks/useGet";
 import { usePost } from "@/hooks/usePost";
+import { useSalonServices } from "@/contexts/ServicesProvider";
 import { useForm } from "@/hooks/useForm";
 import { useUser } from "@/hooks/useUser";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -30,7 +31,6 @@ import type { ApiError } from "@/types/api";
 import type {
   Appointment,
   Client,
-  Service,
   PaginatedResponse,
   Sale,
   Salon,
@@ -226,7 +226,6 @@ export function AgendaPage() {
   const hasSalonSettingsInAuth = !!user?.salon?.settings;
   const appointmentsStaleTime = 1000 * 30; // 30s for near real-time
   const clientsStaleTime = 1000 * 60 * 10; // 10m
-  const servicesStaleTime = 1000 * 60 * 10; // 10m
   const appointmentsParams = useMemo(
     () => ({
       salonId,
@@ -265,10 +264,9 @@ export function AgendaPage() {
     refetchOnWindowFocus: true,
   });
 
-  const { data: servicesData, isLoading: isServicesLoading } = useGet<PaginatedResponse<Service>>(
-    withParams("services", { salonId, perPage: 100, compact: true }),
-    { enabled: shouldLoadReferenceData, staleTime: servicesStaleTime },
-  );
+  const { services, isLoading: isServicesLoading } = useSalonServices(salonId, {
+    enabled: shouldLoadReferenceData,
+  });
 
   const { data: staffResponse } = useGet<PaginatedResponse<User>>(
     withParams("users", { salonId, role: "user", perPage: 100 }),
@@ -309,7 +307,6 @@ export function AgendaPage() {
   const isReferenceDataLoading =
     shouldLoadReferenceData && (isClientsLoading || isServicesLoading);
   const clients = safeExtractArray<Client>(clientsData);
-  const services = safeExtractArray<Service>(servicesData);
   const staffMembers = safeExtractArray<User>(staffResponse);
   const staffOptions = useMemo(() => {
     return buildStaffOptions({

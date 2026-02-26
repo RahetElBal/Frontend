@@ -27,11 +27,12 @@ import {
 import { useLanguage } from "@/hooks/useLanguage";
 import { useUser } from "@/hooks/useUser";
 import { useGet, withParams } from "@/hooks/useGet";
+import { useSalonServices } from "@/contexts/ServicesProvider";
 import {
   translateServiceCategory,
   translateServiceName,
 } from "@/common/service-translations";
-import type { Appointment, Client, Sale, Service } from "@/types/entities";
+import type { Appointment, Client, Sale } from "@/types/entities";
 import type { PaginatedResponse } from "@/types/api";
 import { normalizeSalesResponse } from "@/utils/normalize-sales";
 import { ROUTES } from "@/constants/navigation";
@@ -105,17 +106,9 @@ export function AnalyticsPage() {
     },
   );
 
-  const { data: servicesResponse, isLoading: loadingServices } = useGet<
-    PaginatedResponse<Service>
-  >(
-    withParams("services", { salonId, perPage: 10, compact: true }),
-    {
-      enabled: !!salonId && canViewAnalytics,
-      staleTime: listStaleTime,
-      gcTime: listCacheTime,
-      refetchOnWindowFocus: false,
-    },
-  );
+  const { services, isLoading: loadingServices } = useSalonServices(salonId, {
+    enabled: !!salonId && canViewAnalytics,
+  });
 
   // Move all data extraction and useMemo hooks before early returns
   const isLoading =
@@ -130,10 +123,6 @@ export function AnalyticsPage() {
   const clients = useMemo(
     () => clientsResponse?.data ?? [],
     [clientsResponse?.data],
-  );
-  const services = useMemo(
-    () => servicesResponse?.data ?? [],
-    [servicesResponse?.data],
   );
   const serviceLookup = useMemo(
     () => new Map(services.map((service) => [service.id, service])),

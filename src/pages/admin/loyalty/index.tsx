@@ -35,15 +35,13 @@ import {
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { toast } from "@/lib/toast";
-import { useGet, withParams } from "@/hooks/useGet";
+import { useSalonServices } from "@/contexts/ServicesProvider";
+import { useLoyaltyContext, useSalonLoyaltyData } from "@/contexts/LoyaltyProvider";
 import { usePost } from "@/hooks/usePost";
 import { useUser } from "@/hooks/useUser";
 import { useLanguage } from "@/hooks/useLanguage";
-import type { Client, Sale, Service } from "@/types/entities";
-import type { PaginatedResponse } from "@/types";
-import { normalizeSalesResponse } from "@/utils/normalize-sales";
+import type { Sale } from "@/types/entities";
 import {
-  extractArray,
   deriveLoyaltySettings,
   calculateTotalPointsIssued,
   calculateTotalPointsRedeemed,
@@ -63,47 +61,29 @@ export function LoyaltyPage() {
   /* cSpell:ignore Superadmin */
   const { salon, isAdmin, isSuperadmin } = useUser();
   const { formatCurrency } = useLanguage();
+  const { invalidateLoyaltyData } = useLoyaltyContext();
   const [isRedeemModalOpen, setIsRedeemModalOpen] = useState(false);
   const [redeemClientId, setRedeemClientId] = useState("");
   const [redeemServiceId, setRedeemServiceId] = useState("");
   const salonId = salon?.id;
   const canRedeem = isAdmin || isSuperadmin;
+  const shouldLoadData = !!salonId;
   const shouldLoadServices = !!salonId && canRedeem && isRedeemModalOpen;
 
-  const { data: clientsData, isLoading: isClientsLoading } =
-    useGet<PaginatedResponse<Client>>(
-    withParams("clients", { salonId, perPage: 10 }),
-    { enabled: !!salonId, staleTime: 1000 * 60 * 5 },
-  );
-
-  const { data: salesData, isLoading: isSalesLoading } =
-    useGet<PaginatedResponse<Sale>>(
-    withParams("sales", {
-      salonId,
-      perPage: 10,
-      sortBy: "createdAt",
-      sortOrder: "desc",
-      compact: true,
-    }),
-    { enabled: !!salonId, staleTime: 1000 * 60, select: normalizeSalesResponse },
-  );
-
-  const { data: servicesData, isLoading: isServicesLoading } =
-    useGet<PaginatedResponse<Service>>(
-    withParams("services", { salonId, perPage: 10, compact: true }),
-    { enabled: shouldLoadServices, staleTime: 1000 * 60 * 10 },
-  );
-
-  const clients = useMemo(
-    () => extractArray<Client>(clientsData),
-    [clientsData],
-  );
-  const salesStats = useMemo(() => extractArray<Sale>(salesData), [salesData]);
+  const { services, isLoading: isServicesLoading } = useSalonServices(salonId, {
+    enabled: shouldLoadServices,
+  });
+  const {
+    clients,
+    sales: salesStats,
+    isClientsLoading,
+    isSalesLoading,
+  } = useSalonLoyaltyData(salonId, {
+    enabled: shouldLoadData,
+    includeClients: true,
+    includeSales: true,
+  });
   const sales = useMemo(() => salesStats.slice(0, 10), [salesStats]);
-  const services = useMemo(
-    () => extractArray<Service>(servicesData),
-    [servicesData],
-  );
   const showLoyaltyLoading =
     (isClientsLoading || isSalesLoading) &&
     clients.length === 0 &&
@@ -177,6 +157,9 @@ export function LoyaltyPage() {
   >("sales", {
     invalidate: ["sales", "clients"],
     onSuccess: () => {
+      if (salonId) {
+        invalidateLoyaltyData(salonId);
+      }
       toast.success(t("loyalty.redeemSuccess"));
       setIsRedeemModalOpen(false);
       setRedeemClientId("");

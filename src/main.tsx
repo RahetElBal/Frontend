@@ -3,8 +3,10 @@ import { createRoot } from "react-dom/client";
 
 import { AuthProvider } from "@/contexts/AuthProvider";
 import { GlobalProvider } from "@/contexts/GlobalProvider";
+import { LoyaltyProvider } from "@/contexts/LoyaltyProvider";
 import { ModalsProvider } from "@/contexts/ModalsProvider";
 import { QueryProvider } from "@/contexts/QueryProvider";
+import { ServicesProvider } from "@/contexts/ServicesProvider";
 import { ViewModeProvider } from "@/contexts/ViewModeProvider";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { Toaster } from "@/components/ui/sonner";
@@ -25,16 +27,20 @@ const bootstrap = async () => {
       <ErrorBoundary>
         <QueryProvider>
           <AuthProvider>
-            <SlaWelcomeModal />
-            <PlanExpiryWarningModal />
-            <ViewModeProvider>
-              <GlobalProvider>
-                <ModalsProvider>
-                  <App />
-                  <Toaster />
-                </ModalsProvider>
-              </GlobalProvider>
-            </ViewModeProvider>
+            <ServicesProvider>
+              <LoyaltyProvider>
+                <SlaWelcomeModal />
+                <PlanExpiryWarningModal />
+                <ViewModeProvider>
+                  <GlobalProvider>
+                    <ModalsProvider>
+                      <App />
+                      <Toaster />
+                    </ModalsProvider>
+                  </GlobalProvider>
+                </ViewModeProvider>
+              </LoyaltyProvider>
+            </ServicesProvider>
           </AuthProvider>
         </QueryProvider>
       </ErrorBoundary>
