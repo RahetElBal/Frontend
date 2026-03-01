@@ -30,7 +30,7 @@ export default function LandingPage() {
   const planCards = [
     {
       name: t("landing.plans.standard.name"),
-      price: "69 000 DA",
+      price: "79 000 DA",
       subtitle: t("landing.plans.standard.subtitle"),
       highlighted: false,
       items: [

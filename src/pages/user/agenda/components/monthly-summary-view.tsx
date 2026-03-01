@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import type { Appointment } from "@/types/entities";
 import { AppointmentStatus } from "@/types/entities";
-import { getLocalDateString } from "../utils";
+import { getLocalDateString } from "./utils";
 
 const dayKeys = [
   "monday",

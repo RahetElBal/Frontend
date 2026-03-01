@@ -35,8 +35,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { canModifySalon, type SalonModalState } from "../../utils";
-import { createSalonFormSchema, type SalonFormData } from "../../validation";
+import { canModifySalon, type SalonModalState } from "../utils";
+import { createSalonFormSchema, type SalonFormData } from "../validation";
 import React from "react";
 import { parseValidationMsg } from "@/common/validator/zodI18n";
 import { normalizePhone } from "@/common/phone";

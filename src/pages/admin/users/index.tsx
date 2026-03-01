@@ -13,7 +13,7 @@ import type { User, Salon } from "@/types/entities";
 import { StatsGrid } from "./components/stats-grid";
 import { useUser } from "@/hooks/useUser";
 import type { PaginatedResponse } from "@/types";
-import { useUsersColumns } from "./list/columns";
+import { useUsersColumns } from "./components/list/columns";
 import { UserDialog } from "./components/dialog/cu-user";
 import {
   createUserModalHandlers,
@@ -22,7 +22,7 @@ import {
   getSalonsByPermission,
   getSelectedUser,
   type UserModalState,
-} from "./utils";
+} from "./components/utils";
 
 export function AdminUsersPage() {
   const { t } = useTranslation();

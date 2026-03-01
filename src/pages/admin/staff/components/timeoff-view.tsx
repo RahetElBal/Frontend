@@ -12,7 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import type { User as UserType, StaffTimeOff } from "@/types/entities";
-import { getStaffName, getTimeOffStatusBadge } from "../utils";
+import { getStaffName, getTimeOffStatusBadge } from "./utils";
 
 interface TimeOffViewProps {
   timeOffRequests: StaffTimeOff[];

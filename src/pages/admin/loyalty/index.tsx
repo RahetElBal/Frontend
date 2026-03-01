@@ -57,7 +57,7 @@ import {
   canClientRedeem,
   validateRedemption,
   createRedemptionPayload,
-} from "./utils";
+} from "./components/utils";
 
 export function LoyaltyPage() {
   const { t } = useTranslation();

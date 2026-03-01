@@ -1,11 +1,23 @@
 import { useTranslation } from "react-i18next";
-import { Building2, UserCog, UserPlus, Phone } from "lucide-react";
+import {
+  Building2,
+  UserCog,
+  UserPlus,
+  Phone,
+  Users,
+  Calendar,
+  ShoppingCart,
+  Package,
+  Scissors,
+  Settings,
+} from "lucide-react";
 import type { UseFormReturn } from "react-hook-form";
 import { Controller } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PhoneNumberInput } from "@/components/ui/phone-input";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -16,8 +28,11 @@ import {
 import { DialogFooter } from "@/components/ui/dialog";
 import type { User, Salon } from "@/types/entities";
 import type { UserFormData } from "./validation";
+import { STAFF_PERMISSIONS, type StaffPermission } from "./validation";
 import { parseValidationMsg } from "@/common/validator/zodI18n";
 import { useUser } from "@/hooks/useUser";
+import { ProFeatureGate } from "@/components/pro-feature-gate";
+import { isProPlan } from "@/lib/plan";
 
 interface UserFormProps {
   form: UseFormReturn<UserFormData>;
@@ -29,6 +44,18 @@ interface UserFormProps {
   onSubmit: (data: UserFormData) => void;
   onCancel: () => void;
 }
+
+const PERMISSION_META: Record<
+  StaffPermission,
+  { icon: typeof Users; labelKey: string }
+> = {
+  clients: { icon: Users, labelKey: "nav.clients" },
+  agenda: { icon: Calendar, labelKey: "nav.agenda" },
+  sales: { icon: ShoppingCart, labelKey: "nav.sales" },
+  products: { icon: Package, labelKey: "nav.products" },
+  services: { icon: Scissors, labelKey: "nav.services" },
+  settings: { icon: Settings, labelKey: "nav.settings" },
+};
 
 export function UserForm({
   form,
@@ -42,9 +69,8 @@ export function UserForm({
   const { t } = useTranslation();
   const { salon: currentSalon } = useUser();
   const currentRole = form.watch("role");
-  const isProLikePlan = ["pro", "all-in", "all_in", "allin"].includes(
-    String(currentSalon?.planTier || "").toLowerCase().trim(),
-  );
+  const isPro = isProPlan(currentSalon?.planTier);
+  const isProLikePlan = isPro;
   const getErrorMessage = (message?: string): string | undefined => {
     if (!message) return undefined;
     if (message.startsWith("validation.") || message.startsWith("errors.")) {
@@ -226,6 +252,42 @@ export function UserForm({
               </div>
             </div>
           </div>
+        )}
+        {/* Advanced Permissions - Pro plan only, staff users only */}
+        {currentRole === "user" && (
+          <ProFeatureGate featureKey="advancedPermissions" compact>
+            <div className="space-y-3">
+              <Label>{t("proFeatures.advancedPermissions.title")}</Label>
+              <div className="grid grid-cols-2 gap-2">
+                {STAFF_PERMISSIONS.map((perm) => {
+                  const meta = PERMISSION_META[perm];
+                  const Icon = meta.icon;
+                  const currentPerms = form.watch("permissions") ?? [];
+                  const checked = currentPerms.includes(perm);
+                  return (
+                    <label
+                      key={perm}
+                      className="flex cursor-pointer items-center gap-2.5 rounded-lg border p-2.5 transition-colors hover:bg-muted/50 has-[data-state=checked]:border-accent-blue-300 has-[data-state=checked]:bg-accent-blue-50/50"
+                    >
+                      <Checkbox
+                        checked={checked}
+                        onCheckedChange={(val) => {
+                          const next = val
+                            ? [...currentPerms, perm]
+                            : currentPerms.filter((p) => p !== perm);
+                          form.setValue("permissions", next, {
+                            shouldDirty: true,
+                          });
+                        }}
+                      />
+                      <Icon className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm">{t(meta.labelKey)}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+          </ProFeatureGate>
         )}
       </div>
 

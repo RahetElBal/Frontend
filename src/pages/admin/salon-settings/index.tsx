@@ -15,6 +15,7 @@ import { useUser } from "@/hooks/useUser";
 import { useSalonSettings } from "@/contexts/SalonSettingsProvider";
 import { useSalonServices } from "@/contexts/ServicesProvider";
 import { ROUTES } from "@/constants/navigation";
+import { isProPlan } from "@/lib/plan";
 import { GeneralSettings } from "./components/general-settings";
 import { WorkingHoursSettings } from "./components/working-hours-settings";
 import { LoyaltySettings } from "./components/loyalty-settings";
@@ -24,7 +25,7 @@ import {
   createFieldUpdater,
   createWorkingHoursUpdater,
   mergeFormData,
-} from "./utils";
+} from "./components/utils";
 
 type SettingsPage =
   | "general"
@@ -63,12 +64,7 @@ export function SalonSettingsPage() {
 
   // Use latest salon settings when available
   const currentSalon = cachedSalon || userSalon;
-  const normalizedPlanTier = String(currentSalon?.planTier || "standard").toLowerCase();
-  const isReminderProEnabled =
-    normalizedPlanTier === "pro" ||
-    normalizedPlanTier === "all-in" ||
-    normalizedPlanTier === "all_in" ||
-    normalizedPlanTier === "allin";
+  const isReminderProEnabled = isProPlan(currentSalon?.planTier);
 
   // Settings are stored within the salon entity
   const settings = currentSalon?.settings as SalonSettingsExtended | undefined;

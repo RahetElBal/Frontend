@@ -22,7 +22,7 @@ import {
   normalizeTime,
   getLocalDateString,
   timeToMinutes,
-} from "../utils";
+} from "./utils";
 import {
   getServiceImage,
   getServiceImageFallback,

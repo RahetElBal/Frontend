@@ -15,7 +15,7 @@ import {
   getSalonsToDisplay,
   getFilteredUsers,
   getDashboardDescription,
-} from "./utils";
+} from "./components/utils";
 
 interface DashboardSummaryStats {
   grossRevenue: number;

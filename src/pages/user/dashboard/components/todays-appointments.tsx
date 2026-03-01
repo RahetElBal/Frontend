@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/badge";
 import { type Appointment } from "@/types/entities";
 import type { PaginatedResponse } from "@/types";
-import { getTodaysAppointments, statusColors } from "../utils";
+import { getTodaysAppointments, statusColors } from "./utils";
 
 interface TodaysAppointmentsProps {
   appointments?: PaginatedResponse<Appointment>;

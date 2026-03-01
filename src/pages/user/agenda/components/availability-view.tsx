@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { LoadingPanel } from "@/components/loading-panel";
 import type { Appointment, User as StaffUser } from "@/types/entities";
 import { AppointmentStatus } from "@/types/entities";
-import { getLocalDateString, normalizeTime, timeToMinutes } from "../utils";
+import { getLocalDateString, normalizeTime, timeToMinutes } from "./utils";
 
 interface AvailabilityViewProps {
   selectedDate: string;

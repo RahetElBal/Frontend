@@ -31,7 +31,7 @@ import { usePostAction } from "@/hooks/usePostAction";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useUser } from "@/hooks/useUser";
 import { toast } from "@/lib/toast";
-import { giftCardStatusColors } from "./utils";
+import { giftCardStatusColors } from "./components/utils";
 
 interface CreateGiftCardDto {
   salonId: string;

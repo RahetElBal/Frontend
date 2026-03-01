@@ -1,6 +1,6 @@
 import { momentLocalizer } from "react-big-calendar";
 import moment from "moment";
-import { agendaStatusColors } from "../utils";
+import { agendaStatusColors } from "../../utils";
 import { AppointmentStatus, type Appointment } from "@/types/entities";
 
 export const localizer = momentLocalizer(moment);

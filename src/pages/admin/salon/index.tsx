@@ -19,9 +19,9 @@ import {
   getDashboardDescription,
   type SalonModalState,
   type SalonSummaryStats,
-} from "./utils";
+} from "./components/utils";
 import { StatsGrid } from "./components/stats-grid";
-import { useSalonsColumns } from "./list/columns";
+import { useSalonsColumns } from "./components/list/columns";
 import { DataTable } from "@/components/table";
 import { SalonModals } from "./components/dialog/salon-modal";
 import { MediaImage } from "@/components/media-image";

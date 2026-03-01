@@ -1,5 +1,5 @@
 import { type Appointment, type Client } from "@/types/entities";
-import { dashboardStatusColors } from "../utils";
+import { dashboardStatusColors } from "../../utils";
 
 /**
  * Gets the local date string in YYYY-MM-DD format without timezone conversion.

@@ -41,7 +41,7 @@ import {
   formatPromotionDiscountValue,
   getPromotionStatusBadge,
   getPromotionTypeIcon,
-} from "./utils";
+} from "./components/utils";
 
 // TODO: Backend needs to implement these endpoints:
 // - GET /promotions?salonId={salonId}

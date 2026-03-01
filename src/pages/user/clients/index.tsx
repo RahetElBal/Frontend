@@ -11,7 +11,7 @@ import { useForm } from "@/hooks/useForm";
 import type { Client } from "@/types/entities";
 import { ClientModals } from "./components/dialog/client-modals";
 import type { ClientModalState } from "./types";
-import { clientFormSchema, type ClientFormData } from "./validation";
+import { clientFormSchema, type ClientFormData } from "./components/validation";
 import { getClientColumns } from "./components/list/columns";
 import { useUser } from "@/hooks/useUser";
 import type { PaginatedResponse } from "@/types";

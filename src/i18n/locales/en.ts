@@ -85,6 +85,18 @@ export interface TranslationKeys {
     standard: string;
     pro: string;
   };
+  proFeatures: {
+    advancedAnalytics: {
+      title: string;
+      description: string;
+      locked: string;
+    };
+    advancedPermissions: {
+      title: string;
+      description: string;
+      locked: string;
+    };
+  };
   planWarning: {
     title: string;
     message: string;
@@ -1905,6 +1917,20 @@ export const en = {
     badge: "Plan: {{plan}}",
     standard: "Standard",
     pro: "Pro",
+  },
+  proFeatures: {
+    advancedAnalytics: {
+      title: "Advanced Analytics",
+      description:
+        "Unlock detailed revenue breakdowns, top services, category analysis, pack performance, and more with the Pro plan.",
+      locked: "Advanced analytics available on the Pro plan",
+    },
+    advancedPermissions: {
+      title: "Advanced Roles & Permissions",
+      description:
+        "Assign granular permissions to your staff — control who can manage clients, view sales, handle agenda, or access settings.",
+      locked: "Advanced permissions available on the Pro plan",
+    },
   },
   planWarning: {
     title: "Plan ending soon",

@@ -67,7 +67,7 @@ import {
   addMinutesToTime,
   timeToMinutes,
   findConflictingAppointment,
-} from "../../utils";
+} from "../utils";
 import { getValidationErrorMessage } from "@/pages/user/utils";
 import { FormErrorMessage } from "@/pages/user/components/form-error-message";
 import { normalizePhone } from "@/common/phone";

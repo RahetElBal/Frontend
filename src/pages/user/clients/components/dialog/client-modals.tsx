@@ -42,7 +42,7 @@ import { PhoneNumberInput } from "@/components/ui/phone-input";
 import { Badge } from "@/components/badge";
 import { Switch } from "@/components/ui/switch";
 import type { ClientModalState } from "@/pages/user/clients/types";
-import type { ClientFormData } from "@/pages/user/clients/validation";
+import type { ClientFormData } from "../validation";
 import { getValidationErrorMessage } from "@/pages/user/utils";
 import { FormErrorMessage } from "@/pages/user/components/form-error-message";
 import { normalizePhone } from "@/common/phone";

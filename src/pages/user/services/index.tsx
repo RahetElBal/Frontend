@@ -49,7 +49,7 @@ import {
 import { useServicesContext } from "@/contexts/ServicesProvider";
 import { post } from "@/lib/http";
 import { ServiceCard } from "./components/service-card";
-import { getServiceCategoryName } from "./utils";
+import { getServiceCategoryName } from "./components/utils";
 import {
   translateServiceCategory,
   translateServiceName,

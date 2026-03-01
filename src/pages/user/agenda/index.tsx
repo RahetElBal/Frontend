@@ -42,8 +42,8 @@ import type {
 } from "@/types";
 import { AppointmentStatus } from "@/types/entities";
 import type { AppointmentModalState } from "./types";
-import { appointmentFormSchema, type AppointmentFormData } from "./validation";
-import type { CalendarEvent } from "./utils";
+import { appointmentFormSchema, type AppointmentFormData } from "./components/validation";
+import type { CalendarEvent } from "./components/utils";
 import {
   ALL_STAFF_ID,
   buildStaffOptions,
@@ -61,7 +61,7 @@ import {
   normalizeTime,
   timeToMinutes,
   findConflictingAppointment,
-} from "./utils";
+} from "./components/utils";
 
 import {
   requestNotificationPermission,

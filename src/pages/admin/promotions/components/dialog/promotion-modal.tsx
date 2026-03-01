@@ -22,7 +22,7 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import type { PromotionType, PromotionAppliesTo } from "@/types/entities";
 import type { CreatePromotionDto } from "../../types";
-import { generatePromotionCode } from "../../utils";
+import { generatePromotionCode } from "../utils";
 
 const PROMOTION_TYPES: PromotionType[] = [
   "percentage",

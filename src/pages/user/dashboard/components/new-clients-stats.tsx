@@ -2,7 +2,7 @@ import { useTranslation } from "react-i18next";
 import { Users } from "lucide-react";
 import { StatsCard } from "@/components/stats-card";
 import type { Client } from "@/types/entities";
-import { getTodaysNewClients, getLastWeekNewClients } from "../utils";
+import { getTodaysNewClients, getLastWeekNewClients } from "./utils";
 import { getChangeDisplay } from "@/common/utils";
 
 interface NewClientsStatsProps {

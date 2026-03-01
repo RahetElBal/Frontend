@@ -13,7 +13,7 @@ import type {
   PaginatedResponse,
 } from "@/types";
 import { useGet, withParams } from "@/hooks/useGet";
-import { getLocalDateString } from "./utils";
+import { getLocalDateString } from "./components/utils";
 
 export function DashboardPage() {
   const { t } = useTranslation();

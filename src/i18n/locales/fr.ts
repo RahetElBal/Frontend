@@ -1381,6 +1381,20 @@ export const fr = {
     standard: "Standard",
     pro: "Pro",
   },
+  proFeatures: {
+    advancedAnalytics: {
+      title: "Analyses avancées",
+      description:
+        "Débloquez les détails de revenus, top services, analyse par catégorie, performance des packs et plus avec le plan Pro.",
+      locked: "Analyses avancées disponibles avec le plan Pro",
+    },
+    advancedPermissions: {
+      title: "Rôles et permissions avancés",
+      description:
+        "Attribuez des permissions granulaires à votre équipe — contrôlez qui peut gérer les clients, voir les ventes, gérer l'agenda ou accéder aux paramètres.",
+      locked: "Permissions avancées disponibles avec le plan Pro",
+    },
+  },
   planWarning: {
     title: "Plan bientôt expiré",
     message:

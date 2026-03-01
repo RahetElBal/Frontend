@@ -51,7 +51,7 @@ import {
   useCategoriesContext,
   useSalonCategories,
 } from "@/contexts/CategoriesProvider";
-import { getProductColumns } from "./list/columns";
+import { getProductColumns } from "./components/list/columns";
 
 // Modal state type
 type ProductModalState = {

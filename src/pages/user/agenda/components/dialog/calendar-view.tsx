@@ -11,7 +11,7 @@ import {
   appointmentToCalendarEvent,
   getAppointmentDisplayStatus,
   type CalendarEvent,
-} from "../../utils";
+} from "../utils";
 
 const localizer = momentLocalizer(moment);
 

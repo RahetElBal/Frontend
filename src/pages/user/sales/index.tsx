@@ -36,8 +36,8 @@ import type { Sale, SaleItem } from "@/types/entities";
 import { useGet, withParams } from "@/hooks/useGet";
 import { usePost } from "@/hooks/usePost";
 import { toast } from "@/lib/toast";
-import { getSalesColumns } from "./list/columns";
-import { saleStatusColors, formatSaleTime, toNumber } from "./utils";
+import { getSalesColumns } from "./components/list/columns";
+import { saleStatusColors, formatSaleTime, toNumber } from "./components/utils";
 import { normalizeSale, normalizeSalesResponse } from "@/utils/normalize-sales";
 import type { PaginatedResponse } from "@/types";
 

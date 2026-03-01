@@ -19,7 +19,7 @@ import {
   getAppointmentDisplayStatus,
   normalizeTime,
   statusColors,
-} from "../utils";
+} from "./utils";
 import { translateServiceName } from "@/common/service-translations";
 
 type HistoryStatusFilter = "all" | AppointmentStatus;
