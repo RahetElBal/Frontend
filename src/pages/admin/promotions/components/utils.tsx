@@ -6,7 +6,7 @@ import type {
   PromotionStatus,
   PromotionType,
 } from "@/types/entities";
-import { StatusBadge } from "../components/status-badge";
+import { StatusBadge } from "../../components/status-badge";
 
 export const copyPromotionCode = (
   code: string,

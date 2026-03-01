@@ -1,5 +1,5 @@
 import type { TFunction } from "i18next";
-import { StatusBadge } from "../components/status-badge";
+import { StatusBadge } from "../../components/status-badge";
 import type { TimeOffStatus, User } from "@/types/entities";
 
 export const getStaffName = (staffMembers: User[], staffId: string) => {

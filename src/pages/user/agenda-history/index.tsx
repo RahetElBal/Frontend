@@ -21,7 +21,7 @@ import {
   getLocalDateString,
   safeExtractArray,
   getAppointmentDisplayStatus,
-} from "../agenda/utils";
+} from "../agenda/components/utils";
 
 const getAppointmentAmount = (appointment: Appointment): number => {
   return Number(

@@ -53,7 +53,7 @@ import type {
   User as StaffUser,
 } from "@/types/entities";
 import { AppointmentStatus } from "@/types/entities";
-import type { AppointmentFormData } from "../../validation";
+import type { AppointmentFormData } from "../validation";
 import type { AppointmentModalState } from "../../types";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useUser } from "@/hooks/useUser";
