@@ -366,6 +366,29 @@ export interface TranslationKeys {
     dzPioneer: string;
     digitalizeOneClick: string;
   };
+  mobileApp: {
+    badge: string;
+    title: string;
+    description: string;
+    backToWebsite: string;
+    signInToDownload: string;
+    loading: string;
+    androidTitle: string;
+    versionInfo: string;
+    downloadApk: string;
+    preparing: string;
+    downloadMode: string;
+    signedSecureLink: string;
+    direct: string;
+    fileSize: string;
+    manifestUpdated: string;
+    sha256: string;
+    releaseNotes: string;
+    manifestUnavailable: string;
+    directDownload: string;
+    iosTitle: string;
+    iosNotConfigured: string;
+  };
   supportReport: {
     title: string;
     description: string;
@@ -1834,6 +1857,31 @@ export const en = {
       terms: "Terms",
       privacy: "Privacy",
     },
+  },
+  mobileApp: {
+    badge: "Mobile App Distribution",
+    title: "Download Beautiq Mobile App",
+    description:
+      "Android APK distribution with checksum and secure-link support. For iOS, use TestFlight, MDM, or enterprise distribution.",
+    backToWebsite: "Back to website",
+    signInToDownload: "Sign in to download securely",
+    loading: "Loading distribution info...",
+    androidTitle: "Android (APK)",
+    versionInfo: "Version {{version}} (build {{build}})",
+    downloadApk: "Download APK",
+    preparing: "Preparing...",
+    downloadMode: "Download mode",
+    signedSecureLink: "Signed secure link",
+    direct: "Direct",
+    fileSize: "File size",
+    manifestUpdated: "Manifest updated",
+    sha256: "SHA-256",
+    releaseNotes: "Release notes",
+    manifestUnavailable: "API manifest unavailable — using bundled APK.",
+    directDownload: "Direct download",
+    iosTitle: "iOS Distribution",
+    iosNotConfigured:
+      "iOS distribution links are not configured yet. Contact support for iOS access.",
   },
   supportReport: {
     title: "Support Report",

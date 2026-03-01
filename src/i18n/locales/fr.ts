@@ -1298,6 +1298,31 @@ export const fr = {
       privacy: "Confidentialité",
     },
   },
+  mobileApp: {
+    badge: "Distribution App Mobile",
+    title: "Télécharger l'application Beautiq",
+    description:
+      "Distribution APK Android avec checksum et lien sécurisé. Pour iOS, utilisez TestFlight, MDM ou distribution entreprise.",
+    backToWebsite: "Retour au site",
+    signInToDownload: "Se connecter pour télécharger",
+    loading: "Chargement des infos de distribution...",
+    androidTitle: "Android (APK)",
+    versionInfo: "Version {{version}} (build {{build}})",
+    downloadApk: "Télécharger l'APK",
+    preparing: "Préparation...",
+    downloadMode: "Mode de téléchargement",
+    signedSecureLink: "Lien sécurisé signé",
+    direct: "Direct",
+    fileSize: "Taille du fichier",
+    manifestUpdated: "Manifeste mis à jour",
+    sha256: "SHA-256",
+    releaseNotes: "Notes de version",
+    manifestUnavailable: "Manifeste API indisponible — utilisation de l'APK intégré.",
+    directDownload: "Téléchargement direct",
+    iosTitle: "Distribution iOS",
+    iosNotConfigured:
+      "Les liens de distribution iOS ne sont pas encore configurés. Contactez le support pour l'accès iOS.",
+  },
   supportReport: {
     title: "Rapport support",
     description:
