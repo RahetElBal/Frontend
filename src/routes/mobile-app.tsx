@@ -7,6 +7,14 @@ import { ROUTES } from "@/constants/navigation";
 import { AUTH_STORAGE_KEY } from "@/constants/auth";
 import { API_BASE_URL } from "@/lib/http";
 
+const STATIC_APK_URL = "/downloads/app-release.apk";
+const STATIC_APK_VERSION = "1.0.0";
+const STATIC_APK_BUILD = "1";
+const STATIC_APK_SIZE_BYTES = 29367304;
+const STATIC_APK_SHA256 =
+  "53f5ae3917aa6d6c3c0e7d0977ffc9506df46d790696bda8c92cfa485958cc74";
+const STATIC_APK_RELEASE_NOTES = "Production release";
+
 type DownloadMode = "direct" | "signed_url";
 
 type MobileAppManifest = {
@@ -75,13 +83,10 @@ export default function MobileAppDownloadPage() {
         if (isMounted) {
           setManifest(data);
         }
-      } catch (error) {
-        if (!isMounted) return;
-        setErrorMessage(
-          error instanceof Error
-            ? error.message
-            : "Unable to load mobile app download information.",
-        );
+      } catch {
+        if (isMounted) {
+          setErrorMessage("API manifest unavailable");
+        }
       } finally {
         if (isMounted) {
           setIsLoading(false);
@@ -95,24 +100,33 @@ export default function MobileAppDownloadPage() {
     };
   }, [apiBase]);
 
+  const androidVersion = manifest?.android?.version ?? STATIC_APK_VERSION;
+  const androidBuild = manifest?.android?.buildNumber ?? STATIC_APK_BUILD;
+  const androidSize = manifest?.android?.sizeBytes ?? STATIC_APK_SIZE_BYTES;
+  const androidSha = manifest?.android?.checksumSha256 ?? STATIC_APK_SHA256;
+  const androidNotes = manifest?.android?.releaseNotes ?? STATIC_APK_RELEASE_NOTES;
+  const androidAvailable = manifest?.android?.available ?? true;
+
   const startAndroidDownload = useCallback(async () => {
-    if (!manifest?.android?.available) return;
     setDownloadError(null);
 
+    if (!manifest?.android?.available) {
+      window.location.href = STATIC_APK_URL;
+      return;
+    }
+
     if (manifest.android.downloadMode === "direct") {
-      if (!manifest.android.downloadUrl) {
-        setDownloadError("Direct download URL is not configured.");
-        return;
+      if (manifest.android.downloadUrl) {
+        window.location.href = manifest.android.downloadUrl;
+      } else {
+        window.location.href = STATIC_APK_URL;
       }
-      window.location.href = manifest.android.downloadUrl;
       return;
     }
 
     const authToken = localStorage.getItem(AUTH_STORAGE_KEY);
     if (!authToken) {
-      setDownloadError(
-        "Sign in is required to generate a secure APK download link.",
-      );
+      window.location.href = STATIC_APK_URL;
       return;
     }
 
@@ -134,12 +148,8 @@ export default function MobileAppDownloadPage() {
         throw new Error("Download URL is missing from token response.");
       }
       window.location.href = data.downloadUrl;
-    } catch (error) {
-      setDownloadError(
-        error instanceof Error
-          ? error.message
-          : "Unable to prepare secure download link.",
-      );
+    } catch {
+      window.location.href = STATIC_APK_URL;
     } finally {
       setIsPreparingDownload(false);
     }
@@ -154,6 +164,10 @@ export default function MobileAppDownloadPage() {
       ].filter((item) => Boolean(item.href)),
     [manifest],
   );
+
+  const iosNote =
+    manifest?.ios?.note ??
+    "iOS website sideloading is not supported. Use TestFlight, MDM, or enterprise distribution.";
 
   return (
     <div className="min-h-screen bg-linear-to-b from-accent-pink-50 via-background to-accent-blue-50 text-foreground">
@@ -192,26 +206,19 @@ export default function MobileAppDownloadPage() {
           </Card>
         ) : null}
 
-        {errorMessage ? (
-          <Card className="border-red-200 bg-red-50 p-6">
-            <p className="font-medium text-red-700">Unable to load distribution data</p>
-            <p className="mt-1 text-sm text-red-600">{errorMessage}</p>
-          </Card>
-        ) : null}
-
-        {manifest ? (
+        {!isLoading ? (
           <>
             <Card className="space-y-5 p-6">
               <div className="flex items-center justify-between gap-4">
                 <div>
                   <h2 className="text-xl font-semibold">Android (APK)</h2>
                   <p className="text-sm text-muted-foreground">
-                    Version {manifest.android.version} (build {manifest.android.buildNumber})
+                    Version {androidVersion} (build {androidBuild})
                   </p>
                 </div>
                 <Button
                   onClick={() => void startAndroidDownload()}
-                  disabled={!manifest.android.available || isPreparingDownload}
+                  disabled={!androidAvailable || isPreparingDownload}
                   className="gap-2"
                 >
                   <Download className="h-4 w-4" />
@@ -223,27 +230,29 @@ export default function MobileAppDownloadPage() {
                 <p>
                   <span className="text-muted-foreground">Availability:</span>{" "}
                   <span className="font-medium">
-                    {manifest.android.available ? "Available" : "Not available"}
+                    {androidAvailable ? "Available" : "Not available"}
                   </span>
                 </p>
                 <p>
                   <span className="text-muted-foreground">Download mode:</span>{" "}
                   <span className="font-medium">
-                    {manifest.android.downloadMode === "signed_url"
+                    {manifest?.android?.downloadMode === "signed_url"
                       ? "Signed secure link"
                       : "Direct"}
                   </span>
                 </p>
                 <p>
                   <span className="text-muted-foreground">File size:</span>{" "}
-                  <span className="font-medium">{formatBytes(manifest.android.sizeBytes)}</span>
+                  <span className="font-medium">{formatBytes(androidSize)}</span>
                 </p>
-                <p>
-                  <span className="text-muted-foreground">Manifest updated:</span>{" "}
-                  <span className="font-medium">
-                    {new Date(manifest.generatedAt).toLocaleString()}
-                  </span>
-                </p>
+                {manifest ? (
+                  <p>
+                    <span className="text-muted-foreground">Manifest updated:</span>{" "}
+                    <span className="font-medium">
+                      {new Date(manifest.generatedAt).toLocaleString()}
+                    </span>
+                  </p>
+                ) : null}
               </div>
 
               <div className="rounded-xl border border-border/80 bg-muted/20 p-3">
@@ -251,21 +260,35 @@ export default function MobileAppDownloadPage() {
                   SHA-256
                 </p>
                 <p className="mt-1 break-all font-mono text-xs sm:text-sm">
-                  {manifest.android.checksumSha256 || "-"}
+                  {androidSha || "-"}
                 </p>
               </div>
 
-              {manifest.android.releaseNotes ? (
+              {androidNotes ? (
                 <div className="rounded-xl border border-border/80 bg-muted/20 p-3">
                   <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                     Release notes
                   </p>
-                  <p className="mt-1 text-sm">{manifest.android.releaseNotes}</p>
+                  <p className="mt-1 text-sm">{androidNotes}</p>
                 </div>
               ) : null}
 
               {downloadError ? (
                 <p className="text-sm font-medium text-red-600">{downloadError}</p>
+              ) : null}
+
+              {errorMessage ? (
+                <div className="flex items-center gap-3 rounded-lg border border-accent-pink-200 bg-accent-pink-50 p-3">
+                  <p className="text-xs text-muted-foreground">
+                    API manifest unavailable — using bundled APK.
+                  </p>
+                  <Button asChild variant="outline" size="sm" className="ml-auto shrink-0 gap-2">
+                    <a href={STATIC_APK_URL} download="app-release.apk">
+                      <Download className="h-3 w-3" />
+                      Direct download
+                    </a>
+                  </Button>
+                </div>
               ) : null}
             </Card>
 
@@ -274,7 +297,7 @@ export default function MobileAppDownloadPage() {
                 <ShieldCheck className="h-5 w-5 text-accent-blue-500" />
                 <h2 className="text-xl font-semibold">iOS Distribution</h2>
               </div>
-              <p className="text-sm text-muted-foreground">{manifest.ios.note}</p>
+              <p className="text-sm text-muted-foreground">{iosNote}</p>
 
               {iosLinks.length > 0 ? (
                 <div className="flex flex-wrap gap-2">
