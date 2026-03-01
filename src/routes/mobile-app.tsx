@@ -7,7 +7,6 @@ import { ROUTES } from "@/constants/navigation";
 import { AUTH_STORAGE_KEY } from "@/constants/auth";
 import { API_BASE_URL } from "@/lib/http";
 
-const STATIC_APK_URL = "/downloads/app-release.apk";
 const STATIC_APK_VERSION = "1.0.0";
 const STATIC_APK_BUILD = "1";
 const STATIC_APK_SIZE_BYTES = 29367304;
@@ -64,6 +63,7 @@ export default function MobileAppDownloadPage() {
   const [downloadError, setDownloadError] = useState<string | null>(null);
 
   const apiBase = useMemo(() => API_BASE_URL.replace(/\/$/, ""), []);
+  const fallbackApkUrl = `${apiBase}/mobile-app/android/download`;
   const isAuthenticated = useMemo(
     () => Boolean(localStorage.getItem(AUTH_STORAGE_KEY)),
     [],
@@ -111,22 +111,18 @@ export default function MobileAppDownloadPage() {
     setDownloadError(null);
 
     if (!manifest?.android?.available) {
-      window.location.href = STATIC_APK_URL;
+      window.location.href = fallbackApkUrl;
       return;
     }
 
     if (manifest.android.downloadMode === "direct") {
-      if (manifest.android.downloadUrl) {
-        window.location.href = manifest.android.downloadUrl;
-      } else {
-        window.location.href = STATIC_APK_URL;
-      }
+      window.location.href = manifest.android.downloadUrl || fallbackApkUrl;
       return;
     }
 
     const authToken = localStorage.getItem(AUTH_STORAGE_KEY);
     if (!authToken) {
-      window.location.href = STATIC_APK_URL;
+      window.location.href = fallbackApkUrl;
       return;
     }
 
@@ -149,11 +145,11 @@ export default function MobileAppDownloadPage() {
       }
       window.location.href = data.downloadUrl;
     } catch {
-      window.location.href = STATIC_APK_URL;
+      window.location.href = fallbackApkUrl;
     } finally {
       setIsPreparingDownload(false);
     }
-  }, [apiBase, manifest]);
+  }, [apiBase, fallbackApkUrl, manifest]);
 
   const iosLinks = useMemo(
     () =>
@@ -283,7 +279,7 @@ export default function MobileAppDownloadPage() {
                     API manifest unavailable — using bundled APK.
                   </p>
                   <Button asChild variant="outline" size="sm" className="ml-auto shrink-0 gap-2">
-                    <a href={STATIC_APK_URL} download="app-release.apk">
+                    <a href={fallbackApkUrl} download="app-release.apk">
                       <Download className="h-3 w-3" />
                       Direct download
                     </a>

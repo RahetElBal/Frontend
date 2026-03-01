@@ -1,4 +1,4 @@
-import { ArrowRight, Check, ShieldCheck, Smartphone, Sparkles } from "lucide-react";
+import { ArrowRight, ShieldCheck, Smartphone, Sparkles } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 
@@ -18,54 +18,12 @@ export default function LandingPage() {
   const navLeft = [
     { label: t("landing.nav.discover"), href: "#top" },
     { label: t("landing.nav.services"), href: "#features" },
-    { label: t("landing.nav.pricing"), href: "#pricing" },
   ];
 
   const navRight = [
     { label: t("landing.nav.algeria"), href: "#algeria" },
     { label: t("landing.nav.mobile"), href: "#mobile" },
     { label: t("landing.nav.contact"), href: "#contact" },
-  ];
-
-  const planCards = [
-    {
-      name: t("landing.plans.standard.name"),
-      price: "79 000 DA",
-      subtitle: t("landing.plans.standard.subtitle"),
-      highlighted: false,
-      items: [
-        t("landing.plans.standard.item1"),
-        t("landing.plans.standard.item2"),
-        t("landing.plans.standard.item3"),
-        t("landing.plans.standard.item4"),
-      ],
-    },
-    {
-      name: t("landing.plans.pro.name"),
-      price: "99 000 DA",
-      subtitle: t("landing.plans.pro.subtitle"),
-      highlighted: true,
-      items: [
-        t("landing.plans.pro.item1"),
-        t("landing.plans.pro.item2"),
-        t("landing.plans.pro.item3"),
-        t("landing.plans.pro.item4"),
-        t("landing.plans.pro.item5"),
-        t("landing.plans.pro.item6"),
-      ],
-    },
-    {
-      name: t("landing.plans.allIn.name"),
-      price: "SUR DEVIS",
-      subtitle: t("landing.plans.allIn.subtitle"),
-      highlighted: false,
-      items: [
-        t("landing.plans.allIn.item1"),
-        t("landing.plans.allIn.item2"),
-        t("landing.plans.allIn.item3"),
-        t("landing.plans.allIn.item4"),
-      ],
-    },
   ];
 
   return (
@@ -221,69 +179,6 @@ export default function LandingPage() {
                   <p className="mt-1 text-sm text-muted-foreground">{t("landing.features.cashDescription")}</p>
                 </article>
               </div>
-            </div>
-          </div>
-        </section>
-
-        <section id="pricing" className="px-4 pb-12 pt-2 sm:px-6 lg:px-10">
-          <div className="mx-auto max-w-[1600px]">
-            <div className="text-center">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-accent-blue-600">
-                {t("landing.pricing.badge")}
-              </p>
-              <h2
-                className="mt-3 text-4xl text-accent-pink-700 sm:text-5xl"
-                style={{ fontFamily: '"Playfair Display", "Times New Roman", serif' }}
-              >
-                {t("landing.pricing.title")}
-              </h2>
-              <p className="mt-4 inline-flex rounded-full border border-amber-300 bg-amber-50 px-4 py-2 text-sm font-medium text-amber-900">
-                {t("landing.pricing.launchNote")}
-              </p>
-            </div>
-
-            <div className="mt-8 grid gap-5 lg:grid-cols-3">
-              {planCards.map((plan) => (
-                <article
-                  key={plan.name}
-                  className={
-                    plan.highlighted
-                      ? "relative rounded-3xl border border-accent-pink-300 bg-white p-6 shadow-2xl shadow-accent-pink-200/50"
-                      : "relative rounded-3xl border border-accent-blue-200/70 bg-white/95 p-6 shadow-xl shadow-accent-blue-100/45"
-                  }
-                >
-                  {plan.highlighted ? (
-                    <span className="absolute right-5 top-5 rounded-full bg-accent-pink-500 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-white">
-                      {t("landing.pricing.recommended")}
-                    </span>
-                  ) : null}
-
-                  <p className="text-sm uppercase tracking-wide text-muted-foreground">{plan.name}</p>
-                  <p className="mt-2 text-4xl font-semibold text-accent-pink-600">{plan.price}</p>
-                  <p className="mt-1 text-sm text-muted-foreground">{plan.subtitle}</p>
-
-                  <ul className="mt-6 space-y-3">
-                    {plan.items.map((item) => (
-                      <li key={item} className="flex items-start gap-2 text-sm">
-                        <Check className="mt-0.5 h-4 w-4 shrink-0 text-accent-pink-500" />
-                        <span className="text-muted-foreground">{item}</span>
-                      </li>
-                    ))}
-                  </ul>
-
-                  <Button
-                    asChild
-                    variant={plan.highlighted ? "default" : "outline"}
-                    className={
-                      plan.highlighted
-                        ? "mt-6 w-full"
-                        : "mt-6 w-full border-accent-pink-200 bg-accent-pink-50 hover:bg-accent-pink-100"
-                    }
-                  >
-                    <Link to={ROUTES.LOGIN}>{t("landing.pricing.start")}</Link>
-                  </Button>
-                </article>
-              ))}
             </div>
           </div>
         </section>

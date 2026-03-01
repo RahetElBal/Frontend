@@ -7,7 +7,7 @@ export const AUTH_ROUTES = {
 } as const;
 
 export const CONTACT_INFO = {
-  PHONE: "+213 776 10 16 80",
+  PHONE: "07 79 37 86 20",
   EMAIL: "contact@beautysalon.com",
 } as const;
 
