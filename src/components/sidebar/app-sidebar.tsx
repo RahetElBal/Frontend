@@ -38,26 +38,7 @@ export function AppSidebar({
   const { t } = useTranslation();
   const [collapsed, setCollapsed] = useState(false);
   const navigation = getNavigationForRole(userRole, isInAdminPanel);
-  const isMarketingEnabled = useMemo(() => {
-    const normalized = String(currentSalon?.planTier || "").toLowerCase().trim();
-    return (
-      normalized === "pro" ||
-      normalized === "all-in" ||
-      normalized === "all_in" ||
-      normalized === "allin"
-    );
-  }, [currentSalon?.planTier]);
-
-  const visibleNavigation = useMemo(() => {
-    if (isInAdminPanel || isMarketingEnabled) {
-      return navigation;
-    }
-
-    return navigation.map((section) => ({
-      ...section,
-      items: section.items.filter((item) => item.id !== "marketing"),
-    }));
-  }, [navigation, isInAdminPanel, isMarketingEnabled]);
+  const visibleNavigation = useMemo(() => navigation, [navigation]);
 
   useEffect(() => {
     const width = collapsed ? SIDEBAR_WIDTH_COLLAPSED : SIDEBAR_WIDTH;

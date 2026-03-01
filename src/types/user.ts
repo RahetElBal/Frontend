@@ -74,7 +74,6 @@ export interface SalonSettings {
   loyaltyRewardServiceId?: string;
   loyaltyRewardDiscountType?: "percent" | "fixed";
   loyaltyRewardDiscountValue?: number;
-  socialPublishingEnabled?: boolean;
 }
 
 export interface WorkingHours {

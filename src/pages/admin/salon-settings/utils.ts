@@ -8,7 +8,6 @@ export const defaultSettings: Partial<SalonSettingsExtended> = {
   timeFormat: "24h",
   sendAppointmentConfirmation: true,
   sendAppointmentReminder: true,
-  socialPublishingEnabled: true,
   reminderHoursBefore: 2,
   sendBirthdayGreeting: false,
   sendReviewRequest: false,

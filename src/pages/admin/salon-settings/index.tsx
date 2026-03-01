@@ -69,7 +69,6 @@ export function SalonSettingsPage() {
     normalizedPlanTier === "all-in" ||
     normalizedPlanTier === "all_in" ||
     normalizedPlanTier === "allin";
-  const isSocialPublishingProEnabled = isReminderProEnabled;
 
   // Settings are stored within the salon entity
   const settings = currentSalon?.settings as SalonSettingsExtended | undefined;
@@ -125,7 +124,6 @@ export function SalonSettingsPage() {
       : {
           ...formData,
           sendAppointmentReminder: false,
-          socialPublishingEnabled: false,
         };
 
     applyOptimisticSettings(nextSettings);
@@ -235,7 +233,6 @@ export function SalonSettingsPage() {
                 <NotificationSettings
                   formData={formData}
                   isReminderProEnabled={isReminderProEnabled}
-                  isSocialPublishingProEnabled={isSocialPublishingProEnabled}
                   updateField={updateField}
                 />
               )}

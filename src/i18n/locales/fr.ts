@@ -1230,7 +1230,7 @@ export const fr = {
     titleLine1: "Élevez la gestion",
     titleLine2: "de votre salon",
     description:
-      "Beautiq centralise CRM, agenda, ventes et marketing pour les salons de beauté en Algérie. Gérez web et mobile depuis une seule plateforme.",
+      "Beautiq centralise CRM, agenda, ventes et fidélisation pour les salons de beauté en Algérie. Gérez web et mobile depuis une seule plateforme.",
     ctaLogin: "Accéder à la connexion",
     ctaMobile: "App mobile",
     highlights: {
@@ -1244,8 +1244,8 @@ export const fr = {
       crmDescription: "Fiches clients, historique et préférences centralisées.",
       agendaTitle: "Agenda intelligent",
       agendaDescription: "Rendez-vous, disponibilités et rappels automatiques.",
-      cashTitle: "Caisse + marketing",
-      cashDescription: "Paiements, campagnes et performance en temps réel.",
+      cashTitle: "Caisse + performance",
+      cashDescription: "Paiements, remboursements et performance en temps réel.",
     },
     pricing: {
       badge: "Tarifs",
@@ -1268,11 +1268,11 @@ export const fr = {
         name: "Pro",
         subtitle: "Par offre",
         item1: "Tout Standard +",
-        item2: "Automatisations marketing avancées",
-        item3: "Publication Instagram et TikTok",
+        item2: "Rappels WhatsApp automatiques",
+        item3: "Configuration rappels et confirmations WhatsApp",
         item4: "Analyses avancées",
         item5: "Rôles et permissions avancés",
-        item6: "Support prioritaire",
+        item6: "Support prioritaire (réponse accélérée)",
       },
       allIn: {
         name: "All-In",

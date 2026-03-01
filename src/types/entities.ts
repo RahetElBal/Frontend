@@ -92,7 +92,6 @@ export interface SalonSettings {
   loyaltyRewardServiceId?: string;
   loyaltyRewardDiscountType?: "percent" | "fixed";
   loyaltyRewardDiscountValue?: number;
-  socialPublishingEnabled?: boolean;
 }
 
 export interface WorkingHours {
@@ -643,7 +642,6 @@ export interface SalonSettingsExtended extends BaseEntity {
   // Notification Settings
   sendAppointmentConfirmation: boolean;
   sendAppointmentReminder: boolean;
-  socialPublishingEnabled: boolean;
   reminderHoursBefore: number;
   sendBirthdayGreeting: boolean;
   sendReviewRequest: boolean;

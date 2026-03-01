@@ -145,9 +145,9 @@ export function PlanExpiryWarningModal() {
           <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
             <p className="font-medium">Ce que vous risquez de perdre:</p>
             <ul className="mt-2 list-disc space-y-1 ps-5">
-              <li>Publication sociale Instagram et TikTok</li>
-              <li>Automatisations marketing avancées</li>
-              <li>Tableau analytique avancé et support prioritaire</li>
+              <li>Rappels WhatsApp automatiques</li>
+              <li>Tableau analytique avancé</li>
+              <li>Support prioritaire (prise en charge accélérée)</li>
             </ul>
           </div>
         ) : null}

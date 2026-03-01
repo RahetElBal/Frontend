@@ -35,7 +35,7 @@ export default function TermsPage() {
             <h2 className="text-xl font-semibold">1. Objet</h2>
             <p className="text-sm text-muted-foreground">
               Beautiq fournit une plateforme SaaS de gestion pour salons de beauté:
-              CRM, agenda, ventes, marketing et outils d'exploitation.
+              CRM, agenda, ventes, fidélité et outils d'exploitation.
             </p>
           </section>
 
@@ -79,7 +79,7 @@ export default function TermsPage() {
             <h2 className="text-xl font-semibold">6. Services tiers</h2>
             <p className="text-sm text-muted-foreground">
               Certaines fonctionnalités s'appuient sur des services tiers (ex:
-              Instagram, TikTok, SMS). Leur disponibilité et leurs politiques
+              WhatsApp, SMS, email). Leur disponibilité et leurs politiques
               restent sous la responsabilité de ces fournisseurs.
             </p>
           </section>

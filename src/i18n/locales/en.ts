@@ -1755,7 +1755,7 @@ export const en = {
     titleLine1: "Elevate Your Salon",
     titleLine2: "Management",
     description:
-      "Beautiq centralizes CRM, scheduling, sales and marketing for beauty salons in Algeria. Manage web and mobile from one platform.",
+      "Beautiq centralizes CRM, scheduling, sales and loyalty for beauty salons in Algeria. Manage web and mobile from one platform.",
     ctaLogin: "Access login",
     ctaMobile: "Mobile app",
     highlights: {
@@ -1769,8 +1769,8 @@ export const en = {
       crmDescription: "Client records, history and preferences in one place.",
       agendaTitle: "Smart scheduling",
       agendaDescription: "Appointments, staff availability and reminders.",
-      cashTitle: "Checkout + marketing",
-      cashDescription: "Payments, campaigns and real-time performance.",
+      cashTitle: "Checkout + performance",
+      cashDescription: "Payments, refunds and real-time performance.",
     },
     pricing: {
       badge: "Pricing",
@@ -1793,11 +1793,11 @@ export const en = {
         name: "Pro",
         subtitle: "Per offer",
         item1: "Everything in Standard +",
-        item2: "Advanced marketing automations",
-        item3: "Instagram and TikTok publishing",
+        item2: "Automated WhatsApp reminders",
+        item3: "WhatsApp reminders and confirmations setup",
         item4: "Advanced analytics",
         item5: "Advanced team roles and permissions",
-        item6: "Priority support",
+        item6: "Priority support (faster response)",
       },
       allIn: {
         name: "All-In",

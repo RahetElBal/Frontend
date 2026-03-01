@@ -17,6 +17,7 @@ import { DialogFooter } from "@/components/ui/dialog";
 import type { User, Salon } from "@/types/entities";
 import type { UserFormData } from "./validation";
 import { parseValidationMsg } from "@/common/validator/zodI18n";
+import { useUser } from "@/hooks/useUser";
 
 interface UserFormProps {
   form: UseFormReturn<UserFormData>;
@@ -39,7 +40,11 @@ export function UserForm({
   onCancel,
 }: UserFormProps) {
   const { t } = useTranslation();
+  const { salon: currentSalon } = useUser();
   const currentRole = form.watch("role");
+  const isProLikePlan = ["pro", "all-in", "all_in", "allin"].includes(
+    String(currentSalon?.planTier || "").toLowerCase().trim(),
+  );
   const getErrorMessage = (message?: string): string | undefined => {
     if (!message) return undefined;
     if (message.startsWith("validation.") || message.startsWith("errors.")) {
@@ -107,6 +112,11 @@ export function UserForm({
               {getErrorMessage(form.formState.errors.phone.message as string)}
             </p>
           )}
+          {!isSuperadmin && isCreateMode && currentRole === "user" && isProLikePlan ? (
+            <p className="text-xs text-muted-foreground">
+              Offre Pro: demandez le numero WhatsApp du membre pour recevoir les rappels automatiques.
+            </p>
+          ) : null}
         </div>
 
         {/* Role Display (Read-only in create mode) */}

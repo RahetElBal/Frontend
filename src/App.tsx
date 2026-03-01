@@ -36,11 +36,6 @@ const AnalyticsPage = lazy(() =>
     default: module.AnalyticsPage,
   })),
 );
-const MarketingPage = lazy(() =>
-  import("./pages/admin/marketing").then((module) => ({
-    default: module.MarketingPage,
-  })),
-);
 const SalonSettingsPage = lazy(() =>
   import("./pages/admin/salon-settings").then((module) => ({
     default: module.SalonSettingsPage,
@@ -158,7 +153,6 @@ function App() {
           <Route path={ROUTES.PRODUCTS} element={<ProductsPage />} />
           <Route path={ROUTES.SALES} element={<SalesPage />} />
           <Route path={ROUTES.PROMOTIONS} element={<PromotionsPage />} />
-          <Route path={ROUTES.MARKETING} element={<MarketingPage />} />
           <Route path={ROUTES.ANALYTICS} element={<AnalyticsPage />} />
           <Route path={ROUTES.LOYALTY} element={<LoyaltyPage />} />
           <Route

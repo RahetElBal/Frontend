@@ -977,7 +977,7 @@ export const es = {
     titleLine1: "Eleva la gestion",
     titleLine2: "de tu salon",
     description:
-      "Beautiq centraliza CRM, agenda, ventas y marketing para salones de belleza en Argelia. Gestiona web y movil desde una sola plataforma.",
+      "Beautiq centraliza CRM, agenda, ventas y fidelizacion para salones de belleza en Argelia. Gestiona web y movil desde una sola plataforma.",
     ctaLogin: "Acceder al login",
     ctaMobile: "App movil",
     highlights: {
@@ -991,8 +991,8 @@ export const es = {
       crmDescription: "Fichas, historial y preferencias en un solo lugar.",
       agendaTitle: "Agenda inteligente",
       agendaDescription: "Citas, disponibilidad del equipo y recordatorios.",
-      cashTitle: "Caja + marketing",
-      cashDescription: "Pagos, campanas y rendimiento en tiempo real.",
+      cashTitle: "Caja + rendimiento",
+      cashDescription: "Pagos, reembolsos y rendimiento en tiempo real.",
     },
     pricing: {
       badge: "Precios",
@@ -1015,11 +1015,11 @@ export const es = {
         name: "Pro",
         subtitle: "Por oferta",
         item1: "Todo Standard +",
-        item2: "Automatizaciones de marketing avanzadas",
-        item3: "Publicacion en Instagram y TikTok",
+        item2: "Recordatorios automaticos por WhatsApp",
+        item3: "Configuracion de recordatorios y confirmaciones por WhatsApp",
         item4: "Analitica avanzada",
         item5: "Roles y permisos avanzados",
-        item6: "Soporte prioritario",
+        item6: "Soporte prioritario (respuesta mas rapida)",
       },
       allIn: {
         name: "All-In",

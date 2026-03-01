@@ -15,7 +15,6 @@ import type { SettingsSectionProps } from "../types";
 export function NotificationSettings({
   formData,
   isReminderProEnabled = false,
-  isSocialPublishingProEnabled = false,
   updateField,
 }: SettingsSectionProps) {
   const { t } = useTranslation();
@@ -63,29 +62,6 @@ export function NotificationSettings({
             disabled={!isReminderProEnabled}
             onCheckedChange={(checked) =>
               updateField("sendAppointmentReminder", checked)
-            }
-          />
-        </div>
-
-        <div className="flex items-center justify-between p-4 border rounded-lg">
-          <div>
-            <p className="font-medium">Instagram & TikTok publishing</p>
-            <p className="text-sm text-muted-foreground">
-              Publish posts and stories directly from your salon workspace.
-            </p>
-            {!isSocialPublishingProEnabled ? (
-              <p className="text-xs mt-1 text-amber-600">
-                Direct social publishing is available for Pro offer only.
-              </p>
-            ) : null}
-          </div>
-          <Switch
-            checked={
-              isSocialPublishingProEnabled && formData.socialPublishingEnabled
-            }
-            disabled={!isSocialPublishingProEnabled}
-            onCheckedChange={(checked) =>
-              updateField("socialPublishingEnabled", checked)
             }
           />
         </div>

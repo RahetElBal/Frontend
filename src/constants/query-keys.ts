@@ -33,9 +33,6 @@ export const ENDPOINTS = {
   GIFT_CARDS: 'gift-cards',
   REWARDS: 'rewards',
   
-  // Marketing
-  CAMPAIGNS: 'campaigns',
-  
   // Analytics & Dashboard
   DASHBOARD: 'dashboard',
   ANALYTICS: 'analytics',
