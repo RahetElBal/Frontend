@@ -335,7 +335,6 @@ export function SalesPage() {
         totalItems={salesMeta?.total ?? 0}
         totalPages={Math.max(salesMeta?.lastPage ?? 0, 1)}
         onPageChange={setPage}
-        newestFirst
         searchPlaceholder={t("sales.searchPlaceholder")}
         emptyMessage={t("sales.noSales")}
         loading={showTableLoading}

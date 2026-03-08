@@ -8,7 +8,6 @@ interface ServerPaginationProps {
   totalItems: number;
   totalPages: number;
   onPageChange: (page: number) => void;
-  newestFirst?: boolean;
 }
 
 export function ServerPagination({
@@ -17,7 +16,6 @@ export function ServerPagination({
   totalItems,
   totalPages,
   onPageChange,
-  newestFirst = false,
 }: ServerPaginationProps) {
   const { t } = useTranslation();
   const safePage = Math.max(page, 1);
@@ -25,14 +23,8 @@ export function ServerPagination({
   const showingFrom = totalItems === 0 ? 0 : (safePage - 1) * perPage + 1;
   const showingTo =
     totalItems === 0 ? 0 : Math.min(safePage * perPage, totalItems);
-  const canPrevPage = newestFirst
-    ? safePage < safeTotalPages
-    : safePage > 1;
-  const canNextPage = newestFirst
-    ? safePage > 1
-    : safePage < safeTotalPages;
-  const previousPage = newestFirst ? safePage + 1 : safePage - 1;
-  const nextPage = newestFirst ? safePage - 1 : safePage + 1;
+  const canPrevPage = safePage > 1;
+  const canNextPage = safePage < safeTotalPages;
 
   return (
     <div className="relative z-10 flex items-center justify-between gap-3">
@@ -49,7 +41,7 @@ export function ServerPagination({
           variant="outline"
           size="sm"
           className="pointer-events-auto"
-          onClick={() => onPageChange(previousPage)}
+          onClick={() => onPageChange(safePage - 1)}
           disabled={!canPrevPage}
         >
           {t("common.previous")}
@@ -62,7 +54,7 @@ export function ServerPagination({
           variant="outline"
           size="sm"
           className="pointer-events-auto"
-          onClick={() => onPageChange(nextPage)}
+          onClick={() => onPageChange(safePage + 1)}
           disabled={!canNextPage}
         >
           {t("common.next")}
