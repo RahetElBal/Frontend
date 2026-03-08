@@ -9,6 +9,7 @@ import { useGet, withParams } from "@/hooks/useGet";
 import { useSalonStaff } from "@/contexts/StaffProvider";
 import { useUser } from "@/hooks/useUser";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useServerTableState } from "@/hooks/useServerTableState";
 import { ROUTES } from "@/constants/navigation";
 import type { Appointment, PaginatedResponse } from "@/types";
 import { AppointmentStatus } from "@/types/entities";
@@ -59,23 +60,13 @@ export function AgendaHistoryPage() {
   const [dateTo, setDateTo] = useState(() => getLocalDateString());
   const [status, setStatus] = useState<"all" | AppointmentStatus>("all");
   const [staffId, setStaffId] = useState<string | null>(ALL_STAFF_ID);
-  const [page, setPage] = useState(1);
-  const [searchInput, setSearchInput] = useState("");
-  const [search, setSearch] = useState("");
-
-  useEffect(() => {
-    const normalizedSearch = searchInput.trim();
-    const timeoutId = window.setTimeout(() => {
-      setSearch((previousSearch) =>
-        previousSearch === normalizedSearch
-          ? previousSearch
-          : normalizedSearch,
-      );
-      setPage((previousPage) => (previousPage === 1 ? previousPage : 1));
-    }, 300);
-
-    return () => window.clearTimeout(timeoutId);
-  }, [searchInput]);
+  const {
+    page,
+    setPage,
+    search,
+    searchInput,
+    setSearchInput,
+  } = useServerTableState();
 
   const staffFilterId = staffId === ALL_STAFF_ID ? null : staffId;
   const historyFilters = useMemo(() => {
