@@ -1,19 +1,19 @@
 import { Users, UserCog } from "lucide-react";
 
 import { Card } from "@/components/ui/card";
-import type { User } from "@/types/entities";
-import { UserRole } from "@/types/entities";
 import { AdminStatsGrid } from "@/pages/admin/components/stats-grid";
 
 interface StatsGridProps {
-  users: User[];
+  totalUsers: number;
+  totalAdmins: number;
   isSuperadmin: boolean;
 }
 
-export function StatsGrid({ users, isSuperadmin }: StatsGridProps) {
-  const totalUsers = users.length;
-  const admins = users.filter((u) => u.role === UserRole.ADMIN).length;
-
+export function StatsGrid({
+  totalUsers,
+  totalAdmins,
+  isSuperadmin,
+}: StatsGridProps) {
   const allStats = [
     {
       title: "Total utilisateurs",
@@ -24,7 +24,7 @@ export function StatsGrid({ users, isSuperadmin }: StatsGridProps) {
     },
     {
       title: "Administrateurs",
-      value: admins,
+      value: totalAdmins,
       icon: UserCog,
       color: "text-accent-blue",
       bgColor: "bg-accent-blue/10",

@@ -1,8 +1,10 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { Search, X } from "lucide-react";
 import { Badge } from "@/components/badge";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -10,8 +12,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { DataTable, type Column } from "@/components/table/data-table";
-import { useTable } from "@/hooks/useTable";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Spinner } from "@/components/spinner";
 import { useLanguage } from "@/hooks/useLanguage";
 import type { Appointment } from "@/types/entities";
 import { AppointmentStatus } from "@/types/entities";
@@ -27,6 +36,8 @@ type HistoryStatusFilter = "all" | AppointmentStatus;
 interface HistoryViewProps {
   appointments: Appointment[];
   isLoading?: boolean;
+  search: string;
+  onSearchChange: (value: string) => void;
   dateFrom: string;
   dateTo: string;
   onDateFromChange: (value: string) => void;
@@ -36,6 +47,11 @@ interface HistoryViewProps {
   staffId: string | null;
   staffOptions: Array<{ id: string; label: string }>;
   onStaffChange: (value: string) => void;
+  page: number;
+  perPage: number;
+  totalItems: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
   onSelectAppointment?: (appointment: Appointment) => void;
 }
 
@@ -48,7 +64,6 @@ type AppointmentHistoryRow = Appointment & {
   statusLabel: string;
   paymentLabel: string;
   priceValue: number;
-  dateTimeSort: number;
 };
 
 const getDisplayPrice = (appointment: Appointment) =>
@@ -82,6 +97,8 @@ const getStaffLabel = (
 export function HistoryView({
   appointments,
   isLoading = false,
+  search,
+  onSearchChange,
   dateFrom,
   dateTo,
   onDateFromChange,
@@ -91,6 +108,11 @@ export function HistoryView({
   staffId,
   staffOptions,
   onStaffChange,
+  page,
+  perPage,
+  totalItems,
+  totalPages,
+  onPageChange,
   onSelectAppointment,
 }: HistoryViewProps) {
   const { t } = useTranslation();
@@ -104,16 +126,8 @@ export function HistoryView({
     return map;
   }, [staffOptions]);
 
-  const filteredAppointments = useMemo(() => {
-    if (statusFilter === "all") return appointments;
-    return appointments.filter(
-      (appointment) =>
-        getAppointmentDisplayStatus(appointment) === statusFilter,
-    );
-  }, [appointments, statusFilter]);
-
   const rows = useMemo<AppointmentHistoryRow[]>(() => {
-    return filteredAppointments.map((appointment) => {
+    return appointments.map((appointment) => {
       const clientName = appointment.client
         ? `${appointment.client.firstName || ""} ${
             appointment.client.lastName || ""
@@ -137,9 +151,6 @@ export function HistoryView({
         ? t("agenda.paymentPaid")
         : t("agenda.paymentUnpaid");
       const priceValue = getDisplayPrice(appointment);
-      const dateTimeSort = new Date(
-        `${appointment.date}T${normalizeTime(appointment.startTime) || "00:00"}`,
-      ).getTime();
 
       return {
         ...appointment,
@@ -151,85 +162,14 @@ export function HistoryView({
         statusLabel,
         paymentLabel,
         priceValue,
-        dateTimeSort,
       };
     });
-  }, [filteredAppointments, staffLabelById, t]);
+  }, [appointments, staffLabelById, t]);
 
-  const table = useTable<AppointmentHistoryRow>({
-    data: rows,
-    initialPerPage: 20,
-    initialSort: { key: "dateTimeSort", direction: "desc" },
-    searchKeys: [
-      "clientName",
-      "serviceName",
-      "staffName",
-      "date",
-      "timeRange",
-      "statusLabel",
-      "paymentLabel",
-    ],
-  });
-
-  const columns = useMemo<Column<AppointmentHistoryRow>[]>(
-    () => [
-      {
-        key: "dateTimeSort",
-        header: t("fields.date"),
-        sortable: true,
-        render: (row) => row.date,
-      },
-      {
-        key: "timeRange",
-        header: t("fields.time"),
-        render: (row) => row.timeRange,
-      },
-      {
-        key: "clientName",
-        header: t("fields.client"),
-        sortable: true,
-      },
-      {
-        key: "serviceName",
-        header: t("fields.service"),
-        sortable: true,
-      },
-      {
-        key: "staffName",
-        header: t("fields.staff"),
-        sortable: true,
-      },
-      {
-        key: "displayStatus",
-        header: t("fields.status"),
-        sortable: true,
-        className: "min-w-[140px] whitespace-nowrap",
-        render: (row) => (
-          <Badge variant={statusColors[row.displayStatus]}>
-            {row.statusLabel}
-          </Badge>
-        ),
-      },
-      {
-        key: "paymentLabel",
-        header: t("agenda.paymentStatus"),
-        sortable: true,
-        render: (row) => (
-          <Badge variant={row.paid ? "success" : "warning"}>
-            {row.paymentLabel}
-          </Badge>
-        ),
-      },
-      {
-        key: "priceValue",
-        header: t("fields.total"),
-        sortable: true,
-        className: "text-right",
-        render: (row) => formatCurrency(row.priceValue),
-      },
-    ],
-    [t, formatCurrency],
-  );
+  const showingFrom = totalItems === 0 ? 0 : (page - 1) * perPage + 1;
+  const showingTo = totalItems === 0 ? 0 : Math.min(page * perPage, totalItems);
+  const canPrevPage = page > 1;
+  const canNextPage = page < totalPages;
 
   return (
     <div className="space-y-4">
@@ -323,16 +263,123 @@ export function HistoryView({
         </div>
       </Card>
 
-      <DataTable
-        table={table}
-        columns={columns}
-        onRowClick={
-          onSelectAppointment ? (row) => onSelectAppointment(row) : undefined
-        }
-        searchPlaceholder={t("common.search")}
-        emptyMessage={t("common.noResults")}
-        loading={isLoading}
-      />
+      <div className="space-y-4">
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1 max-w-sm">
+            <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder={t("common.search")}
+              value={search}
+              onChange={(event) => onSearchChange(event.target.value)}
+              className="ps-9"
+            />
+            {search && (
+              <button
+                type="button"
+                onClick={() => onSearchChange("")}
+                className="absolute end-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div className="rounded-md border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{t("fields.date")}</TableHead>
+                <TableHead>{t("fields.time")}</TableHead>
+                <TableHead>{t("fields.client")}</TableHead>
+                <TableHead>{t("fields.service")}</TableHead>
+                <TableHead>{t("fields.staff")}</TableHead>
+                <TableHead className="min-w-[140px] whitespace-nowrap">
+                  {t("fields.status")}
+                </TableHead>
+                <TableHead>{t("agenda.paymentStatus")}</TableHead>
+                <TableHead className="text-right">{t("fields.total")}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={8} className="h-24 text-center">
+                    <div className="flex flex-col items-center justify-center gap-2 text-muted-foreground">
+                      <Spinner size="sm" />
+                      <span className="text-sm">{t("common.loading")}</span>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : rows.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={8} className="h-24 text-center">
+                    {t("common.noResults")}
+                  </TableCell>
+                </TableRow>
+              ) : (
+                rows.map((row) => (
+                  <TableRow
+                    key={row.id}
+                    className={onSelectAppointment ? "cursor-pointer" : undefined}
+                    onClick={() => onSelectAppointment?.(row)}
+                  >
+                    <TableCell>{row.date}</TableCell>
+                    <TableCell>{row.timeRange}</TableCell>
+                    <TableCell>{row.clientName}</TableCell>
+                    <TableCell>{row.serviceName}</TableCell>
+                    <TableCell>{row.staffName}</TableCell>
+                    <TableCell>
+                      <Badge variant={statusColors[row.displayStatus]}>
+                        {row.statusLabel}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={row.paid ? "success" : "warning"}>
+                        {row.paymentLabel}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {formatCurrency(row.priceValue)}
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
+
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-muted-foreground">
+            {t("common.showingCount", {
+              from: showingFrom,
+              to: showingTo,
+              total: totalItems,
+            })}
+          </p>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onPageChange(page - 1)}
+              disabled={!canPrevPage}
+            >
+              {t("common.previous")}
+            </Button>
+            <span className="text-sm text-muted-foreground">
+              {t("common.pageOf", { page, total: totalPages })}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onPageChange(page + 1)}
+              disabled={!canNextPage}
+            >
+              {t("common.next")}
+            </Button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

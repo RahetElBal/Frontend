@@ -15,7 +15,7 @@ import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/badge";
-import { DataTable } from "@/components/table/data-table";
+import { ServerDataTable } from "@/components/table";
 import {
   Dialog,
   DialogContent,
@@ -37,7 +37,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { useTable } from "@/hooks/useTable";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useForm } from "@/hooks/useForm";
 import { useUser } from "@/hooks/useUser";
@@ -52,6 +51,8 @@ import {
   useSalonCategories,
 } from "@/contexts/CategoriesProvider";
 import { getProductColumns } from "./components/list/columns";
+import type { PaginatedResponse } from "@/types";
+import { useServerTableState } from "@/hooks/useServerTableState";
 
 // Modal state type
 type ProductModalState = {
@@ -74,13 +75,7 @@ const productFormSchema = z.object({
 
 type ProductFormData = z.infer<typeof productFormSchema>;
 
-// API response type for paginated products
-interface ProductsResponse {
-  data: Product[];
-  total: number;
-  page: number;
-  perPage: number;
-}
+const PRODUCTS_PAGE_SIZE = 20;
 
 export function ProductsPage() {
   const { t } = useTranslation();
@@ -89,6 +84,13 @@ export function ProductsPage() {
   const productsStaleTime = 1000 * 60 * 10;
   const lowStockStaleTime = 1000 * 60 * 2;
   const { invalidateCategories } = useCategoriesContext();
+  const {
+    page,
+    setPage,
+    search,
+    searchInput,
+    setSearchInput,
+  } = useServerTableState();
 
   // Unified modal state
   const [modalState, setModalState] = useState<ProductModalState>(null);
@@ -99,12 +101,18 @@ export function ProductsPage() {
   const {
     data: productsResponse,
     isLoading,
-  } = useGet<ProductsResponse>(
-    withParams("products", { salonId }),
+    isFetching,
+  } = useGet<PaginatedResponse<Product>>(
+    withParams("products", {
+      salonId,
+      search: search || undefined,
+      skip: (page - 1) * PRODUCTS_PAGE_SIZE,
+      limit: PRODUCTS_PAGE_SIZE,
+    }),
     { enabled: !!salonId, staleTime: productsStaleTime },
   );
-  
   const products = productsResponse?.data || [];
+  const productsMeta = productsResponse?.meta;
 
   const { productCategories = [] } = useSalonCategories(salonId, {
     enabled: !!salonId,
@@ -256,10 +264,17 @@ export function ProductsPage() {
     setStockAdjustment(0);
   };
 
-  const table = useTable<Product>({
-    data: products,
-    searchKeys: ["name", "reference", "sku", "barcode"],
-  });
+  const showTableLoading = (isLoading || isFetching) && products.length === 0;
+
+  useEffect(() => {
+    if (!productsMeta) return;
+
+    const lastPage =
+      productsMeta.total > 0 ? Math.max(1, productsMeta.lastPage) : 1;
+    if (page > lastPage) {
+      setPage(lastPage);
+    }
+  }, [page, productsMeta, setPage]);
 
   // Use the dedicated low-stock endpoint for counts
   const lowStockCount = lowStockProducts.filter((p) => p.stock > 0).length;
@@ -306,7 +321,9 @@ export function ProductsPage() {
     <div className="space-y-6">
       <PageHeader
         title={t("nav.products")}
-        description={t("products.description", { count: products.length })}
+        description={t("products.description", {
+          count: productsMeta?.total ?? 0,
+        })}
         actions={
           <Button
             className="gap-2"
@@ -345,13 +362,19 @@ export function ProductsPage() {
         </Card>
       )}
 
-      <DataTable
-        table={table}
+      <ServerDataTable
+        items={products}
         columns={columns}
-        selectable
+        search={searchInput}
+        onSearchChange={setSearchInput}
+        page={productsMeta?.currentPage ?? page}
+        perPage={productsMeta?.perPage ?? PRODUCTS_PAGE_SIZE}
+        totalItems={productsMeta?.total ?? 0}
+        totalPages={Math.max(productsMeta?.lastPage ?? 0, 1)}
+        onPageChange={setPage}
         searchPlaceholder={t("products.searchPlaceholder")}
         emptyMessage={t("products.noProducts")}
-        loading={isLoading}
+        loading={showTableLoading}
       />
 
       {/* Create/Edit Product Modal */}

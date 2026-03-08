@@ -25,11 +25,16 @@ export interface PaginationMeta {
   lastPage: number;
   perPage: number;
   total: number;
+  limit?: number;
+  skip?: number;
 }
 
 export interface PaginationParams {
   page?: number;
   perPage?: number;
+  skip?: number;
+  limit?: number;
+  search?: string;
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
 }

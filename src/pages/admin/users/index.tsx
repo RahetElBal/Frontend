@@ -1,12 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { UserPlus, UserCog } from "lucide-react";
 
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
-import { DataTable } from "@/components/table/data-table";
-import { useTable } from "@/hooks/useTable";
-import { useGet } from "@/hooks/useGet";
+import { ServerDataTable } from "@/components/table";
+import { useGet, withParams } from "@/hooks/useGet";
 import { usePostAction } from "@/hooks/usePostAction";
 
 import type { User, Salon } from "@/types/entities";
@@ -17,12 +16,14 @@ import { useUsersColumns } from "./components/list/columns";
 import { UserDialog } from "./components/dialog/cu-user";
 import {
   createUserModalHandlers,
-  filterUsersByPermission,
   getPageDescription,
   getSalonsByPermission,
   getSelectedUser,
   type UserModalState,
 } from "./components/utils";
+import { useServerTableState } from "@/hooks/useServerTableState";
+
+const USERS_PAGE_SIZE = 20;
 
 export function AdminUsersPage() {
   const { t } = useTranslation();
@@ -30,23 +31,62 @@ export function AdminUsersPage() {
   const [modalState, setModalState] = useState<UserModalState>(null);
 
   const { isSuperadmin, user: currentUser } = useUser();
+  const { page, setPage, search, searchInput, setSearchInput } =
+    useServerTableState();
+  const managedById = !isSuperadmin ? currentUser?.id : undefined;
+
+  const usersParams = {
+    search: search || undefined,
+    skip: (page - 1) * USERS_PAGE_SIZE,
+    limit: USERS_PAGE_SIZE,
+    managedById,
+  };
+  const usersCountParams = {
+    limit: 1,
+    managedById,
+  };
 
   // Fetch all users
   const {
     data: usersResponse,
     refetch,
     isLoading: usersLoading,
-  } = useGet<PaginatedResponse<User>>("users", {
+    isFetching: isUsersFetching,
+  } = useGet<PaginatedResponse<User>>(withParams("users", usersParams), {
     retry: 1,
   });
-
-  // Filter users based on role
-  const allUsers = usersResponse?.data || [];
-  const users = filterUsersByPermission(
-    allUsers,
-    isSuperadmin,
-    currentUser?.id,
+  const { data: usersCountResponse } = useGet<PaginatedResponse<User>>(
+    withParams("users", usersCountParams),
+    {
+      retry: 1,
+    },
   );
+  const { data: adminsCountResponse } = useGet<PaginatedResponse<User>>(
+    withParams("users", {
+      limit: 1,
+      role: "admin",
+    }),
+    {
+      retry: 1,
+      enabled: isSuperadmin,
+    },
+  );
+
+  const allUsers = usersResponse?.data || [];
+  const users = allUsers;
+  const usersMeta = usersResponse?.meta;
+  const totalUsers = usersCountResponse?.meta.total ?? 0;
+  const totalAdmins = adminsCountResponse?.meta.total ?? 0;
+  const showUsersLoading = (usersLoading || isUsersFetching) && users.length === 0;
+
+  useEffect(() => {
+    if (!usersMeta) return;
+
+    const lastPage = usersMeta.total > 0 ? Math.max(1, usersMeta.lastPage) : 1;
+    if (page > lastPage) {
+      setPage(lastPage);
+    }
+  }, [page, setPage, usersMeta]);
 
   // Salons - superadmin fetches all, admin uses their own from useUser
   const { data: allSalons = [] } = useGet<Salon[]>("salons", {
@@ -66,11 +106,6 @@ export function AdminUsersPage() {
   });
 
   const selectedUser = getSelectedUser(modalState, users);
-
-  const table = useTable<User>({
-    data: users,
-    searchKeys: ["name", "email"],
-  });
 
   // Create modal handlers
   const {
@@ -113,7 +148,7 @@ export function AdminUsersPage() {
     <div className="space-y-6">
       <PageHeader
         title={t("nav.admin.users")}
-        description={getPageDescription(isSuperadmin, adminSalon, users.length)}
+        description={getPageDescription(isSuperadmin, adminSalon, totalUsers)}
         actions={
           isSuperadmin ? (
             <div className="flex gap-2">
@@ -135,17 +170,27 @@ export function AdminUsersPage() {
         }
       />
 
-      {users.length > 0 && (
-        <StatsGrid users={users} isSuperadmin={isSuperadmin} />
+      {totalUsers > 0 && (
+        <StatsGrid
+          totalUsers={totalUsers}
+          totalAdmins={totalAdmins}
+          isSuperadmin={isSuperadmin}
+        />
       )}
 
-      <DataTable
-        table={table}
+      <ServerDataTable
+        items={users}
         columns={columns}
-        selectable
+        search={searchInput}
+        onSearchChange={setSearchInput}
+        page={usersMeta?.currentPage ?? page}
+        perPage={usersMeta?.perPage ?? USERS_PAGE_SIZE}
+        totalItems={usersMeta?.total ?? 0}
+        totalPages={Math.max(usersMeta?.lastPage ?? 0, 1)}
+        onPageChange={setPage}
         searchPlaceholder={t("admin.users.searchPlaceholder")}
         emptyMessage={t("admin.users.noUsers")}
-        loading={usersLoading}
+        loading={showUsersLoading}
       />
 
       <UserDialog

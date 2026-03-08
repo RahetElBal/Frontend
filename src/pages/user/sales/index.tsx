@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { PageHeader } from "@/components/page-header";
@@ -23,8 +23,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/badge";
-import { DataTable } from "@/components/table/data-table";
-import { useTable } from "@/hooks/useTable";
+import { ServerDataTable } from "@/components/table";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useUser } from "@/hooks/useUser";
 import { ROUTES } from "@/constants/navigation";
@@ -40,6 +39,9 @@ import { getSalesColumns } from "./components/list/columns";
 import { saleStatusColors, formatSaleTime, toNumber } from "./components/utils";
 import { normalizeSale, normalizeSalesResponse } from "@/utils/normalize-sales";
 import type { PaginatedResponse } from "@/types";
+import { useServerTableState } from "@/hooks/useServerTableState";
+
+const SALES_PAGE_SIZE = 20;
 
 const getSaleItemPricing = (item: SaleItem) => {
   const quantity = Math.max(1, toNumber(item.quantity, 1));
@@ -94,11 +96,24 @@ export function SalesPage() {
       enabled: !!salonId,
     },
   );
+  const {
+    page,
+    setPage,
+    search,
+    searchInput,
+    setSearchInput,
+  } = useServerTableState();
 
-  const { data: salesResponse, isLoading } = useGet<PaginatedResponse<Sale>>(
+  const {
+    data: salesResponse,
+    isLoading,
+    isFetching,
+  } = useGet<PaginatedResponse<Sale>>(
     withParams("sales", {
       salonId,
-      perPage: 10,
+      search: search || undefined,
+      skip: (page - 1) * SALES_PAGE_SIZE,
+      limit: SALES_PAGE_SIZE,
       sortBy: "createdAt",
       sortOrder: "desc",
       compact: true,
@@ -113,6 +128,7 @@ export function SalesPage() {
     },
   );
   const sales = salesResponse?.data ?? [];
+  const salesMeta = salesResponse?.meta;
 
   const { data: selectedSaleDetails } = useGet<Sale>(`sales/${selectedSaleId}`, {
     enabled: !!selectedSaleId,
@@ -150,58 +166,25 @@ export function SalesPage() {
   }, [selectedSaleDetails, sales, selectedSaleId]);
 
   const isSaleDetailsLoading = !!selectedSaleId && !selectedSaleDetails;
-
-  const table = useTable<Sale>({
-    data: sales,
-    searchKeys: ["id"],
-  });
-
-  const fallbackGrossRevenue = (sales ?? []).reduce(
-    (sum, sale) =>
-      sale?.status === "completed" || sale?.status === "refunded"
-        ? sum + toNumber(sale?.total)
-        : sum,
-    0,
-  );
-  const fallbackTransactions = sales.filter(
-    (sale) => sale.status === "completed",
-  ).length;
-  const fallbackRefundedCount = sales.filter(
-    (sale) => sale.status === "refunded",
-  ).length;
-  const fallbackRefundedRevenueImpact = sales.reduce((sum, sale) => {
-    if (sale.status !== "refunded") return sum;
-    return sum - Math.abs(toNumber(sale?.total));
-  }, 0);
-  const fallbackAverage =
-    fallbackTransactions > 0
-      ? fallbackGrossRevenue / fallbackTransactions
-      : 0;
-  const hasSummaryData =
-    summary.updatedAt > 0 ||
-    summary.grossRevenue !== 0 ||
-    summary.netRevenue !== 0 ||
-    summary.transactionCount !== 0 ||
-    summary.canceledCount !== 0 ||
-    summary.refundedCount !== 0;
-  const grossRevenue = hasSummaryData
-    ? summary.grossRevenue
-    : fallbackGrossRevenue;
-  const netRevenue = hasSummaryData
-    ? summary.netRevenue
-    : Math.max(0, fallbackGrossRevenue + fallbackRefundedRevenueImpact);
-  const transactionsCount = hasSummaryData
-    ? summary.transactionCount
-    : fallbackTransactions;
-  const refundedCount = hasSummaryData
-    ? summary.refundedCount
-    : fallbackRefundedCount;
-  const refundedAmount = Math.abs(
-    hasSummaryData ? summary.refundedRevenueImpact : fallbackRefundedRevenueImpact,
-  );
+  const hasSummaryData = summary.updatedAt > 0;
+  const grossRevenue = summary.grossRevenue;
+  const netRevenue = summary.netRevenue;
+  const transactionsCount = summary.transactionCount;
+  const refundedCount = summary.refundedCount;
+  const refundedAmount = Math.abs(summary.refundedRevenueImpact);
   const averageTicket =
-    transactionsCount > 0 ? netRevenue / transactionsCount : fallbackAverage;
+    transactionsCount > 0 ? netRevenue / transactionsCount : 0;
   const showSummaryLoading = isSummaryLoading && !hasSummaryData;
+  const showTableLoading = (isLoading || isFetching) && sales.length === 0;
+
+  useEffect(() => {
+    if (!salesMeta) return;
+
+    const lastPage = salesMeta.total > 0 ? Math.max(1, salesMeta.lastPage) : 1;
+    if (page > lastPage) {
+      setPage(lastPage);
+    }
+  }, [page, salesMeta, setPage]);
 
   const handleRefund = useCallback(
     (sale: Sale) => {
@@ -342,12 +325,19 @@ export function SalesPage() {
         </Card>
       </div>
 
-      <DataTable
-        table={table}
+      <ServerDataTable
+        items={sales}
         columns={columns}
+        search={searchInput}
+        onSearchChange={setSearchInput}
+        page={salesMeta?.currentPage ?? page}
+        perPage={salesMeta?.perPage ?? SALES_PAGE_SIZE}
+        totalItems={salesMeta?.total ?? 0}
+        totalPages={Math.max(salesMeta?.lastPage ?? 0, 1)}
+        onPageChange={setPage}
         searchPlaceholder={t("sales.searchPlaceholder")}
         emptyMessage={t("sales.noSales")}
-        loading={isLoading}
+        loading={showTableLoading}
       />
 
       <AlertDialog

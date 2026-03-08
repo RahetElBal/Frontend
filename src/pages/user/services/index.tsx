@@ -10,6 +10,7 @@ import {
 
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
+import { ServerPagination } from "@/components/table";
 import { LoadingPanel } from "@/components/loading-panel";
 import {
   Dialog,
@@ -54,6 +55,7 @@ import {
   translateServiceCategory,
   translateServiceName,
 } from "@/common/service-translations";
+import { useServerTableState } from "@/hooks/useServerTableState";
 
 // Modal state type
 type ServiceModalState = {
@@ -62,6 +64,7 @@ type ServiceModalState = {
 } | null;
 
 const SERVICE_DURATION_STEP_MINUTES = 15;
+const SERVICES_PAGE_SIZE = 24;
 
 // Zod schema for service form
 const serviceFormSchema = z.object({
@@ -103,6 +106,7 @@ export function ServicesPage() {
   const { invalidateCategories } = useCategoriesContext();
   const servicesStaleTime = 1000 * 60 * 10;
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const { page, setPage } = useServerTableState();
 
   // Unified modal state
   const [modalState, setModalState] = useState<ServiceModalState>(null);
@@ -116,10 +120,16 @@ export function ServicesPage() {
     isLoading,
     refetch,
     } = useGet<PaginatedResponse<Service>>(
-      withParams("services", { salonId, perPage: 100 }),
+      withParams("services", {
+        salonId,
+        category: selectedCategory || undefined,
+        skip: (page - 1) * SERVICES_PAGE_SIZE,
+        limit: SERVICES_PAGE_SIZE,
+      }),
       { enabled: !!salonId, staleTime: servicesStaleTime },
     );
   const services = servicesResponse?.data ?? [];
+  const servicesMeta = servicesResponse?.meta;
 
   const { serviceCategories: categoriesData = [] } = useSalonCategories(
     salonId,
@@ -267,14 +277,20 @@ export function ServicesPage() {
       });
   }, [t, refetch, salonId, invalidateServices]);
 
-  const filteredServices = selectedCategory
-    ? services.filter((s) => getServiceCategoryName(s) === selectedCategory)
-    : services;
-
   const servicesByCategory = categories.map((cat) => ({
     ...cat,
     services: services.filter((s) => getServiceCategoryName(s) === cat.id),
-  }));
+  })).filter((category) => category.services.length > 0);
+
+  useEffect(() => {
+    if (!servicesMeta) return;
+
+    const lastPage =
+      servicesMeta.total > 0 ? Math.max(1, servicesMeta.lastPage) : 1;
+    if (page > lastPage) {
+      setPage(lastPage);
+    }
+  }, [page, setPage, servicesMeta]);
 
   // Handlers
   const handleView = (service: Service) => {
@@ -317,7 +333,9 @@ export function ServicesPage() {
     <div className="space-y-6">
       <PageHeader
         title={t("nav.services")}
-        description={t("services.description", { count: services.length })}
+        description={t("services.description", {
+          count: servicesMeta?.total ?? 0,
+        })}
         actions={
           canManageServices ? (
             <Button
@@ -338,25 +356,29 @@ export function ServicesPage() {
         <Button
           variant={selectedCategory === null ? "default" : "outline"}
           size="sm"
-          onClick={() => setSelectedCategory(null)}
+          onClick={() => {
+            setSelectedCategory(null);
+            setPage(1);
+          }}
         >
-          {t("common.all")} ({services.length})
+          {t("common.all")}
         </Button>
         {categories.map((cat) => (
           <Button
             key={cat.id}
             variant={selectedCategory === cat.id ? "default" : "outline"}
             size="sm"
-            onClick={() => setSelectedCategory(cat.id)}
+            onClick={() => {
+              setSelectedCategory(cat.id);
+              setPage(1);
+            }}
             className="gap-2"
           >
             <span
               className="h-2 w-2 rounded-full"
               style={{ backgroundColor: cat.color }}
             />
-            {cat.label} (
-            {services.filter((s) => getServiceCategoryName(s) === cat.id).length}
-            )
+            {cat.label}
           </Button>
         ))}
       </div>
@@ -420,7 +442,7 @@ export function ServicesPage() {
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {filteredServices.map((service) => (
+          {services.map((service) => (
             <ServiceCard
               key={service.id}
               service={service}
@@ -431,6 +453,16 @@ export function ServicesPage() {
             />
           ))}
         </div>
+      )}
+
+      {!isLoading && (
+        <ServerPagination
+          page={servicesMeta?.currentPage ?? page}
+          perPage={servicesMeta?.perPage ?? SERVICES_PAGE_SIZE}
+          totalItems={servicesMeta?.total ?? 0}
+          totalPages={Math.max(servicesMeta?.lastPage ?? 0, 1)}
+          onPageChange={setPage}
+        />
       )}
 
       {/* Create/Edit Service Modal */}
