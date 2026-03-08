@@ -646,6 +646,12 @@ export function AgendaPage() {
     [selectedDate],
   );
 
+  useEffect(() => {
+    if (filter === "today" && selectedDate !== today) {
+      setFilter("all");
+    }
+  }, [filter, selectedDate, today]);
+
   const todayAppointments = useMemo(
     () => appointments.filter((apt) => apt.date === today),
     [appointments, today],

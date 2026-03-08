@@ -323,6 +323,21 @@ export function AppointmentModals({
   const currentMinutes = now.getHours() * 60 + now.getMinutes();
   const isPastDate = selectedDate < todayStr;
   const isToday = selectedDate === todayStr;
+  const isSelectedAppointmentPast = useMemo(() => {
+    if (!selectedAppointment) return false;
+
+    const appointmentEndTime =
+      selectedAppointment.endTime || selectedAppointment.startTime;
+    const appointmentEndMinutes = timeToMinutes(appointmentEndTime);
+
+    return (
+      selectedAppointment.date < todayStr ||
+      (selectedAppointment.date === todayStr &&
+        appointmentEndMinutes < currentMinutes)
+    );
+  }, [selectedAppointment, todayStr, currentMinutes]);
+  const forceViewMode =
+    !!selectedAppointment && isSelectedAppointmentPast && !derived?.isCreateMode;
   const visibleServices = useMemo(() => allServices, [allServices]);
   const selectedService = useMemo(
     () => allServices.find((service) => service.id === selectedServiceId) || null,
@@ -577,7 +592,7 @@ export function AppointmentModals({
   };
 
   // DELETE MODE
-  if (derived.isDeleteMode) {
+  if (derived.isDeleteMode && !forceViewMode) {
     return (
       <AlertDialog open={!!modalState} onOpenChange={handleClose}>
         <AlertDialogContent>
@@ -606,7 +621,7 @@ export function AppointmentModals({
   }
 
   // VIEW MODE
-  if (derived.isViewMode) {
+  if (derived.isViewMode || forceViewMode) {
     const appointmentPrice = toNumber(
       selectedAppointment?.price ??
         selectedAppointment?.customPrice ??
@@ -677,6 +692,7 @@ export function AppointmentModals({
       return label || t("common.unknown");
     })();
     const canUpdateStatus =
+      !isSelectedAppointmentPast &&
       !!selectedAppointment &&
       !!user?.id &&
       (selectedAppointment.staffId === user.id || isAdmin || isSuperadmin);
@@ -916,6 +932,7 @@ export function AppointmentModals({
               )}
             {selectedAppointment &&
               onCreateSale &&
+              !isSelectedAppointmentPast &&
               !selectedAppointment.paid &&
               selectedAppointment.status === AppointmentStatus.COMPLETED && (
                 <div className="flex gap-2 w-full sm:w-auto">
@@ -945,7 +962,7 @@ export function AppointmentModals({
               </Button>
               {selectedAppointment && (
                 <>
-                  {!selectedAppointment.paid && (
+                  {!selectedAppointment.paid && !isSelectedAppointmentPast && (
                     <Button
                       variant="outline"
                       className="text-destructive"

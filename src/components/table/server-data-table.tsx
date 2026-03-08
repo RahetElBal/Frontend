@@ -25,6 +25,7 @@ interface ServerDataTableProps<T extends { id: string }> {
   totalItems: number;
   totalPages: number;
   onPageChange: (page: number) => void;
+  newestFirst?: boolean;
   onRowClick?: (item: T) => void;
   search?: string;
   onSearchChange?: (value: string) => void;
@@ -41,6 +42,7 @@ export function ServerDataTable<T extends { id: string }>({
   totalItems,
   totalPages,
   onPageChange,
+  newestFirst = false,
   onRowClick,
   search,
   onSearchChange,
@@ -132,6 +134,7 @@ export function ServerDataTable<T extends { id: string }>({
         totalItems={totalItems}
         totalPages={totalPages}
         onPageChange={onPageChange}
+        newestFirst={newestFirst}
       />
     </div>
   );

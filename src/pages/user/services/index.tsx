@@ -457,7 +457,7 @@ export function ServicesPage() {
 
       {!isLoading && (
         <ServerPagination
-          page={servicesMeta?.currentPage ?? page}
+          page={page}
           perPage={servicesMeta?.perPage ?? SERVICES_PAGE_SIZE}
           totalItems={servicesMeta?.total ?? 0}
           totalPages={Math.max(servicesMeta?.lastPage ?? 0, 1)}

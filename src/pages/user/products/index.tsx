@@ -367,7 +367,7 @@ export function ProductsPage() {
         columns={columns}
         search={searchInput}
         onSearchChange={setSearchInput}
-        page={productsMeta?.currentPage ?? page}
+        page={page}
         perPage={productsMeta?.perPage ?? PRODUCTS_PAGE_SIZE}
         totalItems={productsMeta?.total ?? 0}
         totalPages={Math.max(productsMeta?.lastPage ?? 0, 1)}

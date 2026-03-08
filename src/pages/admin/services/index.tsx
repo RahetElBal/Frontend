@@ -842,7 +842,7 @@ export default function AdminServicesPage() {
 
       {selectedSalonId && (
         <ServerPagination
-          page={servicesMeta?.currentPage ?? page}
+          page={page}
           perPage={servicesMeta?.perPage ?? ADMIN_SERVICES_PAGE_SIZE}
           totalItems={servicesMeta?.total ?? 0}
           totalPages={Math.max(servicesMeta?.lastPage ?? 0, 1)}

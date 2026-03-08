@@ -188,7 +188,7 @@ export function ClientsPage() {
           columns={columns}
           search={regularState.searchInput}
           onSearchChange={regularState.setSearchInput}
-          page={regularMeta?.currentPage ?? regularState.page}
+          page={regularState.page}
           perPage={regularMeta?.perPage ?? CLIENTS_PAGE_SIZE}
           totalItems={regularMeta?.total ?? 0}
           totalPages={Math.max(regularMeta?.lastPage ?? 0, 1)}
@@ -211,7 +211,7 @@ export function ClientsPage() {
           columns={columns}
           search={walkInState.searchInput}
           onSearchChange={walkInState.setSearchInput}
-          page={walkInMeta?.currentPage ?? walkInState.page}
+          page={walkInState.page}
           perPage={walkInMeta?.perPage ?? CLIENTS_PAGE_SIZE}
           totalItems={walkInMeta?.total ?? 0}
           totalPages={Math.max(walkInMeta?.lastPage ?? 0, 1)}

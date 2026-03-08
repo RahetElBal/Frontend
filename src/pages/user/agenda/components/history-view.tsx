@@ -52,6 +52,7 @@ interface HistoryViewProps {
   totalItems: number;
   totalPages: number;
   onPageChange: (page: number) => void;
+  newestFirst?: boolean;
   onSelectAppointment?: (appointment: Appointment) => void;
 }
 
@@ -113,6 +114,7 @@ export function HistoryView({
   totalItems,
   totalPages,
   onPageChange,
+  newestFirst = false,
   onSelectAppointment,
 }: HistoryViewProps) {
   const { t } = useTranslation();
@@ -166,10 +168,19 @@ export function HistoryView({
     });
   }, [appointments, staffLabelById, t]);
 
-  const showingFrom = totalItems === 0 ? 0 : (page - 1) * perPage + 1;
-  const showingTo = totalItems === 0 ? 0 : Math.min(page * perPage, totalItems);
-  const canPrevPage = page > 1;
-  const canNextPage = page < totalPages;
+  const safePage = Math.max(page, 1);
+  const safeTotalPages = Math.max(totalPages, safePage, 1);
+  const showingFrom = totalItems === 0 ? 0 : (safePage - 1) * perPage + 1;
+  const showingTo =
+    totalItems === 0 ? 0 : Math.min(safePage * perPage, totalItems);
+  const canPrevPage = newestFirst
+    ? safePage < safeTotalPages
+    : safePage > 1;
+  const canNextPage = newestFirst
+    ? safePage > 1
+    : safePage < safeTotalPages;
+  const previousPage = newestFirst ? safePage + 1 : safePage - 1;
+  const nextPage = newestFirst ? safePage - 1 : safePage + 1;
 
   return (
     <div className="space-y-4">
@@ -363,20 +374,20 @@ export function HistoryView({
               variant="outline"
               size="sm"
               className="pointer-events-auto"
-              onClick={() => onPageChange(page - 1)}
+              onClick={() => onPageChange(previousPage)}
               disabled={!canPrevPage}
             >
               {t("common.previous")}
             </Button>
             <span className="text-sm text-muted-foreground">
-              {t("common.pageOf", { page, total: totalPages })}
+              {t("common.pageOf", { page: safePage, total: safeTotalPages })}
             </span>
             <Button
               type="button"
               variant="outline"
               size="sm"
               className="pointer-events-auto"
-              onClick={() => onPageChange(page + 1)}
+              onClick={() => onPageChange(nextPage)}
               disabled={!canNextPage}
             >
               {t("common.next")}

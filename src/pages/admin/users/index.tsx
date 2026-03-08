@@ -183,7 +183,7 @@ export function AdminUsersPage() {
         columns={columns}
         search={searchInput}
         onSearchChange={setSearchInput}
-        page={usersMeta?.currentPage ?? page}
+        page={page}
         perPage={usersMeta?.perPage ?? USERS_PAGE_SIZE}
         totalItems={usersMeta?.total ?? 0}
         totalPages={Math.max(usersMeta?.lastPage ?? 0, 1)}

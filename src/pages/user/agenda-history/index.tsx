@@ -294,11 +294,12 @@ export function AgendaHistoryPage() {
           setPage(1);
           setStaffId(value);
         }}
-        page={paginationMeta?.currentPage ?? page}
+        page={page}
         perPage={paginationMeta?.perPage ?? HISTORY_PAGE_SIZE}
         totalItems={paginationMeta?.total ?? 0}
         totalPages={Math.max(paginationMeta?.lastPage ?? 0, 1)}
         onPageChange={setPage}
+        newestFirst
       />
     </div>
   );

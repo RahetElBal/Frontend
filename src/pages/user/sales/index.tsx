@@ -330,11 +330,12 @@ export function SalesPage() {
         columns={columns}
         search={searchInput}
         onSearchChange={setSearchInput}
-        page={salesMeta?.currentPage ?? page}
+        page={page}
         perPage={salesMeta?.perPage ?? SALES_PAGE_SIZE}
         totalItems={salesMeta?.total ?? 0}
         totalPages={Math.max(salesMeta?.lastPage ?? 0, 1)}
         onPageChange={setPage}
+        newestFirst
         searchPlaceholder={t("sales.searchPlaceholder")}
         emptyMessage={t("sales.noSales")}
         loading={showTableLoading}
