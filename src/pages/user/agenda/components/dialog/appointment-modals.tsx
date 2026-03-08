@@ -59,6 +59,7 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { useUser } from "@/hooks/useUser";
 import {
   statusColors,
+  canRecordAppointmentPayment,
   getAppointmentDisplayStatus,
   getLocalDateString,
   getWorkingHoursForDate,
@@ -705,6 +706,11 @@ export function AppointmentModals({
     const displayStatus = selectedAppointment
       ? getAppointmentDisplayStatus(selectedAppointment)
       : null;
+    const canRecordSelectedAppointmentPayment =
+      !!selectedAppointment &&
+      !!onCreateSale &&
+      canViewPayment &&
+      canRecordAppointmentPayment(selectedAppointment);
     return (
       <Dialog open={!!modalState} onOpenChange={handleClose}>
         <DialogContent className="sm:max-w-4xl w-full overflow-x-hidden">
@@ -760,9 +766,7 @@ export function AppointmentModals({
                       </div>
                     </div>
                   )}
-                {onCreateSale &&
-                  selectedAppointment.status === AppointmentStatus.COMPLETED &&
-                  !selectedAppointment.paid &&
+                {canRecordSelectedAppointmentPayment &&
                   loyaltyEnabled &&
                   canRedeemLoyalty && (
                     <div className="flex items-center justify-between gap-4 p-3 rounded-lg bg-muted/50">
@@ -931,20 +935,13 @@ export function AppointmentModals({
                 </div>
               )}
             {selectedAppointment &&
-              onCreateSale &&
-              !isSelectedAppointmentPast &&
-              !selectedAppointment.paid &&
-              selectedAppointment.status === AppointmentStatus.COMPLETED && (
+              canRecordSelectedAppointmentPayment && (
                 <div className="flex gap-2 w-full sm:w-auto">
                   <Button
                     className="w-full sm:w-auto"
                     onClick={() =>
                       onCreateSale(selectedAppointment, {
-                        redeemLoyalty:
-                          selectedAppointment.status === AppointmentStatus.COMPLETED &&
-                          canRedeemLoyalty
-                            ? redeemLoyalty
-                            : false,
+                        redeemLoyalty: canRedeemLoyalty ? redeemLoyalty : false,
                       })
                     }
                     disabled={isPending || isCreatingSale}

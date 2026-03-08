@@ -120,7 +120,11 @@ export function getSalesColumns({
       key: "status",
       header: t("fields.status"),
       render: (sale) => (
-        <Badge variant={saleStatusColors[sale.status]}>{sale.status}</Badge>
+        <Badge variant={saleStatusColors[sale.status]}>
+          {t(`sales.statuses.${sale.status}`, {
+            defaultValue: sale.status,
+          })}
+        </Badge>
       ),
     },
     {

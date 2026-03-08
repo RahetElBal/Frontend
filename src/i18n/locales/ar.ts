@@ -618,6 +618,12 @@ export const ar = {
     viewPayment: "عرض الدفع",
     paymentStatus: "حالة الدفع",
     paidBy: "مدفوع بواسطة",
+    statuses: {
+      pending: "ÙÙŠ Ø§Ù„Ø§Ù†ØªØ¸Ø§Ø±",
+      completed: "Ù…ÙƒØªÙ…Ù„",
+      refunded: "Ù…Ø³ØªØ±Ø¯",
+      cancelled: "Ù…Ù„ØºÙ‰",
+    },
   },
 
   giftCards: {

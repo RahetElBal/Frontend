@@ -7,6 +7,13 @@ import { PageHeader } from "@/components/page-header";
 import { Card } from "@/components/ui/card";
 import { Spinner } from "@/components/spinner";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -31,7 +38,7 @@ import {
   useBusinessSummaryContext,
   useSalonBusinessSummary,
 } from "@/contexts/BusinessSummaryProvider";
-import type { Sale, SaleItem } from "@/types/entities";
+import { SaleStatus, type Sale, type SaleItem } from "@/types/entities";
 import { useGet, withParams } from "@/hooks/useGet";
 import { usePost } from "@/hooks/usePost";
 import { toast } from "@/lib/toast";
@@ -83,6 +90,7 @@ export function SalesPage() {
   const [selectedSaleId, setSelectedSaleId] = useState<string | null>(null);
   const [refundingSaleId, setRefundingSaleId] = useState<string | null>(null);
   const [salePendingRefund, setSalePendingRefund] = useState<Sale | null>(null);
+  const [statusFilter, setStatusFilter] = useState<SaleStatus | "all">("all");
 
   if (!isAdmin && !isSuperadmin) {
     return <Navigate to={ROUTES.DASHBOARD} replace />;
@@ -112,6 +120,7 @@ export function SalesPage() {
     withParams("sales", {
       salonId,
       search: search || undefined,
+      status: statusFilter === "all" ? undefined : statusFilter,
       skip: (page - 1) * SALES_PAGE_SIZE,
       limit: SALES_PAGE_SIZE,
       sortBy: "createdAt",
@@ -325,6 +334,48 @@ export function SalesPage() {
         </Card>
       </div>
 
+      <div className="flex justify-end">
+        <div className="w-full sm:w-60">
+          <Select
+            value={statusFilter}
+            onValueChange={(value: SaleStatus | "all") => {
+              setStatusFilter(value);
+              setPage((previousPage) => (previousPage === 1 ? previousPage : 1));
+            }}
+          >
+            <SelectTrigger
+              className="bg-white text-black"
+              aria-label={t("sales.paymentStatus")}
+            >
+              <SelectValue placeholder={t("sales.paymentStatus")} />
+            </SelectTrigger>
+            <SelectContent className="bg-white text-black">
+              <SelectItem value="all">{t("common.all")}</SelectItem>
+              <SelectItem value={SaleStatus.COMPLETED}>
+                {t("sales.statuses.completed", {
+                  defaultValue: SaleStatus.COMPLETED,
+                })}
+              </SelectItem>
+              <SelectItem value={SaleStatus.PENDING}>
+                {t("sales.statuses.pending", {
+                  defaultValue: SaleStatus.PENDING,
+                })}
+              </SelectItem>
+              <SelectItem value={SaleStatus.CANCELLED}>
+                {t("sales.statuses.cancelled", {
+                  defaultValue: SaleStatus.CANCELLED,
+                })}
+              </SelectItem>
+              <SelectItem value={SaleStatus.REFUNDED}>
+                {t("sales.statuses.refunded", {
+                  defaultValue: SaleStatus.REFUNDED,
+                })}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
       <ServerDataTable
         items={sales}
         columns={columns}
@@ -399,7 +450,9 @@ export function SalesPage() {
                   </p>
                 </div>
                 <Badge variant={saleStatusColors[selectedSale.status]}>
-                  {selectedSale.status}
+                  {t(`sales.statuses.${selectedSale.status}`, {
+                    defaultValue: selectedSale.status,
+                  })}
                 </Badge>
               </div>
 

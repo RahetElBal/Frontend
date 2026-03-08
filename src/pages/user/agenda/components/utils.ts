@@ -46,6 +46,21 @@ export function getAppointmentDisplayStatus(
     : appointment.status;
 }
 
+export function canRecordAppointmentPayment(
+  appointment: Appointment,
+  referenceDate: Date = new Date(),
+): boolean {
+  if (appointment.paid) {
+    return false;
+  }
+
+  return (
+    appointment.status === AppointmentStatus.COMPLETED ||
+    getAppointmentDisplayStatus(appointment, referenceDate) ===
+      AppointmentStatus.OVERDUE
+  );
+}
+
 export const timeSlots = [
   "09:00",
   "09:30",

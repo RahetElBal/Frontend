@@ -18,6 +18,7 @@ import { AppointmentStatus } from "@/types/entities";
 import {
   statusColors,
   getAppointmentDisplayStatus,
+  canRecordAppointmentPayment,
   getCurrentTimeString,
   normalizeTime,
   getLocalDateString,
@@ -143,6 +144,10 @@ export function TimelineView({
               const displayStatus = appointment
                 ? getAppointmentDisplayStatus(appointment)
                 : null;
+              const canRecordPaymentForAppointment =
+                !!appointment &&
+                !!onRecordPayment &&
+                canRecordAppointmentPayment(appointment);
               const isStartSlot =
                 appointment && normalizeTime(appointment.startTime) === time;
               const isOccupied = !!appointment && !isStartSlot;
@@ -280,10 +285,7 @@ export function TimelineView({
                                   },
                                 )}
                               </Badge>
-                              {!appointment.paid &&
-                                appointment.status ===
-                                  AppointmentStatus.COMPLETED &&
-                                onRecordPayment && (
+                              {canRecordPaymentForAppointment && (
                                   <Button
                                     size="icon"
                                     className="h-7 w-7 shadow-sm bg-red-600 text-white hover:bg-red-500"
@@ -372,10 +374,7 @@ export function TimelineView({
                                   },
                                 )}
                               </Badge>
-                              {!appointment.paid &&
-                                appointment.status ===
-                                  AppointmentStatus.COMPLETED &&
-                                onRecordPayment && (
+                              {canRecordPaymentForAppointment && (
                                   <Button
                                     size="sm"
                                     className="h-9 px-4 text-sm font-semibold whitespace-nowrap shadow-sm bg-red-600 text-white hover:bg-red-500"

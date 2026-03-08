@@ -33,17 +33,14 @@ export function AdminUsersPage() {
   const { isSuperadmin, user: currentUser } = useUser();
   const { page, setPage, search, searchInput, setSearchInput } =
     useServerTableState();
-  const managedById = !isSuperadmin ? currentUser?.id : undefined;
 
   const usersParams = {
     search: search || undefined,
     skip: (page - 1) * USERS_PAGE_SIZE,
     limit: USERS_PAGE_SIZE,
-    managedById,
   };
   const usersCountParams = {
     limit: 1,
-    managedById,
   };
 
   // Fetch all users

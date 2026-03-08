@@ -1200,6 +1200,12 @@ export const en = {
     cash: "Cash",
     bankTransfer: "Bank transfer",
     other: "Other",
+    statuses: {
+      pending: "Pending",
+      completed: "Completed",
+      refunded: "Refunded",
+      cancelled: "Cancelled",
+    },
     quantity: "Qty",
     unitPrice: "Unit price",
   },

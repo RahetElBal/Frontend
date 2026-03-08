@@ -674,6 +674,12 @@ export const fr = {
     bankTransfer: "Virement",
     other: "Autre",
     quantity: "Qté",
+    statuses: {
+      pending: "En attente",
+      completed: "TerminÃ©",
+      refunded: "RemboursÃ©",
+      cancelled: "AnnulÃ©",
+    },
     unitPrice: "Prix unitaire",
   },
 

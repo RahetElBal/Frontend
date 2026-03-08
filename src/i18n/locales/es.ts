@@ -610,6 +610,12 @@ export const es = {
     viewPayment: "Ver pago",
     paymentStatus: "Estado del pago",
     paidBy: "Pagado por",
+    statuses: {
+      pending: "Pendiente",
+      completed: "Completado",
+      refunded: "Reembolsado",
+      cancelled: "Cancelado",
+    },
   },
 
   giftCards: {
