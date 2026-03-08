@@ -212,7 +212,7 @@ export function TablePagination<T extends { id: string }>({
   const { t } = useTranslation();
 
   return (
-    <div className="flex items-center justify-between">
+    <div className="relative z-10 flex items-center justify-between gap-3">
       <p className="text-sm text-muted-foreground">
         {table.selectedCount > 0
           ? t("common.selectedCount", { count: table.selectedCount })
@@ -224,8 +224,10 @@ export function TablePagination<T extends { id: string }>({
       </p>
       <div className="flex items-center gap-2">
         <Button
+          type="button"
           variant="outline"
           size="sm"
+          className="pointer-events-auto"
           onClick={table.prevPage}
           disabled={!table.canPrevPage}
         >
@@ -235,8 +237,10 @@ export function TablePagination<T extends { id: string }>({
           {t("common.pageOf", { page: table.page, total: table.totalPages })}
         </span>
         <Button
+          type="button"
           variant="outline"
           size="sm"
+          className="pointer-events-auto"
           onClick={table.nextPage}
           disabled={!table.canNextPage}
         >
