@@ -78,6 +78,15 @@ export function ClientModals({
     return getValidationErrorMessage(t, message);
   };
 
+  const formatBirthDate = (value?: string) => {
+    if (!value) return null;
+    const parsed = new Date(`${value.slice(0, 10)}T12:00:00`);
+    if (Number.isNaN(parsed.getTime())) {
+      return value;
+    }
+    return parsed.toLocaleDateString();
+  };
+
   const selectedClient = useMemo(() => {
     if (!modalState || modalState.clientId === "create") return null;
     return clients.find((c) => c.id === modalState.clientId) || null;
@@ -194,6 +203,7 @@ export function ClientModals({
         lastName: "",
         email: "",
         phone: "",
+        birthDate: "",
         isMarried: false,
       });
     } else if (selectedClient && mode === "edit") {
@@ -202,6 +212,7 @@ export function ClientModals({
         lastName: selectedClient.lastName,
         email: selectedClient.email || "",
         phone: selectedClient.phone || "",
+        birthDate: selectedClient.birthDate?.slice(0, 10) || "",
         isMarried: selectedClient.isMarried ?? false,
       });
     }
@@ -220,6 +231,7 @@ export function ClientModals({
       lastName: data.lastName.trim(),
       email: normalizedEmail || data.email.trim(),
       phone: normalizedPhone || data.phone.trim(),
+      birthDate: data.birthDate?.trim() || undefined,
       isMarried: !!data.isMarried,
     };
     if (derived.isCreateMode) {
@@ -306,6 +318,20 @@ export function ClientModals({
                         {t("fields.phone")}
                       </p>
                       <p className="font-medium">{selectedClient.phone}</p>
+                    </div>
+                  </div>
+                )}
+
+                {selectedClient.birthDate && (
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+                    <Calendar className="h-5 w-5 text-muted-foreground" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">
+                        {t("fields.dateOfBirth")}
+                      </p>
+                      <p className="font-medium">
+                        {formatBirthDate(selectedClient.birthDate)}
+                      </p>
                     </div>
                   </div>
                 )}
@@ -489,6 +515,11 @@ export function ClientModals({
                   />
                 )}
               />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="birthDate">{t("fields.dateOfBirth")}</Label>
+              <Input id="birthDate" type="date" {...form.register("birthDate")} />
+              <FormErrorMessage message={getErrorMessage("birthDate")} />
             </div>
             <div className="flex items-center justify-between rounded-lg border p-3">
               <div>

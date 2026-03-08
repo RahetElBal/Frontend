@@ -64,7 +64,7 @@ export function SalonSettingsPage() {
 
   // Use latest salon settings when available
   const currentSalon = cachedSalon || userSalon;
-  const isReminderProEnabled = isProPlan(currentSalon?.planTier);
+  const isWhatsappAutomationProEnabled = isProPlan(currentSalon?.planTier);
 
   // Settings are stored within the salon entity
   const settings = currentSalon?.settings as SalonSettingsExtended | undefined;
@@ -115,11 +115,12 @@ export function SalonSettingsPage() {
   );
 
   const handleSave = () => {
-    const nextSettings = isReminderProEnabled
+    const nextSettings = isWhatsappAutomationProEnabled
       ? formData
       : {
           ...formData,
           sendAppointmentReminder: false,
+          sendBirthdayGreeting: false,
         };
 
     applyOptimisticSettings(nextSettings);
@@ -228,7 +229,9 @@ export function SalonSettingsPage() {
               {activePage === "notifications" && (
                 <NotificationSettings
                   formData={formData}
-                  isReminderProEnabled={isReminderProEnabled}
+                  isWhatsappAutomationProEnabled={
+                    isWhatsappAutomationProEnabled
+                  }
                   updateField={updateField}
                 />
               )}
