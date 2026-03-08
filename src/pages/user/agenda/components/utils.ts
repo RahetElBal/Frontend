@@ -9,6 +9,17 @@ export const statusColors = agendaStatusColors;
 
 export type AppointmentDisplayStatus = AppointmentStatus;
 
+export function isUuid(value?: string | null): value is string {
+  if (typeof value !== "string") {
+    return false;
+  }
+
+  const trimmed = value.trim();
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+    trimmed,
+  );
+}
+
 export function isAppointmentLate(
   appointment: Appointment,
   referenceDate: Date = new Date(),
@@ -50,7 +61,11 @@ export function canRecordAppointmentPayment(
   appointment: Appointment,
   referenceDate: Date = new Date(),
 ): boolean {
-  if (appointment.paid) {
+  if (
+    appointment.paid ||
+    !isUuid(appointment.id) ||
+    !isUuid(appointment.serviceId)
+  ) {
     return false;
   }
 

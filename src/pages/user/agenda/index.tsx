@@ -52,6 +52,7 @@ import {
   getLocalDateString,
   isAppointmentOverdue,
   isOptimisticAppointmentId,
+  isUuid,
   mergeAppointments,
   timeToDate,
   getWorkingHoursForDate,
@@ -123,7 +124,7 @@ export function AgendaPage() {
         return undefined;
       }
       const clientId = appointment.clientId?.trim();
-      return clientId ? clientId : undefined;
+      return isUuid(clientId) ? clientId : undefined;
     },
     [],
   );
@@ -1008,6 +1009,55 @@ export function AgendaPage() {
   const { mutateAsync: createWalkInClient, isPending: isCreatingWalkIn } =
     usePost<Client, Partial<Client>>("clients");
 
+  const handleRecordAppointmentPayment = useCallback(
+    (
+      appointment: Appointment,
+      options?: {
+        redeemLoyalty?: boolean;
+      },
+    ) => {
+      const appointmentId = appointment.id?.trim();
+      const serviceId = appointment.serviceId?.trim();
+
+      if (!salonId || !isUuid(appointmentId) || !isUuid(serviceId)) {
+        toast.error(t("common.error"));
+        return;
+      }
+
+      const optimisticUpdated = {
+        ...appointment,
+        id: appointmentId,
+        serviceId,
+        status: AppointmentStatus.COMPLETED,
+        paid: true,
+        updatedAt: new Date().toISOString(),
+      };
+
+      upsertVisibleAppointment(optimisticUpdated);
+      createSaleFromAppointment({
+        salonId,
+        appointmentId,
+        clientId: getSaleClientIdForAppointment(appointment),
+        redeemLoyalty: options?.redeemLoyalty ?? false,
+        items: [
+          {
+            type: "service",
+            itemId: serviceId,
+            quantity: 1,
+            price: appointment.price,
+          },
+        ],
+      });
+    },
+    [
+      salonId,
+      t,
+      upsertVisibleAppointment,
+      createSaleFromAppointment,
+      getSaleClientIdForAppointment,
+    ],
+  );
+
   const handleSelectSlot = useCallback(
     ({ start }: { start: Date; end: Date }) => {
       const date = getLocalDateString(start);
@@ -1619,33 +1669,10 @@ export function AgendaPage() {
             }
             onRecordPayment={
               canRecordPayment
-                ? (appointment) => {
-                    if (!salonId || !appointment.serviceId) {
-                      toast.error(t("common.error"));
-                      return;
-                    }
-                    const optimisticUpdated = {
-                      ...appointment,
-                      status: AppointmentStatus.COMPLETED,
-                      paid: true,
-                      updatedAt: new Date().toISOString(),
-                    };
-                    upsertVisibleAppointment(optimisticUpdated);
-                    createSaleFromAppointment({
-                      salonId,
-                      appointmentId: appointment.id,
-                      clientId: getSaleClientIdForAppointment(appointment),
+                ? (appointment) =>
+                    handleRecordAppointmentPayment(appointment, {
                       redeemLoyalty: false,
-                      items: [
-                        {
-                          type: "service",
-                          itemId: appointment.serviceId,
-                          quantity: 1,
-                          price: appointment.price,
-                        },
-                      ],
-                    });
-                  }
+                    })
                 : undefined
             }
             isRecordingPayment={isCreatingSale}
@@ -1667,33 +1694,7 @@ export function AgendaPage() {
           onDelete={handleDeleteAppointment}
           onCreateSale={
             canRecordPayment
-              ? (appointment, options) => {
-                  if (!salonId || !appointment.serviceId) {
-                    toast.error(t("common.error"));
-                    return;
-                  }
-                  const optimisticUpdated = {
-                    ...appointment,
-                    status: AppointmentStatus.COMPLETED,
-                    paid: true,
-                    updatedAt: new Date().toISOString(),
-                  };
-                  upsertVisibleAppointment(optimisticUpdated);
-                  createSaleFromAppointment({
-                    salonId,
-                    appointmentId: appointment.id,
-                    clientId: getSaleClientIdForAppointment(appointment),
-                    redeemLoyalty: options?.redeemLoyalty ?? false,
-                    items: [
-                      {
-                        type: "service",
-                        itemId: appointment.serviceId,
-                        quantity: 1,
-                        price: appointment.price,
-                      },
-                    ],
-                  });
-                }
+              ? handleRecordAppointmentPayment
               : undefined
           }
           onUpdateStatus={handleStatusUpdate}
