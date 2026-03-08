@@ -168,8 +168,8 @@ export function HistoryView({
 
   const showingFrom = totalItems === 0 ? 0 : (page - 1) * perPage + 1;
   const showingTo = totalItems === 0 ? 0 : Math.min(page * perPage, totalItems);
-  const canPrevPage = page > 1;
-  const canNextPage = page < totalPages;
+  const canGoToNewerPage = page > 1;
+  const canGoToOlderPage = page < totalPages;
 
   return (
     <div className="space-y-4">
@@ -363,8 +363,8 @@ export function HistoryView({
               variant="outline"
               size="sm"
               className="pointer-events-auto"
-              onClick={() => onPageChange(page - 1)}
-              disabled={!canPrevPage}
+              onClick={() => onPageChange(page + 1)}
+              disabled={!canGoToOlderPage}
             >
               {t("common.previous")}
             </Button>
@@ -376,8 +376,8 @@ export function HistoryView({
               variant="outline"
               size="sm"
               className="pointer-events-auto"
-              onClick={() => onPageChange(page + 1)}
-              disabled={!canNextPage}
+              onClick={() => onPageChange(page - 1)}
+              disabled={!canGoToNewerPage}
             >
               {t("common.next")}
             </Button>
