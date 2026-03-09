@@ -692,20 +692,27 @@ export function AppointmentModals({
 
       return label || t("common.unknown");
     })();
-    const canUpdateStatus =
-      !isSelectedAppointmentPast &&
-      !!selectedAppointment &&
-      !!user?.id &&
-      (selectedAppointment.staffId === user.id || isAdmin || isSuperadmin);
-    const canMarkInProgress =
-      selectedAppointment?.status === AppointmentStatus.PENDING ||
-      selectedAppointment?.status === AppointmentStatus.CONFIRMED;
-    const canMarkFinished =
-      selectedAppointment?.status === AppointmentStatus.IN_PROGRESS ||
-      selectedAppointment?.status === AppointmentStatus.OVERDUE;
     const displayStatus = selectedAppointment
       ? getAppointmentDisplayStatus(selectedAppointment)
       : null;
+    const canManageSelectedAppointment =
+      !!selectedAppointment &&
+      !!user?.id &&
+      (selectedAppointment.staffId === user.id || isAdmin || isSuperadmin);
+    const canCompleteOverdueAppointment =
+      canManageSelectedAppointment &&
+      displayStatus === AppointmentStatus.OVERDUE;
+    const canUpdateStatus =
+      !!selectedAppointment &&
+      canManageSelectedAppointment &&
+      (!isSelectedAppointmentPast || canCompleteOverdueAppointment);
+    const canMarkInProgress =
+      displayStatus !== AppointmentStatus.OVERDUE &&
+      (selectedAppointment?.status === AppointmentStatus.PENDING ||
+        selectedAppointment?.status === AppointmentStatus.CONFIRMED);
+    const canMarkFinished =
+      selectedAppointment?.status === AppointmentStatus.IN_PROGRESS ||
+      canCompleteOverdueAppointment;
     const canRecordSelectedAppointmentPayment =
       !!selectedAppointment &&
       !!onCreateSale &&
@@ -896,7 +903,6 @@ export function AppointmentModals({
             {selectedAppointment &&
               onUpdateStatus &&
               canUpdateStatus &&
-              !selectedAppointment.paid &&
               selectedAppointment.status !== AppointmentStatus.CANCELLED && (
                 <div className="flex gap-2 w-full sm:w-auto">
                   {canMarkInProgress && (
