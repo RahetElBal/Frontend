@@ -18,7 +18,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { Sale } from "@/types/entities";
-import { formatSaleTime, saleStatusColors, toNumber } from "../utils";
+import {
+  formatSaleDate,
+  formatSaleTime,
+  getSaleStatusLabel,
+  saleStatusColors,
+  toNumber,
+} from "../utils";
 
 interface GetSalesColumnsProps {
   t: TFunction;
@@ -54,6 +60,18 @@ export function getSalesColumns({
               {formatSaleTime(sale.createdAt)}
             </p>
           </div>
+        </div>
+      ),
+    },
+    {
+      key: "date",
+      header: t("fields.date"),
+      render: (sale) => (
+        <div>
+          <p className="text-sm font-medium">{formatSaleDate(sale.createdAt)}</p>
+          <p className="text-xs text-muted-foreground">
+            {formatSaleTime(sale.createdAt)}
+          </p>
         </div>
       ),
     },
@@ -121,9 +139,7 @@ export function getSalesColumns({
       header: t("fields.status"),
       render: (sale) => (
         <Badge variant={saleStatusColors[sale.status]}>
-          {t(`sales.statuses.${sale.status}`, {
-            defaultValue: sale.status,
-          })}
+          {getSaleStatusLabel(t, sale.status)}
         </Badge>
       ),
     },

@@ -43,7 +43,14 @@ import { useGet, withParams } from "@/hooks/useGet";
 import { usePost } from "@/hooks/usePost";
 import { toast } from "@/lib/toast";
 import { getSalesColumns } from "./components/list/columns";
-import { saleStatusColors, formatSaleTime, toNumber } from "./components/utils";
+import {
+  formatSaleDate,
+  formatSaleTime,
+  getSalePaymentStatusLabel,
+  getSaleStatusLabel,
+  saleStatusColors,
+  toNumber,
+} from "./components/utils";
 import { normalizeSale, normalizeSalesResponse } from "@/utils/normalize-sales";
 import type { PaginatedResponse } from "@/types";
 import { useServerTableState } from "@/hooks/useServerTableState";
@@ -352,24 +359,16 @@ export function SalesPage() {
             <SelectContent className="bg-white text-black">
               <SelectItem value="all">{t("common.all")}</SelectItem>
               <SelectItem value={SaleStatus.COMPLETED}>
-                {t("sales.statuses.completed", {
-                  defaultValue: SaleStatus.COMPLETED,
-                })}
+                {getSaleStatusLabel(t, SaleStatus.COMPLETED)}
               </SelectItem>
               <SelectItem value={SaleStatus.PENDING}>
-                {t("sales.statuses.pending", {
-                  defaultValue: SaleStatus.PENDING,
-                })}
+                {getSaleStatusLabel(t, SaleStatus.PENDING)}
               </SelectItem>
               <SelectItem value={SaleStatus.CANCELLED}>
-                {t("sales.statuses.cancelled", {
-                  defaultValue: SaleStatus.CANCELLED,
-                })}
+                {getSaleStatusLabel(t, SaleStatus.CANCELLED)}
               </SelectItem>
               <SelectItem value={SaleStatus.REFUNDED}>
-                {t("sales.statuses.refunded", {
-                  defaultValue: SaleStatus.REFUNDED,
-                })}
+                {getSaleStatusLabel(t, SaleStatus.REFUNDED)}
               </SelectItem>
             </SelectContent>
           </Select>
@@ -450,9 +449,7 @@ export function SalesPage() {
                   </p>
                 </div>
                 <Badge variant={saleStatusColors[selectedSale.status]}>
-                  {t(`sales.statuses.${selectedSale.status}`, {
-                    defaultValue: selectedSale.status,
-                  })}
+                  {getSaleStatusLabel(t, selectedSale.status)}
                 </Badge>
               </div>
 
@@ -479,6 +476,14 @@ export function SalesPage() {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">
+                    {t("fields.date")}
+                  </p>
+                  <p className="font-medium">
+                    {formatSaleDate(selectedSale.createdAt)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">
                     {t("sales.paymentMethod")}
                   </p>
                   <p className="font-medium">
@@ -490,7 +495,10 @@ export function SalesPage() {
                     {t("sales.paymentStatus")}
                   </p>
                   <p className="font-medium">
-                    {selectedSale.paymentStatus || selectedSale.status}
+                    {getSalePaymentStatusLabel(
+                      t,
+                      selectedSale.paymentStatus || selectedSale.status,
+                    )}
                   </p>
                 </div>
               </div>

@@ -1,4 +1,11 @@
-import type { SaleStatus } from "@/types/entities";
+import type { TFunction } from "i18next";
+
+import type { PaymentStatus, SaleStatus } from "@/types/entities";
+
+export const formatSaleDate = (dateString: string) => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString("fr-FR");
+};
 
 export const formatSaleTime = (dateString: string) => {
   const date = new Date(dateString);
@@ -17,6 +24,58 @@ export const toNumber = (value: unknown, fallback = 0): number => {
     return Number.isFinite(parsed) ? parsed : fallback;
   }
   return fallback;
+};
+
+const frenchSaleStatusLabels: Record<SaleStatus, string> = {
+  pending: "En attente",
+  completed: "Terminé",
+  refunded: "Remboursé",
+  cancelled: "Annulé",
+};
+
+const frenchPaymentStatusLabels: Record<PaymentStatus, string> = {
+  pending: "En attente",
+  partial: "Partiel",
+  paid: "Payé",
+  refunded: "Remboursé",
+};
+
+const isFrenchLanguage = (t: TFunction) => {
+  const i18n = (t as TFunction & { i18n?: { language?: string } }).i18n;
+  return i18n?.language?.startsWith("fr");
+};
+
+export const getSaleStatusLabel = (t: TFunction, status?: SaleStatus) => {
+  if (!status) return t("common.unknown");
+  if (isFrenchLanguage(t)) {
+    return frenchSaleStatusLabels[status] ?? status;
+  }
+  return t(`sales.statuses.${status}`, {
+    defaultValue: status,
+  });
+};
+
+export const getSalePaymentStatusLabel = (
+  t: TFunction,
+  status?: PaymentStatus | SaleStatus,
+) => {
+  if (!status) return t("common.unknown");
+  if (isFrenchLanguage(t)) {
+    return (
+      (frenchPaymentStatusLabels as Partial<Record<PaymentStatus | SaleStatus, string>>)[
+        status
+      ] ??
+      (frenchSaleStatusLabels as Partial<Record<PaymentStatus | SaleStatus, string>>)[
+        status
+      ] ??
+      status
+    );
+  }
+  return t(`sales.paymentStatuses.${status}`, {
+    defaultValue: t(`sales.statuses.${status}`, {
+      defaultValue: status,
+    }),
+  });
 };
 
 export const saleStatusColors: Record<
