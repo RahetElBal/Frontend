@@ -10,9 +10,9 @@ import { API_BASE_URL } from "@/lib/http";
 
 const STATIC_APK_VERSION = "1.0.0";
 const STATIC_APK_BUILD = "1";
-const STATIC_APK_SIZE_BYTES = 29379636;
+const STATIC_APK_SIZE_BYTES = 29403956;
 const STATIC_APK_SHA256 =
-  "96bf92760cbff93366a6d8eae2dca38a2ff97885f84cc1e8a964e2984f09f08e";
+  "fbdd7aa0577974e264773dcbc3716e22c568312b8cd4c61f61cf2e49abf546c6";
 const STATIC_APK_RELEASE_NOTES = "Production release";
 
 type DownloadMode = "direct" | "signed_url";
