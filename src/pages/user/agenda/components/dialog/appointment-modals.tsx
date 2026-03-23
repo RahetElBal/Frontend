@@ -710,18 +710,37 @@ export function AppointmentModals({
       displayStatus !== AppointmentStatus.OVERDUE &&
       (selectedAppointment?.status === AppointmentStatus.PENDING ||
         selectedAppointment?.status === AppointmentStatus.CONFIRMED);
+    const isOverdueUnpaidAppointment =
+      displayStatus === AppointmentStatus.OVERDUE && !selectedAppointment?.paid;
     const canMarkFinished =
-      selectedAppointment?.status === AppointmentStatus.IN_PROGRESS ||
-      canCompleteOverdueAppointment;
+      !isOverdueUnpaidAppointment &&
+      (selectedAppointment?.status === AppointmentStatus.IN_PROGRESS ||
+        canCompleteOverdueAppointment);
     const canRecordSelectedAppointmentPayment =
       !!selectedAppointment &&
       !!onCreateSale &&
       canViewPayment &&
       canRecordAppointmentPayment(selectedAppointment);
+    const canCancelSelectedAppointment =
+      !!selectedAppointment &&
+      selectedAppointment.status !== AppointmentStatus.CANCELLED &&
+      !selectedAppointment.paid &&
+      (displayStatus === AppointmentStatus.OVERDUE || !isSelectedAppointmentPast);
+    const showStatusActions = canMarkInProgress || canMarkFinished;
     const paymentActionLabel =
-      displayStatus === AppointmentStatus.COMPLETED
+      isOverdueUnpaidAppointment
+        ? t("agenda.completeAndPay")
+        : displayStatus === AppointmentStatus.COMPLETED
         ? t("agenda.recordPayment")
         : t("agenda.completeAndPay");
+    const openCancelAppointmentDialog = () => {
+      if (!selectedAppointment) return;
+      setModalState({
+        appointmentId: selectedAppointment.id,
+        mode: "delete",
+        nonce: Date.now(),
+      });
+    };
     const handleRecordPayment = () => {
       if (!selectedAppointment || !onCreateSale) return;
       onCreateSale(selectedAppointment, {
@@ -783,17 +802,34 @@ export function AppointmentModals({
                           </p>
                         </div>
                       </div>
-                      {canRecordSelectedAppointmentPayment && (
-                        <Button
-                          className="shrink-0"
-                          onClick={handleRecordPayment}
-                          disabled={isPending || isCreatingSale}
-                        >
-                          <DollarSign className="h-4 w-4 me-2" />
-                          {isCreatingSale
-                            ? t("common.loading")
-                            : paymentActionLabel}
-                        </Button>
+                      {(canCancelSelectedAppointment ||
+                        canRecordSelectedAppointmentPayment) && (
+                        <div className="flex flex-col gap-2 sm:flex-row">
+                          {isOverdueUnpaidAppointment &&
+                            canCancelSelectedAppointment && (
+                              <Button
+                                variant="outline"
+                                className="text-destructive"
+                                onClick={openCancelAppointmentDialog}
+                                disabled={isPending}
+                              >
+                                <Trash2 className="h-4 w-4 me-2" />
+                                {t("common.cancel")}
+                              </Button>
+                            )}
+                          {canRecordSelectedAppointmentPayment && (
+                            <Button
+                              className="shrink-0"
+                              onClick={handleRecordPayment}
+                              disabled={isPending || isCreatingSale}
+                            >
+                              <DollarSign className="h-4 w-4 me-2" />
+                              {isCreatingSale
+                                ? t("common.loading")
+                                : paymentActionLabel}
+                            </Button>
+                          )}
+                        </div>
                       )}
                     </div>
                   )}
@@ -927,6 +963,7 @@ export function AppointmentModals({
             {selectedAppointment &&
               onUpdateStatus &&
               canUpdateStatus &&
+              showStatusActions &&
               selectedAppointment.status !== AppointmentStatus.CANCELLED && (
                 <div className="flex gap-2 w-full sm:w-auto">
                   {canMarkInProgress && (
@@ -970,17 +1007,12 @@ export function AppointmentModals({
               </Button>
               {selectedAppointment && (
                 <>
-                  {!selectedAppointment.paid && !isSelectedAppointmentPast && (
+                  {canCancelSelectedAppointment &&
+                    !isOverdueUnpaidAppointment && (
                     <Button
                       variant="outline"
                       className="text-destructive"
-                      onClick={() =>
-                        setModalState({
-                          appointmentId: selectedAppointment.id,
-                          mode: "delete",
-                          nonce: Date.now(),
-                        })
-                      }
+                      onClick={openCancelAppointmentDialog}
                     >
                       <Trash2 className="h-4 w-4 me-2" />
                       {t("common.delete")}
