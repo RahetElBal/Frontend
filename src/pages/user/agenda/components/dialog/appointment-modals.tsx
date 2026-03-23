@@ -757,6 +757,11 @@ export function AppointmentModals({
         <DialogContent className="sm:max-w-4xl w-full overflow-x-hidden">
           <DialogHeader>
             <DialogTitle>{t("agenda.appointmentDetails")}</DialogTitle>
+            <DialogDescription className="sr-only">
+              {selectedAppointment
+                ? t("agenda.appointmentDetails")
+                : t("common.loading")}
+            </DialogDescription>
           </DialogHeader>
           {selectedAppointment && (
             <div className="space-y-6 py-4">

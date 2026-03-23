@@ -94,6 +94,9 @@ export function AgendaPage() {
     null,
   );
   const focusClearTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const notificationModalTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
   const triggerAppointmentFocus = useCallback((appointmentId: string) => {
     setFocusedAppointmentId(appointmentId);
     if (focusClearTimerRef.current) {
@@ -110,6 +113,9 @@ export function AgendaPage() {
     () => () => {
       if (focusClearTimerRef.current) {
         clearTimeout(focusClearTimerRef.current);
+      }
+      if (notificationModalTimerRef.current) {
+        clearTimeout(notificationModalTimerRef.current);
       }
     },
     [],
@@ -578,11 +584,6 @@ export function AgendaPage() {
     }
 
     triggerAppointmentFocus(appointment.id);
-    setModalState({
-      appointmentId: appointment.id,
-      mode: "view",
-      nonce: Date.now(),
-    });
     openedAppointmentRef.current = appointmentFocusKey;
 
     const nextParams = new URLSearchParams(location.search);
@@ -603,6 +604,18 @@ export function AgendaPage() {
         { replace: true },
       );
     }
+
+    if (notificationModalTimerRef.current) {
+      clearTimeout(notificationModalTimerRef.current);
+    }
+    notificationModalTimerRef.current = setTimeout(() => {
+      setModalState({
+        appointmentId: appointment.id,
+        mode: "view",
+        nonce: Date.now(),
+      });
+      notificationModalTimerRef.current = null;
+    }, 0);
   }, [
     appointmentDateParam,
     appointmentFocusKey,
@@ -615,6 +628,7 @@ export function AgendaPage() {
     location.search,
     navigate,
     shouldApplyQueryFocus,
+    setModalState,
     triggerAppointmentFocus,
   ]);
 
