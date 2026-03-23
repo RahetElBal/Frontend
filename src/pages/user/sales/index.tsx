@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { PageHeader } from "@/components/page-header";
 import { Card } from "@/components/ui/card";
@@ -92,9 +92,10 @@ export function SalesPage() {
   const { t } = useTranslation();
   const { formatCurrency } = useLanguage();
   const { user, isAdmin, isSuperadmin } = useUser();
+  const location = useLocation();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { invalidateBusinessSummary } = useBusinessSummaryContext();
-  const [selectedSaleId, setSelectedSaleId] = useState<string | null>(null);
   const [refundingSaleId, setRefundingSaleId] = useState<string | null>(null);
   const [salePendingRefund, setSalePendingRefund] = useState<Sale | null>(null);
   const [statusFilter, setStatusFilter] = useState<SaleStatus | "all">("all");
@@ -118,6 +119,37 @@ export function SalesPage() {
     searchInput,
     setSearchInput,
   } = useServerTableState();
+  const selectedSaleId = useMemo(() => {
+    const params = new URLSearchParams(location.search);
+    const value = params.get("saleId")?.trim();
+    return value || null;
+  }, [location.search]);
+
+  const setSelectedSaleId = useCallback(
+    (saleId: string | null) => {
+      const params = new URLSearchParams(location.search);
+      if (saleId) {
+        params.set("saleId", saleId);
+      } else {
+        params.delete("saleId");
+      }
+      const nextSearch = params.toString();
+      const currentSearch = location.search.startsWith("?")
+        ? location.search.slice(1)
+        : location.search;
+
+      if (nextSearch === currentSearch) return;
+
+      navigate(
+        {
+          pathname: location.pathname,
+          search: nextSearch ? `?${nextSearch}` : "",
+        },
+        { replace: true },
+      );
+    },
+    [location.pathname, location.search, navigate],
+  );
 
   const {
     data: salesResponse,

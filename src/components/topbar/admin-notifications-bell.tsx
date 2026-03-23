@@ -295,6 +295,7 @@ export function AdminNotificationsBell() {
     time?: string;
     staffId?: string;
     appointmentId?: string;
+    saleId?: string;
     total?: number | string;
     paymentStatus?: string;
     status?: string;
@@ -490,12 +491,23 @@ export function AdminNotificationsBell() {
     const isPayment =
       (notification.type === AdminNotificationType.SALE_CREATED ||
         notification.type === AdminNotificationType.SALE_COMPLETED ||
+        notification.type === AdminNotificationType.APPOINTMENT_PAYMENT_RECORDED ||
         notification.type === AdminNotificationType.SALE_REFUNDED ||
         String(payload.paymentStatus || "").toLowerCase() === "paid") &&
-      notification.type !== AdminNotificationType.APPOINTMENT_PAYMENT_RECORDED;
+      canViewAmounts;
 
     if (isPayment) {
-      navigate(ROUTES.SALES);
+      const params = new URLSearchParams();
+      if (payload.saleId) {
+        params.set("saleId", payload.saleId);
+      }
+      if (notification.id) {
+        params.set("focus", "notification");
+      }
+      const target = params.toString()
+        ? `${ROUTES.SALES}?${params.toString()}`
+        : ROUTES.SALES;
+      navigate(target);
       setOpen(false);
       return;
     }
