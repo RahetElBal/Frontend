@@ -1017,7 +1017,8 @@ export function AgendaPage() {
       },
     ) => {
       const appointmentId = appointment.id?.trim();
-      const serviceId = appointment.serviceId?.trim();
+      const serviceId =
+        appointment.serviceId?.trim() || appointment.service?.id?.trim() || "";
 
       if (!salonId || !isUuid(appointmentId) || !isUuid(serviceId)) {
         toast.error(t("common.error"));

@@ -60,10 +60,17 @@ export function getAppointmentDisplayStatus(
 export function canRecordAppointmentPayment(
   appointment: Appointment,
 ): boolean {
+  const serviceId =
+    typeof appointment.serviceId === "string" && appointment.serviceId.trim()
+      ? appointment.serviceId.trim()
+      : typeof appointment.service?.id === "string"
+      ? appointment.service.id.trim()
+      : "";
+
   if (
     appointment.paid ||
     !isUuid(appointment.id) ||
-    !isUuid(appointment.serviceId)
+    !isUuid(serviceId)
   ) {
     return false;
   }
