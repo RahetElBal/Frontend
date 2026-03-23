@@ -64,6 +64,7 @@ export function WorkingHoursSettings({
                     <Input
                       type="time"
                       value={hours?.closeTime || "18:00"}
+                      min={hours?.openTime || "09:00"}
                       onChange={(e) =>
                         updateWorkingHours(day, "closeTime", e.target.value)
                       }

@@ -540,13 +540,13 @@ export const ar = {
     redeemNowNotEligible: "غير مؤهل للاستخدام",
   },
   history: {
-    description: "?????? ??? ???????? ???????",
-    totalAppointments: "?????? ????????",
-    completedAppointments: "???????? ????????",
-    unpaidAppointments: "???????? ??? ????????",
-    totalRevenue: "?????? ?????????",
-    averageTicket: "????? ????????",
-    noShowAppointments: "????? ??? ??????",
+    description: "عرض ومتابعة سجل المواعيد والأداء",
+    totalAppointments: "إجمالي المواعيد",
+    completedAppointments: "المواعيد المكتملة",
+    unpaidAppointments: "المواعيد غير المدفوعة",
+    totalRevenue: "إجمالي الإيرادات",
+    averageTicket: "متوسط قيمة الفاتورة",
+    noShowAppointments: "حالات عدم الحضور",
   },
 
   services: {
@@ -619,10 +619,10 @@ export const ar = {
     paymentStatus: "حالة الدفع",
     paidBy: "مدفوع بواسطة",
     statuses: {
-      pending: "ÙÙŠ Ø§Ù„Ø§Ù†ØªØ¸Ø§Ø±",
-      completed: "Ù…ÙƒØªÙ…Ù„",
-      refunded: "Ù…Ø³ØªØ±Ø¯",
-      cancelled: "Ù…Ù„ØºÙ‰",
+      pending: "قيد الانتظار",
+      completed: "مكتمل",
+      refunded: "مسترد",
+      cancelled: "ملغى",
     },
   },
 

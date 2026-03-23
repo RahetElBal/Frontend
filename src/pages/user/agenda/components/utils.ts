@@ -68,7 +68,7 @@ export function canRecordAppointmentPayment(
     return false;
   }
 
-  return appointment.status === AppointmentStatus.COMPLETED;
+  return appointment.status !== AppointmentStatus.CANCELLED;
 }
 
 export const timeSlots = [

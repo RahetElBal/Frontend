@@ -29,23 +29,6 @@ export function NotificationSettings({
         <div className="flex items-center justify-between p-4 border rounded-lg">
           <div>
             <p className="font-medium">
-              {t("salonSettings.appointmentConfirmation")}
-            </p>
-            <p className="text-sm text-muted-foreground">
-              {t("salonSettings.appointmentConfirmationDescription")}
-            </p>
-          </div>
-          <Switch
-            checked={formData.sendAppointmentConfirmation}
-            onCheckedChange={(checked) =>
-              updateField("sendAppointmentConfirmation", checked)
-            }
-          />
-        </div>
-
-        <div className="flex items-center justify-between p-4 border rounded-lg">
-          <div>
-            <p className="font-medium">
               {t("salonSettings.appointmentReminder")}
             </p>
             <p className="text-sm text-muted-foreground">
@@ -117,21 +100,6 @@ export function NotificationSettings({
             disabled={!isWhatsappAutomationProEnabled}
             onCheckedChange={(checked) =>
               updateField("sendBirthdayGreeting", checked)
-            }
-          />
-        </div>
-
-        <div className="flex items-center justify-between p-4 border rounded-lg">
-          <div>
-            <p className="font-medium">{t("salonSettings.reviewRequest")}</p>
-            <p className="text-sm text-muted-foreground">
-              {t("salonSettings.reviewRequestDescription")}
-            </p>
-          </div>
-          <Switch
-            checked={formData.sendReviewRequest}
-            onCheckedChange={(checked) =>
-              updateField("sendReviewRequest", checked)
             }
           />
         </div>

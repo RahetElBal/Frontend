@@ -41,8 +41,6 @@ export interface SalonSettingsSnapshot {
     sendAppointmentReminder: boolean;
     reminderHoursBefore: number;
     sendBirthdayGreeting: boolean;
-    sendReviewRequest: boolean;
-    reviewRequestHoursAfter: number;
   };
 }
 
@@ -138,11 +136,6 @@ export const buildSalonSettingsSnapshot = (
         toNumber(settings?.reminderHoursBefore, 24),
       ),
       sendBirthdayGreeting: !!settings?.sendBirthdayGreeting,
-      sendReviewRequest: !!settings?.sendReviewRequest,
-      reviewRequestHoursAfter: Math.max(
-        0,
-        toNumber(settings?.reviewRequestHoursAfter, 24),
-      ),
     },
   };
 };

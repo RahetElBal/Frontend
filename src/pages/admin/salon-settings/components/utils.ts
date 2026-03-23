@@ -1,5 +1,20 @@
 import type { SalonSettingsExtended } from "@/types/entities";
 
+function normalizeTimeValue(value?: string) {
+  if (!value) return "";
+  const [hours = "", minutes = ""] = value.split(":");
+  if (!hours || !minutes) return value;
+  return `${hours.padStart(2, "0")}:${minutes.padStart(2, "0")}`;
+}
+
+function isTimeEarlier(candidate?: string, reference?: string) {
+  const normalizedCandidate = normalizeTimeValue(candidate);
+  const normalizedReference = normalizeTimeValue(reference);
+
+  if (!normalizedCandidate || !normalizedReference) return false;
+  return normalizedCandidate < normalizedReference;
+}
+
 export const defaultSettings: Partial<SalonSettingsExtended> = {
   currency: "EUR",
   timezone: "Europe/Paris",
@@ -10,8 +25,6 @@ export const defaultSettings: Partial<SalonSettingsExtended> = {
   sendAppointmentReminder: true,
   reminderHoursBefore: 2,
   sendBirthdayGreeting: false,
-  sendReviewRequest: false,
-  reviewRequestHoursAfter: 24,
   taxEnabled: true,
   taxRate: 20,
   pricesIncludeTax: true,
@@ -91,19 +104,35 @@ export function createWorkingHoursUpdater(
       openTime: "09:00",
       closeTime: "18:00",
     };
+
+    const nextDayHours = {
+      isOpen: currentDayHours.isOpen,
+      openTime: currentDayHours.openTime,
+      closeTime: currentDayHours.closeTime,
+      breakStart: currentDayHours.breakStart,
+      breakEnd: currentDayHours.breakEnd,
+      [field]: value,
+    };
+
+    if (field === "openTime" && typeof value === "string") {
+      nextDayHours.openTime = value;
+      if (isTimeEarlier(nextDayHours.closeTime, value)) {
+        nextDayHours.closeTime = value;
+      }
+    }
+
+    if (field === "closeTime" && typeof value === "string") {
+      nextDayHours.closeTime = isTimeEarlier(value, nextDayHours.openTime)
+        ? nextDayHours.openTime
+        : value;
+    }
+
     setDraftSettings((prev) => ({
       ...prev,
       workingHours: {
         ...baseSettings.workingHours,
         ...(prev.workingHours ?? {}),
-        [day]: {
-          isOpen: currentDayHours.isOpen,
-          openTime: currentDayHours.openTime,
-          closeTime: currentDayHours.closeTime,
-          breakStart: currentDayHours.breakStart,
-          breakEnd: currentDayHours.breakEnd,
-          [field]: value,
-        },
+        [day]: nextDayHours,
       },
     }));
     setHasChanges(true);

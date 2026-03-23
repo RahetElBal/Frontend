@@ -676,9 +676,9 @@ export const fr = {
     quantity: "Qté",
     statuses: {
       pending: "En attente",
-      completed: "TerminÃ©",
-      refunded: "RemboursÃ©",
-      cancelled: "AnnulÃ©",
+      completed: "Terminé",
+      refunded: "Remboursé",
+      cancelled: "Annulé",
     },
     unitPrice: "Prix unitaire",
   },

@@ -644,8 +644,6 @@ export interface SalonSettingsExtended extends BaseEntity {
   sendAppointmentReminder: boolean;
   reminderHoursBefore: number;
   sendBirthdayGreeting: boolean;
-  sendReviewRequest: boolean;
-  reviewRequestHoursAfter: number;
 
   // Tax Settings
   taxEnabled: boolean;
