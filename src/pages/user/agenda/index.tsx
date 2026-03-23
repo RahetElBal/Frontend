@@ -79,10 +79,6 @@ import { MonthlySummaryView } from "./components/monthly-summary-view";
 import { AppointmentModals } from "./components/dialog/appointment-modals";
 import { translateServiceName } from "@/common/service-translations";
 
-const WALK_IN_EMAIL_PREFIX = "walkin+";
-const isWalkInClientEmail = (email?: string | null) =>
-  (email ?? "").trim().toLowerCase().startsWith(WALK_IN_EMAIL_PREFIX);
-
 export function AgendaPage() {
   const { t } = useTranslation();
   const location = useLocation();
@@ -115,16 +111,6 @@ export function AgendaPage() {
       if (focusClearTimerRef.current) {
         clearTimeout(focusClearTimerRef.current);
       }
-    },
-    [],
-  );
-  const getSaleClientIdForAppointment = useCallback(
-    (appointment: Appointment): string | undefined => {
-      if (isWalkInClientEmail(appointment.client?.email)) {
-        return undefined;
-      }
-      const clientId = appointment.clientId?.trim();
-      return isUuid(clientId) ? clientId : undefined;
     },
     [],
   );
@@ -1043,7 +1029,6 @@ export function AgendaPage() {
       createSaleFromAppointment({
         salonId,
         appointmentId,
-        clientId: getSaleClientIdForAppointment(appointment),
         redeemLoyalty: options?.redeemLoyalty ?? false,
         items: [
           {
@@ -1060,7 +1045,6 @@ export function AgendaPage() {
       t,
       upsertVisibleAppointment,
       createSaleFromAppointment,
-      getSaleClientIdForAppointment,
     ],
   );
 
