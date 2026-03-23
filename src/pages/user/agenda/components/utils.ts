@@ -75,7 +75,16 @@ export function canRecordAppointmentPayment(
     return false;
   }
 
-  return appointment.status !== AppointmentStatus.CANCELLED;
+  const displayStatus = getAppointmentDisplayStatus(appointment);
+
+  if (appointment.status === AppointmentStatus.CANCELLED) {
+    return false;
+  }
+
+  return (
+    displayStatus === AppointmentStatus.OVERDUE ||
+    appointment.status === AppointmentStatus.COMPLETED
+  );
 }
 
 export const timeSlots = [

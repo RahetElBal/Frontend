@@ -699,19 +699,34 @@ export function AgendaPage() {
                 deletedIds: new Set<string>(),
               };
         const nextAppointments = [...base.appointments];
+        const nextMatchKey = getAppointmentMatchKey(nextAppointment);
         const index = nextAppointments.findIndex(
           (appointment) => appointment.id === nextAppointment.id,
         );
-        if (index === -1) {
+        const optimisticMatchIndex =
+          index === -1 && !isOptimisticAppointmentId(nextAppointment.id)
+            ? nextAppointments.findIndex(
+                (appointment) =>
+                  isOptimisticAppointmentId(appointment.id) &&
+                  getAppointmentMatchKey(appointment) === nextMatchKey,
+              )
+            : -1;
+        const targetIndex = index !== -1 ? index : optimisticMatchIndex;
+        const replacedAppointmentId =
+          targetIndex !== -1 ? nextAppointments[targetIndex]?.id : undefined;
+        if (targetIndex === -1) {
           if (options?.prepend) {
             nextAppointments.unshift(nextAppointment);
           } else {
             nextAppointments.push(nextAppointment);
           }
         } else {
-          nextAppointments[index] = nextAppointment;
+          nextAppointments[targetIndex] = nextAppointment;
         }
         const nextDeletedIds = new Set(base.deletedIds);
+        if (replacedAppointmentId) {
+          nextDeletedIds.delete(replacedAppointmentId);
+        }
         nextDeletedIds.delete(nextAppointment.id);
         return {
           scopeKey: optimisticScopeKey,
@@ -900,7 +915,8 @@ export function AgendaPage() {
     AppointmentPayload
   >("appointments", {
     invalidate: ["appointments"],
-    onSuccess: () => {
+    onSuccess: (appointment) => {
+      upsertVisibleAppointment(appointment, { prepend: true });
       toast.success(t("agenda.newAppointment") + " - " + t("common.success"));
       setModalState(null);
     },
@@ -915,7 +931,8 @@ export function AgendaPage() {
   >(`appointments/${selectedAppointment?.id}`, {
     method: "PATCH",
     invalidate: ["appointments"],
-    onSuccess: () => {
+    onSuccess: (appointment) => {
+      upsertVisibleAppointment(appointment);
       toast.success(t("common.edit") + " - " + t("common.success"));
       setModalState(null);
     },
@@ -935,7 +952,8 @@ export function AgendaPage() {
           `appointments/${id}`,
           { status },
         ),
-      onSuccess: (_data, variables) => {
+      onSuccess: (appointment, variables) => {
+        upsertVisibleAppointment(appointment);
         if (variables.status === AppointmentStatus.CANCELLED) {
           toast.success(t("agenda.appointmentCancelled"));
         } else {
@@ -1400,6 +1418,11 @@ export function AgendaPage() {
         toast.error(t("common.error"));
         return;
       }
+      if (isOptimisticAppointmentId(appointment.id)) {
+        queryClient.invalidateQueries({ queryKey: ["appointments"] });
+        toast.info(t("common.loading"));
+        return;
+      }
       if (appointment.status === status) return;
       const optimisticUpdated = {
         ...appointment,
@@ -1409,7 +1432,7 @@ export function AgendaPage() {
       upsertVisibleAppointment(optimisticUpdated);
       updateAppointmentStatus({ id: appointment.id, status });
     },
-    [updateAppointmentStatus, upsertVisibleAppointment, t],
+    [queryClient, updateAppointmentStatus, upsertVisibleAppointment, t],
   );
 
   return (

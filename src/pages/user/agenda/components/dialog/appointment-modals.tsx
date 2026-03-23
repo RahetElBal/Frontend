@@ -62,6 +62,7 @@ import {
   canRecordAppointmentPayment,
   getAppointmentDisplayStatus,
   getLocalDateString,
+  isOptimisticAppointmentId,
   getWorkingHoursForDate,
   buildTimeSlotsForHours,
   DEFAULT_SLOT_MINUTES,
@@ -695,6 +696,9 @@ export function AppointmentModals({
     const displayStatus = selectedAppointment
       ? getAppointmentDisplayStatus(selectedAppointment)
       : null;
+    const isSelectedAppointmentOptimistic =
+      !!selectedAppointment &&
+      isOptimisticAppointmentId(selectedAppointment.id);
     const canManageSelectedAppointment =
       !!selectedAppointment &&
       !!user?.id &&
@@ -704,6 +708,7 @@ export function AppointmentModals({
       displayStatus === AppointmentStatus.OVERDUE;
     const canUpdateStatus =
       !!selectedAppointment &&
+      !isSelectedAppointmentOptimistic &&
       canManageSelectedAppointment &&
       (!isSelectedAppointmentPast || canCompleteOverdueAppointment);
     const canMarkInProgress =
