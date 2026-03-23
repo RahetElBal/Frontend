@@ -9,6 +9,8 @@ const NOTIFICATION_SOUND_FALLBACK = "data:audio/wav;base64,UklGRnoGAABXQVZFZm10I
 
 let audioContext: AudioContext | null = null;
 let notificationAudio: HTMLAudioElement | null = null;
+let lastNotificationSoundAt = 0;
+const NOTIFICATION_SOUND_COOLDOWN_MS = 1500;
 
 const getNotificationAudio = () => {
   if (!notificationAudio) {
@@ -47,6 +49,12 @@ export function primeNotificationSound() {
  * Play a notification sound
  */
 export async function playNotificationSound(soundUrl?: string) {
+  const now = Date.now();
+  if (now - lastNotificationSoundAt < NOTIFICATION_SOUND_COOLDOWN_MS) {
+    return;
+  }
+  lastNotificationSoundAt = now;
+
   try {
     const tryPlay = async (source: string) => {
       const audio = new Audio(source);

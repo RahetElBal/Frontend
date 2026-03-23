@@ -59,6 +59,14 @@ export function TimelineView({
 }: TimelineViewProps) {
   const { t } = useTranslation();
   const appointmentNodeRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const handleRecordPaymentClick = (
+    event: React.MouseEvent<HTMLButtonElement>,
+    appointment: Appointment,
+  ) => {
+    event.preventDefault();
+    event.stopPropagation();
+    onRecordPayment?.(appointment);
+  };
   const currentTimeString = getCurrentTimeString();
   const currentHour = new Date().getHours();
   const currentMinutes = new Date().getMinutes();
@@ -287,12 +295,16 @@ export function TimelineView({
                               </Badge>
                               {canRecordPaymentForAppointment && (
                                   <Button
+                                    type="button"
                                     size="icon"
                                     className="h-7 w-7 shadow-sm bg-red-600 text-white hover:bg-red-500"
-                                    onClick={(event) => {
+                                    onMouseDown={(event) => {
+                                      event.preventDefault();
                                       event.stopPropagation();
-                                      onRecordPayment(appointment);
                                     }}
+                                    onClick={(event) =>
+                                      handleRecordPaymentClick(event, appointment)
+                                    }
                                     disabled={isRecordingPayment}
                                     title={t("agenda.recordPayment")}
                                     aria-label={t("agenda.recordPayment")}
@@ -376,12 +388,16 @@ export function TimelineView({
                               </Badge>
                               {canRecordPaymentForAppointment && (
                                   <Button
+                                    type="button"
                                     size="sm"
                                     className="h-9 px-4 text-sm font-semibold whitespace-nowrap shadow-sm bg-red-600 text-white hover:bg-red-500"
-                                    onClick={(event) => {
+                                    onMouseDown={(event) => {
+                                      event.preventDefault();
                                       event.stopPropagation();
-                                      onRecordPayment(appointment);
                                     }}
+                                    onClick={(event) =>
+                                      handleRecordPaymentClick(event, appointment)
+                                    }
                                     disabled={isRecordingPayment}
                                   >
                                     <DollarSign className="h-3 w-3 me-1" />

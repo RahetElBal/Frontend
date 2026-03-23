@@ -852,6 +852,8 @@ export function AgendaPage() {
       return isOverdue;
     });
 
+    let hasPlayedOverdueSound = false;
+
     // Show notification for each overdue unpaid appointment (only once per session)
     overdueUnpaid.forEach((apt) => {
       const notificationKey = `overdue-notified-${apt.id}`;
@@ -873,7 +875,10 @@ export function AgendaPage() {
         { duration: 10000 },
       );
 
-      playNotificationSound("/sounds/delayed.mp3");
+      if (!hasPlayedOverdueSound) {
+        hasPlayedOverdueSound = true;
+        playNotificationSound("/sounds/delayed.mp3");
+      }
 
       if (notificationsEnabled) {
         const params = new URLSearchParams();
