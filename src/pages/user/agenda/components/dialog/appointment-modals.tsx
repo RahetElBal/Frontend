@@ -338,7 +338,7 @@ export function AppointmentModals({
     );
   }, [selectedAppointment, todayStr, currentMinutes]);
   const forceViewMode =
-    !!selectedAppointment && isSelectedAppointmentPast && !derived?.isCreateMode;
+    !!selectedAppointment && isSelectedAppointmentPast && derived?.isEditMode;
   const visibleServices = useMemo(() => allServices, [allServices]);
   const selectedService = useMemo(
     () => allServices.find((service) => service.id === selectedServiceId) || null,
@@ -593,7 +593,7 @@ export function AppointmentModals({
   };
 
   // DELETE MODE
-  if (derived.isDeleteMode && !forceViewMode) {
+  if (derived.isDeleteMode) {
     return (
       <AlertDialog open={!!modalState} onOpenChange={handleClose}>
         <AlertDialogContent>
