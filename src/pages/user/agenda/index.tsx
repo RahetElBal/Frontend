@@ -578,6 +578,11 @@ export function AgendaPage() {
     }
 
     triggerAppointmentFocus(appointment.id);
+    setModalState({
+      appointmentId: appointment.id,
+      mode: "view",
+      nonce: Date.now(),
+    });
     openedAppointmentRef.current = appointmentFocusKey;
 
     const nextParams = new URLSearchParams(location.search);
