@@ -524,6 +524,7 @@ export function AdminNotificationsBell() {
     }
     if (payload.appointmentId) {
       params.set("appointmentId", payload.appointmentId);
+      params.set("modal", "view");
     }
     params.set("view", "day");
     params.set("focus", "notification");

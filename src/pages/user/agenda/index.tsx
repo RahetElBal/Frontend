@@ -89,14 +89,11 @@ export function AgendaPage() {
   const { invalidateBusinessSummary } = useBusinessSummaryContext();
   const canRecordPayment = isAdmin || isSuperadmin;
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
-  const [modalState, setModalState] = useState<AppointmentModalState>(null);
+  const [modalState, setModalStateState] = useState<AppointmentModalState>(null);
   const [focusedAppointmentId, setFocusedAppointmentId] = useState<string | null>(
     null,
   );
   const focusClearTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const notificationModalTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
-    null,
-  );
   const triggerAppointmentFocus = useCallback((appointmentId: string) => {
     setFocusedAppointmentId(appointmentId);
     if (focusClearTimerRef.current) {
@@ -113,9 +110,6 @@ export function AgendaPage() {
     () => () => {
       if (focusClearTimerRef.current) {
         clearTimeout(focusClearTimerRef.current);
-      }
-      if (notificationModalTimerRef.current) {
-        clearTimeout(notificationModalTimerRef.current);
       }
     },
     [],
@@ -149,6 +143,11 @@ export function AgendaPage() {
     const trimmed = value?.trim();
     return trimmed ? trimmed : null;
   }, [queryParams]);
+  const appointmentModalParam = useMemo(() => {
+    const value = queryParams.get("modal");
+    const trimmed = value?.trim();
+    return trimmed === "view" ? "view" : null;
+  }, [queryParams]);
   const appointmentFocusKey = useMemo(() => {
     if (appointmentIdParam) return `id:${appointmentIdParam}`;
     if (!appointmentDateParam || !appointmentTimeParam) return null;
@@ -163,6 +162,47 @@ export function AgendaPage() {
   ]);
   const openedAppointmentRef = useRef<string | null>(null);
   const appliedQueryFocusRef = useRef<string | null>(null);
+  const setModalState = useCallback(
+    (nextState: AppointmentModalState) => {
+      setModalStateState(nextState);
+
+      const nextParams = new URLSearchParams(location.search);
+
+      if (
+        nextState &&
+        nextState.mode === "view" &&
+        nextState.appointmentId !== "create"
+      ) {
+        nextParams.set("appointmentId", nextState.appointmentId);
+        nextParams.set("modal", "view");
+        nextParams.delete("focus");
+        nextParams.delete("time");
+        nextParams.delete("appointmentTime");
+      } else {
+        nextParams.delete("appointmentId");
+        nextParams.delete("modal");
+        nextParams.delete("focus");
+        nextParams.delete("time");
+        nextParams.delete("appointmentTime");
+      }
+
+      const nextSearch = nextParams.toString();
+      const currentSearch = location.search.startsWith("?")
+        ? location.search.slice(1)
+        : location.search;
+
+      if (nextSearch !== currentSearch) {
+        navigate(
+          {
+            pathname: location.pathname,
+            search: nextSearch ? `?${nextSearch}` : "",
+          },
+          { replace: true },
+        );
+      }
+    },
+    [location.pathname, location.search, navigate],
+  );
   const [activeTab, setActiveTab] = useState<
     "appointments" | "availability"
   >(() => (queryParams.get("tab") === "availability" ? "availability" : "appointments"));
@@ -549,7 +589,10 @@ export function AgendaPage() {
   }, []);
 
   useEffect(() => {
-    if (!appointmentFocusKey) return;
+    if (!appointmentFocusKey) {
+      openedAppointmentRef.current = null;
+      return;
+    }
     if (!shouldApplyQueryFocus) return;
     if (openedAppointmentRef.current === appointmentFocusKey) return;
 
@@ -586,47 +629,26 @@ export function AgendaPage() {
     triggerAppointmentFocus(appointment.id);
     openedAppointmentRef.current = appointmentFocusKey;
 
-    const nextParams = new URLSearchParams(location.search);
-    nextParams.delete("focus");
-    nextParams.delete("appointmentId");
-    nextParams.delete("time");
-    nextParams.delete("appointmentTime");
-    const nextSearch = nextParams.toString();
-    const currentSearch = location.search.startsWith("?")
-      ? location.search.slice(1)
-      : location.search;
-    if (nextSearch !== currentSearch) {
-      navigate(
-        {
-          pathname: location.pathname,
-          search: nextSearch ? `?${nextSearch}` : "",
-        },
-        { replace: true },
-      );
-    }
-
-    if (notificationModalTimerRef.current) {
-      clearTimeout(notificationModalTimerRef.current);
-    }
-    notificationModalTimerRef.current = setTimeout(() => {
+    if (
+      appointmentModalParam === "view" ||
+      appointmentFocusSource === "notification"
+    ) {
       setModalState({
         appointmentId: appointment.id,
         mode: "view",
         nonce: Date.now(),
       });
-      notificationModalTimerRef.current = null;
-    }, 0);
+    }
   }, [
+    appointmentModalParam,
     appointmentDateParam,
     appointmentFocusKey,
+    appointmentFocusSource,
     appointmentIdParam,
     appointmentStaffParam,
     appointmentTimeParam,
     appointments,
     activeTab,
-    location.pathname,
-    location.search,
-    navigate,
     shouldApplyQueryFocus,
     setModalState,
     triggerAppointmentFocus,
