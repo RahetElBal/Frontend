@@ -718,6 +718,16 @@ export function AppointmentModals({
       !!onCreateSale &&
       canViewPayment &&
       canRecordAppointmentPayment(selectedAppointment);
+    const paymentActionLabel =
+      displayStatus === AppointmentStatus.COMPLETED
+        ? t("agenda.recordPayment")
+        : t("agenda.completeAndPay");
+    const handleRecordPayment = () => {
+      if (!selectedAppointment || !onCreateSale) return;
+      onCreateSale(selectedAppointment, {
+        redeemLoyalty: canRedeemLoyalty ? redeemLoyalty : false,
+      });
+    };
     return (
       <Dialog open={!!modalState} onOpenChange={handleClose}>
         <DialogContent className="sm:max-w-4xl w-full overflow-x-hidden">
@@ -759,18 +769,32 @@ export function AppointmentModals({
 
                 <div className="grid gap-4">
                   {canViewPayment && (
-                    <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
-                      <DollarSign className="h-5 w-5 text-muted-foreground" />
-                      <div>
-                        <p className="text-sm text-muted-foreground">
-                          {t("agenda.paymentStatus")}
-                        </p>
-                        <p className="font-medium">
-                          {selectedAppointment.paid
-                            ? t("agenda.paymentPaid")
-                            : t("agenda.paymentUnpaid")}
-                        </p>
+                    <div className="flex flex-col gap-3 rounded-lg bg-muted/50 p-3 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="flex items-center gap-3">
+                        <DollarSign className="h-5 w-5 text-muted-foreground" />
+                        <div>
+                          <p className="text-sm text-muted-foreground">
+                            {t("agenda.paymentStatus")}
+                          </p>
+                          <p className="font-medium">
+                            {selectedAppointment.paid
+                              ? t("agenda.paymentPaid")
+                              : t("agenda.paymentUnpaid")}
+                          </p>
+                        </div>
                       </div>
+                      {canRecordSelectedAppointmentPayment && (
+                        <Button
+                          className="shrink-0"
+                          onClick={handleRecordPayment}
+                          disabled={isPending || isCreatingSale}
+                        >
+                          <DollarSign className="h-4 w-4 me-2" />
+                          {isCreatingSale
+                            ? t("common.loading")
+                            : paymentActionLabel}
+                        </Button>
+                      )}
                     </div>
                   )}
                 {canRecordSelectedAppointmentPayment &&
@@ -938,25 +962,6 @@ export function AppointmentModals({
                         : t("agenda.markFinished")}
                     </Button>
                   )}
-                </div>
-              )}
-            {selectedAppointment &&
-              canRecordSelectedAppointmentPayment && (
-                <div className="flex gap-2 w-full sm:w-auto">
-                  <Button
-                    className="w-full sm:w-auto"
-                    onClick={() =>
-                      onCreateSale(selectedAppointment, {
-                        redeemLoyalty: canRedeemLoyalty ? redeemLoyalty : false,
-                      })
-                    }
-                    disabled={isPending || isCreatingSale}
-                  >
-                    <DollarSign className="h-4 w-4 me-2" />
-                    {isCreatingSale
-                      ? t("common.loading")
-                      : t("agenda.recordPayment")}
-                  </Button>
                 </div>
               )}
             <div className="flex gap-2 w-full sm:w-auto sm:ms-auto">
