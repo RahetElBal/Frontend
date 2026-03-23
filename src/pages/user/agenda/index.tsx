@@ -585,6 +585,29 @@ export function AgendaPage() {
   );
 
   useEffect(() => {
+    if (modalState?.mode !== "view" || !selectedAppointment) return;
+
+    if (viewMode !== "day") {
+      setViewMode("day");
+    }
+
+    if (selectedDate !== selectedAppointment.date) {
+      setSelectedDate(selectedAppointment.date);
+    }
+
+    const appointmentStaffId = selectedAppointment.staffId?.trim() || null;
+    if (appointmentStaffId && selectedStaffId !== appointmentStaffId) {
+      setSelectedStaffId(appointmentStaffId);
+    }
+  }, [
+    modalState?.mode,
+    selectedAppointment,
+    selectedDate,
+    selectedStaffId,
+    viewMode,
+  ]);
+
+  useEffect(() => {
     requestNotificationPermission().then(setNotificationsEnabled);
   }, []);
 
