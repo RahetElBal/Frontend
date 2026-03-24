@@ -242,6 +242,8 @@ export function TimelineView({
                             "bg-gray-50 border-l-gray-400",
                           displayStatus === AppointmentStatus.CANCELLED &&
                             "bg-red-50 border-l-red-500",
+                          displayStatus === AppointmentStatus.NO_SHOW &&
+                            "bg-rose-100 border-l-rose-700",
                           displayStatus === AppointmentStatus.OVERDUE &&
                             "bg-red-50 border-l-red-500",
                         )}

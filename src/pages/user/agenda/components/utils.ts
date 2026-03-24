@@ -513,7 +513,11 @@ export function isAppointmentOverdue(
   appointment: Appointment,
   referenceDate: Date = new Date(),
 ): boolean {
-  if (appointment.status === AppointmentStatus.CANCELLED || appointment.paid) {
+  if (
+    appointment.status === AppointmentStatus.CANCELLED ||
+    appointment.status === AppointmentStatus.NO_SHOW ||
+    appointment.paid
+  ) {
     return false;
   }
   if (appointment.status === AppointmentStatus.OVERDUE) {
@@ -529,6 +533,7 @@ export function isAppointmentOverdue(
     .padStart(2, "0")}`;
   const isPastDate = appointment.date < today;
   const isPastTime =
-    appointment.date === today && appointment.endTime < currentTime;
+    appointment.date === today &&
+    normalizeTime(appointment.endTime || appointment.startTime) < currentTime;
   return isPastDate || isPastTime;
 }

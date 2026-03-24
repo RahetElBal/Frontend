@@ -711,6 +711,9 @@ export function AppointmentModals({
       !isSelectedAppointmentOptimistic &&
       canManageSelectedAppointment &&
       (!isSelectedAppointmentPast || canCompleteOverdueAppointment);
+    const canMarkConfirmed =
+      displayStatus !== AppointmentStatus.OVERDUE &&
+      selectedAppointment?.status === AppointmentStatus.PENDING;
     const canMarkInProgress =
       displayStatus !== AppointmentStatus.OVERDUE &&
       (selectedAppointment?.status === AppointmentStatus.PENDING ||
@@ -726,12 +729,24 @@ export function AppointmentModals({
       !!onCreateSale &&
       canViewPayment &&
       canRecordAppointmentPayment(selectedAppointment);
+    const canMarkNoShow =
+      !!selectedAppointment &&
+      !isSelectedAppointmentOptimistic &&
+      canManageSelectedAppointment &&
+      !selectedAppointment.paid &&
+      selectedAppointment.status !== AppointmentStatus.CANCELLED &&
+      selectedAppointment.status !== AppointmentStatus.COMPLETED &&
+      selectedAppointment.status !== AppointmentStatus.NO_SHOW &&
+      (displayStatus === AppointmentStatus.OVERDUE || isSelectedAppointmentPast);
     const canCancelSelectedAppointment =
       !!selectedAppointment &&
       selectedAppointment.status !== AppointmentStatus.CANCELLED &&
+      selectedAppointment.status !== AppointmentStatus.COMPLETED &&
+      selectedAppointment.status !== AppointmentStatus.NO_SHOW &&
       !selectedAppointment.paid &&
       (displayStatus === AppointmentStatus.OVERDUE || !isSelectedAppointmentPast);
-    const showStatusActions = canMarkInProgress || canMarkFinished;
+    const showStatusActions =
+      canMarkConfirmed || canMarkInProgress || canMarkFinished || canMarkNoShow;
     const paymentActionLabel =
       isOverdueUnpaidAppointment
         ? t("agenda.completeAndPay")
@@ -976,6 +991,23 @@ export function AppointmentModals({
               showStatusActions &&
               selectedAppointment.status !== AppointmentStatus.CANCELLED && (
                 <div className="flex gap-2 w-full sm:w-auto">
+                  {canMarkConfirmed && (
+                    <Button
+                      variant="outline"
+                      className="w-full sm:w-auto"
+                      onClick={() =>
+                        onUpdateStatus(
+                          selectedAppointment,
+                          AppointmentStatus.CONFIRMED,
+                        )
+                      }
+                      disabled={isPending || isUpdatingStatus}
+                    >
+                      {isUpdatingStatus
+                        ? t("common.loading")
+                        : t("agenda.markConfirmed")}
+                    </Button>
+                  )}
                   {canMarkInProgress && (
                     <Button
                       variant="outline"
@@ -1007,6 +1039,23 @@ export function AppointmentModals({
                       {isUpdatingStatus
                         ? t("common.loading")
                         : t("agenda.markFinished")}
+                    </Button>
+                  )}
+                  {canMarkNoShow && (
+                    <Button
+                      variant="outline"
+                      className="w-full sm:w-auto text-destructive"
+                      onClick={() =>
+                        onUpdateStatus(
+                          selectedAppointment,
+                          AppointmentStatus.NO_SHOW,
+                        )
+                      }
+                      disabled={isPending || isUpdatingStatus}
+                    >
+                      {isUpdatingStatus
+                        ? t("common.loading")
+                        : t("agenda.markNoShow")}
                     </Button>
                   )}
                 </div>

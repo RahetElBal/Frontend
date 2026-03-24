@@ -28,7 +28,7 @@ import { useForm } from "@/hooks/useForm";
 import { useUser } from "@/hooks/useUser";
 import { useLanguage } from "@/hooks/useLanguage";
 import { normalizePhone } from "@/common/phone";
-import { patch } from "@/lib/http";
+import { patch, post } from "@/lib/http";
 import type { ApiError } from "@/types/api";
 
 import type {
@@ -685,7 +685,10 @@ export function AgendaPage() {
   const unpaidAppointments = useMemo(
     () =>
       appointments.filter(
-        (apt) => !apt.paid && apt.status !== AppointmentStatus.CANCELLED,
+        (apt) =>
+          !apt.paid &&
+          apt.status !== AppointmentStatus.CANCELLED &&
+          apt.status !== AppointmentStatus.NO_SHOW,
       ),
     [appointments],
   );
@@ -893,29 +896,11 @@ export function AgendaPage() {
     if (!Array.isArray(appointments) || appointments.length === 0) return;
 
     const now = new Date();
-    const today = getLocalDateString(now);
-    const currentTime = `${now.getHours().toString().padStart(2, "0")}:${now
-      .getMinutes()
-      .toString()
-      .padStart(2, "0")}`;
 
     // Find overdue unpaid appointments (completed but not paid, or past end time and not paid)
-    const overdueUnpaid = appointments.filter((apt) => {
-      // Skip cancelled appointments
-      if (apt.status === AppointmentStatus.CANCELLED) return false;
-
-      // Already paid, no need to notify
-      if (apt.paid) return false;
-
-      // Check if appointment is in the past
-      const isPastDate = apt.date < today;
-      const isPastTime =
-        apt.date === today && apt.endTime && apt.endTime < currentTime;
-      const isOverdue = isPastDate || isPastTime;
-
-      // Appointment is overdue and unpaid
-      return isOverdue;
-    });
+    const overdueUnpaid = appointments.filter((apt) =>
+      isAppointmentOverdue(apt, now),
+    );
 
     let hasPlayedOverdueSound = false;
 
@@ -1018,14 +1003,38 @@ export function AgendaPage() {
         ),
       onSuccess: (appointment, variables) => {
         upsertVisibleAppointment(appointment);
-        if (variables.status === AppointmentStatus.CANCELLED) {
-          toast.success(t("agenda.appointmentCancelled"));
-        } else {
-          toast.success(t("common.statusUpdated"));
+        switch (variables.status) {
+          case AppointmentStatus.CONFIRMED:
+            toast.success(t("agenda.appointmentConfirmed"));
+            break;
+          case AppointmentStatus.NO_SHOW:
+            toast.success(t("agenda.appointmentNoShow"));
+            break;
+          case AppointmentStatus.CANCELLED:
+            toast.success(t("agenda.appointmentCancelled"));
+            break;
+          default:
+            toast.success(t("common.statusUpdated"));
+            break;
         }
         queryClient.invalidateQueries({ queryKey: ["appointments"] });
       },
       onError: (error) => {
+        queryClient.invalidateQueries({ queryKey: ["appointments"] });
+        toast.error(error.message || t("common.error"));
+      },
+    });
+
+  const { mutate: cancelAppointment, isPending: isCancellingAppointment } =
+    useMutation<Appointment, ApiError, { id: string }>({
+      mutationFn: ({ id }) => post<Appointment>(`appointments/${id}/cancel`),
+      onSuccess: (appointment) => {
+        upsertVisibleAppointment(appointment);
+        toast.success(t("agenda.appointmentCancelled"));
+        queryClient.invalidateQueries({ queryKey: ["appointments"] });
+      },
+      onError: (error) => {
+        queryClient.invalidateQueries({ queryKey: ["appointments"] });
         toast.error(error.message || t("common.error"));
       },
     });
@@ -1075,6 +1084,7 @@ export function AgendaPage() {
         setModalState(null);
       },
       onError: (error) => {
+        queryClient.invalidateQueries({ queryKey: ["appointments"] });
         toast.error(error.message || t("common.error"));
       },
     });
@@ -1469,10 +1479,7 @@ export function AgendaPage() {
       updatedAt: new Date().toISOString(),
     };
     upsertVisibleAppointment(optimisticCancelled);
-    updateAppointmentStatus({
-      id: selectedAppointment.id,
-      status: AppointmentStatus.CANCELLED,
-    });
+    cancelAppointment({ id: selectedAppointment.id });
     setModalState(null);
   };
 
@@ -1780,6 +1787,7 @@ export function AgendaPage() {
           isPending={
             isCreating ||
             isUpdating ||
+            isCancellingAppointment ||
             isCreatingSale ||
             isCreatingWalkIn
           }
