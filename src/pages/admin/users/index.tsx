@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { UserPlus, UserCog } from "lucide-react";
 
@@ -6,14 +6,14 @@ import { AppRole } from "@/constants/enum";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { ServerDataTable } from "@/components/table";
-import { useGet, withParams } from "@/hooks/useGet";
+import { useGet } from "@/hooks/useGet";
+import { useTable } from "@/hooks/useTable";
 import { usePostAction } from "@/hooks/usePostAction";
 
 import type { User } from "./types";
 import type { Salon } from "@/pages/admin/salon/types";
 import { StatsGrid } from "./components/stats-grid";
 import { useUser } from "@/hooks/useUser";
-import type { PaginatedResponse } from "@/types/api";
 import { useUsersColumns } from "./components/list/columns";
 import { UserDialog } from "./components/dialog/cu-user";
 import {
@@ -23,7 +23,6 @@ import {
   getSelectedUser,
   type UserModalState,
 } from "./components/utils";
-import { useServerTableState } from "@/hooks/useServerTableState";
 
 const USERS_PAGE_SIZE = 20;
 
@@ -33,64 +32,32 @@ export function AdminUsersPage() {
   const [modalState, setModalState] = useState<UserModalState>(null);
 
   const { isSuperadmin, user: currentUser } = useUser();
-  const { page, setPage, search, searchInput, setSearchInput } =
-    useServerTableState();
-
-  const usersParams = {
-    search: search || undefined,
-    skip: (page - 1) * USERS_PAGE_SIZE,
-    limit: USERS_PAGE_SIZE,
-  };
-  const usersCountParams = {
-    limit: 1,
-  };
-
-  // Fetch all users
-  const {
-    data: usersResponse,
-    refetch,
-    isLoading: usersLoading,
-    isFetching: isUsersFetching,
-  } = useGet<PaginatedResponse<User>>(withParams("users", usersParams), {
-    retry: 1,
+  const usersTable = useTable<User>({
+    path: "users",
+    initialPerPage: USERS_PAGE_SIZE,
   });
-  const { data: usersCountResponse } = useGet<PaginatedResponse<User>>(
-    withParams("users", usersCountParams),
-    {
-      retry: 1,
-    },
-  );
-  const { data: adminsCountResponse } = useGet<PaginatedResponse<User>>(
-    withParams("users", {
-      limit: 1,
+
+  const adminsTable = useTable<User>({
+    path: "users",
+    query: {
       role: AppRole.ADMIN,
-    }),
-    {
-      retry: 1,
-      enabled: isSuperadmin,
     },
-  );
+    enabled: isSuperadmin,
+    initialPerPage: 1,
+  });
 
-  const allUsers = usersResponse?.data || [];
-  const users = allUsers;
-  const usersMeta = usersResponse?.meta;
-  const totalUsers = usersCountResponse?.meta.total ?? 0;
-  const totalAdmins = adminsCountResponse?.meta.total ?? 0;
-  const showUsersLoading = (usersLoading || isUsersFetching) && users.length === 0;
-
-  useEffect(() => {
-    if (!usersMeta) return;
-
-    const lastPage = usersMeta.total > 0 ? Math.max(1, usersMeta.lastPage) : 1;
-    if (page > lastPage) {
-      setPage(lastPage);
-    }
-  }, [page, setPage, usersMeta]);
+  const users = usersTable.items;
+  const totalUsers = usersTable.totalItems;
+  const totalAdmins = adminsTable.totalItems;
+  const showUsersLoading =
+    (usersTable.isLoading || usersTable.isFetching) && users.length === 0;
 
   // Salons - superadmin fetches all, admin uses their own from useUser
-  const { data: allSalons = [] } = useGet<Salon[]>("salons", {
-    retry: 1,
-    enabled: isSuperadmin,
+  const { data: allSalons = [] } = useGet<Salon[]>({
+    path: "salons",
+    options: {
+      enabled: isSuperadmin,
+    },
   });
 
   const adminSalon = !isSuperadmin
@@ -99,9 +66,11 @@ export function AdminUsersPage() {
   const salons = getSalonsByPermission(isSuperadmin, allSalons, adminSalon);
 
   // Only superadmin can fetch list of admins (for assigning salon ownership)
-  const { data: admins = [] } = useGet<User[]>("users/admins", {
-    retry: 1,
-    enabled: isSuperadmin,
+  const { data: admins = [] } = useGet<User[]>({
+    path: "users/admins",
+    options: {
+      enabled: isSuperadmin,
+    },
   });
 
   const selectedUser = getSelectedUser(modalState, users);
@@ -117,7 +86,7 @@ export function AdminUsersPage() {
   } = createUserModalHandlers(setModalState);
 
   const handleSuccess = () => {
-    refetch();
+    void usersTable.refetch();
   };
 
   const { mutate: updateUserStatus, isPending: isUpdatingStatus } =
@@ -180,13 +149,13 @@ export function AdminUsersPage() {
       <ServerDataTable
         items={users}
         columns={columns}
-        search={searchInput}
-        onSearchChange={setSearchInput}
-        page={page}
-        perPage={usersMeta?.perPage ?? USERS_PAGE_SIZE}
-        totalItems={usersMeta?.total ?? 0}
-        totalPages={Math.max(usersMeta?.lastPage ?? 0, 1)}
-        onPageChange={setPage}
+        search={usersTable.searchInput}
+        onSearchChange={usersTable.setSearchInput}
+        page={usersTable.page}
+        perPage={usersTable.perPage}
+        totalItems={usersTable.totalItems}
+        totalPages={usersTable.totalPages}
+        onPageChange={usersTable.setPage}
         searchPlaceholder={t("admin.users.searchPlaceholder")}
         emptyMessage={t("admin.users.noUsers")}
         loading={showUsersLoading}

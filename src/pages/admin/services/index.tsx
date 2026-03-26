@@ -36,7 +36,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { toast } from "@/lib/toast";
-import { useGet, withParams } from "@/hooks/useGet";
+import { useGet } from "@/hooks/useGet";
+import { useTable } from "@/hooks/useTable";
 import { useCategoriesContext } from "@/contexts/CategoriesProvider";
 import { useServicesContext } from "@/contexts/ServicesProvider";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -49,12 +50,10 @@ import {
   translateServiceCategory,
   translateServiceName,
 } from "@/common/service-translations";
-import type { PaginatedResponse } from "@/types/api";
 import type { Salon } from "@/pages/admin/salon/types";
 import type { Category, Service } from "@/pages/user/services/types";
 import { Badge } from "@/components/badge";
 import { useSalonCategories } from "@/contexts/CategoriesProvider";
-import { useServerTableState } from "@/hooks/useServerTableState";
 
 type ServiceModalMode = "create" | "edit";
 type ServicePayload = {
@@ -113,8 +112,6 @@ export default function AdminServicesPage() {
     packServiceIds: [] as string[],
   });
   const [lastNonPackCategory, setLastNonPackCategory] = useState("");
-  const { page, setPage, search, searchInput, setSearchInput, resetPage } =
-    useServerTableState();
 
   const getCategoryName = (category?: string | Category): string => {
     if (!category) return "";
@@ -122,9 +119,12 @@ export default function AdminServicesPage() {
     return category.name || "";
   };
 
-  const { data: salons = [] } = useGet<Salon[]>("salons", {
-    enabled: isSuperadmin,
-    staleTime: salonsStaleTime,
+  const { data: salons = [] } = useGet<Salon[]>({
+    path: "salons",
+    options: {
+      enabled: isSuperadmin,
+      staleTime: salonsStaleTime,
+    },
   });
 
   const availableSalons = isSuperadmin
@@ -133,58 +133,50 @@ export default function AdminServicesPage() {
       ? [user.salon]
       : [];
 
-  const {
-    data: servicesResponse,
-    isLoading: servicesLoading,
-    isFetching: isServicesFetching,
-    refetch,
-  } = useGet<PaginatedResponse<Service>>(
-    withParams(
-      "services",
-      selectedSalonId
-        ? {
-            salonId: selectedSalonId,
-            search: search || undefined,
-            category: selectedCategory === "all" ? undefined : selectedCategory,
-            skip: (page - 1) * ADMIN_SERVICES_PAGE_SIZE,
-            limit: ADMIN_SERVICES_PAGE_SIZE,
-          }
-        : {},
-    ),
-    { enabled: !!selectedSalonId, staleTime: servicesStaleTime },
-  );
-
-  const services = useMemo(
-    () => servicesResponse?.data ?? [],
-    [servicesResponse],
-  );
-  const servicesMeta = servicesResponse?.meta;
+  const servicesTable = useTable<Service>({
+    path: "services",
+    query: {
+      salonId: selectedSalonId || undefined,
+      category: selectedCategory === "all" ? undefined : selectedCategory,
+    },
+    enabled: !!selectedSalonId,
+    initialPerPage: ADMIN_SERVICES_PAGE_SIZE,
+    options: { staleTime: servicesStaleTime },
+  });
+  const services = servicesTable.items;
   const {
     serviceCategories: categoryNames = [],
   } = useSalonCategories(selectedSalonId, {
     enabled: !!selectedSalonId,
     includeProducts: false,
   });
-  const { data: packServicesResponse } = useGet<PaginatedResponse<Service>>(
-    withParams(
-      "services",
-      selectedSalonId
-        ? {
-            salonId: selectedSalonId,
-            limit: PACK_OPTIONS_LIMIT,
-            compact: true,
-          }
-        : {},
-    ),
-    {
+  const { data: allPackServices = [] } = useGet<Service[]>({
+    path: "services",
+    query: selectedSalonId
+      ? {
+          salonId: selectedSalonId,
+          limit: PACK_OPTIONS_LIMIT,
+          compact: true,
+        }
+      : undefined,
+    options: {
       enabled: isModalOpen && !!selectedSalonId,
       staleTime: servicesStaleTime,
+      select: (response) => {
+        const normalizedResponse = response as
+          | { data?: Service[] }
+          | Service[];
+
+        if (Array.isArray(normalizedResponse)) {
+          return normalizedResponse;
+        }
+
+        return Array.isArray(normalizedResponse?.data)
+          ? normalizedResponse.data
+          : [];
+      },
     },
-  );
-  const allPackServices = useMemo(
-    () => packServicesResponse?.data ?? [],
-    [packServicesResponse],
-  );
+  });
 
   const categories = useMemo(() => {
     return Array.from(new Set(categoryNames.filter(Boolean))).sort((a, b) =>
@@ -270,16 +262,6 @@ export default function AdminServicesPage() {
     setInitialPrices(nextPrices);
   }, [services]);
 
-  useEffect(() => {
-    if (!servicesMeta) return;
-
-    const lastPage =
-      servicesMeta.total > 0 ? Math.max(1, servicesMeta.lastPage) : 1;
-    if (page > lastPage) {
-      setPage(lastPage);
-    }
-  }, [page, setPage, servicesMeta]);
-
   const handlePriceChange = (serviceId: string, value: string) => {
     setPriceEdits((prev) => ({ ...prev, [serviceId]: value }));
   };
@@ -302,7 +284,7 @@ export default function AdminServicesPage() {
         invalidateServices(selectedSalonId);
         invalidateCategories(selectedSalonId);
       }
-      refetch();
+      void servicesTable.refetch();
     } catch (error) {
       const message =
         error instanceof Error ? error.message : t("common.error");
@@ -342,7 +324,7 @@ export default function AdminServicesPage() {
         invalidateServices(selectedSalonId);
         invalidateCategories(selectedSalonId);
       }
-      refetch();
+      void servicesTable.refetch();
     } catch (error) {
       const message =
         error instanceof Error ? error.message : t("common.error");
@@ -539,7 +521,7 @@ export default function AdminServicesPage() {
         invalidateCategories(selectedSalonId);
       }
       setIsModalOpen(false);
-      refetch();
+      void servicesTable.refetch();
     } catch (error) {
       const message =
         error instanceof Error ? error.message : t("common.error");
@@ -637,7 +619,7 @@ export default function AdminServicesPage() {
                   onValueChange={(value) => {
                     setSelectedSalonId(value);
                     setSelectedCategory("all");
-                    resetPage();
+                    servicesTable.resetPage();
                   }}
                 >
                   <SelectTrigger className="w-full sm:w-80">
@@ -663,8 +645,8 @@ export default function AdminServicesPage() {
           </div>
           <div className="flex flex-wrap gap-3">
             <Input
-              value={searchInput}
-              onChange={(event) => setSearchInput(event.target.value)}
+              value={servicesTable.searchInput}
+              onChange={(event) => servicesTable.setSearchInput(event.target.value)}
               placeholder={t("admin.services.searchPlaceholder")}
               className="w-full sm:w-64"
             />
@@ -672,7 +654,7 @@ export default function AdminServicesPage() {
               value={selectedCategory}
               onValueChange={(value) => {
                 setSelectedCategory(value);
-                resetPage();
+                servicesTable.resetPage();
               }}
             >
               <SelectTrigger className="w-full sm:w-52">
@@ -730,7 +712,8 @@ export default function AdminServicesPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {servicesLoading && (
+              {(servicesTable.isLoading || servicesTable.isFetching) &&
+                services.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={5} className="h-24">
                     <div className="flex items-center justify-center gap-2 text-muted-foreground">
@@ -740,14 +723,16 @@ export default function AdminServicesPage() {
                   </TableCell>
                 </TableRow>
               )}
-              {!servicesLoading && !isServicesFetching && services.length === 0 && (
+              {!servicesTable.isLoading &&
+                !servicesTable.isFetching &&
+                services.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={5} className="text-center">
                     {t("admin.services.noServices")}
                   </TableCell>
                 </TableRow>
               )}
-              {!servicesLoading &&
+              {!servicesTable.isLoading &&
                 Object.entries(groupedServices).map(([category, items]) => (
                   <Fragment key={category}>
                     {groupByCategory && (
@@ -844,11 +829,11 @@ export default function AdminServicesPage() {
 
       {selectedSalonId && (
         <ServerPagination
-          page={page}
-          perPage={servicesMeta?.perPage ?? ADMIN_SERVICES_PAGE_SIZE}
-          totalItems={servicesMeta?.total ?? 0}
-          totalPages={Math.max(servicesMeta?.lastPage ?? 0, 1)}
-          onPageChange={setPage}
+          page={servicesTable.page}
+          perPage={servicesTable.perPage}
+          totalItems={servicesTable.totalItems}
+          totalPages={servicesTable.totalPages}
+          onPageChange={servicesTable.setPage}
         />
       )}
 

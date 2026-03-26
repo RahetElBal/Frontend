@@ -39,9 +39,8 @@ import { useForm } from "@/hooks/useForm";
 import { useUser } from "@/hooks/useUser";
 import { toast } from "@/lib/toast";
 import type { Service } from "./types";
-import type { PaginatedResponse } from "@/types/api";
 import type { ApiError } from "@/types/api";
-import { useGet, withParams } from "@/hooks/useGet";
+import { useTable } from "@/hooks/useTable";
 import { usePost } from "@/hooks/usePost";
 import {
   useCategoriesContext,
@@ -55,7 +54,6 @@ import {
   translateServiceCategory,
   translateServiceName,
 } from "@/common/service-translations";
-import { useServerTableState } from "@/hooks/useServerTableState";
 
 // Modal state type
 type ServiceModalState = {
@@ -104,9 +102,7 @@ export function ServicesPage() {
   const { user, isSuperadmin } = useUser();
   const { invalidateServices } = useServicesContext();
   const { invalidateCategories } = useCategoriesContext();
-  const servicesStaleTime = 1000 * 60 * 10;
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const { page, setPage } = useServerTableState();
 
   // Unified modal state
   const [modalState, setModalState] = useState<ServiceModalState>(null);
@@ -115,21 +111,17 @@ export function ServicesPage() {
   const canManageServices = isSuperadmin;
 
   // Fetch services and categories from API (scoped to current salon)
-  const {
-    data: servicesResponse,
-    isLoading,
-    refetch,
-    } = useGet<PaginatedResponse<Service>>(
-      withParams("services", {
-        salonId,
-        category: selectedCategory || undefined,
-        skip: (page - 1) * SERVICES_PAGE_SIZE,
-        limit: SERVICES_PAGE_SIZE,
-      }),
-      { enabled: !!salonId, staleTime: servicesStaleTime },
-    );
-  const services = servicesResponse?.data ?? [];
-  const servicesMeta = servicesResponse?.meta;
+  const servicesTable = useTable<Service>({
+    path: "services",
+    query: {
+      salonId,
+      category: selectedCategory || undefined,
+    },
+    enabled: !!salonId,
+    initialPerPage: SERVICES_PAGE_SIZE,
+    options: { staleTime: 1000 * 60 * 10 },
+  });
+  const services = servicesTable.items;
 
   const { serviceCategories: categoriesData = [] } = useSalonCategories(
     salonId,
@@ -270,27 +262,20 @@ export function ServicesPage() {
           invalidateServices(salonId);
           invalidateCategories(salonId);
         }
-        refetch();
+        void servicesTable.refetch();
       })
       .catch((error: ApiError) => {
         toast.error(error.message || t("common.error"));
       });
-  }, [t, refetch, salonId, invalidateServices]);
+  }, [t, salonId, invalidateCategories, invalidateServices, servicesTable]);
 
   const servicesByCategory = categories.map((cat) => ({
     ...cat,
     services: services.filter((s) => getServiceCategoryName(s) === cat.id),
   })).filter((category) => category.services.length > 0);
-
-  useEffect(() => {
-    if (!servicesMeta) return;
-
-    const lastPage =
-      servicesMeta.total > 0 ? Math.max(1, servicesMeta.lastPage) : 1;
-    if (page > lastPage) {
-      setPage(lastPage);
-    }
-  }, [page, setPage, servicesMeta]);
+  const showServicesLoading =
+    (servicesTable.isLoading || servicesTable.isFetching) &&
+    services.length === 0;
 
   // Handlers
   const handleView = (service: Service) => {
@@ -334,7 +319,7 @@ export function ServicesPage() {
       <PageHeader
         title={t("nav.services")}
         description={t("services.description", {
-          count: servicesMeta?.total ?? 0,
+          count: servicesTable.totalItems,
         })}
         actions={
           canManageServices ? (
@@ -356,11 +341,11 @@ export function ServicesPage() {
         <Button
           variant={selectedCategory === null ? "default" : "outline"}
           size="sm"
-          onClick={() => {
-            setSelectedCategory(null);
-            setPage(1);
-          }}
-        >
+            onClick={() => {
+              setSelectedCategory(null);
+              servicesTable.resetPage();
+            }}
+          >
           {t("common.all")}
         </Button>
         {categories.map((cat) => (
@@ -370,7 +355,7 @@ export function ServicesPage() {
             size="sm"
             onClick={() => {
               setSelectedCategory(cat.id);
-              setPage(1);
+              servicesTable.resetPage();
             }}
             className="gap-2"
           >
@@ -384,7 +369,7 @@ export function ServicesPage() {
       </div>
 
       {/* Services Grid */}
-      {isLoading ? (
+      {showServicesLoading ? (
         <LoadingPanel label={t("common.loading")} />
       ) : selectedCategory === null ? (
         <div className="space-y-8">
@@ -455,13 +440,13 @@ export function ServicesPage() {
         </div>
       )}
 
-      {!isLoading && (
+      {!showServicesLoading && (
         <ServerPagination
-          page={page}
-          perPage={servicesMeta?.perPage ?? SERVICES_PAGE_SIZE}
-          totalItems={servicesMeta?.total ?? 0}
-          totalPages={Math.max(servicesMeta?.lastPage ?? 0, 1)}
-          onPageChange={setPage}
+          page={servicesTable.page}
+          perPage={servicesTable.perPage}
+          totalItems={servicesTable.totalItems}
+          totalPages={servicesTable.totalPages}
+          onPageChange={servicesTable.setPage}
         />
       )}
 

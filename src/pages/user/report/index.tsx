@@ -194,7 +194,7 @@ const statusStyles: Record<SupportTicketStatus, string> = {
   closed: "bg-zinc-200 text-zinc-700",
 };
 
-const SUPPORT_TICKETS_QUERY_KEY = ["support-reports/mine"] as const;
+const SUPPORT_TICKETS_QUERY_KEY = ["support-reports", "mine", {}] as const;
 
 function formatDateTime(value?: string | null): string {
   if (!value) return "-";
@@ -239,9 +239,12 @@ export default function SupportReportPage() {
   );
   const normalizedPlanKey = planTier === "all-in" ? "allIn" : planTier;
   const queryClient = useQueryClient();
-  const ticketsQuery = useGet<SupportTicket[]>("support-reports/mine", {
-    refetchInterval: 15000,
-    staleTime: 5000,
+  const ticketsQuery = useGet<SupportTicket[]>({
+    path: "support-reports/mine",
+    options: {
+      refetchInterval: 15000,
+      staleTime: 5000,
+    },
   });
 
   const tickets = ticketsQuery.data ?? [];
@@ -287,7 +290,7 @@ export default function SupportReportPage() {
     (payload) => `support-reports/${encodeURIComponent(payload.ticketId)}/replies`,
     {
       method: "POST",
-      invalidate: ["support-reports/mine"],
+      invalidate: ["support-reports"],
       onMutate: (payload) => {
         const previousTickets = readTicketsCache();
         const now = new Date().toISOString();
@@ -357,7 +360,7 @@ export default function SupportReportPage() {
     (payload) => `support-reports/${encodeURIComponent(payload.ticketId)}/close`,
     {
       method: "POST",
-      invalidate: ["support-reports/mine"],
+      invalidate: ["support-reports"],
       onMutate: (payload) => {
         const previousTickets = readTicketsCache();
         const now = new Date().toISOString();
@@ -413,7 +416,7 @@ export default function SupportReportPage() {
     CreateSupportReportPayload
   >("support-reports", {
     method: "POST",
-    invalidate: ["support-reports/mine"],
+    invalidate: ["support-reports"],
     onMutate: (payload) => {
       const previousTickets = readTicketsCache();
       const hasActiveTicket = previousTickets.some(

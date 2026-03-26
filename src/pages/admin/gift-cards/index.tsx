@@ -25,7 +25,7 @@ import { Label } from "@/components/ui/label";
 import { GiftCardStatus } from "./enum";
 import type { GiftCard } from "./types";
 import { cn } from "@/lib/utils";
-import { useGet, withParams } from "@/hooks/useGet";
+import { useGet } from "@/hooks/useGet";
 import { usePost } from "@/hooks/usePost";
 import { usePostAction } from "@/hooks/usePostAction";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -61,10 +61,11 @@ export function GiftCardsPage() {
   const salonId = user?.salon?.id;
 
   // Fetch gift cards from API
-  const { data: giftCards = [], isLoading } = useGet<GiftCard[]>(
-    withParams("gift-cards", { salonId }),
-    { enabled: !!salonId },
-  );
+  const { data: giftCards = [], isLoading } = useGet<GiftCard[]>({
+    path: "gift-cards",
+    query: { salonId },
+    options: { enabled: !!salonId },
+  });
 
   // Create gift card mutation
   const createGiftCard = usePost<GiftCard, CreateGiftCardDto>("gift-cards", {
@@ -81,8 +82,11 @@ export function GiftCardsPage() {
 
   // Lookup gift card by code - GET /gift-cards/lookup/{code}
   const { refetch: lookupGiftCardQuery, isFetching: isLookingUp } = useGet<GiftCard>(
-    withParams(`gift-cards/lookup/${lookupCode}`, { salonId }),
-    { enabled: false },
+    {
+      path: lookupCode ? `gift-cards/lookup/${lookupCode}` : "gift-cards/lookup",
+      query: { salonId },
+      options: { enabled: false },
+    },
   );
 
   const lookupGiftCard = async () => {

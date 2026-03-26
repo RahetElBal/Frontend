@@ -1,10 +1,9 @@
 import { useTranslation } from "react-i18next";
 import { useUser } from "@/hooks/useUser";
-import { useGet, withParams } from "@/hooks/useGet";
+import { useGet } from "@/hooks/useGet";
 import { useSalonBusinessSummary } from "@/contexts/BusinessSummaryProvider";
 import { Spinner } from "@/components/spinner";
 import { PageHeader } from "@/components/page-header";
-import type { PaginatedResponse } from "@/types/api";
 import type { Salon } from "@/pages/admin/salon/types";
 import type { User } from "@/pages/admin/users/types";
 import { StatsGrid } from "./components/stats-grid";
@@ -36,23 +35,37 @@ export default function AdminDashboardPage() {
       enabled: !isSuperadmin && !!adminSalonId,
     });
 
-  const { data: usersData, isLoading: usersLoading } = useGet<
-    PaginatedResponse<User>
-  >("users", {
-    retry: 1,
+  const { data: users = [], isLoading: usersLoading } = useGet<User[]>({
+    path: "users",
+    options: {
+      select: (response) => {
+        const normalizedResponse = response as { data?: User[] } | User[];
+
+        if (Array.isArray(normalizedResponse)) {
+          return normalizedResponse;
+        }
+
+        return Array.isArray(normalizedResponse?.data)
+          ? normalizedResponse.data
+          : [];
+      },
+    },
   });
 
-  const { data: salonsData, isLoading: salonsLoading } = useGet<Salon[]>(
-    "salons",
-    {
+  const { data: salonsData, isLoading: salonsLoading } = useGet<Salon[]>({
+    path: "salons",
+    options: {
       enabled: isSuperadmin,
     },
-  );
+  });
   const { data: summaryStats, isLoading: summaryLoading } =
-    useGet<DashboardSummaryStats>(withParams("salons/stats/summary"), {
-      enabled: isSuperadmin,
-      staleTime: 1000 * 60 * 5,
-      refetchOnWindowFocus: true,
+    useGet<DashboardSummaryStats>({
+      path: "salons/stats/summary",
+      options: {
+        enabled: isSuperadmin,
+        staleTime: 1000 * 60 * 5,
+        refetchOnWindowFocus: true,
+      },
     });
 
   const effectiveSummaryLoading = isSuperadmin
@@ -83,7 +96,7 @@ export default function AdminDashboardPage() {
     ? getRecentItems(salonsToDisplay, 5)
     : [];
   const filteredUsers = getFilteredUsers(
-    usersData?.data,
+    users,
     isSuperadmin,
     user?.id,
   );
@@ -110,7 +123,7 @@ export default function AdminDashboardPage() {
 
       <StatsGrid
         salonsData={salonsToDisplay}
-        usersData={usersData}
+        usersTotal={users.length}
         loading={isLoading}
         revenueData={{
           gross: grossRevenue,

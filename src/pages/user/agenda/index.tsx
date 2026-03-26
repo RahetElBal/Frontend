@@ -18,7 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "@/lib/toast";
-import { useGet, withParams } from "@/hooks/useGet";
+import { useGet } from "@/hooks/useGet";
 import { useBusinessSummaryContext } from "@/contexts/BusinessSummaryProvider";
 import { usePost } from "@/hooks/usePost";
 import { useSalonSettings } from "@/contexts/SalonSettingsProvider";
@@ -30,7 +30,6 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { normalizePhone } from "@/common/phone";
 import { patch, post } from "@/lib/http";
 import type { ApiError } from "@/types/api";
-import type { PaginatedResponse } from "@/types/api";
 import type { SalonSettings } from "@/pages/admin/salon/types";
 import type { SalonSettingsExtended } from "@/pages/admin/salon-settings/types";
 import type { User } from "@/pages/admin/users/types";
@@ -45,7 +44,6 @@ import {
   ALL_STAFF_ID,
   buildStaffOptions,
   getAppointmentMatchKey,
-  safeExtractArray,
   getLocalDateString,
   isAppointmentOverdue,
   isOptimisticAppointmentId,
@@ -300,20 +298,49 @@ export function AgendaPage() {
     !!salonId &&
     (activeTab === "availability" || viewMode === "month" || !!staffFilterId);
   const {
-    data: appointmentsData,
+    data: rawAppointments = [],
     isLoading: isAppointmentsLoading,
-  } = useGet<PaginatedResponse<Appointment>>(
-    withParams("appointments", appointmentsParams),
-    {
+  } = useGet<Appointment[]>({
+    path: "appointments",
+    query: appointmentsParams,
+    options: {
       enabled: shouldFetchAppointments,
       staleTime: appointmentsStaleTime,
-    },
-  );
+      select: (response) => {
+        const normalizedResponse = response as
+          | { data?: Appointment[] }
+          | Appointment[];
 
-  const { data: clientsData, isLoading: isClientsLoading } = useGet<PaginatedResponse<Client>>(
-    withParams("clients", { salonId, perPage: 100 }),
-    { enabled: shouldLoadReferenceData, staleTime: clientsStaleTime },
-  );
+        if (Array.isArray(normalizedResponse)) {
+          return normalizedResponse;
+        }
+
+        return Array.isArray(normalizedResponse?.data)
+          ? normalizedResponse.data
+          : [];
+      },
+    },
+  });
+
+  const { data: clients = [], isLoading: isClientsLoading } = useGet<Client[]>({
+    path: "clients",
+    query: { salonId, perPage: 100 },
+    options: {
+      enabled: shouldLoadReferenceData,
+      staleTime: clientsStaleTime,
+      select: (response) => {
+        const normalizedResponse = response as { data?: Client[] } | Client[];
+
+        if (Array.isArray(normalizedResponse)) {
+          return normalizedResponse;
+        }
+
+        return Array.isArray(normalizedResponse?.data)
+          ? normalizedResponse.data
+          : [];
+      },
+    },
+  });
 
   const { settings: salonSettingsData } = useSalonSettings(salonId, {
     enabled: !!salonId,
@@ -335,7 +362,6 @@ export function AgendaPage() {
     appointments: [] as Appointment[],
     deletedIds: new Set<string>(),
   }));
-  const rawAppointments = safeExtractArray<Appointment>(appointmentsData);
   const optimisticScopeKey = useMemo(
     () => `${salonId ?? "no-salon"}|${activeStaffScopeId ?? "no-staff"}`,
     [salonId, activeStaffScopeId],
@@ -364,7 +390,6 @@ export function AgendaPage() {
   const isReferenceDataLoading =
     shouldLoadReferenceData &&
     (isClientsLoading || isServicesLoading || (canSelectStaff && isStaffLoading));
-  const clients = safeExtractArray<Client>(clientsData);
   const staffOptions = useMemo(() => {
     return buildStaffOptions({
       user,
@@ -1060,22 +1085,19 @@ export function AgendaPage() {
         if (variables?.salonId) {
           invalidateBusinessSummary(variables.salonId);
         }
-        queryClient.setQueryData<PaginatedResponse<Appointment> | undefined>(
+        queryClient.setQueryData<Appointment[] | undefined>(
           appointmentsQueryKey,
           (current) => {
             if (!current) return current;
-            return {
-              ...current,
-              data: current.data.map((appointment) =>
-                appointment.id === variables.appointmentId
-                  ? {
-                      ...appointment,
-                      status: AppointmentStatus.COMPLETED,
-                      paid: true,
-                    }
-                  : appointment,
-              ),
-            };
+            return current.map((appointment) =>
+              appointment.id === variables.appointmentId
+                ? {
+                    ...appointment,
+                    status: AppointmentStatus.COMPLETED,
+                    paid: true,
+                  }
+                : appointment,
+            );
           },
         );
         setModalState(null);

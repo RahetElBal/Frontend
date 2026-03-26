@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { PageHeader } from "@/components/page-header";
@@ -32,6 +32,7 @@ import {
 import { Badge } from "@/components/badge";
 import { ServerDataTable } from "@/components/table";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useTable } from "@/hooks/useTable";
 import { useUser } from "@/hooks/useUser";
 import { ROUTES } from "@/constants/navigation";
 import {
@@ -40,7 +41,7 @@ import {
 } from "@/contexts/BusinessSummaryProvider";
 import { SaleStatus } from "./enum";
 import type { Sale, SaleItem } from "./types";
-import { useGet, withParams } from "@/hooks/useGet";
+import { useGet } from "@/hooks/useGet";
 import { usePost } from "@/hooks/usePost";
 import { toast } from "@/lib/toast";
 import { getSalesColumns } from "./components/list/columns";
@@ -52,9 +53,7 @@ import {
   saleStatusColors,
   toNumber,
 } from "./components/utils";
-import { normalizeSale, normalizeSalesResponse } from "@/utils/normalize-sales";
-import type { PaginatedResponse } from "@/types/api";
-import { useServerTableState } from "@/hooks/useServerTableState";
+import { normalizeSale } from "@/utils/normalize-sales";
 
 const SALES_PAGE_SIZE = 20;
 
@@ -113,13 +112,24 @@ export function SalesPage() {
       enabled: !!salonId,
     },
   );
-  const {
-    page,
-    setPage,
-    search,
-    searchInput,
-    setSearchInput,
-  } = useServerTableState();
+  const salesTable = useTable<Sale>({
+    path: "sales",
+    query: {
+      salonId,
+      status: statusFilter === "all" ? undefined : statusFilter,
+      compact: true,
+      sortBy: "createdAt",
+      sortOrder: "desc",
+    },
+    enabled: !!salonId,
+    initialPerPage: SALES_PAGE_SIZE,
+    options: {
+      staleTime: salesStaleTime,
+      refetchOnMount: "always",
+      refetchOnWindowFocus: true,
+      refetchOnReconnect: true,
+    },
+  });
   const selectedSaleId = useMemo(() => {
     const params = new URLSearchParams(location.search);
     const value = params.get("saleId")?.trim();
@@ -152,37 +162,18 @@ export function SalesPage() {
     [location.pathname, location.search, navigate],
   );
 
-  const {
-    data: salesResponse,
-    isLoading,
-    isFetching,
-  } = useGet<PaginatedResponse<Sale>>(
-    withParams("sales", {
-      salonId,
-      search: search || undefined,
-      status: statusFilter === "all" ? undefined : statusFilter,
-      skip: (page - 1) * SALES_PAGE_SIZE,
-      limit: SALES_PAGE_SIZE,
-      sortBy: "createdAt",
-      sortOrder: "desc",
-      compact: true,
-    }),
-    {
-      enabled: !!salonId,
-      staleTime: salesStaleTime,
-      refetchOnMount: "always",
-      refetchOnWindowFocus: true,
-      refetchOnReconnect: true,
-      select: normalizeSalesResponse,
-    },
+  const sales = useMemo(
+    () => salesTable.items.map(normalizeSale),
+    [salesTable.items],
   );
-  const sales = salesResponse?.data ?? [];
-  const salesMeta = salesResponse?.meta;
 
-  const { data: selectedSaleDetails } = useGet<Sale>(`sales/${selectedSaleId}`, {
-    enabled: !!selectedSaleId,
-    staleTime: 1000 * 60,
-    select: normalizeSale,
+  const { data: selectedSaleDetails } = useGet<Sale>({
+    path: selectedSaleId ? `sales/${selectedSaleId}` : "sales",
+    options: {
+      enabled: !!selectedSaleId,
+      staleTime: 1000 * 60,
+      select: normalizeSale,
+    },
   });
 
   const { mutate: refundSale, isPending: isRefunding } = usePost<Sale, { id: string }>(
@@ -191,7 +182,7 @@ export function SalesPage() {
       invalidate: ["sales", "appointments"],
       onSuccess: (_sale, variables) => {
         queryClient.invalidateQueries({
-          queryKey: [`sales/${variables.id}`],
+          queryKey: ["sales", variables.id],
         });
         if (salonId) {
           invalidateBusinessSummary(salonId);
@@ -224,16 +215,8 @@ export function SalesPage() {
   const averageTicket =
     transactionsCount > 0 ? netRevenue / transactionsCount : 0;
   const showSummaryLoading = isSummaryLoading && !hasSummaryData;
-  const showTableLoading = (isLoading || isFetching) && sales.length === 0;
-
-  useEffect(() => {
-    if (!salesMeta) return;
-
-    const lastPage = salesMeta.total > 0 ? Math.max(1, salesMeta.lastPage) : 1;
-    if (page > lastPage) {
-      setPage(lastPage);
-    }
-  }, [page, salesMeta, setPage]);
+  const showTableLoading =
+    (salesTable.isLoading || salesTable.isFetching) && sales.length === 0;
 
   const handleRefund = useCallback(
     (sale: Sale) => {
@@ -380,7 +363,7 @@ export function SalesPage() {
             value={statusFilter}
             onValueChange={(value: SaleStatus | "all") => {
               setStatusFilter(value);
-              setPage((previousPage) => (previousPage === 1 ? previousPage : 1));
+              salesTable.resetPage();
             }}
           >
             <SelectTrigger
@@ -411,13 +394,13 @@ export function SalesPage() {
       <ServerDataTable
         items={sales}
         columns={columns}
-        search={searchInput}
-        onSearchChange={setSearchInput}
-        page={page}
-        perPage={salesMeta?.perPage ?? SALES_PAGE_SIZE}
-        totalItems={salesMeta?.total ?? 0}
-        totalPages={Math.max(salesMeta?.lastPage ?? 0, 1)}
-        onPageChange={setPage}
+        search={salesTable.searchInput}
+        onSearchChange={salesTable.setSearchInput}
+        page={salesTable.page}
+        perPage={salesTable.perPage}
+        totalItems={salesTable.totalItems}
+        totalPages={salesTable.totalPages}
+        onPageChange={salesTable.setPage}
         searchPlaceholder={t("sales.searchPlaceholder")}
         emptyMessage={t("sales.noSales")}
         loading={showTableLoading}

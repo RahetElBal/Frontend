@@ -45,14 +45,13 @@ import type { Product } from "./types";
 import { cn } from "@/lib/utils";
 import { usePost } from "@/hooks/usePost";
 import { usePostAction } from "@/hooks/usePostAction";
-import { useGet, withParams } from "@/hooks/useGet";
+import { useGet } from "@/hooks/useGet";
+import { useTable } from "@/hooks/useTable";
 import {
   useCategoriesContext,
   useSalonCategories,
 } from "@/contexts/CategoriesProvider";
 import { getProductColumns } from "./components/list/columns";
-import type { PaginatedResponse } from "@/types/api";
-import { useServerTableState } from "@/hooks/useServerTableState";
 
 // Modal state type
 type ProductModalState = {
@@ -81,16 +80,7 @@ export function ProductsPage() {
   const { t } = useTranslation();
   const { formatCurrency } = useLanguage();
   const { user } = useUser();
-  const productsStaleTime = 1000 * 60 * 10;
-  const lowStockStaleTime = 1000 * 60 * 2;
   const { invalidateCategories } = useCategoriesContext();
-  const {
-    page,
-    setPage,
-    search,
-    searchInput,
-    setSearchInput,
-  } = useServerTableState();
 
   // Unified modal state
   const [modalState, setModalState] = useState<ProductModalState>(null);
@@ -98,21 +88,16 @@ export function ProductsPage() {
   const salonId = user?.salon?.id;
 
   // Fetch products from API (scoped to current salon)
-  const {
-    data: productsResponse,
-    isLoading,
-    isFetching,
-  } = useGet<PaginatedResponse<Product>>(
-    withParams("products", {
+  const productsTable = useTable<Product>({
+    path: "products",
+    query: {
       salonId,
-      search: search || undefined,
-      skip: (page - 1) * PRODUCTS_PAGE_SIZE,
-      limit: PRODUCTS_PAGE_SIZE,
-    }),
-    { enabled: !!salonId, staleTime: productsStaleTime },
-  );
-  const products = productsResponse?.data || [];
-  const productsMeta = productsResponse?.meta;
+    },
+    enabled: !!salonId,
+    initialPerPage: PRODUCTS_PAGE_SIZE,
+    options: { staleTime: 1000 * 60 * 10 },
+  });
+  const products = productsTable.items;
 
   const { productCategories = [] } = useSalonCategories(salonId, {
     enabled: !!salonId,
@@ -120,10 +105,11 @@ export function ProductsPage() {
   });
 
   // Fetch low stock products - GET /products/low-stock
-  const { data: lowStockProducts = [] } = useGet<Product[]>(
-    withParams("products/low-stock", { salonId }),
-    { enabled: !!salonId, staleTime: lowStockStaleTime },
-  );
+  const { data: lowStockProducts = [] } = useGet<Product[]>({
+    path: "products/low-stock",
+    query: { salonId },
+    options: { enabled: !!salonId, staleTime: 1000 * 60 * 2 },
+  });
 
   // Helper functions
   const getSelectedProduct = (): Product | null => {
@@ -264,17 +250,9 @@ export function ProductsPage() {
     setStockAdjustment(0);
   };
 
-  const showTableLoading = (isLoading || isFetching) && products.length === 0;
-
-  useEffect(() => {
-    if (!productsMeta) return;
-
-    const lastPage =
-      productsMeta.total > 0 ? Math.max(1, productsMeta.lastPage) : 1;
-    if (page > lastPage) {
-      setPage(lastPage);
-    }
-  }, [page, productsMeta, setPage]);
+  const showTableLoading =
+    (productsTable.isLoading || productsTable.isFetching) &&
+    products.length === 0;
 
   // Use the dedicated low-stock endpoint for counts
   const lowStockCount = lowStockProducts.filter((p) => p.stock > 0).length;
@@ -322,7 +300,7 @@ export function ProductsPage() {
       <PageHeader
         title={t("nav.products")}
         description={t("products.description", {
-          count: productsMeta?.total ?? 0,
+          count: productsTable.totalItems,
         })}
         actions={
           <Button
@@ -365,13 +343,13 @@ export function ProductsPage() {
       <ServerDataTable
         items={products}
         columns={columns}
-        search={searchInput}
-        onSearchChange={setSearchInput}
-        page={page}
-        perPage={productsMeta?.perPage ?? PRODUCTS_PAGE_SIZE}
-        totalItems={productsMeta?.total ?? 0}
-        totalPages={Math.max(productsMeta?.lastPage ?? 0, 1)}
-        onPageChange={setPage}
+        search={productsTable.searchInput}
+        onSearchChange={productsTable.setSearchInput}
+        page={productsTable.page}
+        perPage={productsTable.perPage}
+        totalItems={productsTable.totalItems}
+        totalPages={productsTable.totalPages}
+        onPageChange={productsTable.setPage}
         searchPlaceholder={t("products.searchPlaceholder")}
         emptyMessage={t("products.noProducts")}
         loading={showTableLoading}

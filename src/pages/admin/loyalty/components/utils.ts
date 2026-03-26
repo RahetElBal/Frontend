@@ -3,7 +3,6 @@ import type { Client } from "@/pages/user/clients/types";
 import type { Sale } from "@/pages/user/sales/types";
 import type { Service } from "@/pages/user/services/types";
 import type { SalonSettingsExtended } from "@/pages/admin/salon-settings/types";
-import type { PaginatedResponse } from "@/types/api";
 
 export const defaultLoyaltySettings = {
   loyaltyEnabled: false,
@@ -16,10 +15,10 @@ export const defaultLoyaltySettings = {
 };
 
 /**
- * Extracts array from PaginatedResponse or returns array as-is
+ * Extracts an array from a list payload or returns the array as-is
  */
 export const extractArray = <T>(
-  data: PaginatedResponse<T> | T[] | undefined,
+  data: { data?: T[] } | T[] | undefined,
 ): T[] => {
   if (!data) return [];
   if (Array.isArray(data)) return data;

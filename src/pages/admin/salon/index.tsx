@@ -5,7 +5,7 @@ import { Plus } from "lucide-react";
 
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
-import { useGet, withParams } from "@/hooks/useGet";
+import { useGet } from "@/hooks/useGet";
 import { useUser } from "@/hooks/useUser";
 import { useTable } from "@/hooks/useTable";
 import { toast } from "@/lib/toast";
@@ -42,43 +42,44 @@ export default function SalonsPage() {
     [userIsSuperadmin, adminSalon],
   );
   const salonId = currentSalon?.id;
-  const summaryPath = useMemo(
-    () =>
-      withParams(
-        "salons/stats/summary",
-        userIsSuperadmin ? {} : { salonId },
-      ),
-    [userIsSuperadmin, salonId],
-  );
 
   // Fetch data - only superadmin needs to fetch all salons
   const {
     data: allSalons = [],
     isLoading,
-  } = useGet<Salon[]>("salons", {
-    enabled: userIsSuperadmin,
-    staleTime: adminStatsStaleTime,
-    refetchOnWindowFocus: false,
+  } = useGet<Salon[]>({
+    path: "salons",
+    options: {
+      enabled: userIsSuperadmin,
+      staleTime: adminStatsStaleTime,
+      refetchOnWindowFocus: false,
+    },
   });
 
   const {
     data: admins = [],
     isLoading: isAdminsLoading,
     isError: isAdminsError,
-  } = useGet<User[]>("users/admins", {
-    enabled: userIsSuperadmin,
-    retry: 1,
-    staleTime: adminStatsStaleTime,
-    refetchOnWindowFocus: false,
+  } = useGet<User[]>({
+    path: "users/admins",
+    options: {
+      enabled: userIsSuperadmin,
+      staleTime: adminStatsStaleTime,
+      refetchOnWindowFocus: false,
+    },
   });
 
   const {
     data: summaryStats,
     isLoading: isSummaryLoading,
-  } = useGet<SalonSummaryStats>(summaryPath, {
-    enabled: userIsSuperadmin || !!salonId,
-    staleTime: adminStatsStaleTime,
-    refetchOnWindowFocus: false,
+  } = useGet<SalonSummaryStats>({
+    path: "salons/stats/summary",
+    query: userIsSuperadmin ? undefined : { salonId },
+    options: {
+      enabled: userIsSuperadmin || !!salonId,
+      staleTime: adminStatsStaleTime,
+      refetchOnWindowFocus: false,
+    },
   });
 
   const isStatsLoading = useMemo(

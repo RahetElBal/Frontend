@@ -12,7 +12,6 @@ import {
 import { AppRole } from "@/constants/enum";
 import { useAuthContext } from "@/contexts/AuthProvider";
 import { buildUrl, get } from "@/lib/http";
-import type { PaginatedResponse } from "@/types/api";
 import type { Salon } from "@/pages/admin/salon/types";
 import type { User } from "@/pages/admin/users/types";
 import type { AuthUser } from "@/types/user";
@@ -43,11 +42,11 @@ interface UseSalonStaffOptions {
   enabled?: boolean;
 }
 
-type StaffApiResponse = PaginatedResponse<User> | User[];
-
 const StaffContext = createContext<StaffContextValue | undefined>(undefined);
 
-const extractStaff = (response: StaffApiResponse | null | undefined) => {
+const extractStaff = (
+  response: User[] | { data?: User[] } | null | undefined,
+) => {
   if (Array.isArray(response)) return response;
   if (Array.isArray(response?.data)) return response.data;
   return [];
@@ -116,7 +115,7 @@ export function StaffProvider({ children }: StaffProviderProps) {
 
       const request = (async () => {
         try {
-          const response = await get<StaffApiResponse>(
+          const response = await get<User[] | { data?: User[] }>(
             buildUrl("users", {
               salonId: normalizedSalonId,
               role: AppRole.USER,

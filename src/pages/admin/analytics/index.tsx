@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/select";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useUser } from "@/hooks/useUser";
-import { useGet, withParams } from "@/hooks/useGet";
+import { useGet } from "@/hooks/useGet";
 import { useSalonBusinessSummary } from "@/contexts/BusinessSummaryProvider";
 import { useSalonServices } from "@/contexts/ServicesProvider";
 import {
@@ -37,7 +37,6 @@ import {
 import type { Appointment } from "@/pages/user/agenda/types";
 import type { Client } from "@/pages/user/clients/types";
 import type { Sale } from "@/pages/user/sales/types";
-import type { PaginatedResponse } from "@/types/api";
 import { normalizeSalesResponse } from "@/utils/normalize-sales";
 import { ROUTES } from "@/constants/navigation";
 import {
@@ -67,51 +66,54 @@ export function AnalyticsPage() {
     enabled: !!salonId && canViewAnalytics,
   });
 
-  const listStaleTime = 1000 * 60 * 5;
-  const listCacheTime = 1000 * 60 * 30;
-
   const { data: salesResponse, isLoading: loadingSales } = useGet<
-    PaginatedResponse<Sale>
-  >(
-    withParams("sales", {
+    {
+      data: Sale[];
+    }
+  >({
+    path: "sales",
+    query: {
       salonId,
       perPage: 10,
       sortBy: "createdAt",
       sortOrder: "desc",
       summary: true,
-    }),
-    {
+    },
+    options: {
       enabled: !!salonId && canViewAnalytics,
-      staleTime: listStaleTime,
-      gcTime: listCacheTime,
+      staleTime: 1000 * 60 * 5,
       refetchOnWindowFocus: false,
       select: normalizeSalesResponse,
     },
-  );
+  });
 
   const { data: appointmentsResponse, isLoading: loadingAppointments } = useGet<
-    PaginatedResponse<Appointment>
-  >(
-    withParams("appointments", { salonId, perPage: 10, summary: true }),
     {
+      data: Appointment[];
+    }
+  >({
+    path: "appointments",
+    query: { salonId, perPage: 10, summary: true },
+    options: {
       enabled: !!salonId && canViewAnalytics,
-      staleTime: listStaleTime,
-      gcTime: listCacheTime,
+      staleTime: 1000 * 60 * 5,
       refetchOnWindowFocus: false,
     },
-  );
+  });
 
   const { data: clientsResponse, isLoading: loadingClients } = useGet<
-    PaginatedResponse<Client>
-  >(
-    withParams("clients", { salonId, perPage: 10 }),
     {
+      data: Client[];
+    }
+  >({
+    path: "clients",
+    query: { salonId, perPage: 10 },
+    options: {
       enabled: !!salonId && canViewAnalytics,
-      staleTime: listStaleTime,
-      gcTime: listCacheTime,
+      staleTime: 1000 * 60 * 5,
       refetchOnWindowFocus: false,
     },
-  );
+  });
 
   const { services, isLoading: loadingServices } = useSalonServices(salonId, {
     enabled: !!salonId && canViewAnalytics,

@@ -195,7 +195,8 @@ const createHttpClient = (): KyInstance => {
 };
 
 // Export singleton instance
-export const http = createHttpClient();
+export const apiClient = createHttpClient();
+export const http = apiClient;
 
 // ============================================
 // TYPED HTTP METHODS

@@ -1,17 +1,16 @@
-import { useMemo, useState, useCallback, useEffect } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { Navigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
 import { PageHeader } from "@/components/page-header";
 import { Card } from "@/components/ui/card";
 import { Spinner } from "@/components/spinner";
-import { useGet, withParams } from "@/hooks/useGet";
+import { useGet } from "@/hooks/useGet";
+import { useTable } from "@/hooks/useTable";
 import { useSalonStaff } from "@/contexts/StaffProvider";
 import { useUser } from "@/hooks/useUser";
 import { useLanguage } from "@/hooks/useLanguage";
-import { useServerTableState } from "@/hooks/useServerTableState";
 import { ROUTES } from "@/constants/navigation";
-import type { PaginatedResponse } from "@/types/api";
 import type { Appointment } from "@/pages/user/agenda/types";
 import { AppointmentStatus } from "@/pages/user/agenda/enum";
 
@@ -20,7 +19,6 @@ import {
   ALL_STAFF_ID,
   buildStaffOptions,
   getLocalDateString,
-  safeExtractArray,
 } from "../agenda/components/utils";
 
 const HISTORY_PAGE_SIZE = 20;
@@ -61,77 +59,55 @@ export function AgendaHistoryPage() {
   const [dateTo, setDateTo] = useState(() => getLocalDateString());
   const [status, setStatus] = useState<"all" | AppointmentStatus>("all");
   const [staffId, setStaffId] = useState<string | null>(ALL_STAFF_ID);
-  const {
-    page,
-    setPage,
-    search,
-    searchInput,
-    setSearchInput,
-  } = useServerTableState();
 
   const staffFilterId = staffId === ALL_STAFF_ID ? null : staffId;
-  const historyFilters = useMemo(() => {
+  const historyQuery = useMemo(() => {
     return {
       salonId,
       staffId: staffFilterId || undefined,
       dateFrom: dateFrom || undefined,
       dateTo: dateTo || undefined,
       status: status === "all" ? undefined : status,
-      search: search || undefined,
-    };
-  }, [salonId, staffFilterId, dateFrom, dateTo, status, search]);
-
-  const historyParams = useMemo(() => {
-    return {
-      ...historyFilters,
-      skip: (page - 1) * HISTORY_PAGE_SIZE,
-      limit: HISTORY_PAGE_SIZE,
       compact: true,
       includeStaff: true,
       sortBy: "date",
       sortOrder: "desc",
     };
-  }, [historyFilters, page]);
+  }, [salonId, staffFilterId, dateFrom, dateTo, status]);
 
-  const {
-    data: appointmentsData,
-    isLoading: isAppointmentsLoading,
-    isFetching: isAppointmentsFetching,
-  } =
-    useGet<PaginatedResponse<Appointment>>(
-      withParams("appointments", historyParams),
-      {
-        enabled: !!salonId,
-        staleTime: 1000 * 30,
-      },
-    );
+  const appointmentsTable = useTable<Appointment>({
+    path: "appointments",
+    query: historyQuery,
+    enabled: !!salonId,
+    initialPerPage: HISTORY_PAGE_SIZE,
+    options: {
+      staleTime: 1000 * 30,
+    },
+  });
   const {
     data: historySummary,
     isLoading: isHistorySummaryLoading,
     isFetching: isHistorySummaryFetching,
-  } = useGet<AppointmentHistorySummary>(
-    withParams("appointments/history-summary", historyFilters),
-    {
+  } = useGet<AppointmentHistorySummary>({
+    path: "appointments/history-summary",
+    query: {
+      salonId,
+      staffId: staffFilterId || undefined,
+      dateFrom: dateFrom || undefined,
+      dateTo: dateTo || undefined,
+      status: status === "all" ? undefined : status,
+      search: appointmentsTable.search || undefined,
+    },
+    options: {
       enabled: !!salonId,
       staleTime: 1000 * 30,
     },
-  );
+  });
 
-  const appointments = safeExtractArray<Appointment>(appointmentsData);
-  const paginationMeta = appointmentsData?.meta;
+  const appointments = appointmentsTable.items;
   const { staff: staffMembers } = useSalonStaff(salonId, {
     enabled: !!salonId,
   });
-
-  useEffect(() => {
-    if (!paginationMeta) return;
-
-    const lastPage =
-      paginationMeta.total > 0 ? Math.max(1, paginationMeta.lastPage) : 1;
-    if (page > lastPage) {
-      setPage(lastPage);
-    }
-  }, [paginationMeta, page]);
 
   const staffOptions = useMemo(
     () =>
@@ -149,29 +125,29 @@ export function AgendaHistoryPage() {
   const showStatsLoading =
     (isHistorySummaryLoading || isHistorySummaryFetching) && !historySummary;
   const showTableLoading =
-    (isAppointmentsLoading || isAppointmentsFetching) &&
+    (appointmentsTable.isLoading || appointmentsTable.isFetching) &&
     appointments.length === 0;
 
   const handleDateFromChange = useCallback(
     (nextValue: string) => {
-      setPage(1);
+      appointmentsTable.resetPage();
       setDateFrom(nextValue);
       if (dateTo && nextValue && nextValue > dateTo) {
         setDateTo(nextValue);
       }
     },
-    [dateTo],
+    [appointmentsTable, dateTo],
   );
 
   const handleDateToChange = useCallback(
     (nextValue: string) => {
-      setPage(1);
+      appointmentsTable.resetPage();
       setDateTo(nextValue);
       if (dateFrom && nextValue && nextValue < dateFrom) {
         setDateFrom(nextValue);
       }
     },
-    [dateFrom],
+    [appointmentsTable, dateFrom],
   );
 
   return (
@@ -269,28 +245,28 @@ export function AgendaHistoryPage() {
       <HistoryView
         appointments={appointments}
         isLoading={showTableLoading}
-        search={searchInput}
-        onSearchChange={setSearchInput}
+        search={appointmentsTable.searchInput}
+        onSearchChange={appointmentsTable.setSearchInput}
         dateFrom={dateFrom}
         dateTo={dateTo}
         onDateFromChange={handleDateFromChange}
         onDateToChange={handleDateToChange}
         statusFilter={status}
         onStatusChange={(value) => {
-          setPage(1);
+          appointmentsTable.resetPage();
           setStatus(value);
         }}
         staffId={staffId}
         staffOptions={staffOptions}
         onStaffChange={(value) => {
-          setPage(1);
+          appointmentsTable.resetPage();
           setStaffId(value);
         }}
-        page={paginationMeta?.currentPage ?? page}
-        perPage={paginationMeta?.perPage ?? HISTORY_PAGE_SIZE}
-        totalItems={paginationMeta?.total ?? 0}
-        totalPages={Math.max(paginationMeta?.lastPage ?? 0, 1)}
-        onPageChange={setPage}
+        page={appointmentsTable.page}
+        perPage={appointmentsTable.perPage}
+        totalItems={appointmentsTable.totalItems}
+        totalPages={appointmentsTable.totalPages}
+        onPageChange={appointmentsTable.setPage}
       />
     </div>
   );

@@ -12,7 +12,6 @@ import {
 import { buildUrl, get } from "@/lib/http";
 import type { Client } from "@/pages/user/clients/types";
 import type { Sale } from "@/pages/user/sales/types";
-import type { PaginatedResponse } from "@/types/api";
 import { normalizeSale } from "@/utils/normalize-sales";
 
 const CLIENTS_TTL_MS = 1000 * 60 * 5;
@@ -47,11 +46,11 @@ interface UseSalonLoyaltyDataOptions {
   includeSales?: boolean;
 }
 
-type ListResponse<T> = PaginatedResponse<T> | T[];
-
 const LoyaltyContext = createContext<LoyaltyContextValue | undefined>(undefined);
 
-const extractArray = <T,>(response: ListResponse<T> | null | undefined): T[] => {
+const extractArray = <T,>(
+  response: T[] | { data?: T[] } | null | undefined,
+): T[] => {
   if (!response) return [];
   if (Array.isArray(response)) return response;
   return Array.isArray(response.data) ? response.data : [];
@@ -117,7 +116,7 @@ export function LoyaltyProvider({ children }: LoyaltyProviderProps) {
 
     const request = (async () => {
       try {
-        const response = await get<ListResponse<Client>>(
+        const response = await get<Client[] | { data?: Client[] }>(
           buildUrl("clients", { salonId: normalizedSalonId, perPage: 10 }),
         );
         const clients = extractArray(response);
@@ -160,7 +159,7 @@ export function LoyaltyProvider({ children }: LoyaltyProviderProps) {
 
     const request = (async () => {
       try {
-        const response = await get<ListResponse<Sale>>(
+        const response = await get<Sale[] | { data?: Sale[] }>(
           buildUrl("sales", {
             salonId: normalizedSalonId,
             perPage: 10,

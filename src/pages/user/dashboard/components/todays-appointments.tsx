@@ -3,16 +3,15 @@ import { Clock } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/badge";
 import type { Appointment } from "@/pages/user/agenda/types";
-import type { PaginatedResponse } from "@/types/api";
 import { getTodaysAppointments, statusColors } from "./utils";
 
 interface TodaysAppointmentsProps {
-  appointments?: PaginatedResponse<Appointment>;
+  appointments?: Appointment[];
 }
 export function TodaysAppointments({ appointments }: TodaysAppointmentsProps) {
   const { t } = useTranslation();
 
-  const allAppointments = appointments?.data || [];
+  const allAppointments = appointments || [];
   const todaysAppointments = getTodaysAppointments(allAppointments);
 
   return (

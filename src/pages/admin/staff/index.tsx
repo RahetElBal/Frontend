@@ -6,7 +6,7 @@ import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/lib/toast";
 import type { StaffSchedule } from "./types";
-import { useGet, withParams } from "@/hooks/useGet";
+import { useGet } from "@/hooks/useGet";
 import { usePost } from "@/hooks/usePost";
 import { useSalonStaff } from "@/contexts/StaffProvider";
 import { useUser } from "@/hooks/useUser";
@@ -32,10 +32,11 @@ export function StaffPage() {
 
   // NOTE: These endpoints are not yet implemented in the backend API
   // For now, we'll use empty arrays as fallback
-  const { data: schedulesResponse } = useGet<StaffSchedule[]>(
-    withParams("staff-schedules", { salonId }),
-    { enabled: !!salonId },
-  );
+  const { data: schedulesResponse } = useGet<StaffSchedule[]>({
+    path: "staff-schedules",
+    query: { salonId },
+    options: { enabled: !!salonId },
+  });
   const schedules = Array.isArray(schedulesResponse) ? schedulesResponse : [];
 
   // Mutations - NOTE: These endpoints need to be implemented in backend

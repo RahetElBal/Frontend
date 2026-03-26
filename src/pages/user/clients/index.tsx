@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Plus } from "lucide-react";
 
@@ -13,9 +13,7 @@ import type { ClientModalState } from "./types";
 import { clientFormSchema, type ClientFormData } from "./components/validation";
 import { getClientColumns } from "./components/list/columns";
 import { useUser } from "@/hooks/useUser";
-import type { PaginatedResponse } from "@/types/api";
-import { useGet, withParams } from "@/hooks/useGet";
-import { useServerTableState } from "@/hooks/useServerTableState";
+import { useTable } from "@/hooks/useTable";
 
 const CLIENTS_PAGE_SIZE = 20;
 
@@ -27,43 +25,29 @@ export function ClientsPage() {
   const [modalState, setModalState] = useState<ClientModalState>(null);
 
   const salonId = user?.salon?.id;
-  const clientsStaleTime = 1000 * 60 * 10;
-  const regularState = useServerTableState();
-  const walkInState = useServerTableState();
-
-  const {
-    data: regularClientsResponse,
-    isLoading: isRegularClientsLoading,
-    isFetching: isRegularClientsFetching,
-    refetch: refetchRegularClients,
-  } = useGet<PaginatedResponse<Client>>(
-    withParams("clients", {
+  const regularTable = useTable<Client>({
+    path: "clients",
+    query: {
       salonId,
-      search: regularState.search || undefined,
-      skip: (regularState.page - 1) * CLIENTS_PAGE_SIZE,
-      limit: CLIENTS_PAGE_SIZE,
       includeMetrics: true,
       walkIn: false,
-    }),
-    { enabled: !!salonId, staleTime: clientsStaleTime },
-  );
+    },
+    enabled: !!salonId,
+    initialPerPage: CLIENTS_PAGE_SIZE,
+    options: { staleTime: 1000 * 60 * 10 },
+  });
 
-  const {
-    data: walkInClientsResponse,
-    isLoading: isWalkInClientsLoading,
-    isFetching: isWalkInClientsFetching,
-    refetch: refetchWalkInClients,
-  } = useGet<PaginatedResponse<Client>>(
-    withParams("clients", {
+  const walkInTable = useTable<Client>({
+    path: "clients",
+    query: {
       salonId,
-      search: walkInState.search || undefined,
-      skip: (walkInState.page - 1) * CLIENTS_PAGE_SIZE,
-      limit: CLIENTS_PAGE_SIZE,
       includeMetrics: true,
       walkIn: true,
-    }),
-    { enabled: !!salonId, staleTime: clientsStaleTime },
-  );
+    },
+    enabled: !!salonId,
+    initialPerPage: CLIENTS_PAGE_SIZE,
+    options: { staleTime: 1000 * 60 * 10 },
+  });
 
   const normalizeClients = useMemo(
     () => (clients: Client[]) =>
@@ -84,46 +68,24 @@ export function ClientsPage() {
   );
 
   const regularClients = useMemo(
-    () => normalizeClients(regularClientsResponse?.data ?? []),
-    [normalizeClients, regularClientsResponse],
+    () => normalizeClients(regularTable.items),
+    [normalizeClients, regularTable.items],
   );
   const walkInClients = useMemo(
-    () => normalizeClients(walkInClientsResponse?.data ?? []),
-    [normalizeClients, walkInClientsResponse],
+    () => normalizeClients(walkInTable.items),
+    [normalizeClients, walkInTable.items],
   );
-  const regularMeta = regularClientsResponse?.meta;
-  const walkInMeta = walkInClientsResponse?.meta;
-  const totalClientsCount = (regularMeta?.total ?? 0) + (walkInMeta?.total ?? 0);
+  const totalClientsCount = regularTable.totalItems + walkInTable.totalItems;
   const clientsWithMetrics = useMemo(
     () => [...regularClients, ...walkInClients],
     [regularClients, walkInClients],
   );
   const showRegularClientsLoading =
-    (isRegularClientsLoading || isRegularClientsFetching) &&
+    (regularTable.isLoading || regularTable.isFetching) &&
     regularClients.length === 0;
   const showWalkInClientsLoading =
-    (isWalkInClientsLoading || isWalkInClientsFetching) &&
+    (walkInTable.isLoading || walkInTable.isFetching) &&
     walkInClients.length === 0;
-
-  useEffect(() => {
-    if (!regularMeta) return;
-
-    const lastPage =
-      regularMeta.total > 0 ? Math.max(1, regularMeta.lastPage) : 1;
-    if (regularState.page > lastPage) {
-      regularState.setPage(lastPage);
-    }
-  }, [regularMeta, regularState.page, regularState.setPage]);
-
-  useEffect(() => {
-    if (!walkInMeta) return;
-
-    const lastPage =
-      walkInMeta.total > 0 ? Math.max(1, walkInMeta.lastPage) : 1;
-    if (walkInState.page > lastPage) {
-      walkInState.setPage(lastPage);
-    }
-  }, [walkInMeta, walkInState.page, walkInState.setPage]);
 
   const form = useForm<ClientFormData>({
     schema: clientFormSchema,
@@ -181,19 +143,19 @@ export function ClientsPage() {
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold">{t("nav.clients")}</h2>
           <span className="text-sm text-muted-foreground">
-            {regularMeta?.total ?? 0}
+            {regularTable.totalItems}
           </span>
         </div>
         <ServerDataTable
           items={regularClients}
           columns={columns}
-          search={regularState.searchInput}
-          onSearchChange={regularState.setSearchInput}
-          page={regularState.page}
-          perPage={regularMeta?.perPage ?? CLIENTS_PAGE_SIZE}
-          totalItems={regularMeta?.total ?? 0}
-          totalPages={Math.max(regularMeta?.lastPage ?? 0, 1)}
-          onPageChange={regularState.setPage}
+          search={regularTable.searchInput}
+          onSearchChange={regularTable.setSearchInput}
+          page={regularTable.page}
+          perPage={regularTable.perPage}
+          totalItems={regularTable.totalItems}
+          totalPages={regularTable.totalPages}
+          onPageChange={regularTable.setPage}
           searchPlaceholder={t("clients.searchPlaceholder")}
           emptyMessage={t("clients.noClients")}
           loading={showRegularClientsLoading}
@@ -204,19 +166,19 @@ export function ClientsPage() {
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold">{t("agenda.walkIn")}</h2>
           <span className="text-sm text-muted-foreground">
-            {walkInMeta?.total ?? 0}
+            {walkInTable.totalItems}
           </span>
         </div>
         <ServerDataTable
           items={walkInClients}
           columns={columns}
-          search={walkInState.searchInput}
-          onSearchChange={walkInState.setSearchInput}
-          page={walkInState.page}
-          perPage={walkInMeta?.perPage ?? CLIENTS_PAGE_SIZE}
-          totalItems={walkInMeta?.total ?? 0}
-          totalPages={Math.max(walkInMeta?.lastPage ?? 0, 1)}
-          onPageChange={walkInState.setPage}
+          search={walkInTable.searchInput}
+          onSearchChange={walkInTable.setSearchInput}
+          page={walkInTable.page}
+          perPage={walkInTable.perPage}
+          totalItems={walkInTable.totalItems}
+          totalPages={walkInTable.totalPages}
+          onPageChange={walkInTable.setPage}
           searchPlaceholder={t("clients.searchPlaceholder")}
           emptyMessage={t("clients.noClients")}
           loading={showWalkInClientsLoading}
@@ -229,8 +191,8 @@ export function ClientsPage() {
         clients={clientsWithMetrics}
         form={form}
         onSuccess={() => {
-          void refetchRegularClients();
-          void refetchWalkInClients();
+          void regularTable.refetch();
+          void walkInTable.refetch();
         }}
       />
     </div>

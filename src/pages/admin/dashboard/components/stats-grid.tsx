@@ -3,14 +3,12 @@ import { Building2, Users, DollarSign, Activity } from "lucide-react";
 import { StatsCard } from "@/components/stats-card";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useUser } from "@/hooks/useUser";
-import type { PaginatedResponse } from "@/types/api";
 import type { Salon } from "@/pages/admin/salon/types";
-import type { User } from "@/pages/admin/users/types";
 import { AdminStatsGrid } from "@/pages/admin/components/stats-grid";
 
 interface StatsGridProps {
   salonsData?: Salon[];
-  usersData?: PaginatedResponse<User>;
+  usersTotal?: number;
   loading?: boolean;
   revenueData?: {
     gross: number;
@@ -21,7 +19,7 @@ interface StatsGridProps {
 
 export function StatsGrid({
   salonsData,
-  usersData,
+  usersTotal = 0,
   loading = false,
   revenueData,
 }: StatsGridProps) {
@@ -29,7 +27,6 @@ export function StatsGrid({
   const { formatCurrency } = useLanguage();
   const { isSuperadmin } = useUser();
   const totalSalons = salonsData?.length || 0;
-  const totalUsers = usersData?.meta.total || 0;
   const activeSubscriptions = salonsData?.filter((s) => s.isActive).length || 0;
   const grossRevenue = revenueData?.gross || 0;
   const netRevenue = revenueData?.net || 0;
@@ -50,7 +47,7 @@ export function StatsGrid({
       )}
       <StatsCard
         title={t("admin.stats.totalUsers")}
-        value={totalUsers}
+        value={usersTotal}
         loading={loading}
         icon={Users}
         iconColor="text-accent-blue"

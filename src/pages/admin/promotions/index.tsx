@@ -34,7 +34,7 @@ import { cn } from "@/lib/utils";
 import type { Promotion } from "./types";
 import type { PromotionStatus } from "./enum";
 import { usePost } from "@/hooks/usePost";
-import { useGet, withParams } from "@/hooks/useGet";
+import { useGet } from "@/hooks/useGet";
 import { PromotionModal } from "./components/dialog/promotion-modal";
 import type { CreatePromotionDto } from "./types";
 import {
@@ -63,10 +63,11 @@ export function PromotionsPage() {
   const salonId = user?.salon?.id;
 
   // Fetch promotions - NOTE: This endpoint needs to be implemented in backend
-  const { data: promotions = [], isLoading } = useGet<Promotion[]>(
-    withParams("promotions", { salonId }),
-    { enabled: !!salonId },
-  );
+  const { data: promotions = [], isLoading } = useGet<Promotion[]>({
+    path: "promotions",
+    query: { salonId },
+    options: { enabled: !!salonId },
+  });
 
   // Mutations - NOTE: These endpoints need to be implemented in backend
   const createPromotion = usePost<Promotion, CreatePromotionDto & { salonId: string }>(

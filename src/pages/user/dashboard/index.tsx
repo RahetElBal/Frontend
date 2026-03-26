@@ -7,10 +7,9 @@ import { useSalonBusinessSummary } from "@/contexts/BusinessSummaryProvider";
 import { TodaysAppointments } from "./components/todays-appointments";
 import { TopServices } from "./components/top-services";
 import { StatsGrid } from "./components/stats-grid";
-import type { PaginatedResponse } from "@/types/api";
 import type { Appointment } from "@/pages/user/agenda/types";
 import type { Client } from "@/pages/user/clients/types";
-import { useGet, withParams } from "@/hooks/useGet";
+import { useGet } from "@/hooks/useGet";
 import { getLocalDateString } from "./components/utils";
 
 export function DashboardPage() {
@@ -33,15 +32,45 @@ export function DashboardPage() {
     { enabled: !!salonId },
   );
 
-  const { data: appointmentsData } = useGet<PaginatedResponse<Appointment>>(
-    withParams("appointments", appointmentsParams),
-    { enabled: !!salonId && !!today },
-  );
+  const { data: appointments = [] } = useGet<Appointment[]>({
+    path: "appointments",
+    query: appointmentsParams,
+    options: {
+      enabled: !!salonId && !!today,
+      select: (response) => {
+        const normalizedResponse = response as
+          | { data?: Appointment[] }
+          | Appointment[];
 
-  const { data: clientsData, isLoading: isClientsLoading } = useGet<PaginatedResponse<Client>>(
-    withParams("clients", { salonId, perPage: 10 }),
-    { enabled: !!salonId },
-  );
+        if (Array.isArray(normalizedResponse)) {
+          return normalizedResponse;
+        }
+
+        return Array.isArray(normalizedResponse?.data)
+          ? normalizedResponse.data
+          : [];
+      },
+    },
+  });
+
+  const { data: clients = [], isLoading: isClientsLoading } = useGet<Client[]>({
+    path: "clients",
+    query: { salonId, perPage: 10 },
+    options: {
+      enabled: !!salonId,
+      select: (response) => {
+        const normalizedResponse = response as { data?: Client[] } | Client[];
+
+        if (Array.isArray(normalizedResponse)) {
+          return normalizedResponse;
+        }
+
+        return Array.isArray(normalizedResponse?.data)
+          ? normalizedResponse.data
+          : [];
+      },
+    },
+  });
 
   const statsLoading = isSummaryLoading || isClientsLoading;
 
@@ -54,8 +83,6 @@ export function DashboardPage() {
   }
 
   const displayName = user?.name ?? user?.email;
-  const clients = clientsData?.data || [];
-
   return (
     <div className="space-y-8">
       <PageHeader
@@ -69,7 +96,7 @@ export function DashboardPage() {
         loading={statsLoading}
       />
 
-      <TodaysAppointments appointments={appointmentsData} />
+      <TodaysAppointments appointments={appointments} />
       <TopServices />
     </div>
   );

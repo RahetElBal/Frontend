@@ -1,6 +1,8 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from "react";
+import type { UseQueryOptions } from "@tanstack/react-query";
+import { useGet } from "@/hooks/useGet";
 
-export type SortDirection = 'asc' | 'desc';
+export type SortDirection = "asc" | "desc";
 
 export interface SortConfig {
   key: string;
@@ -18,7 +20,14 @@ export interface TableFilters {
   [key: string]: string | number | boolean | undefined;
 }
 
-export interface UseTableOptions<T> {
+interface TableMeta {
+  currentPage?: number;
+  lastPage?: number;
+  perPage?: number;
+  total?: number;
+}
+
+interface UseClientTableOptions<T> {
   data: T[];
   initialPage?: number;
   initialPerPage?: number;
@@ -26,6 +35,24 @@ export interface UseTableOptions<T> {
   initialFilters?: TableFilters;
   searchKeys?: (keyof T)[];
 }
+
+interface UseServerTableOptions<T> {
+  path: string;
+  query?: TableFilters;
+  enabled?: boolean;
+  initialPage?: number;
+  initialPerPage?: number;
+  initialSort?: SortConfig;
+  initialFilters?: TableFilters;
+  options?: Omit<
+    UseQueryOptions<{ items: T[]; meta?: TableMeta }, Error>,
+    "queryKey" | "queryFn" | "select"
+  >;
+}
+
+export type UseTableOptions<T> =
+  | UseClientTableOptions<T>
+  | UseServerTableOptions<T>;
 
 export interface UseTableReturn<T> {
   // Data
@@ -39,10 +66,12 @@ export interface UseTableReturn<T> {
   totalItems: number;
   setPage: (page: number) => void;
   setPerPage: (perPage: number) => void;
+  resetPage: () => void;
   nextPage: () => void;
   prevPage: () => void;
   canNextPage: boolean;
   canPrevPage: boolean;
+  meta?: TableMeta;
   
   // Sorting
   sort: SortConfig | null;
@@ -56,7 +85,9 @@ export interface UseTableReturn<T> {
   setFilters: (filters: TableFilters) => void;
   clearFilters: () => void;
   search: string;
+  searchInput: string;
   setSearch: (search: string) => void;
+  setSearchInput: (search: string) => void;
   
   // Selection
   selectedIds: string[];
@@ -69,6 +100,12 @@ export interface UseTableReturn<T> {
   isAllSelected: boolean;
   isSomeSelected: boolean;
   selectedCount: number;
+
+  // Request state
+  isLoading: boolean;
+  isFetching: boolean;
+  error: Error | null;
+  refetch: () => Promise<unknown>;
 }
 
 /**
@@ -97,27 +134,45 @@ export interface UseTableReturn<T> {
 export function useTable<T extends { id: string }>(
   options: UseTableOptions<T>
 ): UseTableReturn<T> {
+  const isServerTable = "path" in options;
   const {
-    data,
     initialPage = 1,
     initialPerPage = 10,
     initialSort,
     initialFilters = {},
-    searchKeys = [],
   } = options;
+  const searchKeys = "searchKeys" in options ? options.searchKeys || [] : [];
 
   // State
   const [page, setPage] = useState(initialPage);
   const [perPage, setPerPage] = useState(initialPerPage);
   const [sort, setSort] = useState<SortConfig | null>(initialSort || null);
   const [filters, setFiltersState] = useState<TableFilters>(initialFilters);
+  const [searchInput, setSearchInputState] = useState(
+    initialFilters.search || ""
+  );
+  const [search, setSearchValue] = useState((initialFilters.search || "").trim());
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      const normalizedSearch = searchInput.trim();
+      setSearchValue((previousSearch) =>
+        previousSearch === normalizedSearch ? previousSearch : normalizedSearch
+      );
+      setPage((previousPage) => (previousPage === 1 ? previousPage : 1));
+    }, 300);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [searchInput]);
+
   // Search
-  const search = filters.search || '';
   const setSearch = useCallback((value: string) => {
-    setFiltersState((prev) => ({ ...prev, search: value }));
-    setPage(1);
+    setSearchInputState(value);
+  }, []);
+
+  const setSearchInput = useCallback((value: string) => {
+    setSearchInputState(value);
   }, []);
 
   // Filter
@@ -128,11 +183,15 @@ export function useTable<T extends { id: string }>(
 
   const setFilters = useCallback((newFilters: TableFilters) => {
     setFiltersState(newFilters);
+    if (typeof newFilters.search === "string") {
+      setSearchInputState(newFilters.search);
+    }
     setPage(1);
   }, []);
 
   const clearFilters = useCallback(() => {
     setFiltersState({});
+    setSearchInputState("");
     setPage(1);
   }, []);
 
@@ -161,42 +220,92 @@ export function useTable<T extends { id: string }>(
     [sort]
   );
 
+  const serverQuery = useMemo(() => {
+    if (!isServerTable) return undefined;
+
+    const { search: _searchFilter, ...otherFilters } = filters;
+    return {
+      ...(options.query ?? {}),
+      ...otherFilters,
+      ...(search ? { search } : {}),
+      ...(sort ? { sortBy: sort.key, sortOrder: sort.direction } : {}),
+      skip: (page - 1) * perPage,
+      limit: perPage,
+    };
+  }, [filters, isServerTable, options, page, perPage, search, sort]);
+
+  const {
+    data: serverData,
+    isLoading,
+    isFetching,
+    error,
+    refetch,
+  } = useGet<{ items: T[]; meta?: TableMeta }>({
+    path: isServerTable ? options.path : "__disabled_table__",
+    query: serverQuery,
+    options: {
+      ...(isServerTable ? options.options : undefined),
+      enabled: isServerTable ? (options.enabled ?? true) : false,
+      select: (response) => {
+        const normalizedResponse = response as
+          | { data?: T[]; meta?: TableMeta }
+          | T[];
+
+        if (Array.isArray(normalizedResponse)) {
+          return {
+            items: normalizedResponse,
+            meta: undefined,
+          };
+        }
+
+        return {
+          items: Array.isArray(normalizedResponse?.data)
+            ? normalizedResponse.data
+            : [],
+          meta: normalizedResponse?.meta,
+        };
+      },
+    },
+  });
+
   // Apply filters and search
   const filteredData = useMemo(() => {
-    let result = [...data];
+    if (isServerTable) {
+      return serverData?.items ?? [];
+    }
 
-    // Apply search
-    if (search && searchKeys.length > 0) {
-      const searchLower = search.toLowerCase();
-      result = result.filter((item) =>
-        searchKeys.some((key) => {
+    const result = [...options.data];
+
+    return result.filter((item) => {
+      if (search && searchKeys.length > 0) {
+        const searchLower = search.toLowerCase();
+        const matchesSearch = searchKeys.some((key) => {
           const value = item[key];
-          if (typeof value === 'string') {
+          if (typeof value === "string") {
             return value.toLowerCase().includes(searchLower);
           }
-          if (typeof value === 'number') {
+          if (typeof value === "number") {
             return value.toString().includes(searchLower);
           }
           return false;
-        })
-      );
-    }
+        });
 
-    // Apply other filters
-    Object.entries(filters).forEach(([key, value]) => {
-      if (key === 'search' || value === undefined) return;
-      result = result.filter((item) => {
+        if (!matchesSearch) {
+          return false;
+        }
+      }
+
+      return Object.entries(filters).every(([key, value]) => {
+        if (key === "search" || value === undefined) return true;
         const itemValue = (item as Record<string, unknown>)[key];
         return itemValue === value;
       });
     });
-
-    return result;
-  }, [data, search, filters, searchKeys]);
+  }, [filters, isServerTable, options, search, searchKeys, serverData?.items]);
 
   // Apply sorting
   const sortedData = useMemo(() => {
-    if (!sort) return filteredData;
+    if (isServerTable || !sort) return filteredData;
 
     return [...filteredData].sort((a, b) => {
       const aValue = (a as Record<string, unknown>)[sort.key];
@@ -207,9 +316,9 @@ export function useTable<T extends { id: string }>(
       if (bValue === null || bValue === undefined) return -1;
 
       let comparison = 0;
-      if (typeof aValue === 'string' && typeof bValue === 'string') {
+      if (typeof aValue === "string" && typeof bValue === "string") {
         comparison = aValue.localeCompare(bValue);
-      } else if (typeof aValue === 'number' && typeof bValue === 'number') {
+      } else if (typeof aValue === "number" && typeof bValue === "number") {
         comparison = aValue - bValue;
       } else if (aValue instanceof Date && bValue instanceof Date) {
         comparison = aValue.getTime() - bValue.getTime();
@@ -217,15 +326,29 @@ export function useTable<T extends { id: string }>(
         comparison = String(aValue).localeCompare(String(bValue));
       }
 
-      return sort.direction === 'asc' ? comparison : -comparison;
+      return sort.direction === "asc" ? comparison : -comparison;
     });
-  }, [filteredData, sort]);
+  }, [filteredData, isServerTable, sort]);
+
+  const meta = isServerTable ? serverData?.meta : undefined;
+
+  useEffect(() => {
+    if (!meta?.lastPage) return;
+    const lastPage = Math.max(1, meta.lastPage);
+    if (page > lastPage) {
+      setPage(lastPage);
+    }
+  }, [meta?.lastPage, page]);
 
   // Pagination
-  const totalItems = sortedData.length;
-  const totalPages = Math.ceil(totalItems / perPage);
+  const totalItems = isServerTable ? meta?.total ?? filteredData.length : sortedData.length;
+  const totalPages = isServerTable
+    ? Math.max(meta?.lastPage ?? 1, 1)
+    : Math.max(Math.ceil(totalItems / perPage), 1);
   const startIndex = (page - 1) * perPage;
-  const items = sortedData.slice(startIndex, startIndex + perPage);
+  const items = isServerTable
+    ? filteredData
+    : sortedData.slice(startIndex, startIndex + perPage);
 
   const canNextPage = page < totalPages;
   const canPrevPage = page > 1;
@@ -241,6 +364,10 @@ export function useTable<T extends { id: string }>(
   const handleSetPerPage = useCallback((newPerPage: number) => {
     setPerPage(newPerPage);
     setPage(1);
+  }, []);
+
+  const resetPage = useCallback(() => {
+    setPage((previousPage) => (previousPage === 1 ? previousPage : 1));
   }, []);
 
   // Selection
@@ -277,19 +404,21 @@ export function useTable<T extends { id: string }>(
   return {
     // Data
     items,
-    allItems: sortedData,
+    allItems: isServerTable ? filteredData : sortedData,
     
     // Pagination
-    page,
-    perPage,
+    page: meta?.currentPage ?? page,
+    perPage: meta?.perPage ?? perPage,
     totalPages,
     totalItems,
     setPage,
     setPerPage: handleSetPerPage,
+    resetPage,
     nextPage,
     prevPage,
     canNextPage,
     canPrevPage,
+    meta,
     
     // Sorting
     sort,
@@ -303,7 +432,9 @@ export function useTable<T extends { id: string }>(
     setFilters,
     clearFilters,
     search,
+    searchInput,
     setSearch,
+    setSearchInput,
     
     // Selection
     selectedIds,
@@ -316,5 +447,16 @@ export function useTable<T extends { id: string }>(
     isAllSelected,
     isSomeSelected,
     selectedCount: selectedIds.length,
+
+    // Request state
+    isLoading,
+    isFetching,
+    error,
+    refetch: async () => {
+      if (!isServerTable) {
+        return [];
+      }
+      return refetch();
+    },
   };
 }

@@ -28,9 +28,6 @@ const getCurrentPosition = async (): Promise<GeoCoordinates> => {
   };
 };
 
-const buildReverseGeocodeUrl = ({ latitude, longitude }: GeoCoordinates) =>
-  `${NOMINATIM_URL}?format=jsonv2&lat=${latitude}&lon=${longitude}`;
-
 const mapGeoAddress = (data: ReverseGeocodeResponse): GeoAddress => ({
   displayAddress: data.display_name,
   city: data.address?.city || data.address?.town || data.address?.village,
@@ -44,17 +41,24 @@ export function useDetectAddress() {
   const [requestToken, setRequestToken] = useState(0);
   const pendingRequestRef = useRef<PendingGeoAddressRequest | null>(null);
 
-  const query = useGet<ReverseGeocodeResponse, GeoAddress>(
-    coords ? buildReverseGeocodeUrl(coords) : `${NOMINATIM_URL}?format=jsonv2`,
-    {
+  const query = useGet<GeoAddress>({
+    path: NOMINATIM_URL,
+    query: coords
+      ? {
+          format: "jsonv2",
+          lat: coords.latitude,
+          lon: coords.longitude,
+        }
+      : { format: "jsonv2" },
+    options: {
       enabled: !!coords,
       retry: false,
       staleTime: 1000 * 60 * 5,
       refetchOnWindowFocus: false,
       refetchOnReconnect: false,
-      select: mapGeoAddress,
+      select: (data) => mapGeoAddress(data as ReverseGeocodeResponse),
     },
-  );
+  });
 
   useEffect(() => {
     if (!pendingRequestRef.current || requestToken === 0) {

@@ -13,7 +13,6 @@ import { useAuthContext } from "@/contexts/AuthProvider";
 import { buildUrl, get } from "@/lib/http";
 import type { Service } from "@/pages/user/services/types";
 import type { Salon } from "@/pages/admin/salon/types";
-import type { PaginatedResponse } from "@/types/api";
 import type { AuthUser } from "@/types/user";
 
 const SERVICES_CACHE_TTL_MS = 1000 * 60 * 30;
@@ -46,9 +45,9 @@ const ServicesContext = createContext<ServicesContextValue | undefined>(
   undefined,
 );
 
-type ServicesApiResponse = PaginatedResponse<Service> | Service[];
-
-const extractServices = (response: ServicesApiResponse | null | undefined) => {
+const extractServices = (
+  response: Service[] | { data?: Service[] } | null | undefined,
+) => {
   if (Array.isArray(response)) return response;
   if (Array.isArray(response?.data)) return response.data;
   return [];
@@ -117,7 +116,7 @@ export function ServicesProvider({ children }: ServicesProviderProps) {
 
       const request = (async () => {
         try {
-          const response = await get<ServicesApiResponse>(
+          const response = await get<Service[] | { data?: Service[] }>(
             buildUrl("services", {
               salonId: normalizedSalonId,
               perPage: 100,

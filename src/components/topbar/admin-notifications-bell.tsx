@@ -21,14 +21,13 @@ import {
   playNotificationSound,
   primeNotificationSound,
 } from "@/lib/notifications";
-import { useGet, withParams } from "@/hooks/useGet";
+import { useGet } from "@/hooks/useGet";
 import { usePost } from "@/hooks/usePost";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useUser } from "@/hooks/useUser";
 import { AUTH_STORAGE_KEY } from "@/constants/auth";
 import { ROUTES } from "@/constants/navigation";
 import { API_BASE_URL } from "@/lib/http";
-import type { PaginatedResponse } from "@/types/api";
 import { AdminNotificationType } from "@/pages/user/notifications/enum";
 import type { AdminNotification } from "@/pages/user/notifications/types";
 
@@ -106,35 +105,56 @@ export function AdminNotificationsBell() {
     [notificationsPerPage, salonId],
   );
 
-  const { data: notificationsData, isLoading: isNotificationsLoading } =
-    useGet<
-      PaginatedResponse<AdminNotification> & {
-        meta?: {
-          currentPage: number;
-          lastPage: number;
-          perPage: number;
-          total: number;
-          unreadCount?: number;
-        };
-      }
-    >(
-      withParams("notifications", notificationsParams),
-      {
+  const { data: notifications = [], isLoading: isNotificationsLoading } =
+    useGet<AdminNotification[]>({
+      path: "notifications",
+      query: notificationsParams,
+      options: {
         enabled: canShow,
         staleTime: 1000 * 30,
         refetchInterval: !isStreamConnected ? NOTIFICATIONS_POLL_MS : false,
-      },
-    );
+        select: (response) => {
+          const normalizedResponse = response as
+            | { data?: AdminNotification[] }
+            | AdminNotification[];
 
-  const notifications = notificationsData?.data ?? [];
+          if (Array.isArray(normalizedResponse)) {
+            return normalizedResponse;
+          }
+
+          return Array.isArray(normalizedResponse?.data)
+            ? normalizedResponse.data
+            : [];
+        },
+      },
+    });
+  const { data: unreadCountFromMeta = 0 } = useGet<number>({
+    path: "notifications",
+    query: {
+      salonId,
+      perPage: 1,
+      includeUnreadCount: true,
+    },
+    options: {
+      enabled: canShow,
+      staleTime: 1000 * 30,
+      refetchInterval: !isStreamConnected ? NOTIFICATIONS_POLL_MS : false,
+      select: (response) => {
+        const normalizedResponse = response as {
+          meta?: { unreadCount?: number };
+        };
+
+        return typeof normalizedResponse?.meta?.unreadCount === "number"
+          ? normalizedResponse.meta.unreadCount
+          : 0;
+      },
+    },
+  });
+
   const unreadCountFromList = notifications.reduce(
     (count, notification) => count + (notification.readAt ? 0 : 1),
     0,
   );
-  const unreadCountFromMeta =
-    typeof notificationsData?.meta?.unreadCount === "number"
-      ? notificationsData.meta.unreadCount
-      : 0;
   const unreadCount = Math.max(unreadCountFromMeta, unreadCountFromList);
   const notificationsForDropdown = notifications.slice(0, 8);
 

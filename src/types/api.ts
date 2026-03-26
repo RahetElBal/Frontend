@@ -14,27 +14,3 @@ export interface ApiError {
   status?: number;
   errors?: Record<string, string[]>;
 }
-
-export interface PaginatedResponse<T> {
-  data: T[];
-  meta: PaginationMeta;
-}
-
-export interface PaginationMeta {
-  currentPage: number;
-  lastPage: number;
-  perPage: number;
-  total: number;
-  limit?: number;
-  skip?: number;
-}
-
-export interface PaginationParams {
-  page?: number;
-  perPage?: number;
-  skip?: number;
-  limit?: number;
-  search?: string;
-  sortBy?: string;
-  sortOrder?: 'asc' | 'desc';
-}
