@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { Users } from "lucide-react";
+import { AppRole } from "@/constants/enum";
 import { useUser } from "@/hooks/useUser";
 import type { User } from "@/types";
 import { formatDate } from "@/common/utils";
@@ -45,7 +46,7 @@ export function RecentUsersCard({ users }: RecentUsersCardProps) {
                 <p className="font-medium truncate">{user.name}</p>
                 <span
                   className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                    user.role === "admin"
+                    user.role === AppRole.ADMIN
                       ? "bg-purple-100 text-purple-800"
                       : "bg-blue-100 text-blue-800"
                   }`}

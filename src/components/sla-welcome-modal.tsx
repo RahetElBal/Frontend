@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import { AppRole } from "@/constants/enum";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -27,7 +28,7 @@ export function SlaWelcomeModal() {
   const salon = user?.salon;
   const shouldShow = useMemo(() => {
     if (!user || !salon) return false;
-    if (user.role !== "admin") return false;
+    if (user.role !== AppRole.ADMIN) return false;
     const acceptedVersion = salon.slaAcceptedVersion ?? 0;
     return !salon.slaAcceptedAt || acceptedVersion < SLA_VERSION;
   }, [user, salon]);

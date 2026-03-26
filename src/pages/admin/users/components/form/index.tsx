@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import type { UseFormReturn } from "react-hook-form";
 import { Controller } from "react-hook-form";
+import { AppRole } from "@/constants/enum";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -138,7 +139,10 @@ export function UserForm({
               {getErrorMessage(form.formState.errors.phone.message as string)}
             </p>
           )}
-          {!isSuperadmin && isCreateMode && currentRole === "user" && isProLikePlan ? (
+          {!isSuperadmin &&
+          isCreateMode &&
+          currentRole === AppRole.USER &&
+          isProLikePlan ? (
             <p className="text-xs text-muted-foreground">
               Offre Pro: demandez le numero WhatsApp du membre pour recevoir les rappels automatiques.
             </p>
@@ -149,7 +153,7 @@ export function UserForm({
         <div className="space-y-2">
           <Label>{t("fields.role")}</Label>
           <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50">
-            {currentRole === "admin" ? (
+            {currentRole === AppRole.ADMIN ? (
               <>
                 <UserCog className="h-5 w-5 text-accent-pink" />
                 <div>
@@ -174,7 +178,7 @@ export function UserForm({
         </div>
 
         {/* Salon Selection - Only for Superadmin creating Admin */}
-        {isSuperadmin && currentRole === "admin" && isCreateMode && (
+        {isSuperadmin && currentRole === AppRole.ADMIN && isCreateMode && (
           <div className="space-y-2">
             <Label htmlFor="salon">{t("fields.salon")}</Label>
             {salons.length === 0 ? (
@@ -224,7 +228,7 @@ export function UserForm({
         )}
 
         {/* Info message for Admin creating User - Salon auto-assigned */}
-        {!isSuperadmin && currentRole === "user" && isCreateMode && (
+        {!isSuperadmin && currentRole === AppRole.USER && isCreateMode && (
           <div className="p-4 rounded-lg border border-blue-200 bg-blue-50 text-blue-800">
             <div className="flex items-start gap-3">
               <Building2 className="h-5 w-5 mt-0.5" />
@@ -239,7 +243,7 @@ export function UserForm({
         )}
 
         {/* Info message for Superadmin creating Admin */}
-        {isSuperadmin && currentRole === "admin" && isCreateMode && (
+        {isSuperadmin && currentRole === AppRole.ADMIN && isCreateMode && (
           <div className="p-4 rounded-lg border border-purple-200 bg-purple-50 text-purple-800">
             <div className="flex items-start gap-3">
               <UserCog className="h-5 w-5 mt-0.5" />
@@ -254,7 +258,7 @@ export function UserForm({
           </div>
         )}
         {/* Advanced Permissions - Pro plan only, staff users only */}
-        {currentRole === "user" && (
+        {currentRole === AppRole.USER && (
           <ProFeatureGate featureKey="advancedPermissions" compact>
             <div className="space-y-3">
               <Label>{t("proFeatures.advancedPermissions.title")}</Label>

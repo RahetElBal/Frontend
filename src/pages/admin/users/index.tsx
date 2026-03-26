@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { UserPlus, UserCog } from "lucide-react";
 
+import { AppRole } from "@/constants/enum";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { ServerDataTable } from "@/components/table";
@@ -61,7 +62,7 @@ export function AdminUsersPage() {
   const { data: adminsCountResponse } = useGet<PaginatedResponse<User>>(
     withParams("users", {
       limit: 1,
-      role: "admin",
+      role: AppRole.ADMIN,
     }),
     {
       retry: 1,

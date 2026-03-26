@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { Outlet, Navigate } from "react-router-dom";
 
+import { AppRole } from "@/constants/enum";
 import { cn } from "@/lib/utils";
 import { AppSidebar } from "@/components/sidebar/app-sidebar";
 import { LoadingPanel } from "@/components/loading-panel";
@@ -10,7 +11,6 @@ import { PlanExpiryBanner } from "@/components/plan-expiry-banner";
 import { MainLayout } from "@/layouts/main-layout";
 import { useUser } from "@/hooks/useUser";
 import { ROUTES } from "@/constants/navigation";
-import type { AppRole } from "@/types/user";
 import type { Salon } from "@/types/entities";
 
 /**
@@ -40,7 +40,8 @@ export function UserLayout() {
   }
 
   // Check user roles
-  const isSuperadmin = user.isSuperadmin || user.role === "superadmin";
+  const isSuperadmin =
+    user.isSuperadmin || user.role === AppRole.SUPER_ADMIN;
   // Superadmin should use admin panel, not user routes
   // Redirect them to admin panel
   if (isSuperadmin) {
@@ -48,7 +49,7 @@ export function UserLayout() {
   }
 
   // Get user role
-  const userRole = (user.role || "user") as AppRole;
+  const userRole = user.role || AppRole.USER;
 
   return (
     <MainLayout>

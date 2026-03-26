@@ -1,9 +1,11 @@
+import { AppRole } from "@/constants/enum";
 import type { User, Salon } from "@/types/entities";
+import type { UserFormData } from "./form/validation";
 
 export type UserModalState = {
   userId: string | "create";
   mode: "view" | "edit" | "delete";
-  initialRole?: "user" | "admin";
+  initialRole?: UserFormData["role"];
   user?: User;
 } | null;
 
@@ -70,7 +72,7 @@ export function createUserModalHandlers(
       setModalState({
         userId: "create",
         mode: "edit",
-        initialRole: "admin",
+        initialRole: AppRole.ADMIN,
       });
     },
 
@@ -78,7 +80,7 @@ export function createUserModalHandlers(
       setModalState({
         userId: "create",
         mode: "edit",
-        initialRole: "user",
+        initialRole: AppRole.USER,
       });
     },
 

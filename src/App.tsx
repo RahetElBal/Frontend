@@ -14,9 +14,8 @@ import TermsPage from "@/routes/terms";
 import PrivacyPage from "@/routes/privacy";
 import { UserLayout } from "@/layouts/user-layout";
 import { AdminLayout } from "@/layouts/admin-layout";
+import { SuperadminLayout } from "@/layouts/superadmin-layout";
 import { ROUTES } from "@/constants/navigation";
-import { useUser } from "@/hooks/useUser";
-import { Spinner } from "@/components/spinner";
 
 const AdminDashboardPage = lazy(() => import("./pages/admin/dashboard"));
 const AdminUsersPage = lazy(() =>
@@ -105,25 +104,6 @@ function AgendaPageWrapper() {
   return <AgendaPage key={location.search} />;
 }
 
-function SuperadminSupportRoute() {
-  const { user, isLoading } = useUser();
-
-  if (isLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <Spinner size="lg" />
-      </div>
-    );
-  }
-
-  const isSuperadmin = Boolean(user?.isSuperadmin || user?.role === "superadmin");
-  if (!isSuperadmin) {
-    return <Navigate to={ROUTES.ADMIN} replace />;
-  }
-
-  return <SupportReportPage />;
-}
-
 function App() {
   return (
     <BrowserRouter>
@@ -184,11 +164,15 @@ function App() {
         {/* Admin routes - with AdminLayout */}
         <Route element={<AdminLayout />}>
           <Route path={ROUTES.ADMIN} element={<AdminDashboardPage />} />
-          <Route path={ROUTES.ADMIN_REPORT} element={<SuperadminSupportRoute />} />
           <Route path={ROUTES.ADMIN_USERS} element={<AdminUsersPage />} />
           <Route path={ROUTES.ADMIN_SALON} element={<SalonsPage />} />
           <Route path={ROUTES.ADMIN_SERVICES} element={<AdminServicesPage />} />
           <Route path={ROUTES.ADMIN_SETTINGS} element={<SettingsPage />} />
+        </Route>
+
+        {/* Superadmin routes - with SuperadminLayout */}
+        <Route element={<SuperadminLayout />}>
+          <Route path={ROUTES.ADMIN_REPORT} element={<SupportReportPage />} />
         </Route>
 
         {/* 404 - redirect to home */}

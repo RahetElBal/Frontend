@@ -3,6 +3,7 @@ import { useMemo, useEffect, useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
+import { AppRole } from "@/constants/enum";
 import type { Salon, User } from "@/types/entities";
 import { toast } from "@/lib/toast";
 import { uploadFile } from "@/lib/http";
@@ -169,7 +170,7 @@ export function SalonModals({
     const salonId = modalState.salonId;
     const isCreateMode = salonId === "create";
     const isSuperadmin = user?.isSuperadmin === true;
-    const isAdmin = user?.role === "admin";
+    const isAdmin = user?.role === AppRole.ADMIN;
 
     return {
       mode: modalState.mode,

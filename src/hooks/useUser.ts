@@ -1,8 +1,9 @@
 import { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { AppRole } from "@/constants/enum";
 import { useAuthContext } from "@/contexts/AuthProvider";
 import { AUTH_ROUTES } from "@/constants/auth";
-import type { AuthUser, AppRole } from "@/types/user";
+import type { AuthUser } from "@/types/user";
 import type { Salon } from "@/types/entities";
 
 interface UseUserOptions {
@@ -29,7 +30,7 @@ export function useUser(options: UseUserOptions = {}): UseUserReturn {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const isUser = user?.role === "user";
+  const isUser = user?.role === AppRole.USER;
 
   useEffect(() => {
     if (isLoading) return;
@@ -78,12 +79,12 @@ function getDefaultRouteForRole(
   isSuperadmin?: boolean,
 ): string {
   // Superadmin goes to admin panel
-  if (isSuperadmin || role === "superadmin") {
+  if (isSuperadmin || role === AppRole.SUPER_ADMIN) {
     return AUTH_ROUTES.ADMIN_DASHBOARD;
   }
 
   // Admin can go to admin panel or dashboard
-  if (role === "admin") {
+  if (role === AppRole.ADMIN) {
     return AUTH_ROUTES.ADMIN_DASHBOARD;
   }
 

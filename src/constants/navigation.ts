@@ -14,10 +14,8 @@ import {
   Heart,
   LifeBuoy,
 } from "lucide-react";
+import { AppRole } from "@/constants/enum";
 import type { NavSection } from "@/types/navigation";
-
-// Role types for navigation access control
-type NavRole = "superadmin" | "admin" | "user";
 
 // ============================================
 // ROUTE PATHS
@@ -336,14 +334,14 @@ export const ADMIN_NAVIGATION: NavSection[] = [
  * Get navigation based on user role
  */
 export function getNavigationForRole(
-  role: NavRole,
+  role: AppRole,
   isInAdminPanel: boolean = false
 ): NavSection[] {
   if (isInAdminPanel) {
-    if (role === "superadmin") {
+    if (role === AppRole.SUPER_ADMIN) {
       return ADMIN_NAVIGATION;
     }
-    if (role === "admin") {
+    if (role === AppRole.ADMIN) {
       return ADMIN_NAVIGATION.map((section) => ({
         ...section,
         items: section.items.filter((item) => item.id !== "admin-support-report"),
@@ -354,7 +352,7 @@ export function getNavigationForRole(
 
   // Regular salon panel
   switch (role) {
-    case "superadmin":
+    case AppRole.SUPER_ADMIN:
       return ADMIN_SALON_NAVIGATION.map((section) =>
         section.id === "management"
           ? {
@@ -363,7 +361,7 @@ export function getNavigationForRole(
             }
           : section
       );
-    case "admin":
+    case AppRole.ADMIN:
       return ADMIN_SALON_NAVIGATION.map((section) =>
         section.id === "management"
           ? {
@@ -372,7 +370,7 @@ export function getNavigationForRole(
             }
           : section
       );
-    case "user":
+    case AppRole.USER:
     default:
       return USER_NAVIGATION;
   }

@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { Outlet, Navigate } from "react-router-dom";
 
+import { AppRole } from "@/constants/enum";
 import { cn } from "@/lib/utils";
 import { AppSidebar } from "@/components/sidebar/app-sidebar";
 import { LoadingPanel } from "@/components/loading-panel";
@@ -10,7 +11,6 @@ import { PlanExpiryBanner } from "@/components/plan-expiry-banner";
 import { MainLayout } from "@/layouts/main-layout";
 import { useUser } from "@/hooks/useUser";
 import { ROUTES } from "@/constants/navigation";
-import type { AppRole } from "@/types/user";
 
 /**
  * Layout for admin panel (superadmin and admin only)
@@ -35,9 +35,9 @@ export function AdminLayout() {
   }
 
   // Check if user has admin or superadmin role
-  const userRole = (user.role || "user") as AppRole;
-  const isSuperadmin = user.isSuperadmin || userRole === "superadmin";
-  const isAdmin = userRole === "admin";
+  const userRole = user.role || AppRole.USER;
+  const isSuperadmin = user.isSuperadmin || userRole === AppRole.SUPER_ADMIN;
+  const isAdmin = userRole === AppRole.ADMIN;
 
   // Only superadmin and admin can access admin panel
   if (!isSuperadmin && !isAdmin) {

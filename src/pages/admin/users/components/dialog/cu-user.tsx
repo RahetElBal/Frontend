@@ -9,6 +9,7 @@ import {
   Building2,
   UserCog,
 } from "lucide-react";
+import { AppRole } from "@/constants/enum";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/badge";
 import {
@@ -32,7 +33,6 @@ import {
 import { usePost } from "@/hooks/usePost";
 import { useForm } from "react-hook-form";
 import { toast } from "@/lib/toast";
-import { UserRole } from "@/types/entities";
 import type { User, Salon } from "@/types/entities";
 import { getDisplayName, getInitials } from "@/common/utils";
 import { useUser } from "@/hooks/useUser";
@@ -47,7 +47,7 @@ interface UserDialogProps {
   onOpenChange: (open: boolean) => void;
   mode: UserDialogMode;
   user: User | null;
-  initialRole?: "user" | "admin";
+  initialRole?: UserFormData["role"];
   salons: Salon[];
   admins: User[];
   onSuccess: () => void;
@@ -91,7 +91,7 @@ export function UserDialog({
       name: "",
       email: "",
       phone: "",
-      role: "user",
+      role: AppRole.USER,
       salonId: "",
       managedById: "",
     },
@@ -104,7 +104,9 @@ export function UserDialog({
     }
 
     if (mode === "create") {
-      const role = initialRole || (currentUserIsSuperadmin ? "admin" : "user");
+      const role =
+        initialRole ||
+        (currentUserIsSuperadmin ? AppRole.ADMIN : AppRole.USER);
       setTimeout(() => {
         form.reset(
           {
@@ -124,8 +126,8 @@ export function UserDialog({
         );
       }, 0);
     } else if (user && mode === "edit") {
-      const formRole =
-        user.role === "superadmin" ? "admin" : (user.role as "user" | "admin");
+      const formRole: UserFormData["role"] =
+        user.role === AppRole.SUPER_ADMIN ? AppRole.ADMIN : user.role;
       setTimeout(() => {
         form.reset(
           {
@@ -201,8 +203,8 @@ export function UserDialog({
   const handleSubmit = (data: UserFormData) => {
     const role = isCreateMode
       ? currentUserIsSuperadmin
-        ? "admin"
-        : "user"
+        ? AppRole.ADMIN
+        : AppRole.USER
       : data.role;
 
     const normalizedPhone = normalizePhone(data.phone);
@@ -384,21 +386,21 @@ export function UserDialog({
                   </p>
                   <Badge
                     variant={
-                      user.role === UserRole.ADMIN || userIsSuperadmin
+                      user.role === AppRole.ADMIN || userIsSuperadmin
                         ? "info"
                         : "default"
                     }
                   >
                     {userIsSuperadmin
                       ? "Super Admin"
-                      : user.role === UserRole.ADMIN
+                      : user.role === AppRole.ADMIN
                       ? "Administrateur"
                       : "Utilisateur"}
                   </Badge>
                 </div>
               </div>
 
-              {user.role !== UserRole.ADMIN && !userIsSuperadmin && (
+              {user.role !== AppRole.ADMIN && !userIsSuperadmin && (
                 <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
                   <UserCog className="h-5 w-5 text-accent-pink" />
                   <div>
@@ -420,7 +422,7 @@ export function UserDialog({
                   </p>
                   <p className="font-medium">
                     {user.salon?.name ||
-                      (user.role === UserRole.ADMIN || userIsSuperadmin
+                      (user.role === AppRole.ADMIN || userIsSuperadmin
                         ? "-"
                         : "Non assigné")}
                   </p>

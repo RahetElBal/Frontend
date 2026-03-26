@@ -14,8 +14,9 @@ import { MediaImage } from "@/components/media-image";
 import { SidebarLogo } from "./sidebar-logo";
 import { SidebarNavSection } from "./sidebar-nav-section";
 import { SidebarUserMenu } from "./sidebar-user-menu";
+import type { AppRole } from "@/constants/enum";
 import type { Salon } from "@/types/entities";
-import type { AuthUser, AppRole } from "@/types/user";
+import type { AuthUser } from "@/types/user";
 import { getNavigationForRole } from "@/constants/navigation";
 
 const DEFAULT_SALON_IMAGE = "/salon-placeholder.svg";

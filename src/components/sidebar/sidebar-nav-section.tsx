@@ -1,8 +1,8 @@
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { SidebarNavItem } from './sidebar-nav-item';
+import type { AppRole } from "@/constants/enum";
 import type { NavSection } from '@/types/navigation';
-import type { AppRole } from '@/types/user';
 
 interface SidebarNavSectionProps {
   section: NavSection;

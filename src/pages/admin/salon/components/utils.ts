@@ -1,3 +1,4 @@
+import { AppRole } from "@/constants/enum";
 import type { User, Salon } from "@/types/entities";
 
 export type SalonModalState = {
@@ -43,8 +44,8 @@ export interface SalonStats {
 export const canModifySalon = (salon: Salon, user: User | null): boolean => {
   if (!user) return false;
 
-  if (user.role === "superadmin") return true;
-  if (user.role === "admin" && salon.ownerId === user.id) return true;
+  if (user.role === AppRole.SUPER_ADMIN) return true;
+  if (user.role === AppRole.ADMIN && salon.ownerId === user.id) return true;
 
   return false;
 };

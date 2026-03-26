@@ -1,3 +1,5 @@
+import type { AppRole } from "@/constants/enum";
+
 // ============================================
 // BASE ENTITY
 // ============================================
@@ -7,20 +9,6 @@ export interface BaseEntity {
   createdAt: string;
   updatedAt: string;
 }
-
-// ============================================
-// ROLE TYPES
-// ============================================
-
-// Role type - superadmin is determined by backend via env var, not stored in DB
-export type AppRole = "superadmin" | "admin" | "user";
-
-export const UserRole = {
-  USER: "user",
-  ADMIN: "admin",
-} as const;
-
-export type UserRole = (typeof UserRole)[keyof typeof UserRole];
 
 // ============================================
 // USER ENTITY

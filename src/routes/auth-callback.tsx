@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { AppRole } from "@/constants/enum";
 import { useAuthContext } from "@/contexts/AuthProvider";
 import { AUTH_STORAGE_KEY, AUTH_ROUTES } from "@/constants/auth";
 import { get } from "@/lib/http";
@@ -55,8 +56,8 @@ export default function AuthCallback() {
     (user: AuthUser) => {
       if (
         user.isSuperadmin ||
-        user.role === "superadmin" ||
-        user.role === "admin"
+        user.role === AppRole.SUPER_ADMIN ||
+        user.role === AppRole.ADMIN
       ) {
         navigate(AUTH_ROUTES.ADMIN_DASHBOARD, { replace: true });
       } else {

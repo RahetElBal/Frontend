@@ -18,12 +18,3 @@ export const AUTH_ENDPOINTS = {
   ME: "/auth/me",
   LOGOUT: "/auth/logout",
 } as const;
-
-// Role constants - Note: superadmin is determined by backend, not stored in DB
-export const ROLES = {
-  SUPERADMIN: "superadmin",
-  ADMIN: "admin", 
-  USER: "user",
-} as const;
-
-export type AppRole = (typeof ROLES)[keyof typeof ROLES];

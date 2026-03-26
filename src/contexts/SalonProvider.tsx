@@ -8,6 +8,7 @@ import {
   useRef,
   type ReactNode,
 } from "react";
+import { AppRole } from "@/constants/enum";
 import type { Salon } from "@/types/entities";
 import { get } from "@/lib/http";
 import { AUTH_STORAGE_KEY } from "@/constants/auth";
@@ -40,8 +41,9 @@ function getStoredUserRole(): { isSuperadmin: boolean; isAdmin: boolean; hasUser
     if (storedUser) {
       const user = JSON.parse(storedUser) as AuthUser;
       return {
-        isSuperadmin: user.isSuperadmin === true || user.role === "superadmin",
-        isAdmin: user.role === "admin",
+        isSuperadmin:
+          user.isSuperadmin === true || user.role === AppRole.SUPER_ADMIN,
+        isAdmin: user.role === AppRole.ADMIN,
         hasUser: true,
       };
     }

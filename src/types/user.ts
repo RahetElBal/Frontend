@@ -1,5 +1,4 @@
-// Role type that includes superadmin (determined by backend)
-export type AppRole = "superadmin" | "admin" | "user";
+import type { AppRole } from "@/constants/enum";
 
 // Base user type for authentication
 export interface AuthUser {
@@ -97,10 +96,3 @@ export interface AuthResponse {
   user: AuthUser;
 }
 
-// Re-export UserRole for backwards compatibility
-export const UserRole = {
-  USER: "user",
-  ADMIN: "admin",
-} as const;
-
-export type UserRole = (typeof UserRole)[keyof typeof UserRole];

@@ -2,6 +2,7 @@ import { useMemo, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import type { UseFormReturn } from "react-hook-form";
 import { Controller } from "react-hook-form";
+import { AppRole } from "@/constants/enum";
 import {
   Phone,
   Award,
@@ -65,7 +66,8 @@ export function ClientModals({
   const { t } = useTranslation();
   const { formatCurrency } = useLanguage();
   const { user } = useUser();
-  const canManageLoyalty = user?.isSuperadmin || user?.role === "admin";
+  const canManageLoyalty =
+    user?.isSuperadmin || user?.role === AppRole.ADMIN;
   const getErrorMessage = (name: keyof ClientFormData): string | undefined => {
     const maybeGetError = (
       form as UseFormReturn<ClientFormData> & {

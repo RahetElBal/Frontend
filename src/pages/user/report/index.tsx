@@ -15,6 +15,7 @@ import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 
+import { AppRole } from "@/constants/enum";
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -207,7 +208,9 @@ export default function SupportReportPage() {
   const location = useLocation();
   const { user, salon } = useUser();
   const planTier = resolvePlanTier(salon?.planTier);
-  const supportResponder = Boolean(user?.isSuperadmin || user?.role === "superadmin");
+  const supportResponder = Boolean(
+    user?.isSuperadmin || user?.role === AppRole.SUPER_ADMIN,
+  );
 
   const [type, setType] = useState<SupportReportType>("technical_issue");
   const [subject, setSubject] = useState("");

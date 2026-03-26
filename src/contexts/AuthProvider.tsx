@@ -7,7 +7,8 @@ import {
   useEffect,
   type ReactNode,
 } from 'react';
-import type { AuthUser, AuthState, AppRole } from '@/types/user';
+import { AppRole } from "@/constants/enum";
+import type { AuthUser, AuthState } from '@/types/user';
 import { AUTH_STORAGE_KEY } from '@/constants/auth';
 
 interface AuthContextValue extends AuthState {
@@ -27,9 +28,9 @@ interface AuthProviderProps {
 
 // Role hierarchy for access checks
 const ROLE_HIERARCHY: Record<AppRole, number> = {
-  superadmin: 3,
-  admin: 2,
-  user: 1,
+  [AppRole.SUPER_ADMIN]: 3,
+  [AppRole.ADMIN]: 2,
+  [AppRole.USER]: 1,
 };
 
 export function AuthProvider({ children }: AuthProviderProps) {
@@ -105,10 +106,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, []);
 
   // Check if user is superadmin
-  const isSuperadmin = state.user?.isSuperadmin === true || state.user?.role === 'superadmin';
+  const isSuperadmin =
+    state.user?.isSuperadmin === true ||
+    state.user?.role === AppRole.SUPER_ADMIN;
 
   // Check if user is admin (or superadmin)
-  const isAdmin = isSuperadmin || state.user?.role === 'admin';
+  const isAdmin = isSuperadmin || state.user?.role === AppRole.ADMIN;
 
   // Check if user has at least the specified role level
   const hasRole = useCallback((requiredRole: AppRole): boolean => {

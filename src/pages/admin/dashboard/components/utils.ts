@@ -1,3 +1,4 @@
+import { AppRole } from "@/constants/enum";
 import type { Salon, User } from "@/types";
 import type { AuthUser } from "@/types/user";
 
@@ -68,7 +69,9 @@ export const getFilteredUsers = (
   if (!users) return [];
 
   if (isSuperadmin) {
-    return users.filter((u) => u.role === "admin" || u.role === "user");
+    return users.filter(
+      (u) => u.role === AppRole.ADMIN || u.role === AppRole.USER,
+    );
   }
 
   return users.filter((u) => u.managedById === currentUserId);

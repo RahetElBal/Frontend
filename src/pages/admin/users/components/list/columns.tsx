@@ -14,7 +14,7 @@ import {
 import { Badge } from "@/components/badge";
 import { Button } from "@/components/ui/button";
 import type { Column } from "@/components/table/data-table";
-import { UserRole } from "@/types/entities";
+import { AppRole } from "@/constants/enum";
 import type { User } from "@/types/entities";
 import { getDisplayName, getInitials } from "@/common/utils";
 
@@ -110,7 +110,7 @@ export function useUsersColumns({
               <UserCog className="h-4 w-4 text-accent-pink" />
               <span>{user.managedBy.name || user.managedBy.email}</span>
             </>
-          ) : user.role === UserRole.ADMIN || user.isSuperadmin ? (
+          ) : user.role === AppRole.ADMIN || user.isSuperadmin ? (
             <span className="text-muted-foreground text-sm">-</span>
           ) : (
             <span className="text-muted-foreground text-sm">Non assigné</span>
@@ -125,7 +125,7 @@ export function useUsersColumns({
       header: t("fields.salon"),
       render: (user) => {
         // Admins and superadmins don't have salon assignments
-        if (user.role === UserRole.ADMIN || user.isSuperadmin) {
+        if (user.role === AppRole.ADMIN || user.isSuperadmin) {
           return <span className="text-muted-foreground text-sm">-</span>;
         }
 
@@ -159,7 +159,7 @@ export function useUsersColumns({
         return (
           <Badge
             variant={
-              user.role === UserRole.ADMIN || userIsSuperadmin
+              user.role === AppRole.ADMIN || userIsSuperadmin
                 ? "info"
                 : "default"
             }
@@ -167,7 +167,7 @@ export function useUsersColumns({
             <Shield className="h-3 w-3 me-1" />
             {userIsSuperadmin
               ? "Super Admin"
-              : user.role === UserRole.ADMIN
+              : user.role === AppRole.ADMIN
               ? "Admin"
               : "Utilisateur"}
           </Badge>

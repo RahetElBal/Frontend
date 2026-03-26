@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { AppRole } from "@/constants/enum";
 import { isValidPhoneForAllowedCountries } from "@/common/phone";
 
 export const STAFF_PERMISSIONS = [
@@ -27,7 +28,7 @@ export const createUserFormSchema = (
       .string()
       .min(1, t("validation.required", { field: t("fields.phone") }))
       .refine(isValidPhoneForAllowedCountries, t("validation.custom.phoneInvalid")),
-    role: z.enum(["user", "admin"] as const),
+    role: z.enum([AppRole.USER, AppRole.ADMIN] as const),
     salonId: z.string().optional(),
     managedById: z.string().optional(),
     permissions: z.array(z.enum(STAFF_PERMISSIONS)).optional(),

@@ -9,6 +9,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { AppRole } from "@/constants/enum";
 import { useAuthContext } from "@/contexts/AuthProvider";
 import { buildUrl, get } from "@/lib/http";
 import type { PaginatedResponse } from "@/types/api";
@@ -117,7 +118,7 @@ export function StaffProvider({ children }: StaffProviderProps) {
           const response = await get<StaffApiResponse>(
             buildUrl("users", {
               salonId: normalizedSalonId,
-              role: "user",
+              role: AppRole.USER,
               perPage: 100,
             }),
           );
@@ -226,4 +227,3 @@ export function useSalonStaff(
 
   return { staff, isLoading, error, refresh };
 }
-
