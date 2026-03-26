@@ -1,6 +1,7 @@
 import type { TFunction } from "i18next";
 import { StatusBadge } from "../../components/status-badge";
-import type { TimeOffStatus, User } from "@/types/entities";
+import type { User } from "@/pages/admin/users/types";
+import type { TimeOffStatus } from "../enum";
 
 export const getStaffName = (staffMembers: User[], staffId: string) => {
   const staff = staffMembers.find((s) => s.id === staffId);

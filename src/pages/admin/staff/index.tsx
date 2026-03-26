@@ -5,7 +5,7 @@ import { Plus, User } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/lib/toast";
-import type { StaffSchedule } from "@/types/entities";
+import type { StaffSchedule } from "./types";
 import { useGet, withParams } from "@/hooks/useGet";
 import { usePost } from "@/hooks/usePost";
 import { useSalonStaff } from "@/contexts/StaffProvider";

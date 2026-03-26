@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import type { TopService } from "@/types/entities";
+import type { TopService } from "../types";
 import { formatCurrency } from "@/common/utils";
 
 const topServices: TopService[] = [];

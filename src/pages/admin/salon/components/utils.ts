@@ -1,5 +1,6 @@
 import { AppRole } from "@/constants/enum";
-import type { User, Salon } from "@/types/entities";
+import type { User } from "@/pages/admin/users/types";
+import type { Salon } from "../types";
 
 export type SalonModalState = {
   salonId: string | "create";

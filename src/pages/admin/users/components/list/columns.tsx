@@ -15,7 +15,7 @@ import { Badge } from "@/components/badge";
 import { Button } from "@/components/ui/button";
 import type { Column } from "@/components/table/data-table";
 import { AppRole } from "@/constants/enum";
-import type { User } from "@/types/entities";
+import type { User } from "../../types";
 import { getDisplayName, getInitials } from "@/common/utils";
 
 interface UseUsersColumnsProps {

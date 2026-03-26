@@ -4,7 +4,7 @@ import { AppRole } from "@/constants/enum";
 import { useAuthContext } from "@/contexts/AuthProvider";
 import { AUTH_ROUTES } from "@/constants/auth";
 import type { AuthUser } from "@/types/user";
-import type { Salon } from "@/types/entities";
+import type { Salon } from "@/pages/admin/salon/types";
 
 interface UseUserOptions {
   redirectTo?: string;

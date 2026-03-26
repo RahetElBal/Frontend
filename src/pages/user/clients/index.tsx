@@ -7,13 +7,13 @@ import { Button } from "@/components/ui/button";
 import { ServerDataTable } from "@/components/table";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useForm } from "@/hooks/useForm";
-import type { Client } from "@/types/entities";
+import type { Client } from "./types";
 import { ClientModals } from "./components/dialog/client-modals";
 import type { ClientModalState } from "./types";
 import { clientFormSchema, type ClientFormData } from "./components/validation";
 import { getClientColumns } from "./components/list/columns";
 import { useUser } from "@/hooks/useUser";
-import type { PaginatedResponse } from "@/types";
+import type { PaginatedResponse } from "@/types/api";
 import { useGet, withParams } from "@/hooks/useGet";
 import { useServerTableState } from "@/hooks/useServerTableState";
 

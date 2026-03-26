@@ -1,5 +1,6 @@
 import { AppRole } from "@/constants/enum";
-import type { User, Salon } from "@/types/entities";
+import type { User } from "../types";
+import type { Salon } from "@/pages/admin/salon/types";
 import type { UserFormData } from "./form/validation";
 
 export type UserModalState = {

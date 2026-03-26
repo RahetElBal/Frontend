@@ -27,7 +27,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DialogFooter } from "@/components/ui/dialog";
-import type { User, Salon } from "@/types/entities";
+import type { User } from "../../types";
+import type { Salon } from "@/pages/admin/salon/types";
 import type { UserFormData } from "./validation";
 import { STAFF_PERMISSIONS, type StaffPermission } from "./validation";
 import { parseValidationMsg } from "@/common/validator/zodI18n";

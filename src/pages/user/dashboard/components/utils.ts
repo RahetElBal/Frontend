@@ -1,4 +1,5 @@
-import { type Appointment, type Client } from "@/types/entities";
+import type { Appointment } from "@/pages/user/agenda/types";
+import type { Client } from "@/pages/user/clients/types";
 import { dashboardStatusColors } from "../../utils";
 
 /**

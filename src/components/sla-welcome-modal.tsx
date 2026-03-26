@@ -15,7 +15,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useAuthContext } from "@/contexts/AuthProvider";
 import { patch } from "@/lib/http";
 import { toast } from "@/lib/toast";
-import type { Salon } from "@/types/user";
+import type { Salon } from "@/pages/admin/salon/types";
 
 const SLA_VERSION = 1;
 

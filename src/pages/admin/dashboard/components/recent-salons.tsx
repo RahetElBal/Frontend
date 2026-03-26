@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { Building2 } from "lucide-react";
 import { useUser } from "@/hooks/useUser";
-import type { Salon } from "@/types";
+import type { Salon } from "@/pages/admin/salon/types";
 import { formatDate } from "@/common/utils";
 import { RecentCard } from "./recent-card";
 import { MediaImage } from "@/components/media-image";

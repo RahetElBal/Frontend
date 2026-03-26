@@ -11,7 +11,8 @@ import {
 } from "react";
 import { useAuthContext } from "@/contexts/AuthProvider";
 import { get } from "@/lib/http";
-import type { Salon, SalonSettings, SalonSettingsExtended } from "@/types/entities";
+import type { Salon, SalonSettings } from "@/pages/admin/salon/types";
+import type { SalonSettingsExtended } from "@/pages/admin/salon-settings/types";
 import type { AuthUser } from "@/types/user";
 
 const SALON_SETTINGS_CACHE_TTL_MS = 1000 * 60 * 10;

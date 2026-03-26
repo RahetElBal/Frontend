@@ -9,10 +9,11 @@ import { ServerDataTable } from "@/components/table";
 import { useGet, withParams } from "@/hooks/useGet";
 import { usePostAction } from "@/hooks/usePostAction";
 
-import type { User, Salon } from "@/types/entities";
+import type { User } from "./types";
+import type { Salon } from "@/pages/admin/salon/types";
 import { StatsGrid } from "./components/stats-grid";
 import { useUser } from "@/hooks/useUser";
-import type { PaginatedResponse } from "@/types";
+import type { PaginatedResponse } from "@/types/api";
 import { useUsersColumns } from "./components/list/columns";
 import { UserDialog } from "./components/dialog/cu-user";
 import {

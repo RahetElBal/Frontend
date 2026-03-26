@@ -11,7 +11,7 @@ import {
 } from "react";
 import { useAuthContext } from "@/contexts/AuthProvider";
 import { buildUrl, get } from "@/lib/http";
-import type { Salon } from "@/types/entities";
+import type { Salon } from "@/pages/admin/salon/types";
 import type { AuthUser } from "@/types/user";
 
 const SUMMARY_CACHE_TTL_MS = 1000 * 60;

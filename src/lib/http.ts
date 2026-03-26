@@ -22,10 +22,34 @@ type EtagEntry = {
 const etagCache = new Map<string, EtagEntry>();
 const inflightGetRequests = new Map<string, Promise<unknown>>();
 
+const isAbsoluteUrl = (url: string): boolean =>
+  /^[a-z][a-z\d+\-.]*:\/\//i.test(url);
+
 const buildEtagCacheKey = (url: string): string => {
+  if (isAbsoluteUrl(url)) {
+    return url;
+  }
   const base = API_BASE_URL.replace(/\/$/, '');
   const path = url.replace(/^\//, '');
   return `${base}/${path}`;
+};
+
+const isApiRequestUrl = (url: string): boolean => {
+  try {
+    const apiUrl = new URL(API_BASE_URL);
+    const requestUrl = new URL(url, API_BASE_URL);
+    const apiPath = apiUrl.pathname.replace(/\/$/, "");
+    const requestPath = requestUrl.pathname;
+
+    return (
+      requestUrl.origin === apiUrl.origin &&
+      (apiPath === "" ||
+        requestPath === apiPath ||
+        requestPath.startsWith(`${apiPath}/`))
+    );
+  } catch {
+    return !isAbsoluteUrl(url);
+  }
 };
 
 const buildHeadersKey = (headers?: Options['headers']): string => {
@@ -134,7 +158,7 @@ const createHttpClient = (): KyInstance => {
       beforeRequest: [
         (request) => {
           const token = getAuthToken();
-          if (token) {
+          if (token && isApiRequestUrl(request.url)) {
             request.headers.set('Authorization', `Bearer ${token}`);
           }
         },
@@ -142,7 +166,7 @@ const createHttpClient = (): KyInstance => {
       afterResponse: [
         async (_request, _options, response) => {
           // Handle 401 Unauthorized - clear auth and redirect
-          if (response.status === 401) {
+          if (response.status === 401 && isApiRequestUrl(response.url)) {
             clearAuth();
           }
           return response;

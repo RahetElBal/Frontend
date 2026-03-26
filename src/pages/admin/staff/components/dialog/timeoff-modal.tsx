@@ -20,7 +20,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
-import type { User as UserType, TimeOffType } from "@/types/entities";
+import type { User as UserType } from "@/pages/admin/users/types";
+import type { TimeOffType } from "../../enum";
 import type { CreateTimeOffDto } from "../../types";
 
 const TIME_OFF_TYPES: TimeOffType[] = [

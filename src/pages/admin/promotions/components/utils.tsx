@@ -3,9 +3,8 @@ import { Percent, Tag } from "lucide-react";
 import { Badge } from "@/components/badge";
 import type {
   Promotion,
-  PromotionStatus,
-  PromotionType,
-} from "@/types/entities";
+} from "../types";
+import type { PromotionStatus, PromotionType } from "../enum";
 import { StatusBadge } from "../../components/status-badge";
 
 export const copyPromotionCode = (

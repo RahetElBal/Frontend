@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { Service } from "@/types/entities";
+import type { Service } from "@/pages/user/services/types";
 import { translateServiceName } from "@/common/service-translations";
 import type { SettingsSectionProps } from "../types";
 

@@ -17,7 +17,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import type { Salon } from "@/types/entities";
+import type { Salon } from "../types";
 import { MediaImage } from "@/components/media-image";
 
 const DEFAULT_SALON_IMAGE = "/salon-placeholder.svg";

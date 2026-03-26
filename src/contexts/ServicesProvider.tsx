@@ -11,7 +11,8 @@ import {
 } from "react";
 import { useAuthContext } from "@/contexts/AuthProvider";
 import { buildUrl, get } from "@/lib/http";
-import type { Service, Salon } from "@/types/entities";
+import type { Service } from "@/pages/user/services/types";
+import type { Salon } from "@/pages/admin/salon/types";
 import type { PaginatedResponse } from "@/types/api";
 import type { AuthUser } from "@/types/user";
 
@@ -229,4 +230,3 @@ export function useSalonServices(
 
   return { services, isLoading, error, refresh };
 }
-

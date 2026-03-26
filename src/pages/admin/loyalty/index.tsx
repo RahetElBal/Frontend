@@ -42,8 +42,8 @@ import { useLoyaltyContext, useSalonLoyaltyData } from "@/contexts/LoyaltyProvid
 import { usePost } from "@/hooks/usePost";
 import { useUser } from "@/hooks/useUser";
 import { useLanguage } from "@/hooks/useLanguage";
-import type { Sale } from "@/types/entities";
-import type { Salon } from "@/types/entities";
+import type { Sale } from "@/pages/user/sales/types";
+import type { Salon } from "@/pages/admin/salon/types";
 import {
   deriveLoyaltySettings,
   calculateTotalPointsIssued,

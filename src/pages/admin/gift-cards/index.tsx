@@ -22,8 +22,8 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { GiftCardStatus } from "@/types/entities";
-import type { GiftCard } from "@/types/entities";
+import { GiftCardStatus } from "./enum";
+import type { GiftCard } from "./types";
 import { cn } from "@/lib/utils";
 import { useGet, withParams } from "@/hooks/useGet";
 import { usePost } from "@/hooks/usePost";

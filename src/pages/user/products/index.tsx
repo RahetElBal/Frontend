@@ -41,7 +41,7 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { useForm } from "@/hooks/useForm";
 import { useUser } from "@/hooks/useUser";
 import { toast } from "@/lib/toast";
-import type { Product } from "@/types/entities";
+import type { Product } from "./types";
 import { cn } from "@/lib/utils";
 import { usePost } from "@/hooks/usePost";
 import { usePostAction } from "@/hooks/usePostAction";
@@ -51,7 +51,7 @@ import {
   useSalonCategories,
 } from "@/contexts/CategoriesProvider";
 import { getProductColumns } from "./components/list/columns";
-import type { PaginatedResponse } from "@/types";
+import type { PaginatedResponse } from "@/types/api";
 import { useServerTableState } from "@/hooks/useServerTableState";
 
 // Modal state type

@@ -11,7 +11,7 @@ import { PlanExpiryBanner } from "@/components/plan-expiry-banner";
 import { MainLayout } from "@/layouts/main-layout";
 import { useUser } from "@/hooks/useUser";
 import { ROUTES } from "@/constants/navigation";
-import type { Salon } from "@/types/entities";
+import type { Salon } from "@/pages/admin/salon/types";
 
 /**
  * Layout for regular users and admins (salon view)

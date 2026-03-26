@@ -28,11 +28,9 @@ import { useUser } from "@/hooks/useUser";
 import { AUTH_STORAGE_KEY } from "@/constants/auth";
 import { ROUTES } from "@/constants/navigation";
 import { API_BASE_URL } from "@/lib/http";
-import type { PaginatedResponse } from "@/types";
-import {
-  AdminNotificationType,
-  type AdminNotification,
-} from "@/types/entities";
+import type { PaginatedResponse } from "@/types/api";
+import { AdminNotificationType } from "@/pages/user/notifications/enum";
+import type { AdminNotification } from "@/pages/user/notifications/types";
 
 const NOTIFICATIONS_POLL_MS = 15000;
 const STREAM_RETRY_MS = 5000;

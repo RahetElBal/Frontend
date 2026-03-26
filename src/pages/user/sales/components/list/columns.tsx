@@ -17,7 +17,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import type { Sale } from "@/types/entities";
+import type { Sale } from "../../types";
 import {
   formatSaleDate,
   formatSaleTime,

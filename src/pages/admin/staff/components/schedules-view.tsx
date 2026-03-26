@@ -3,7 +3,9 @@ import { User } from "lucide-react";
 
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import type { User as UserType, StaffSchedule, DayOfWeek } from "@/types/entities";
+import type { User as UserType } from "@/pages/admin/users/types";
+import type { StaffSchedule } from "../types";
+import type { DayOfWeek } from "../enum";
 
 const DAYS_OF_WEEK: DayOfWeek[] = [
   "monday",

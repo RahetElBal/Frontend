@@ -1,5 +1,5 @@
 import type { TFunction } from "i18next";
-import { AppointmentStatus } from "@/types/entities";
+import { AppointmentStatus } from "@/pages/user/agenda/enum";
 import { parseValidationMsg } from "@/common/validator/zodI18n";
 
 export const getValidationErrorMessage = (

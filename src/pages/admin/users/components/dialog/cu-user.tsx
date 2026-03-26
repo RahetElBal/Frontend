@@ -33,7 +33,8 @@ import {
 import { usePost } from "@/hooks/usePost";
 import { useForm } from "react-hook-form";
 import { toast } from "@/lib/toast";
-import type { User, Salon } from "@/types/entities";
+import type { User } from "../../types";
+import type { Salon } from "@/pages/admin/salon/types";
 import { getDisplayName, getInitials } from "@/common/utils";
 import { useUser } from "@/hooks/useUser";
 import { UserForm } from "../form";

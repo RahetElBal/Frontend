@@ -13,8 +13,8 @@ import { Badge } from "@/components/badge";
 import { Button } from "@/components/ui/button";
 import { LoadingPanel } from "@/components/loading-panel";
 import { cn } from "@/lib/utils";
-import type { Appointment } from "@/types/entities";
-import { AppointmentStatus } from "@/types/entities";
+import type { Appointment } from "../types";
+import { AppointmentStatus } from "../enum";
 import {
   statusColors,
   getAppointmentDisplayStatus,

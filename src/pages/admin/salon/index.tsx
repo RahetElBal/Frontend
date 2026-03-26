@@ -9,7 +9,8 @@ import { useGet, withParams } from "@/hooks/useGet";
 import { useUser } from "@/hooks/useUser";
 import { useTable } from "@/hooks/useTable";
 import { toast } from "@/lib/toast";
-import type { Salon, User } from "@/types/entities";
+import type { Salon } from "./types";
+import type { User } from "@/pages/admin/users/types";
 import {
   canModifySalon,
   getSalonsList,

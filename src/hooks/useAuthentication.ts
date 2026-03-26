@@ -2,7 +2,7 @@ import { useState, useCallback } from "react";
 import { useAuthContext } from "@/contexts/AuthProvider";
 import { AUTH_ROUTES, AUTH_STORAGE_KEY } from "@/constants/auth";
 import { get } from "@/lib/http";
-import type { User } from "@/types/entities";
+import type { User } from "@/pages/admin/users/types";
 import type { AuthUser } from "@/types/user";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";

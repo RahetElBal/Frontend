@@ -18,7 +18,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
-import type { Product } from "@/types/entities";
+import type { Product } from "../../types";
 
 interface GetProductColumnsProps {
   t: TFunction;

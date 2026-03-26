@@ -22,8 +22,8 @@ import {
 } from "@/components/ui/table";
 import { Spinner } from "@/components/spinner";
 import { useLanguage } from "@/hooks/useLanguage";
-import type { Appointment } from "@/types/entities";
-import { AppointmentStatus } from "@/types/entities";
+import type { Appointment } from "../types";
+import { AppointmentStatus } from "../enum";
 import {
   getAppointmentDisplayStatus,
   normalizeTime,

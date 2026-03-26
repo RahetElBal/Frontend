@@ -3,8 +3,8 @@ import { useTranslation } from "react-i18next";
 import { Calendar, momentLocalizer } from "react-big-calendar";
 import moment from "moment";
 import "react-big-calendar/lib/css/react-big-calendar.css";
-import type { Appointment } from "@/types/entities";
-import { AppointmentStatus } from "@/types/entities";
+import type { Appointment } from "../../types";
+import { AppointmentStatus } from "../../enum";
 
 import "../calendar-styles.css";
 import {

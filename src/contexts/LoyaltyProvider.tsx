@@ -10,7 +10,8 @@ import {
   type ReactNode,
 } from "react";
 import { buildUrl, get } from "@/lib/http";
-import type { Client, Sale } from "@/types/entities";
+import type { Client } from "@/pages/user/clients/types";
+import type { Sale } from "@/pages/user/sales/types";
 import type { PaginatedResponse } from "@/types/api";
 import { normalizeSale } from "@/utils/normalize-sales";
 
@@ -343,4 +344,3 @@ export function useSalonLoyaltyData(
     refresh,
   };
 }
-

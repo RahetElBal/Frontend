@@ -1,6 +1,6 @@
 import type { TFunction } from "i18next";
 
-import type { PaymentStatus, SaleStatus } from "@/types/entities";
+import type { PaymentStatus, SaleStatus } from "../enum";
 
 export const formatSaleDate = (dateString: string) => {
   const date = new Date(dateString);

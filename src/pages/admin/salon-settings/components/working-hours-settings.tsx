@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
-import type { DayOfWeek } from "@/types/entities";
+import type { DayOfWeek } from "@/pages/admin/staff/enum";
 import type { WorkingHoursSettingsProps } from "../types";
 
 const DAYS: DayOfWeek[] = [

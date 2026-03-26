@@ -15,7 +15,7 @@ import { SidebarLogo } from "./sidebar-logo";
 import { SidebarNavSection } from "./sidebar-nav-section";
 import { SidebarUserMenu } from "./sidebar-user-menu";
 import type { AppRole } from "@/constants/enum";
-import type { Salon } from "@/types/entities";
+import type { Salon } from "@/pages/admin/salon/types";
 import type { AuthUser } from "@/types/user";
 import { getNavigationForRole } from "@/constants/navigation";
 

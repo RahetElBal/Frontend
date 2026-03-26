@@ -9,7 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import { AppRole } from "@/constants/enum";
-import type { Salon } from "@/types/entities";
+import type { Salon } from "@/pages/admin/salon/types";
 import { get } from "@/lib/http";
 import { AUTH_STORAGE_KEY } from "@/constants/auth";
 import type { AuthUser } from "@/types/user";

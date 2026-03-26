@@ -4,8 +4,8 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import type { Appointment } from "@/types/entities";
-import { AppointmentStatus } from "@/types/entities";
+import type { Appointment } from "../types";
+import { AppointmentStatus } from "../enum";
 import { getLocalDateString } from "./utils";
 
 const dayKeys = [

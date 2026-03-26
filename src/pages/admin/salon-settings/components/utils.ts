@@ -1,4 +1,4 @@
-import type { SalonSettingsExtended } from "@/types/entities";
+import type { SalonSettingsExtended } from "../types";
 
 function normalizeTimeValue(value?: string) {
   if (!value) return "";

@@ -38,7 +38,8 @@ import {
   useBusinessSummaryContext,
   useSalonBusinessSummary,
 } from "@/contexts/BusinessSummaryProvider";
-import { SaleStatus, type Sale, type SaleItem } from "@/types/entities";
+import { SaleStatus } from "./enum";
+import type { Sale, SaleItem } from "./types";
 import { useGet, withParams } from "@/hooks/useGet";
 import { usePost } from "@/hooks/usePost";
 import { toast } from "@/lib/toast";
@@ -52,7 +53,7 @@ import {
   toNumber,
 } from "./components/utils";
 import { normalizeSale, normalizeSalesResponse } from "@/utils/normalize-sales";
-import type { PaginatedResponse } from "@/types";
+import type { PaginatedResponse } from "@/types/api";
 import { useServerTableState } from "@/hooks/useServerTableState";
 
 const SALES_PAGE_SIZE = 20;

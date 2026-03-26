@@ -1,4 +1,5 @@
 import type { AppRole } from "@/constants/enum";
+import type { Salon } from "@/pages/admin/salon/types";
 
 // Base user type for authentication
 export interface AuthUser {
@@ -12,75 +13,6 @@ export interface AuthUser {
   isSuperadmin: boolean;
   salon?: Salon;
   isActive?: boolean;
-}
-
-// Full user type from database (not superadmin)
-export interface User extends AuthUser {
-  createdAt: string;
-  updatedAt: string;
-  isActive: boolean;
-  googleId?: string;
-  lastLoginAt?: string;
-  salon: Salon;
-}
-
-// Salon type
-export interface Salon {
-  id: string;
-  name: string;
-  address?: string;
-  phone?: string;
-  email?: string;
-  logo?: string;
-  isActive: boolean;
-  planTier?: "standard" | "pro";
-  planStatus?: "active" | "inactive" | "expired" | "paused";
-  planUserLimit?: number;
-  planStartAt?: string | null;
-  planEndAt?: string | null;
-  planUpdatedAt?: string | null;
-  planUpdatedById?: string | null;
-  planNotes?: string | null;
-  hasUsedFreeTrial?: boolean;
-  isOnFreeTrial?: boolean;
-  freeTrialStartAt?: string | null;
-  freeTrialEndAt?: string | null;
-  slaAcceptedAt?: string | null;
-  slaAcceptedById?: string | null;
-  slaAcceptedVersion?: number | null;
-  staffLockActive?: boolean;
-  staffLockActivatedAt?: string | null;
-  staffLockClearedAt?: string | null;
-  staffLockReason?: string | null;
-  ownerId: string; // Required - every salon must have an owner admin
-  owner?: User;
-  staff?: User[];
-  createdBySuperadmin?: boolean;
-  settings?: SalonSettings;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface SalonSettings {
-  currency?: string;
-  timezone?: string;
-  language?: string;
-  workingHours?: WorkingHours;
-  loyaltyEnabled?: boolean;
-  loyaltyPointsPerCurrency?: number;
-  loyaltyPointValue?: number;
-  loyaltyMinimumRedemption?: number;
-  loyaltyRewardServiceId?: string;
-  loyaltyRewardDiscountType?: "percent" | "fixed";
-  loyaltyRewardDiscountValue?: number;
-}
-
-export interface WorkingHours {
-  [day: string]: {
-    open: string;
-    close: string;
-    closed?: boolean;
-  };
 }
 
 // Auth state for context

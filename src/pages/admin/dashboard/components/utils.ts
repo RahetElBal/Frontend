@@ -1,5 +1,6 @@
 import { AppRole } from "@/constants/enum";
-import type { Salon, User } from "@/types";
+import type { Salon } from "@/pages/admin/salon/types";
+import type { User } from "@/pages/admin/users/types";
 import type { AuthUser } from "@/types/user";
 
 /**

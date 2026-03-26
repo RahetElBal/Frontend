@@ -2,7 +2,7 @@ import { useTranslation } from "react-i18next";
 import { Users } from "lucide-react";
 import { AppRole } from "@/constants/enum";
 import { useUser } from "@/hooks/useUser";
-import type { User } from "@/types";
+import type { User } from "@/pages/admin/users/types";
 import { formatDate } from "@/common/utils";
 import { RecentCard } from "./recent-card";
 

@@ -1,11 +1,9 @@
-import type {
-  Client,
-  Sale,
-  Service,
-  Salon,
-  SalonSettingsExtended,
-} from "@/types/entities";
-import type { PaginatedResponse } from "@/types";
+import type { Salon } from "@/pages/admin/salon/types";
+import type { Client } from "@/pages/user/clients/types";
+import type { Sale } from "@/pages/user/sales/types";
+import type { Service } from "@/pages/user/services/types";
+import type { SalonSettingsExtended } from "@/pages/admin/salon-settings/types";
+import type { PaginatedResponse } from "@/types/api";
 
 export const defaultLoyaltySettings = {
   loyaltyEnabled: false,

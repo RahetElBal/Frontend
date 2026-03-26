@@ -1,4 +1,4 @@
-import type { Client } from "@/types";
+import type { Client } from "@/pages/user/clients/types";
 import { RevenueStats } from "./revenue-stats";
 import { NewClientsStats } from "./new-clients-stats";
 

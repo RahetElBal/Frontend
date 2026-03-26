@@ -44,15 +44,13 @@ import {
 } from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/badge";
-import type {
-  Appointment,
-  Client,
-  Service,
-  SalonSettings,
-  SalonSettingsExtended,
-  User as StaffUser,
-} from "@/types/entities";
-import { AppointmentStatus } from "@/types/entities";
+import type { SalonSettings } from "@/pages/admin/salon/types";
+import type { SalonSettingsExtended } from "@/pages/admin/salon-settings/types";
+import type { User as StaffUser } from "@/pages/admin/users/types";
+import type { Appointment } from "../../types";
+import { AppointmentStatus } from "../../enum";
+import type { Client } from "@/pages/user/clients/types";
+import type { Service } from "@/pages/user/services/types";
 import type { AppointmentFormData } from "../validation";
 import type { AppointmentModalState } from "../../types";
 import { useLanguage } from "@/hooks/useLanguage";

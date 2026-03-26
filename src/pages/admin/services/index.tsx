@@ -49,7 +49,9 @@ import {
   translateServiceCategory,
   translateServiceName,
 } from "@/common/service-translations";
-import type { Category, PaginatedResponse, Salon, Service } from "@/types";
+import type { PaginatedResponse } from "@/types/api";
+import type { Salon } from "@/pages/admin/salon/types";
+import type { Category, Service } from "@/pages/user/services/types";
 import { Badge } from "@/components/badge";
 import { useSalonCategories } from "@/contexts/CategoriesProvider";
 import { useServerTableState } from "@/hooks/useServerTableState";

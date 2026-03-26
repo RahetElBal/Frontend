@@ -13,11 +13,9 @@ import { usePost } from "@/hooks/usePost";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useUser } from "@/hooks/useUser";
 import { ROUTES } from "@/constants/navigation";
-import type { PaginatedResponse } from "@/types";
-import {
-  AdminNotificationType,
-  type AdminNotification,
-} from "@/types/entities";
+import type { PaginatedResponse } from "@/types/api";
+import { AdminNotificationType } from "./enum";
+import type { AdminNotification } from "./types";
 
 type NotificationPayload = {
   clientName?: string;

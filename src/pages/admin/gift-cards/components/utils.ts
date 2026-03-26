@@ -1,4 +1,4 @@
-import { GiftCardStatus } from "@/types/entities";
+import { GiftCardStatus } from "../enum";
 
 export const giftCardStatusColors: Record<
   GiftCardStatus,

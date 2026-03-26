@@ -1,5 +1,5 @@
 import type { TFunction } from "i18next";
-import type { Service } from "@/types/entities";
+import type { Service } from "@/pages/user/services/types";
 
 const normalize = (value?: string) => value?.trim().toLowerCase() ?? "";
 

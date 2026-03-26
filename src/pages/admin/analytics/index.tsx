@@ -34,7 +34,9 @@ import {
   translateServiceCategory,
   translateServiceName,
 } from "@/common/service-translations";
-import type { Appointment, Client, Sale } from "@/types/entities";
+import type { Appointment } from "@/pages/user/agenda/types";
+import type { Client } from "@/pages/user/clients/types";
+import type { Sale } from "@/pages/user/sales/types";
 import type { PaginatedResponse } from "@/types/api";
 import { normalizeSalesResponse } from "@/utils/normalize-sales";
 import { ROUTES } from "@/constants/navigation";

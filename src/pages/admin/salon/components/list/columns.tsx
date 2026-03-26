@@ -1,7 +1,8 @@
 import { useTranslation } from "react-i18next";
 import { Eye, Pencil, Trash2, CheckCircle2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import type { Salon, User } from "@/types/entities";
+import type { User } from "@/pages/admin/users/types";
+import type { Salon } from "../../types";
 import { canModifySalon } from "../utils";
 import type { Column } from "@/components/table";
 import { Badge } from "@/components/badge";

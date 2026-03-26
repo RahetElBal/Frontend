@@ -13,7 +13,8 @@ import { AppRole } from "@/constants/enum";
 import { useAuthContext } from "@/contexts/AuthProvider";
 import { buildUrl, get } from "@/lib/http";
 import type { PaginatedResponse } from "@/types/api";
-import type { Salon, User } from "@/types/entities";
+import type { Salon } from "@/pages/admin/salon/types";
+import type { User } from "@/pages/admin/users/types";
 import type { AuthUser } from "@/types/user";
 
 const STAFF_CACHE_TTL_MS = 1000 * 60 * 10;

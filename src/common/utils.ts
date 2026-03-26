@@ -1,4 +1,4 @@
-import type { User } from "@/types/entities";
+import type { User } from "@/pages/admin/users/types";
 export const formatDate = (date: string | Date): string => {
   const dateObj = typeof date === "string" ? new Date(date) : date;
   return dateObj.toLocaleDateString("fr-FR", {

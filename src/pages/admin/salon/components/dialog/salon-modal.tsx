@@ -4,7 +4,8 @@ import { useTranslation } from "react-i18next";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
 import { AppRole } from "@/constants/enum";
-import type { Salon, User } from "@/types/entities";
+import type { User } from "@/pages/admin/users/types";
+import type { Salon } from "../../types";
 import { toast } from "@/lib/toast";
 import { uploadFile } from "@/lib/http";
 import { resolveMediaUrl } from "@/lib/media";
@@ -41,9 +42,9 @@ import { createSalonFormSchema, type SalonFormData } from "../validation";
 import React from "react";
 import { parseValidationMsg } from "@/common/validator/zodI18n";
 import { normalizePhone } from "@/common/phone";
-import { detectAddress } from "@/common/geo";
 import { MediaImage } from "@/components/media-image";
 import { PhoneNumberInput } from "@/components/ui/phone-input";
+import { useDetectAddress } from "@/hooks/useDetectAddress";
 
 const DEFAULT_SALON_IMAGE = "/salon-placeholder.svg";
 
@@ -189,7 +190,7 @@ export function SalonModals({
   const hasCustomLogo = Boolean(rawLogo);
   const selectedSalonLogoUrl = resolveMediaUrl(selectedSalon?.logo);
 
-  const [isDetectingAddress, setIsDetectingAddress] = useState(false);
+  const { detectAddress, isDetecting: isDetectingAddress } = useDetectAddress();
 
   const clampCropOffset = (offset: { x: number; y: number }, zoom: number) => {
     if (!cropMeta) return offset;
@@ -335,7 +336,6 @@ export function SalonModals({
   };
 
   const handleDetectAddress = async () => {
-    setIsDetectingAddress(true);
     try {
       const result = await detectAddress();
       if (result.displayAddress) {
@@ -343,8 +343,6 @@ export function SalonModals({
       }
     } catch {
       toast.error(t("common.error"));
-    } finally {
-      setIsDetectingAddress(false);
     }
   };
 

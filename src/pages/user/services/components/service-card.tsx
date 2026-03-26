@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/hooks/useLanguage";
-import type { Service } from "@/types/entities";
+import type { Service } from "../types";
 import {
   getServiceImage,
   getServiceImageFallback,

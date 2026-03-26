@@ -30,17 +30,14 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { normalizePhone } from "@/common/phone";
 import { patch, post } from "@/lib/http";
 import type { ApiError } from "@/types/api";
-
-import type {
-  Appointment,
-  Client,
-  PaginatedResponse,
-  Sale,
-  SalonSettings,
-  SalonSettingsExtended,
-  User,
-} from "@/types";
-import { AppointmentStatus } from "@/types/entities";
+import type { PaginatedResponse } from "@/types/api";
+import type { SalonSettings } from "@/pages/admin/salon/types";
+import type { SalonSettingsExtended } from "@/pages/admin/salon-settings/types";
+import type { User } from "@/pages/admin/users/types";
+import { AppointmentStatus } from "./enum";
+import type { Appointment } from "./types";
+import type { Client } from "@/pages/user/clients/types";
+import type { Sale } from "@/pages/user/sales/types";
 import type { AppointmentModalState } from "./types";
 import { appointmentFormSchema, type AppointmentFormData } from "./components/validation";
 import type { CalendarEvent } from "./components/utils";

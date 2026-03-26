@@ -9,7 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import type { Client } from "@/types/entities";
+import type { Client } from "../../types";
 
 interface ClientColumnsProps {
   t: (key: string) => string;

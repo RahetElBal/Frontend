@@ -11,7 +11,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import type { User as UserType, StaffTimeOff } from "@/types/entities";
+import type { User as UserType } from "@/pages/admin/users/types";
+import type { StaffTimeOff } from "../types";
 import { getStaffName, getTimeOffStatusBadge } from "./utils";
 
 interface TimeOffViewProps {

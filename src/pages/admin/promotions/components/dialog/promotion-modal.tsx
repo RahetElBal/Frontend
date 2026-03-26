@@ -20,7 +20,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
-import type { PromotionType, PromotionAppliesTo } from "@/types/entities";
+import type { PromotionAppliesTo, PromotionType } from "../../enum";
 import type { CreatePromotionDto } from "../../types";
 import { generatePromotionCode } from "../utils";
 

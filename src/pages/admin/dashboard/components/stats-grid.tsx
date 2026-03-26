@@ -3,7 +3,9 @@ import { Building2, Users, DollarSign, Activity } from "lucide-react";
 import { StatsCard } from "@/components/stats-card";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useUser } from "@/hooks/useUser";
-import type { PaginatedResponse, Salon, User } from "@/types";
+import type { PaginatedResponse } from "@/types/api";
+import type { Salon } from "@/pages/admin/salon/types";
+import type { User } from "@/pages/admin/users/types";
 import { AdminStatsGrid } from "@/pages/admin/components/stats-grid";
 
 interface StatsGridProps {

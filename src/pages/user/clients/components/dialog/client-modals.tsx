@@ -14,7 +14,7 @@ import {
   Plus,
   Minus,
 } from "lucide-react";
-import type { Client } from "@/types/entities";
+import type { Client } from "../../types";
 import { toast } from "@/lib/toast";
 import { usePost } from "@/hooks/usePost";
 import { usePostAction } from "@/hooks/usePostAction";

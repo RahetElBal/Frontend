@@ -7,11 +7,9 @@ import { useSalonBusinessSummary } from "@/contexts/BusinessSummaryProvider";
 import { TodaysAppointments } from "./components/todays-appointments";
 import { TopServices } from "./components/top-services";
 import { StatsGrid } from "./components/stats-grid";
-import type {
-  Appointment,
-  Client,
-  PaginatedResponse,
-} from "@/types";
+import type { PaginatedResponse } from "@/types/api";
+import type { Appointment } from "@/pages/user/agenda/types";
+import type { Client } from "@/pages/user/clients/types";
 import { useGet, withParams } from "@/hooks/useGet";
 import { getLocalDateString } from "./components/utils";
 

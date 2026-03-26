@@ -11,8 +11,9 @@ import { useUser } from "@/hooks/useUser";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useServerTableState } from "@/hooks/useServerTableState";
 import { ROUTES } from "@/constants/navigation";
-import type { Appointment, PaginatedResponse } from "@/types";
-import { AppointmentStatus } from "@/types/entities";
+import type { PaginatedResponse } from "@/types/api";
+import type { Appointment } from "@/pages/user/agenda/types";
+import { AppointmentStatus } from "@/pages/user/agenda/enum";
 
 import { HistoryView } from "../agenda/components/history-view";
 import {

@@ -1,4 +1,4 @@
-import type { Sale, SaleItem } from "@/types/entities";
+import type { Sale, SaleItem } from "@/pages/user/sales/types";
 
 const toNumber = (value: unknown, fallback = 0): number => {
   if (typeof value === "number") {

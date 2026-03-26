@@ -2,8 +2,8 @@ import { useTranslation } from "react-i18next";
 import { Clock } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/badge";
-import { type Appointment } from "@/types/entities";
-import type { PaginatedResponse } from "@/types";
+import type { Appointment } from "@/pages/user/agenda/types";
+import type { PaginatedResponse } from "@/types/api";
 import { getTodaysAppointments, statusColors } from "./utils";
 
 interface TodaysAppointmentsProps {

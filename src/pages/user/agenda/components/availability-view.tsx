@@ -5,8 +5,9 @@ import { Calendar, Clock, User } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { LoadingPanel } from "@/components/loading-panel";
-import type { Appointment, User as StaffUser } from "@/types/entities";
-import { AppointmentStatus } from "@/types/entities";
+import type { User as StaffUser } from "@/pages/admin/users/types";
+import type { Appointment } from "../types";
+import { AppointmentStatus } from "../enum";
 import { getLocalDateString, normalizeTime, timeToMinutes } from "./utils";
 
 interface AvailabilityViewProps {

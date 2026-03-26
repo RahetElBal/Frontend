@@ -1,11 +1,11 @@
 import type {
-  Appointment,
-  Product,
-  Sale,
-  Service,
   Category,
-  Client,
-} from "@/types/entities";
+  Service,
+} from "@/pages/user/services/types";
+import type { Product } from "@/pages/user/products/types";
+import type { Appointment } from "@/pages/user/agenda/types";
+import type { Client } from "@/pages/user/clients/types";
+import type { Sale } from "@/pages/user/sales/types";
 
 export interface AggregatedItem {
   name: string;
