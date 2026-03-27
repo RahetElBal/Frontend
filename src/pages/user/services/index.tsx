@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { Plus, Clock, Edit, DollarSign } from "lucide-react";
@@ -49,7 +49,14 @@ import {
 import { useServicesContext } from "@/contexts/ServicesProvider";
 import { post } from "@/lib/http";
 import { ServiceCard } from "./components/service-card";
-import { getServiceCategoryName } from "./components/utils";
+import {
+  createServiceCategoryOptions,
+  createServiceFormDefaults,
+  getSelectedService,
+  getServiceFormValues,
+  getUncategorizedServices,
+  groupServicesByCategory,
+} from "./components/utils";
 import {
   translateServiceCategory,
   translateServiceName,
@@ -130,24 +137,9 @@ export function ServicesPage() {
       includeProducts: false,
     },
   );
-  
-  // Transform categories data for display
-  const categories = categoriesData.map((name) => {
-    return {
-      id: name,
-      name,
-      label: translateServiceCategory(t, name),
-      color: "#ec4899", // Default color, could be dynamic
-    };
-  });
 
-  // Helper functions
-  const getSelectedService = (): Service | null => {
-    if (!modalState || modalState.serviceId === "create") return null;
-    return services.find((s) => s.id === modalState.serviceId) || null;
-  };
-
-  const selectedService = getSelectedService();
+  const categories = createServiceCategoryOptions(categoriesData, t);
+  const selectedService = getSelectedService(modalState?.serviceId, services);
   const isCreateMode = modalState?.serviceId === "create";
   const isEditMode = modalState?.mode === "edit" && !isCreateMode;
   const isViewMode = modalState?.mode === "view";
@@ -156,41 +148,18 @@ export function ServicesPage() {
   // Form setup
   const form = useForm<ServiceFormData>({
     schema: serviceFormSchema,
-    defaultValues: {
-      name: "",
-      description: "",
-      duration: 30,
-      price: 0,
-      category: "",
-      isActive: true,
-    },
+    defaultValues: createServiceFormDefaults(),
   });
 
-  // Reset form when modal state changes
   useEffect(() => {
     if (isCreateMode) {
-      form.reset({
-        name: "",
-        description: "",
-        duration: 30,
-        price: 0,
-        category: "",
-        isActive: true,
-      });
-    } else if (selectedService && isEditMode) {
-      // Category can be a Category object or string depending on API response
-      const categoryValue = typeof selectedService.category === 'string' 
-        ? selectedService.category 
-        : selectedService.category?.name || "";
-      form.reset({
-        name: selectedService.name,
-        description: selectedService.description || "",
-        duration: selectedService.duration,
-        price: selectedService.price,
-        category: categoryValue,
-        isActive: selectedService.isActive,
-      });
+      form.reset(createServiceFormDefaults());
     }
+
+    if (selectedService && isEditMode) {
+      form.reset(getServiceFormValues(selectedService));
+    }
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [modalState, selectedService, isCreateMode, isEditMode]);
 
@@ -254,7 +223,7 @@ export function ServicesPage() {
   );
 
   // Toggle service status - POST /services/{id}/toggle
-  const toggleStatus = useCallback((serviceId: string) => {
+  const toggleStatus = (serviceId: string) => {
     post<Service, undefined>(`services/${serviceId}/toggle`, undefined)
       .then(() => {
         toast.success(t("common.success"));
@@ -267,12 +236,10 @@ export function ServicesPage() {
       .catch((error: ApiError) => {
         toast.error(error.message || t("common.error"));
       });
-  }, [t, salonId, invalidateCategories, invalidateServices, servicesTable]);
+  };
 
-  const servicesByCategory = categories.map((cat) => ({
-    ...cat,
-    services: services.filter((s) => getServiceCategoryName(s) === cat.id),
-  })).filter((category) => category.services.length > 0);
+  const servicesByCategory = groupServicesByCategory(categories, services);
+  const uncategorizedServices = getUncategorizedServices(services);
   const showServicesLoading =
     (servicesTable.isLoading || servicesTable.isFetching) &&
     services.length === 0;
@@ -402,25 +369,23 @@ export function ServicesPage() {
               </div>
             </div>
           ))}
-          {services.filter((s) => !getServiceCategoryName(s)).length > 0 && (
+          {uncategorizedServices.length > 0 && (
             <div>
               <h2 className="text-lg font-semibold mb-4">
                 {t("common.other")}
               </h2>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {services
-                  .filter((s) => !getServiceCategoryName(s))
-                  .map((service) => (
-                    <ServiceCard
-                      key={service.id}
-                      service={service}
-                      onView={handleView}
-                      onEdit={handleEdit}
-                      onDelete={handleDelete}
-                      onToggle={handleToggle}
-                      canManage={canManageServices}
-                    />
-                  ))}
+                {uncategorizedServices.map((service) => (
+                  <ServiceCard
+                    key={service.id}
+                    service={service}
+                    onView={handleView}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                    onToggle={handleToggle}
+                    canManage={canManageServices}
+                  />
+                ))}
               </div>
             </div>
           )}

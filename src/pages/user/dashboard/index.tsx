@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { selectCollectionData } from "@/common/utils";
 import { useUser } from "@/hooks/useUser";
 import { Spinner } from "@/components/spinner";
 import { PageHeader } from "@/components/page-header";
@@ -37,19 +38,10 @@ export function DashboardPage() {
     query: appointmentsParams,
     options: {
       enabled: !!salonId && !!today,
-      select: (response) => {
-        const normalizedResponse = response as
-          | { data?: Appointment[] }
-          | Appointment[];
-
-        if (Array.isArray(normalizedResponse)) {
-          return normalizedResponse;
-        }
-
-        return Array.isArray(normalizedResponse?.data)
-          ? normalizedResponse.data
-          : [];
-      },
+      select: (response) =>
+        selectCollectionData(
+          response as { data?: Appointment[] } | Appointment[],
+        ),
     },
   });
 
@@ -58,17 +50,8 @@ export function DashboardPage() {
     query: { salonId, perPage: 10 },
     options: {
       enabled: !!salonId,
-      select: (response) => {
-        const normalizedResponse = response as { data?: Client[] } | Client[];
-
-        if (Array.isArray(normalizedResponse)) {
-          return normalizedResponse;
-        }
-
-        return Array.isArray(normalizedResponse?.data)
-          ? normalizedResponse.data
-          : [];
-      },
+      select: (response) =>
+        selectCollectionData(response as { data?: Client[] } | Client[]),
     },
   });
 

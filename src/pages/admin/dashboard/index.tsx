@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { selectCollectionData } from "@/common/utils";
 import { useUser } from "@/hooks/useUser";
 import { useGet } from "@/hooks/useGet";
 import { useSalonBusinessSummary } from "@/contexts/BusinessSummaryProvider";
@@ -38,17 +39,8 @@ export default function AdminDashboardPage() {
   const { data: users = [], isLoading: usersLoading } = useGet<User[]>({
     path: "users",
     options: {
-      select: (response) => {
-        const normalizedResponse = response as { data?: User[] } | User[];
-
-        if (Array.isArray(normalizedResponse)) {
-          return normalizedResponse;
-        }
-
-        return Array.isArray(normalizedResponse?.data)
-          ? normalizedResponse.data
-          : [];
-      },
+      select: (response) =>
+        selectCollectionData(response as { data?: User[] } | User[]),
     },
   });
 

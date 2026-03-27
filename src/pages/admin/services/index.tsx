@@ -1,6 +1,7 @@
-import { Fragment, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { selectCollectionData } from "@/common/utils";
 
 import { PageHeader } from "@/components/page-header";
 import { Card } from "@/components/ui/card";
@@ -51,28 +52,35 @@ import {
   translateServiceName,
 } from "@/common/service-translations";
 import type { Salon } from "@/pages/admin/salon/types";
-import type { Category, Service } from "@/pages/user/services/types";
+import type { Service } from "@/pages/user/services/types";
 import { Badge } from "@/components/badge";
 import { useSalonCategories } from "@/contexts/CategoriesProvider";
+import {
+  ADMIN_SERVICES_PAGE_SIZE,
+  PACK_CATEGORY,
+  PACK_OPTIONS_LIMIT,
+  SERVICE_DURATION_STEP_MINUTES,
+  createDefaultServiceFormValues,
+  getAvailableSalons,
+  getCategoryName,
+  getCategoryList,
+  getCategoryOptions,
+  getDirtyServiceIds,
+  getEditServiceFormState,
+  getGroupedServices,
+  getPackDiscountValue,
+  getPackFinalPrice,
+  getPackServiceOptions,
+  getPackTotals,
+  getPriceEditsMap,
+  getSelectedPackServices,
+  togglePackServiceIds,
+  updateServiceFormValues,
+  type ServiceFormValues,
+  type ServicePayload,
+} from "./utils";
 
 type ServiceModalMode = "create" | "edit";
-type ServicePayload = {
-  salonId?: string;
-  name: string;
-  category: string;
-  duration: number;
-  price: number;
-  description?: string;
-  image?: string;
-  isActive: boolean;
-  isPack?: boolean;
-  packServiceIds?: string[];
-};
-
-const PACK_CATEGORY = "PACK";
-const SERVICE_DURATION_STEP_MINUTES = 15;
-const ADMIN_SERVICES_PAGE_SIZE = 20;
-const PACK_OPTIONS_LIMIT = 1000;
 
 export default function AdminServicesPage() {
   const { t } = useTranslation();
@@ -99,25 +107,10 @@ export default function AdminServicesPage() {
   const [isUploadingServiceImage, setIsUploadingServiceImage] =
     useState(false);
   const serviceImageInputRef = useRef<HTMLInputElement | null>(null);
-  const [formValues, setFormValues] = useState({
-    name: "",
-    category: "",
-    duration: "",
-    price: "",
-    packDiscount: "",
-    description: "",
-    image: "",
-    isActive: true,
-    isPack: false,
-    packServiceIds: [] as string[],
-  });
+  const [formValues, setFormValues] = useState<ServiceFormValues>(
+    createDefaultServiceFormValues(),
+  );
   const [lastNonPackCategory, setLastNonPackCategory] = useState("");
-
-  const getCategoryName = (category?: string | Category): string => {
-    if (!category) return "";
-    if (typeof category === "string") return category;
-    return category.name || "";
-  };
 
   const { data: salons = [] } = useGet<Salon[]>({
     path: "salons",
@@ -127,11 +120,7 @@ export default function AdminServicesPage() {
     },
   });
 
-  const availableSalons = isSuperadmin
-    ? salons
-    : user?.salon
-      ? [user.salon]
-      : [];
+  const availableSalons = getAvailableSalons(isSuperadmin, salons, user?.salon);
 
   const servicesTable = useTable<Service>({
     path: "services",
@@ -162,74 +151,28 @@ export default function AdminServicesPage() {
     options: {
       enabled: isModalOpen && !!selectedSalonId,
       staleTime: servicesStaleTime,
-      select: (response) => {
-        const normalizedResponse = response as
-          | { data?: Service[] }
-          | Service[];
-
-        if (Array.isArray(normalizedResponse)) {
-          return normalizedResponse;
-        }
-
-        return Array.isArray(normalizedResponse?.data)
-          ? normalizedResponse.data
-          : [];
-      },
+      select: (response) =>
+        selectCollectionData(response as { data?: Service[] } | Service[]),
     },
   });
 
-  const categories = useMemo(() => {
-    return Array.from(new Set(categoryNames.filter(Boolean))).sort((a, b) =>
-      a.localeCompare(b),
-    );
-  }, [categoryNames]);
-
-  const categoryOptions = useMemo(() => {
-    const baseCategories = categories.filter(
-      (category) => category !== PACK_CATEGORY,
-    );
-    if (formValues.isPack || formValues.category === PACK_CATEGORY) {
-      return [PACK_CATEGORY, ...baseCategories];
-    }
-    return baseCategories;
-  }, [categories, formValues.isPack, formValues.category]);
-
-  const packServiceOptions = useMemo(
-    () =>
-      allPackServices.filter(
-        (service) => !service.isPack && service.id !== editingServiceId,
-      ),
-    [allPackServices, editingServiceId],
+  const categories = getCategoryList(categoryNames);
+  const categoryOptions = getCategoryOptions(categories, formValues);
+  const packServiceOptions = getPackServiceOptions(
+    allPackServices,
+    editingServiceId,
   );
-
-  const selectedPackServices = useMemo(() => {
-    if (!formValues.isPack) return [];
-    const selectedIds = new Set(formValues.packServiceIds);
-    return packServiceOptions.filter((service) => selectedIds.has(service.id));
-  }, [formValues.isPack, formValues.packServiceIds, packServiceOptions]);
-
-  const packTotals = useMemo(() => {
-    const totalDuration = selectedPackServices.reduce(
-      (sum, service) => sum + (Number(service.duration) || 0),
-      0,
-    );
-    const totalPrice = selectedPackServices.reduce(
-      (sum, service) => sum + (Number(service.price) || 0),
-      0,
-    );
-    return { totalDuration, totalPrice };
-  }, [selectedPackServices]);
-
-  const packDiscountValue = useMemo(() => {
-    if (!formValues.isPack) return 0;
-    const parsed = Number(formValues.packDiscount);
-    return Number.isFinite(parsed) ? parsed : 0;
-  }, [formValues.isPack, formValues.packDiscount]);
-
-  const packFinalPrice = useMemo(() => {
-    if (!formValues.isPack) return 0;
-    return Math.max(0, packTotals.totalPrice - packDiscountValue);
-  }, [formValues.isPack, packTotals.totalPrice, packDiscountValue]);
+  const selectedPackServices = getSelectedPackServices(
+    formValues,
+    packServiceOptions,
+  );
+  const packTotals = getPackTotals(selectedPackServices);
+  const packDiscountValue = getPackDiscountValue(formValues);
+  const packFinalPrice = getPackFinalPrice(
+    formValues,
+    packTotals,
+    packDiscountValue,
+  );
 
   useEffect(() => {
     if (!isSuperadmin) {
@@ -251,13 +194,7 @@ export default function AdminServicesPage() {
 
   useEffect(() => {
     if (services.length === 0) return;
-    const nextPrices = services.reduce<Record<string, string>>(
-      (acc, service) => {
-        acc[service.id] = String(service.price ?? 0);
-        return acc;
-      },
-      {},
-    );
+    const nextPrices = getPriceEditsMap(services);
     setPriceEdits(nextPrices);
     setInitialPrices(nextPrices);
   }, [services]);
@@ -294,11 +231,11 @@ export default function AdminServicesPage() {
     }
   };
 
-  const dirtyServiceIds = useMemo(() => {
-    return services
-      .filter((service) => priceEdits[service.id] !== initialPrices[service.id])
-      .map((service) => service.id);
-  }, [services, priceEdits, initialPrices]);
+  const dirtyServiceIds = getDirtyServiceIds(
+    services,
+    priceEdits,
+    initialPrices,
+  );
 
   const handleReset = () => {
     setPriceEdits(initialPrices);
@@ -342,100 +279,45 @@ export default function AdminServicesPage() {
     setModalMode("create");
     setEditingServiceId(null);
     setLastNonPackCategory("");
-    setFormValues({
-      name: "",
-      category: "",
-      duration: "",
-      price: "",
-      packDiscount: "",
-      description: "",
-      image: "",
-      isActive: true,
-      isPack: false,
-      packServiceIds: [],
-    });
+    setFormValues(createDefaultServiceFormValues());
     setIsModalOpen(true);
   };
 
   const openEditModal = (service: Service) => {
     setModalMode("edit");
     setEditingServiceId(service.id);
-    const categoryName = getCategoryName(service.category);
-    const packBasePrice = (service.packServiceIds ?? []).reduce(
-      (sum, serviceId) => {
-        const item = services.find((entry) => entry.id === serviceId);
-        return sum + (Number(item?.price) || 0);
-      },
-      0,
-    );
-    const packDiscount = service.isPack
-      ? Math.max(0, packBasePrice - Number(service.price ?? 0))
-      : 0;
-    setLastNonPackCategory(service.isPack ? "" : categoryName);
-    setFormValues({
-      name: service.name ?? "",
-      category: service.isPack ? PACK_CATEGORY : categoryName,
-      duration: String(service.duration ?? ""),
-      price: String(service.price ?? ""),
-      packDiscount: service.isPack ? String(packDiscount) : "",
-      description: service.description ?? "",
-      image: service.image ?? "",
-      isActive: service.isActive ?? true,
-      isPack: service.isPack ?? false,
-      packServiceIds: service.packServiceIds ?? [],
-    });
+    const nextState = getEditServiceFormState(service, services);
+    setLastNonPackCategory(nextState.lastNonPackCategory);
+    setFormValues(nextState.formValues);
     setIsModalOpen(true);
   };
 
   const handleFormChange = (
-    field: keyof typeof formValues,
+    field: keyof ServiceFormValues,
     value: string | boolean,
   ) => {
-    setFormValues((prev) => {
-      if (field === "isPack") {
-        const nextIsPack = Boolean(value);
-        if (nextIsPack) {
-          if (prev.category && prev.category !== PACK_CATEGORY) {
-            setLastNonPackCategory(prev.category);
-          }
-          return {
-            ...prev,
-            isPack: true,
-            category: PACK_CATEGORY,
-            packDiscount: "",
-          };
-        }
-        const restoredCategory =
-          prev.category === PACK_CATEGORY ? lastNonPackCategory : prev.category;
-        return {
-          ...prev,
-          isPack: false,
-          category: restoredCategory || "",
-          packDiscount: "",
-          packServiceIds: [],
-        };
+    setFormValues((previousValues) => {
+      const nextState = updateServiceFormValues(
+        previousValues,
+        field,
+        value,
+        lastNonPackCategory,
+      );
+
+      if (nextState.lastNonPackCategory !== lastNonPackCategory) {
+        setLastNonPackCategory(nextState.lastNonPackCategory);
       }
-      if (field === "category") {
-        if (prev.isPack) {
-          return { ...prev, category: PACK_CATEGORY };
-        }
-        const nextCategory = String(value);
-        setLastNonPackCategory(nextCategory);
-        return { ...prev, category: nextCategory };
-      }
-      return { ...prev, [field]: value };
+
+      return nextState.formValues;
     });
   };
 
   const togglePackService = (serviceId: string) => {
     setFormValues((prev) => {
-      const existing = new Set(prev.packServiceIds);
-      if (existing.has(serviceId)) {
-        existing.delete(serviceId);
-      } else {
-        existing.add(serviceId);
-      }
-      return { ...prev, packServiceIds: Array.from(existing) };
+      return {
+        ...prev,
+        packServiceIds: togglePackServiceIds(prev.packServiceIds, serviceId),
+      };
     });
   };
 
@@ -443,11 +325,18 @@ export default function AdminServicesPage() {
     const rawDuration = Number(formValues.duration);
     const price = Number(formValues.price);
     const discount = Number(formValues.packDiscount);
-    const resolvedDiscount = Number.isFinite(discount) ? discount : 0;
-    const duration = formValues.isPack ? packTotals.totalDuration : rawDuration;
-    const resolvedPrice = formValues.isPack
-      ? Math.max(0, packTotals.totalPrice - resolvedDiscount)
-      : price;
+    let resolvedDiscount = 0;
+    let duration = rawDuration;
+    let resolvedPrice = price;
+
+    if (Number.isFinite(discount)) {
+      resolvedDiscount = discount;
+    }
+
+    if (formValues.isPack) {
+      duration = packTotals.totalDuration;
+      resolvedPrice = Math.max(0, packTotals.totalPrice - resolvedDiscount);
+    }
     if (!formValues.name.trim()) {
       toast.error(t("admin.services.nameRequired"));
       return;
@@ -481,41 +370,48 @@ export default function AdminServicesPage() {
 
     setIsSavingService(true);
     try {
-      const resolvedCategory = formValues.isPack
-        ? PACK_CATEGORY
-        : formValues.category.trim();
+      let resolvedCategory = formValues.category.trim();
+      if (formValues.isPack) {
+        resolvedCategory = PACK_CATEGORY;
+      }
+
+      const payload: ServicePayload = {
+        name: formValues.name.trim(),
+        category: resolvedCategory,
+        duration,
+        price: resolvedPrice,
+        isActive: formValues.isActive,
+      };
+
+      const description = formValues.description.trim();
+      if (description) {
+        payload.description = description;
+      }
+
+      const image = formValues.image.trim();
+      if (image) {
+        payload.image = image;
+      }
+
+      if (formValues.isPack) {
+        payload.isPack = true;
+        payload.packServiceIds = formValues.packServiceIds;
+      }
+
       if (modalMode === "create") {
-        await post<Service, ServicePayload>("services", {
-          salonId: selectedSalonId,
-          name: formValues.name.trim(),
-          category: resolvedCategory,
-          duration,
-          price: resolvedPrice,
-          description: formValues.description.trim() || undefined,
-          image: formValues.image.trim() || undefined,
-          isActive: formValues.isActive,
-          isPack: formValues.isPack,
-          packServiceIds: formValues.isPack
-            ? formValues.packServiceIds
-            : [],
-        });
+        payload.salonId = selectedSalonId;
+        await post<Service, ServicePayload>("services", payload);
         toast.success(t("admin.services.created"));
-      } else if (editingServiceId) {
-        await patch<Service, ServicePayload>(`services/${editingServiceId}`, {
-          name: formValues.name.trim(),
-          category: resolvedCategory,
-          duration,
-          price: resolvedPrice,
-          description: formValues.description.trim() || undefined,
-          image: formValues.image.trim() || undefined,
-          isActive: formValues.isActive,
-          isPack: formValues.isPack,
-          packServiceIds: formValues.isPack
-            ? formValues.packServiceIds
-            : [],
-        });
+      }
+
+      if (modalMode === "edit" && editingServiceId) {
+        await patch<Service, ServicePayload>(
+          `services/${editingServiceId}`,
+          payload,
+        );
         toast.success(t("admin.services.updated"));
       }
+
       if (selectedSalonId) {
         invalidateServices(selectedSalonId);
         invalidateCategories(selectedSalonId);
@@ -557,19 +453,11 @@ export default function AdminServicesPage() {
     }
   };
 
-  const groupedServices = useMemo(() => {
-    if (!groupByCategory) return { all: services };
-    return services.reduce<Record<string, Service[]>>(
-      (acc, service) => {
-        const categoryName =
-          getCategoryName(service.category) || t("common.unknown");
-        if (!acc[categoryName]) acc[categoryName] = [];
-        acc[categoryName].push(service);
-        return acc;
-      },
-      {},
-    );
-  }, [groupByCategory, services, t]);
+  const groupedServices = getGroupedServices(
+    services,
+    groupByCategory,
+    t("common.unknown"),
+  );
 
   if (!isLoading && !isAdmin) {
     return <Navigate to={ROUTES.ADMIN} replace />;

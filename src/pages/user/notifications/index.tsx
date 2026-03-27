@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
+import { selectCollectionData } from "@/common/utils";
 
 import { PageHeader } from "@/components/page-header";
 import { Card } from "@/components/ui/card";
@@ -58,19 +59,10 @@ export function NotificationsPage() {
       enabled: !!salonId,
       staleTime: 1000 * 30,
       refetchOnMount: "always",
-      select: (response) => {
-        const normalizedResponse = response as
-          | { data?: AdminNotification[] }
-          | AdminNotification[];
-
-        if (Array.isArray(normalizedResponse)) {
-          return normalizedResponse;
-        }
-
-        return Array.isArray(normalizedResponse?.data)
-          ? normalizedResponse.data
-          : [];
-      },
+      select: (response) =>
+        selectCollectionData(
+          response as { data?: AdminNotification[] } | AdminNotification[],
+        ),
     },
   });
   const unreadCount = notifications.reduce(

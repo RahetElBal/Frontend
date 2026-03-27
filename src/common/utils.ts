@@ -1,4 +1,23 @@
 import type { User } from "@/pages/admin/users/types";
+
+export const selectCollectionData = <T>(
+  response: { data?: T[] } | T[] | null | undefined,
+): T[] => {
+  if (!response) {
+    return [];
+  }
+
+  if (Array.isArray(response)) {
+    return response;
+  }
+
+  if (!Array.isArray(response.data)) {
+    return [];
+  }
+
+  return response.data;
+};
+
 export const formatDate = (date: string | Date): string => {
   const dateObj = typeof date === "string" ? new Date(date) : date;
   return dateObj.toLocaleDateString("fr-FR", {

@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Bell, BellRing, Check } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { selectCollectionData } from "@/common/utils";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -113,19 +114,10 @@ export function AdminNotificationsBell() {
         enabled: canShow,
         staleTime: 1000 * 30,
         refetchInterval: !isStreamConnected ? NOTIFICATIONS_POLL_MS : false,
-        select: (response) => {
-          const normalizedResponse = response as
-            | { data?: AdminNotification[] }
-            | AdminNotification[];
-
-          if (Array.isArray(normalizedResponse)) {
-            return normalizedResponse;
-          }
-
-          return Array.isArray(normalizedResponse?.data)
-            ? normalizedResponse.data
-            : [];
-        },
+        select: (response) =>
+          selectCollectionData(
+            response as { data?: AdminNotification[] } | AdminNotification[],
+          ),
       },
     });
   const { data: unreadCountFromMeta = 0 } = useGet<number>({

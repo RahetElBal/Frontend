@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { Calendar, List } from "lucide-react";
+import { selectCollectionData } from "@/common/utils";
 import { PageHeader } from "@/components/page-header";
 import { LoadingPanel } from "@/components/loading-panel";
 import { Spinner } from "@/components/spinner";
@@ -306,19 +307,10 @@ export function AgendaPage() {
     options: {
       enabled: shouldFetchAppointments,
       staleTime: appointmentsStaleTime,
-      select: (response) => {
-        const normalizedResponse = response as
-          | { data?: Appointment[] }
-          | Appointment[];
-
-        if (Array.isArray(normalizedResponse)) {
-          return normalizedResponse;
-        }
-
-        return Array.isArray(normalizedResponse?.data)
-          ? normalizedResponse.data
-          : [];
-      },
+      select: (response) =>
+        selectCollectionData(
+          response as { data?: Appointment[] } | Appointment[],
+        ),
     },
   });
 
@@ -328,17 +320,8 @@ export function AgendaPage() {
     options: {
       enabled: shouldLoadReferenceData,
       staleTime: clientsStaleTime,
-      select: (response) => {
-        const normalizedResponse = response as { data?: Client[] } | Client[];
-
-        if (Array.isArray(normalizedResponse)) {
-          return normalizedResponse;
-        }
-
-        return Array.isArray(normalizedResponse?.data)
-          ? normalizedResponse.data
-          : [];
-      },
+      select: (response) =>
+        selectCollectionData(response as { data?: Client[] } | Client[]),
     },
   });
 
