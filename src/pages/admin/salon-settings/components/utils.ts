@@ -17,7 +17,7 @@ function isTimeEarlier(candidate?: string, reference?: string) {
 
 export const defaultSettings: Partial<SalonSettingsExtended> = {
   currency: "EUR",
-  timezone: "Europe/Paris",
+  timezone: "Africa/Algiers",
   language: "fr",
   dateFormat: "DD/MM/YYYY",
   timeFormat: "24h",

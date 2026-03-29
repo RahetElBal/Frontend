@@ -32,6 +32,7 @@ import {
 import { Badge } from "@/components/badge";
 import { ServerDataTable } from "@/components/table";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useSalonDateTime } from "@/hooks/useSalonDateTime";
 import { useTable } from "@/hooks/useTable";
 import { useUser } from "@/hooks/useUser";
 import { ROUTES } from "@/constants/navigation";
@@ -43,8 +44,6 @@ import { usePost } from "@/hooks/usePost";
 import { toast } from "@/lib/toast";
 import { getSalesColumns } from "./components/list/columns";
 import {
-  formatSaleDate,
-  formatSaleTime,
   getPaymentMethodLabel,
   getSaleDiscountSummary,
   getSaleItemPricing,
@@ -60,6 +59,7 @@ const SALES_PAGE_SIZE = 20;
 export function SalesPage() {
   const { t } = useTranslation();
   const { formatCurrency } = useLanguage();
+  const { formatDate, formatTime } = useSalonDateTime();
   const { user, isAdmin, isSuperadmin } = useUser();
   const location = useLocation();
   const navigate = useNavigate();
@@ -206,11 +206,22 @@ export function SalesPage() {
     return getSalesColumns({
       t,
       formatCurrency,
+      formatDate,
+      formatTime,
       onRefund: handleRefund,
       isRefunding: (sale) => isRefunding && refundingSaleId === sale.id,
       onView: (sale) => setSelectedSaleId(sale.id),
     });
-  }, [formatCurrency, handleRefund, isRefunding, refundingSaleId, setSelectedSaleId, t]);
+  }, [
+    formatCurrency,
+    formatDate,
+    formatTime,
+    handleRefund,
+    isRefunding,
+    refundingSaleId,
+    setSelectedSaleId,
+    t,
+  ]);
 
   const selectedSaleDiscount = useMemo(() => {
     return getSaleDiscountSummary(selectedSale);
@@ -405,7 +416,7 @@ export function SalesPage() {
                     {selectedSale.id.slice(0, 12).toUpperCase()}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {formatSaleTime(selectedSale.createdAt)}
+                    {formatTime(selectedSale.createdAt)}
                   </p>
                 </div>
                 <Badge variant={saleStatusColors[selectedSale.status]}>
@@ -439,7 +450,7 @@ export function SalesPage() {
                     {t("fields.date")}
                   </p>
                   <p className="font-medium">
-                    {formatSaleDate(selectedSale.createdAt)}
+                    {formatDate(selectedSale.createdAt)}
                   </p>
                 </div>
                 <div>

@@ -1,8 +1,8 @@
 import { useTranslation } from "react-i18next";
 import { Building2 } from "lucide-react";
+import { useSalonDateTime } from "@/hooks/useSalonDateTime";
 import { useUser } from "@/hooks/useUser";
 import type { Salon } from "@/pages/admin/salon/types";
-import { formatDate } from "@/common/utils";
 import { RecentCard } from "./recent-card";
 import { MediaImage } from "@/components/media-image";
 
@@ -15,6 +15,7 @@ interface RecentSalonsCardProps {
 export function RecentSalonsCard({ salons }: RecentSalonsCardProps) {
   const { t } = useTranslation();
   const { isSuperadmin } = useUser();
+  const { formatDate } = useSalonDateTime();
   if (!isSuperadmin) {
     return null;
   }

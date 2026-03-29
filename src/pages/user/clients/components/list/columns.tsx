@@ -15,6 +15,7 @@ import type { Client } from "../../types";
 interface ClientColumnsProps {
   t: (key: string) => string;
   formatCurrency: (value: number) => string;
+  formatDate: (value: string | Date) => string;
   onView: (client: Client) => void;
   onEdit: (client: Client) => void;
   onDelete: (client: Client) => void;
@@ -26,6 +27,7 @@ const isWalkInClient = (client: Client) =>
 export const getClientColumns = ({
   t,
   formatCurrency,
+  formatDate,
   onView,
   onEdit,
   onDelete,
@@ -89,7 +91,7 @@ export const getClientColumns = ({
         isWalkInClient(client) ? (
           <span className="text-muted-foreground">-</span>
         ) : client.lastVisit ? (
-          new Date(client.lastVisit).toLocaleDateString()
+          formatDate(client.lastVisit)
         ) : (
           <span className="text-muted-foreground">-</span>
         ),

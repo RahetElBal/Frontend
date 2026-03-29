@@ -48,6 +48,7 @@ import type { ClientFormData } from "../validation";
 import { getValidationErrorMessage } from "@/pages/user/utils";
 import { FormErrorMessage } from "@/pages/user/components/form-error-message";
 import { normalizePhone } from "@/common/phone";
+import { useSalonDateTime } from "@/hooks/useSalonDateTime";
 
 interface ClientModalsProps {
   modalState: ClientModalState;
@@ -66,6 +67,7 @@ export function ClientModals({
 }: ClientModalsProps) {
   const { t } = useTranslation();
   const { formatCurrency } = useLanguage();
+  const { formatDate } = useSalonDateTime();
   const { user } = useUser();
   const loyaltyVisible = MVP_VISIBILITY.loyalty;
   const canManageLoyalty =
@@ -84,11 +86,7 @@ export function ClientModals({
 
   const formatBirthDate = (value?: string) => {
     if (!value) return null;
-    const parsed = new Date(`${value.slice(0, 10)}T12:00:00`);
-    if (Number.isNaN(parsed.getTime())) {
-      return value;
-    }
-    return parsed.toLocaleDateString();
+    return formatDate(value.slice(0, 10));
   };
 
   const selectedClient = useMemo(() => {
@@ -427,9 +425,7 @@ export function ClientModals({
                       {selectedClient.lastVisit && (
                         <span className="text-muted-foreground text-sm ml-2">
                           ({t("fields.lastVisit")}:{" "}
-                          {new Date(
-                            selectedClient.lastVisit,
-                          ).toLocaleDateString()}
+                          {formatDate(selectedClient.lastVisit)}
                           )
                         </span>
                       )}

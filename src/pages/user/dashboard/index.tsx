@@ -1,7 +1,9 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { getCurrentDateTimeInTimeZone } from "@/common/date";
 import { selectCollectionData } from "@/common/utils";
 import { useUser } from "@/hooks/useUser";
+import { useSalonDateTime } from "@/hooks/useSalonDateTime";
 import { Spinner } from "@/components/spinner";
 import { PageHeader } from "@/components/page-header";
 import { useSalonBusinessSummary } from "@/hooks/useSalonBusinessSummary";
@@ -11,14 +13,16 @@ import { StatsGrid } from "./components/stats-grid";
 import type { Appointment } from "@/pages/user/agenda/types";
 import type { Client } from "@/pages/user/clients/types";
 import { useGet } from "@/hooks/useGet";
-import { getLocalDateString } from "./components/utils";
 
 export function DashboardPage() {
   const { t } = useTranslation();
   const { user, isLoading, isUser } = useUser();
+  const { formatTime } = useSalonDateTime();
 
   const salonId = user?.salon?.id;
-  const today = useMemo(() => getLocalDateString(), []);
+  const today = useMemo(() => {
+    return getCurrentDateTimeInTimeZone(user?.salon?.settings?.timezone).date;
+  }, [user?.salon?.settings?.timezone]);
   const appointmentsParams = useMemo(
     () => ({
       salonId,
@@ -79,7 +83,7 @@ export function DashboardPage() {
         loading={statsLoading}
       />
 
-      <TodaysAppointments appointments={appointments} />
+      <TodaysAppointments appointments={appointments} formatTime={formatTime} />
       <TopServices />
     </div>
   );

@@ -22,11 +22,11 @@ import {
 } from "@/components/ui/table";
 import { Spinner } from "@/components/spinner";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useSalonDateTime } from "@/hooks/useSalonDateTime";
 import type { Appointment } from "../types";
 import { AppointmentStatus } from "../enum";
 import {
   getAppointmentDisplayStatus,
-  normalizeTime,
   statusColors,
 } from "./utils";
 import { translateServiceName } from "@/common/service-translations";
@@ -56,6 +56,7 @@ interface HistoryViewProps {
 }
 
 type AppointmentHistoryRow = Appointment & {
+  formattedDate: string;
   clientName: string;
   serviceName: string;
   staffName: string;
@@ -117,6 +118,7 @@ export function HistoryView({
 }: HistoryViewProps) {
   const { t } = useTranslation();
   const { formatCurrency } = useLanguage();
+  const { formatDate, formatTime, timezone } = useSalonDateTime();
   const staffLabelById = useMemo(() => {
     const map = new Map<string, string>();
     staffOptions.forEach((staff) => {
@@ -140,10 +142,14 @@ export function HistoryView({
         ? translateServiceName(t, appointment.service)
         : "";
       const staffName = getStaffLabel(appointment, staffLabelById, "");
-      const timeRange = `${normalizeTime(appointment.startTime)} - ${normalizeTime(
+      const timeRange = `${formatTime(appointment.startTime)} - ${formatTime(
         appointment.endTime,
       )}`;
-      const displayStatus = getAppointmentDisplayStatus(appointment);
+      const displayStatus = getAppointmentDisplayStatus(
+        appointment,
+        new Date(),
+        timezone,
+      );
       const statusLabel = t(`agenda.statuses.${displayStatus}`, {
         defaultValue: displayStatus,
       });
@@ -154,6 +160,7 @@ export function HistoryView({
 
       return {
         ...appointment,
+        formattedDate: formatDate(appointment.date),
         clientName: clientName || t("common.unknown"),
         serviceName: serviceName || t("common.unknown"),
         staffName: staffName || t("common.unknown"),
@@ -164,7 +171,7 @@ export function HistoryView({
         priceValue,
       };
     });
-  }, [appointments, staffLabelById, t]);
+  }, [appointments, formatDate, formatTime, staffLabelById, t, timezone]);
 
   const showingFrom = totalItems === 0 ? 0 : (page - 1) * perPage + 1;
   const showingTo = totalItems === 0 ? 0 : Math.min(page * perPage, totalItems);
@@ -312,7 +319,7 @@ export function HistoryView({
                   <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
                     {t("fields.date")}
                   </p>
-                  <p className="text-sm">{row.date}</p>
+                  <p className="text-sm">{row.formattedDate}</p>
                 </div>
                 <div className="space-y-1">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
@@ -408,7 +415,7 @@ export function HistoryView({
                     className={onSelectAppointment ? "cursor-pointer" : undefined}
                     onClick={() => onSelectAppointment?.(row)}
                   >
-                    <TableCell>{row.date}</TableCell>
+                    <TableCell>{row.formattedDate}</TableCell>
                     <TableCell>{row.timeRange}</TableCell>
                     <TableCell>{row.clientName}</TableCell>
                     <TableCell>{row.serviceName}</TableCell>

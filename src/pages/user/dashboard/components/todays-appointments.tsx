@@ -7,8 +7,12 @@ import { getTodaysAppointments, statusColors } from "./utils";
 
 interface TodaysAppointmentsProps {
   appointments?: Appointment[];
+  formatTime: (value: string | Date) => string;
 }
-export function TodaysAppointments({ appointments }: TodaysAppointmentsProps) {
+export function TodaysAppointments({
+  appointments,
+  formatTime,
+}: TodaysAppointmentsProps) {
   const { t } = useTranslation();
 
   const allAppointments = appointments || [];
@@ -46,7 +50,7 @@ export function TodaysAppointments({ appointments }: TodaysAppointmentsProps) {
                 </div>
               </div>
               <div className="text-end">
-                <p className="font-medium">{apt.startTime}</p>
+                <p className="font-medium">{formatTime(apt.startTime)}</p>
                 <Badge variant={statusColors[apt.status]}>{apt.status}</Badge>
               </div>
             </div>

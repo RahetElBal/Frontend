@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { PageHeader } from "@/components/page-header";
 import { Card } from "@/components/ui/card";
 import { Spinner } from "@/components/spinner";
+import { getCurrentDateTimeInTimeZone } from "@/common/date";
 import { useGet } from "@/hooks/useGet";
 import { useTable } from "@/hooks/useTable";
 import { useSalonStaff } from "@/hooks/useSalonStaff";
@@ -51,12 +52,13 @@ export function AgendaHistoryPage() {
   }
 
   const salonId = user?.salon?.id;
+  const today = getCurrentDateTimeInTimeZone(user?.salon?.settings?.timezone).date;
   const [dateFrom, setDateFrom] = useState(() => {
     const date = new Date();
     date.setDate(date.getDate() - 30);
     return getLocalDateString(date);
   });
-  const [dateTo, setDateTo] = useState(() => getLocalDateString());
+  const [dateTo, setDateTo] = useState(() => today);
   const [status, setStatus] = useState<"all" | AppointmentStatus>("all");
   const [staffId, setStaffId] = useState<string | null>(ALL_STAFF_ID);
 

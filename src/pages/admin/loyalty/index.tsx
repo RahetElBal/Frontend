@@ -42,6 +42,7 @@ import { useSalonSettings } from "@/hooks/useSalonSettings";
 import { usePost } from "@/hooks/usePost";
 import { useUser } from "@/hooks/useUser";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useSalonDateTime } from "@/hooks/useSalonDateTime";
 import type { Sale } from "@/pages/user/sales/types";
 import type { Salon } from "@/pages/admin/salon/types";
 import {
@@ -74,6 +75,7 @@ export function LoyaltyPage() {
   const { settings: salonSettings } = useSalonSettings(salonId, {
     enabled: shouldLoadData,
   });
+  const { formatDate } = useSalonDateTime({ settings: salonSettings });
 
   const { services, isLoading: isServicesLoading } = useSalonServices(salonId, {
     enabled: shouldLoadServices,
@@ -425,7 +427,7 @@ export function LoyaltyPage() {
                         {t("loyalty.paymentDate")}
                       </p>
                       <p className="text-sm">
-                        {new Date(sale.createdAt).toLocaleDateString()}
+                        {formatDate(sale.createdAt)}
                       </p>
                     </div>
                     <div className="space-y-1">
@@ -489,7 +491,7 @@ export function LoyaltyPage() {
                     sales.map((sale) => (
                       <TableRow key={sale.id}>
                         <TableCell>
-                          {new Date(sale.createdAt).toLocaleDateString()}
+                          {formatDate(sale.createdAt)}
                         </TableCell>
                         <TableCell>
                           {sale.client

@@ -3,6 +3,7 @@ import { Check, X, CalendarOff } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { useSalonDateTime } from "@/hooks/useSalonDateTime";
 import {
   Table,
   TableBody,
@@ -29,6 +30,7 @@ export function TimeOffView({
   onReject,
 }: TimeOffViewProps) {
   const { t } = useTranslation();
+  const { formatDate } = useSalonDateTime();
 
   const staffName = (staffId: string) => getStaffName(staffMembers, staffId);
 
@@ -69,8 +71,7 @@ export function TimeOffView({
                 {t("fields.dates")}
               </p>
               <p className="text-sm">
-                {new Date(request.startDate).toLocaleDateString()} -{" "}
-                {new Date(request.endDate).toLocaleDateString()}
+                {formatDate(request.startDate)} - {formatDate(request.endDate)}
                 {request.isHalfDay && (
                   <span className="text-xs text-muted-foreground ms-1">
                     ({t(`staff.${request.halfDayPeriod}`)})
@@ -134,8 +135,7 @@ export function TimeOffView({
                 </TableCell>
                 <TableCell>{t(`staff.timeOffTypes.${request.type}`)}</TableCell>
                 <TableCell>
-                  {new Date(request.startDate).toLocaleDateString()} -{" "}
-                  {new Date(request.endDate).toLocaleDateString()}
+                  {formatDate(request.startDate)} - {formatDate(request.endDate)}
                   {request.isHalfDay && (
                     <span className="text-xs text-muted-foreground ms-1">
                       ({t(`staff.${request.halfDayPeriod}`)})

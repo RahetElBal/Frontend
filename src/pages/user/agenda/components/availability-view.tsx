@@ -5,10 +5,11 @@ import { Calendar, Clock, User } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { LoadingPanel } from "@/components/loading-panel";
+import { useSalonDateTime } from "@/hooks/useSalonDateTime";
 import type { User as StaffUser } from "@/pages/admin/users/types";
 import type { Appointment } from "../types";
 import { AppointmentStatus } from "../enum";
-import { getLocalDateString, normalizeTime, timeToMinutes } from "./utils";
+import { normalizeTime, timeToMinutes } from "./utils";
 
 interface AvailabilityViewProps {
   selectedDate: string;
@@ -40,10 +41,7 @@ export function AvailabilityView({
   onMakeAppointment,
 }: AvailabilityViewProps) {
   const { t } = useTranslation();
-
-  const now = new Date();
-  const todayStr = getLocalDateString(now);
-  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+  const { today, currentMinutes, formatTime } = useSalonDateTime();
 
   const availabilityByStaff = useMemo(() => {
     if (isLoading || isClosed || staffMembers.length === 0) {
@@ -64,9 +62,9 @@ export function AvailabilityView({
       const staffAppointments = appointmentsByStaff.get(staff.id) || [];
       const slots = timeSlots.filter((time) => {
         if (blockedSlots?.has(time)) return false;
-        if (selectedDate < todayStr) return false;
+        if (selectedDate < today) return false;
         const slotMinutes = timeToMinutes(time);
-        if (selectedDate === todayStr && slotMinutes < currentMinutes) {
+        if (selectedDate === today && slotMinutes < currentMinutes) {
           return false;
         }
         return !staffAppointments.some((appointment) => {
@@ -84,13 +82,12 @@ export function AvailabilityView({
   }, [
     isLoading,
     isClosed,
-    staffMembers.length,
     appointments,
     staffMembers,
     timeSlots,
     blockedSlots,
     selectedDate,
-    todayStr,
+    today,
     currentMinutes,
   ]);
 
@@ -153,7 +150,7 @@ export function AvailabilityView({
                 >
                   <div className="flex items-center gap-2 text-sm">
                     <Clock className="h-4 w-4 text-muted-foreground" />
-                    <span className="font-medium">{time}</span>
+                    <span className="font-medium">{formatTime(time)}</span>
                   </div>
                   <Button
                     size="sm"

@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Building2, Clock, Save, Heart, Bell } from "lucide-react";
+import { Building2, Clock, Save, Heart } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import { PageHeader } from "@/components/page-header";
@@ -20,7 +20,6 @@ import { MVP_VISIBILITY } from "@/constants/mvp";
 import { GeneralSettings } from "./components/general-settings";
 import { WorkingHoursSettings } from "./components/working-hours-settings";
 import { LoyaltySettings } from "./components/loyalty-settings";
-import { NotificationSettings } from "./components/notification-settings";
 import {
   mergeWithDefaultSettings,
   createFieldUpdater,
@@ -28,7 +27,7 @@ import {
   mergeFormData,
 } from "./components/utils";
 
-type SettingsPage = "general" | "hours" | "notifications" | "loyalty";
+type SettingsPage = "general" | "hours" | "loyalty";
 
 export function SalonSettingsPage() {
   const { t } = useTranslation();
@@ -40,8 +39,6 @@ export function SalonSettingsPage() {
     switch (location.pathname) {
       case ROUTES.SALON_SETTINGS_HOURS:
         return "hours";
-      case ROUTES.SALON_SETTINGS_NOTIFICATIONS:
-        return "notifications";
       case ROUTES.SALON_SETTINGS_LOYALTY:
         if (MVP_VISIBILITY.loyalty) {
           return "loyalty";
@@ -146,12 +143,6 @@ export function SalonSettingsPage() {
       label: t("salonSettings.tabs.hours"),
       icon: Clock,
     },
-    {
-      id: "notifications",
-      href: ROUTES.SALON_SETTINGS_NOTIFICATIONS,
-      label: t("salonSettings.tabs.notifications"),
-      icon: Bell,
-    },
   ];
 
   if (MVP_VISIBILITY.loyalty) {
@@ -221,12 +212,6 @@ export function SalonSettingsPage() {
                 <WorkingHoursSettings
                   formData={formData}
                   updateWorkingHours={updateWorkingHours}
-                />
-              )}
-              {activePage === "notifications" && (
-                <NotificationSettings
-                  formData={formData}
-                  updateField={updateField}
                 />
               )}
               {MVP_VISIBILITY.loyalty && activePage === "loyalty" && (

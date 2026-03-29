@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { ServerDataTable } from "@/components/table";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useSalonDateTime } from "@/hooks/useSalonDateTime";
 import { useForm } from "@/hooks/useForm";
 import type { Client } from "./types";
 import { ClientModals } from "./components/dialog/client-modals";
@@ -20,6 +21,7 @@ const CLIENTS_PAGE_SIZE = 20;
 export function ClientsPage() {
   const { t } = useTranslation();
   const { formatCurrency } = useLanguage();
+  const { formatDate } = useSalonDateTime();
 
   const { isUser, user } = useUser();
   const [modalState, setModalState] = useState<ClientModalState>(null);
@@ -114,6 +116,7 @@ export function ClientsPage() {
   const columns = getClientColumns({
     t,
     formatCurrency,
+    formatDate,
     onView: handleView,
     onEdit: handleEdit,
     onDelete: handleDelete,

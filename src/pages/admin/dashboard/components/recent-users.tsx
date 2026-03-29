@@ -1,9 +1,9 @@
 import { useTranslation } from "react-i18next";
 import { Users } from "lucide-react";
 import { AppRole } from "@/constants/enum";
+import { useSalonDateTime } from "@/hooks/useSalonDateTime";
 import { useUser } from "@/hooks/useUser";
 import type { User } from "@/pages/admin/users/types";
-import { formatDate } from "@/common/utils";
 import { RecentCard } from "./recent-card";
 
 interface RecentUsersCardProps {
@@ -13,6 +13,7 @@ interface RecentUsersCardProps {
 export function RecentUsersCard({ users }: RecentUsersCardProps) {
   const { t } = useTranslation();
   const { isSuperadmin } = useUser();
+  const { formatDate } = useSalonDateTime();
 
   const title = isSuperadmin
     ? t("admin.dashboard.recentUsers")

@@ -12,13 +12,13 @@ import {
 import type { SettingsSectionProps } from "../types";
 
 const TIMEZONES = [
+  "Africa/Algiers",
   "Europe/Paris",
   "Europe/London",
   "Europe/Berlin",
   "America/New_York",
   "America/Los_Angeles",
   "Asia/Tokyo",
-  "Africa/Algiers",
 ];
 
 export function GeneralSettings({ formData, updateField }: SettingsSectionProps) {

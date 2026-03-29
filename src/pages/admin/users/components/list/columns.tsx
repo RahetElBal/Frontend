@@ -15,6 +15,7 @@ import { Badge } from "@/components/badge";
 import { Button } from "@/components/ui/button";
 import type { Column } from "@/components/table/data-table";
 import { AppRole } from "@/constants/enum";
+import { useSalonDateTime } from "@/hooks/useSalonDateTime";
 import type { User } from "../../types";
 import { getDisplayName, getInitials } from "@/common/utils";
 
@@ -38,6 +39,7 @@ export function useUsersColumns({
   isTogglingActive = false,
 }: UseUsersColumnsProps): Column<User>[] {
   const { t } = useTranslation();
+  const { formatDate } = useSalonDateTime();
 
   const columns: Column<User>[] = [
     {
@@ -200,7 +202,7 @@ export function useUsersColumns({
       key: "createdAt",
       header: t("fields.createdAt"),
       sortable: true,
-      render: (user) => new Date(user.createdAt).toLocaleDateString(),
+      render: (user) => formatDate(user.createdAt),
     },
     {
       key: "actions",

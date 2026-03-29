@@ -12,6 +12,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/badge";
 import { Button } from "@/components/ui/button";
 import { LoadingPanel } from "@/components/loading-panel";
+import { useSalonDateTime } from "@/hooks/useSalonDateTime";
 import { cn } from "@/lib/utils";
 import type { Appointment } from "../types";
 import { AppointmentStatus } from "../enum";
@@ -19,7 +20,6 @@ import {
   statusColors,
   getAppointmentDisplayStatus,
   canRecordAppointmentPayment,
-  getCurrentTimeString,
   normalizeTime,
   getLocalDateString,
   timeToMinutes,
@@ -67,10 +67,11 @@ export function TimelineView({
     event.stopPropagation();
     onRecordPayment?.(appointment);
   };
-  const currentTimeString = getCurrentTimeString();
-  const currentHour = new Date().getHours();
-  const currentMinutes = new Date().getMinutes();
-  const currentTotalMinutes = currentHour * 60 + currentMinutes;
+  const { today, currentMinutes, formatTime, timezone } = useSalonDateTime();
+  const currentTotalMinutes = currentMinutes;
+  const currentHour = Math.floor(currentTotalMinutes / 60);
+  const currentHalfHour = currentTotalMinutes % 60 >= 30 ? "30" : "00";
+  const currentTimeString = `${currentHour.toString().padStart(2, "0")}:${currentHalfHour}`;
   const slotHeight = 60;
   const slotMinutes =
     timeSlots.length >= 2
@@ -96,9 +97,8 @@ export function TimelineView({
 
   // FIX: Use getLocalDateString instead of toISOString to avoid timezone shifts
   const selectedDateStr = getLocalDateString(selectedDate);
-  const todayStr = getLocalDateString();
-  const isPastDate = selectedDateStr < todayStr;
-  const isToday = selectedDateStr === todayStr;
+  const isPastDate = selectedDateStr < today;
+  const isToday = selectedDateStr === today;
   const dayAppointments = appointments.filter(
     (apt) => apt.date === selectedDateStr,
   );
@@ -150,12 +150,12 @@ export function TimelineView({
                 return slotMinutesValue >= start && slotMinutesValue < end;
               });
               const displayStatus = appointment
-                ? getAppointmentDisplayStatus(appointment)
+                ? getAppointmentDisplayStatus(appointment, new Date(), timezone)
                 : null;
               const canRecordPaymentForAppointment =
                 !!appointment &&
                 !!onRecordPayment &&
-                canRecordAppointmentPayment(appointment);
+                canRecordAppointmentPayment(appointment, new Date(), timezone);
               const isStartSlot =
                 appointment && normalizeTime(appointment.startTime) === time;
               const isOccupied = !!appointment && !isStartSlot;
@@ -196,7 +196,7 @@ export function TimelineView({
                       isCurrentTime && "text-accent-pink font-bold",
                     )}
                   >
-                    {time}
+                    {formatTime(time)}
                   </div>
 
                   <div
@@ -265,8 +265,8 @@ export function TimelineView({
                               <div className="flex items-center gap-1.5 text-[11px] leading-4 text-muted-foreground min-w-0">
                                 <Clock className="h-3 w-3 shrink-0" />
                                 <span className="truncate flex-1 min-w-0">
-                                  {normalizeTime(appointment.startTime)} -{" "}
-                                  {normalizeTime(appointment.endTime)}
+                                  {formatTime(appointment.startTime)} -{" "}
+                                  {formatTime(appointment.endTime)}
                                   {appointment.service
                                     ? ` | ${translateServiceName(
                                         t,
@@ -364,8 +364,8 @@ export function TimelineView({
                               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                 <Clock className="h-3 w-3" />
                                 <span>
-                                  {normalizeTime(appointment.startTime)} -{" "}
-                                  {normalizeTime(appointment.endTime)}
+                                  {formatTime(appointment.startTime)} -{" "}
+                                  {formatTime(appointment.endTime)}
                                 </span>
                               </div>
                             </div>

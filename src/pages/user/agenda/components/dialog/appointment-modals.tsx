@@ -56,13 +56,13 @@ import type { Service } from "@/pages/user/services/types";
 import type { AppointmentFormData } from "../validation";
 import type { AppointmentModalState } from "../../types";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useSalonDateTime } from "@/hooks/useSalonDateTime";
 import { useUser } from "@/hooks/useUser";
 import { MVP_VISIBILITY } from "@/constants/mvp";
 import {
   statusColors,
   canRecordAppointmentPayment,
   getAppointmentDisplayStatus,
-  getLocalDateString,
   isOptimisticAppointmentId,
   getWorkingHoursForDate,
   buildTimeSlotsForHours,
@@ -276,6 +276,10 @@ export function AppointmentModals({
   const effectiveSalonSettings = (salonSettings ?? salon?.settings) as
     | SalonSettingsLike
     | undefined;
+  const { today, currentMinutes, formatDate, formatTime, timezone } =
+    useSalonDateTime({
+      settings: effectiveSalonSettings,
+    });
   const loyaltyVisible = MVP_VISIBILITY.loyalty;
   const loyaltySettings = effectiveSalonSettings;
   const loyaltyEnabled = loyaltyVisible && !!loyaltySettings?.loyaltyEnabled;
@@ -366,13 +370,10 @@ export function AppointmentModals({
   const customPriceInput = watch("price");
   const discountInput = watch("discount");
   const walkInEmail = watch("walkInEmail");
-  const selectedDate = watch("date") || getLocalDateString();
+  const selectedDate = watch("date") || today;
   const selectedStartTime = watch("startTime");
-  const todayStr = getLocalDateString();
-  const now = new Date();
-  const currentMinutes = now.getHours() * 60 + now.getMinutes();
-  const isPastDate = selectedDate < todayStr;
-  const isToday = selectedDate === todayStr;
+  const isPastDate = selectedDate < today;
+  const isToday = selectedDate === today;
   const isSelectedAppointmentPast = useMemo(() => {
     if (!selectedAppointment) return false;
 
@@ -381,11 +382,11 @@ export function AppointmentModals({
     const appointmentEndMinutes = timeToMinutes(appointmentEndTime);
 
     return (
-      selectedAppointment.date < todayStr ||
-      (selectedAppointment.date === todayStr &&
+      selectedAppointment.date < today ||
+      (selectedAppointment.date === today &&
         appointmentEndMinutes < currentMinutes)
     );
-  }, [selectedAppointment, todayStr, currentMinutes]);
+  }, [selectedAppointment, today, currentMinutes]);
   const forceViewMode =
     !!selectedAppointment && isSelectedAppointmentPast && derived?.isEditMode;
   const selectedService = useMemo(
@@ -567,7 +568,7 @@ export function AppointmentModals({
       reset({
         clientId: "",
         serviceId: "",
-        date: modalState?.prefillDate || getLocalDateString(),
+        date: modalState?.prefillDate || today,
         startTime: modalState?.prefillTime || "09:00",
         notes: "",
         staffId:
@@ -607,6 +608,7 @@ export function AppointmentModals({
     derived?.isEditMode,
     reset,
     selectedStaffId,
+    today,
     user?.id,
   ]);
 
@@ -737,7 +739,7 @@ export function AppointmentModals({
       return label || t("common.unknown");
     })();
     const displayStatus = selectedAppointment
-      ? getAppointmentDisplayStatus(selectedAppointment)
+      ? getAppointmentDisplayStatus(selectedAppointment, new Date(), timezone)
       : null;
     const isSelectedAppointmentOptimistic =
       !!selectedAppointment &&
@@ -771,7 +773,7 @@ export function AppointmentModals({
       !!selectedAppointment &&
       !!onCreateSale &&
       canViewPayment &&
-      canRecordAppointmentPayment(selectedAppointment);
+      canRecordAppointmentPayment(selectedAppointment, new Date(), timezone);
     const canMarkNoShow =
       !!selectedAppointment &&
       !isSelectedAppointmentOptimistic &&
@@ -999,7 +1001,7 @@ export function AppointmentModals({
                       {t("fields.date")}
                     </p>
                     <p className="font-medium">
-                      {new Date(selectedAppointment.date).toLocaleDateString()}
+                      {formatDate(selectedAppointment.date)}
                     </p>
                   </div>
                 </div>
@@ -1011,8 +1013,8 @@ export function AppointmentModals({
                       {t("fields.time")}
                     </p>
                     <p className="font-medium">
-                      {selectedAppointment.startTime} -{" "}
-                      {selectedAppointment.endTime}
+                      {formatTime(selectedAppointment.startTime)} -{" "}
+                      {formatTime(selectedAppointment.endTime)}
                     </p>
                   </div>
                 </div>
@@ -1501,7 +1503,7 @@ export function AppointmentModals({
                   <Input
                     id="date"
                     type="date"
-                    min={todayStr}
+                    min={today}
                     {...form.register("date")}
                   />
                   <FormErrorMessage message={getErrorMessage("date")} />
@@ -1537,7 +1539,7 @@ export function AppointmentModals({
                             >
                               <div className="flex items-center gap-2">
                                 <Clock className="h-4 w-4" />
-                                {time}
+                                {formatTime(time)}
                                 {isBlocked && (
                                   <span className="text-xs text-muted-foreground">
                                     ({t("agenda.breakTime")})
@@ -1567,8 +1569,8 @@ export function AppointmentModals({
                       client: conflict.client
                         ? `${conflict.client.firstName} ${conflict.client.lastName}`
                         : t("common.unknown"),
-                      start: conflict.startTime,
-                      end: conflict.endTime,
+                      start: formatTime(conflict.startTime),
+                      end: formatTime(conflict.endTime),
                     })}
                   </p>
                 </div>

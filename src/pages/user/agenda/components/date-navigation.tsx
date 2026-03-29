@@ -3,7 +3,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/badge";
-import { formatDate } from "@/common/utils";
+import { useSalonDateTime } from "@/hooks/useSalonDateTime";
 
 interface DateNavigationProps {
   selectedDate: Date;
@@ -23,6 +23,7 @@ export function DateNavigation({
   pendingCount,
 }: DateNavigationProps) {
   const { t } = useTranslation();
+  const { formatDate } = useSalonDateTime();
 
   return (
     <Card className="p-4">

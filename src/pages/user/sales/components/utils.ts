@@ -3,19 +3,6 @@ import type { TFunction } from "i18next";
 import type { PaymentStatus, SaleStatus } from "../enum";
 import type { Sale, SaleItem } from "../types";
 
-export const formatSaleDate = (dateString: string) => {
-  const date = new Date(dateString);
-  return date.toLocaleDateString("fr-FR");
-};
-
-export const formatSaleTime = (dateString: string) => {
-  const date = new Date(dateString);
-  return date.toLocaleTimeString("fr-FR", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-};
-
 export const toNumber = (value: unknown, fallback = 0): number => {
   if (typeof value === "number") {
     return Number.isFinite(value) ? value : fallback;

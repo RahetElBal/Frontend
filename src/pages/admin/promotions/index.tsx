@@ -28,6 +28,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useSalonDateTime } from "@/hooks/useSalonDateTime";
 import { useUser } from "@/hooks/useUser";
 import { toast } from "@/lib/toast";
 import { cn } from "@/lib/utils";
@@ -54,6 +55,7 @@ import {
 export function PromotionsPage() {
   const { t } = useTranslation();
   const { formatCurrency } = useLanguage();
+  const { formatDate } = useSalonDateTime();
   const { user } = useUser();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<PromotionStatus | "all">(
@@ -341,7 +343,7 @@ export function PromotionsPage() {
                       {t("promotions.validFrom")}
                     </p>
                     <p className="font-medium">
-                      {new Date(promotion.startDate).toLocaleDateString()}
+                      {formatDate(promotion.startDate)}
                     </p>
                   </div>
                   <div>
@@ -349,7 +351,7 @@ export function PromotionsPage() {
                       {t("promotions.validUntil")}
                     </p>
                     <p className="font-medium">
-                      {new Date(promotion.endDate).toLocaleDateString()}
+                      {formatDate(promotion.endDate)}
                     </p>
                   </div>
                 </div>

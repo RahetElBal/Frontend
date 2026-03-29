@@ -27,6 +27,7 @@ import { useSalonStaff } from "@/hooks/useSalonStaff";
 import { useForm } from "@/hooks/useForm";
 import { useUser } from "@/hooks/useUser";
 import { useLanguage } from "@/hooks/useLanguage";
+import { getCurrentDateTimeInTimeZone } from "@/common/date";
 import { normalizePhone } from "@/common/phone";
 import { patch, post } from "@/lib/http";
 import type { ApiError } from "@/types/api";
@@ -80,6 +81,9 @@ export function AgendaPage() {
   const navigate = useNavigate();
   const { user, isAdmin, isSuperadmin } = useUser();
   const { formatCurrency } = useLanguage();
+  const initialToday = getCurrentDateTimeInTimeZone(
+    user?.salon?.settings?.timezone,
+  ).date;
   const queryClient = useQueryClient();
   const canRecordPayment = isAdmin || isSuperadmin;
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
@@ -202,12 +206,12 @@ export function AgendaPage() {
   >(() => (queryParams.get("tab") === "availability" ? "availability" : "appointments"));
   const initialDate = useMemo(() => {
     const value = queryParams.get("date");
-    if (!value) return getLocalDateString();
+    if (!value) return initialToday;
     const trimmed = value.trim();
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return getLocalDateString();
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return initialToday;
     const parsed = new Date(`${trimmed}T00:00:00`);
-    return Number.isNaN(parsed.getTime()) ? getLocalDateString() : trimmed;
-  }, [queryParams]);
+    return Number.isNaN(parsed.getTime()) ? initialToday : trimmed;
+  }, [initialToday, queryParams]);
   const initialStaffId = useMemo(() => {
     const value = queryParams.get("staffId");
     if (!value) return null;
@@ -419,6 +423,9 @@ export function AgendaPage() {
   const salonSettings = (salonSettingsData ?? user?.salon?.settings) as
     | SalonSettingsLike
     | undefined;
+  const currentDateTime = getCurrentDateTimeInTimeZone(salonSettings?.timezone);
+  const today = currentDateTime.date;
+  const currentMinutes = currentDateTime.totalMinutes;
   const bookingSlotMinutes = useMemo(() => {
     const configured = Number(salonSettings?.bookingSlotDuration);
     if (Number.isFinite(configured) && configured > 0) {
@@ -548,7 +555,7 @@ export function AgendaPage() {
     defaultValues: {
       clientId: "",
       serviceId: "",
-      date: getLocalDateString(),
+      date: initialToday,
       startTime: "09:00",
       notes: "",
       staffId: "",
@@ -681,8 +688,9 @@ export function AgendaPage() {
   ]);
 
   const isOverdue = useCallback(
-    (apt: Appointment) => isAppointmentOverdue(apt),
-    [],
+    (apt: Appointment) =>
+      isAppointmentOverdue(apt, new Date(), salonSettings?.timezone),
+    [salonSettings?.timezone],
   );
 
   const unpaidAppointments = useMemo(
@@ -696,7 +704,6 @@ export function AgendaPage() {
     [appointments],
   );
 
-  const today = useMemo(() => getLocalDateString(), []);
   const isSelectedDatePast = selectedDate < today;
   const selectedDateObj = useMemo(
     () => new Date(`${selectedDate}T00:00:00`),
@@ -866,7 +873,6 @@ export function AgendaPage() {
     )
       return;
 
-    const today = getLocalDateString();
     const todayAppointments = appointments.filter(
       (apt) =>
         apt.date === today &&
@@ -902,7 +908,7 @@ export function AgendaPage() {
 
     // Find overdue unpaid appointments (completed but not paid, or past end time and not paid)
     const overdueUnpaid = appointments.filter((apt) =>
-      isAppointmentOverdue(apt, now),
+      isAppointmentOverdue(apt, now, salonSettings?.timezone),
     );
 
     let hasPlayedOverdueSound = false;
@@ -1207,10 +1213,7 @@ export function AgendaPage() {
       toast.error(t("common.error"));
       return;
     }
-    const now = new Date();
-    const today = getLocalDateString(now);
     const selectedStartMinutes = timeToMinutes(normalizeTime(data.startTime));
-    const currentMinutes = now.getHours() * 60 + now.getMinutes();
     if (
       data.date < today ||
       (data.date === today && selectedStartMinutes < currentMinutes)

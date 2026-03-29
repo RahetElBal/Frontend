@@ -19,8 +19,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import type { Sale } from "../../types";
 import {
-  formatSaleDate,
-  formatSaleTime,
   getSaleStatusLabel,
   saleStatusColors,
   toNumber,
@@ -29,6 +27,8 @@ import {
 interface GetSalesColumnsProps {
   t: TFunction;
   formatCurrency: (value: number) => string;
+  formatDate: (value: string | Date) => string;
+  formatTime: (value: string | Date) => string;
   onComplete?: (sale: Sale) => void;
   onRefund?: (sale: Sale) => void;
   isRefunding?: (sale: Sale) => boolean;
@@ -38,6 +38,8 @@ interface GetSalesColumnsProps {
 export function getSalesColumns({
   t,
   formatCurrency,
+  formatDate,
+  formatTime,
   onComplete,
   onRefund,
   isRefunding,
@@ -57,7 +59,7 @@ export function getSalesColumns({
               {sale.id.slice(0, 8).toUpperCase()}
             </p>
             <p className="text-xs text-muted-foreground">
-              {formatSaleTime(sale.createdAt)}
+              {formatTime(sale.createdAt)}
             </p>
           </div>
         </div>
@@ -68,9 +70,9 @@ export function getSalesColumns({
       header: t("fields.date"),
       render: (sale) => (
         <div>
-          <p className="text-sm font-medium">{formatSaleDate(sale.createdAt)}</p>
+          <p className="text-sm font-medium">{formatDate(sale.createdAt)}</p>
           <p className="text-xs text-muted-foreground">
-            {formatSaleTime(sale.createdAt)}
+            {formatTime(sale.createdAt)}
           </p>
         </div>
       ),

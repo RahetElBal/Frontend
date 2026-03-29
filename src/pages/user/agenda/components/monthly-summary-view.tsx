@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { useSalonDateTime } from "@/hooks/useSalonDateTime";
 import { cn } from "@/lib/utils";
 import type { Appointment } from "../types";
 import { AppointmentStatus } from "../enum";
@@ -56,8 +57,8 @@ export function MonthlySummaryView({
   onSelectDate,
 }: MonthlySummaryViewProps) {
   const { t } = useTranslation();
+  const { today } = useSalonDateTime();
   const selectedDateStr = getLocalDateString(selectedDate);
-  const todayStr = getLocalDateString();
 
   const countsByDate = useMemo(() => {
     const map = new Map<string, DayCounts>();
@@ -172,9 +173,9 @@ export function MonthlySummaryView({
 
       <div className="mt-1 grid grid-cols-7 gap-px rounded-lg bg-muted/30 overflow-hidden">
         {calendarCells.map((cell) => {
-          const isToday = cell.dateStr === todayStr;
+          const isToday = cell.dateStr === today;
           const isSelected = cell.dateStr === selectedDateStr;
-          const isPast = cell.dateStr < todayStr;
+          const isPast = cell.dateStr < today;
           const hasCounts =
             cell.counts.pending > 0 || cell.counts.completed > 0;
 

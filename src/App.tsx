@@ -162,7 +162,7 @@ function App() {
           />
           <Route
             path={ROUTES.SALON_SETTINGS_NOTIFICATIONS}
-            element={<SalonSettingsPage />}
+            element={<Navigate to={ROUTES.SALON_SETTINGS_GENERAL} replace />}
           />
           <Route
             path={ROUTES.SALON_SETTINGS_LOYALTY}

@@ -36,6 +36,7 @@ import { toast } from "@/lib/toast";
 import type { User } from "../../types";
 import type { Salon } from "@/pages/admin/salon/types";
 import { getDisplayName, getInitials } from "@/common/utils";
+import { useSalonDateTime } from "@/hooks/useSalonDateTime";
 import { useUser } from "@/hooks/useUser";
 import { UserForm } from "../form";
 import { createUserFormSchema, type UserFormData } from "../form/validation";
@@ -65,6 +66,7 @@ export function UserDialog({
   onSuccess,
 }: UserDialogProps) {
   const { t } = useTranslation();
+  const { formatDate } = useSalonDateTime();
   const { isSuperadmin: currentUserIsSuperadmin, user: currentUser } =
     useUser();
 
@@ -437,7 +439,7 @@ export function UserDialog({
                     {t("fields.createdAt")}
                   </p>
                   <p className="font-medium">
-                    {new Date(user.createdAt).toLocaleDateString()}
+                    {formatDate(user.createdAt)}
                   </p>
                 </div>
               </div>

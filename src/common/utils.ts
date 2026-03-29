@@ -1,4 +1,10 @@
 import type { User } from "@/pages/admin/users/types";
+import {
+  DEFAULT_SALON_DATE_FORMAT,
+  DEFAULT_SALON_LANGUAGE,
+  DEFAULT_SALON_TIMEZONE,
+  formatDateValue,
+} from "@/common/date";
 
 export const selectCollectionData = <T>(
   response: { data?: T[] } | T[] | null | undefined,
@@ -19,11 +25,10 @@ export const selectCollectionData = <T>(
 };
 
 export const formatDate = (date: string | Date): string => {
-  const dateObj = typeof date === "string" ? new Date(date) : date;
-  return dateObj.toLocaleDateString("fr-FR", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
+  return formatDateValue(date, {
+    dateFormat: DEFAULT_SALON_DATE_FORMAT,
+    language: DEFAULT_SALON_LANGUAGE,
+    timezone: DEFAULT_SALON_TIMEZONE,
   });
 };
 

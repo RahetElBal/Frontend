@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Calendar, momentLocalizer } from "react-big-calendar";
 import moment from "moment";
 import "react-big-calendar/lib/css/react-big-calendar.css";
+import { useSalonDateTime } from "@/hooks/useSalonDateTime";
 import type { Appointment } from "../../types";
 import { AppointmentStatus } from "../../enum";
 
@@ -27,6 +28,7 @@ export function CalendarView({
   onSelectEvent,
 }: CalendarViewProps) {
   const { t } = useTranslation();
+  const { timezone } = useSalonDateTime();
   const events = useMemo(
     () => appointments.map((apt) => appointmentToCalendarEvent(apt)),
     [appointments],
@@ -52,7 +54,11 @@ export function CalendarView({
 
   const eventStyleGetter = useCallback((event: CalendarEvent) => {
     const appointment = event.resource;
-    const displayStatus = getAppointmentDisplayStatus(appointment);
+    const displayStatus = getAppointmentDisplayStatus(
+      appointment,
+      new Date(),
+      timezone,
+    );
     let backgroundColor = "#3174ad";
 
     switch (displayStatus) {
@@ -92,7 +98,7 @@ export function CalendarView({
         fontWeight: "500",
       },
     };
-  }, []);
+  }, [timezone]);
 
   return (
     <div className="calendar-container">

@@ -1,5 +1,6 @@
 import { momentLocalizer } from "react-big-calendar";
 import moment from "moment";
+import { getDateTimeContext } from "@/common/date";
 import { agendaStatusColors } from "../../utils";
 import { AppointmentStatus } from "../enum";
 import type { Appointment } from "../types";
@@ -24,6 +25,7 @@ export function isUuid(value?: string | null): value is string {
 export function isAppointmentLate(
   appointment: Appointment,
   referenceDate: Date = new Date(),
+  timeZone?: string,
 ): boolean {
   if (appointment.status === AppointmentStatus.OVERDUE) {
     return true;
@@ -35,31 +37,30 @@ export function isAppointmentLate(
   ) {
     return false;
   }
-  const today = getLocalDateString(referenceDate);
-  const currentTime = `${referenceDate
-    .getHours()
-    .toString()
-    .padStart(2, "0")}:${referenceDate
-    .getMinutes()
-    .toString()
-    .padStart(2, "0")}`;
+  const currentDateTime = getDateTimeContext(referenceDate, timeZone);
+  const today = currentDateTime.date;
   const endTime = normalizeTime(appointment.endTime || appointment.startTime);
   const isPastDate = appointment.date < today;
-  const isPastTime = appointment.date === today && endTime < currentTime;
+  const isPastTime =
+    appointment.date === today &&
+    timeToMinutes(endTime) < currentDateTime.totalMinutes;
   return isPastDate || isPastTime;
 }
 
 export function getAppointmentDisplayStatus(
   appointment: Appointment,
   referenceDate: Date = new Date(),
+  timeZone?: string,
 ): AppointmentDisplayStatus {
-  return isAppointmentLate(appointment, referenceDate)
+  return isAppointmentLate(appointment, referenceDate, timeZone)
     ? AppointmentStatus.OVERDUE
     : appointment.status;
 }
 
 export function canRecordAppointmentPayment(
   appointment: Appointment,
+  referenceDate: Date = new Date(),
+  timeZone?: string,
 ): boolean {
   const serviceId =
     typeof appointment.serviceId === "string" && appointment.serviceId.trim()
@@ -76,7 +77,11 @@ export function canRecordAppointmentPayment(
     return false;
   }
 
-  const displayStatus = getAppointmentDisplayStatus(appointment);
+  const displayStatus = getAppointmentDisplayStatus(
+    appointment,
+    referenceDate,
+    timeZone,
+  );
 
   if (appointment.status === AppointmentStatus.CANCELLED) {
     return false;
@@ -513,6 +518,7 @@ export function getLocalDateString(date: Date = new Date()): string {
 export function isAppointmentOverdue(
   appointment: Appointment,
   referenceDate: Date = new Date(),
+  timeZone?: string,
 ): boolean {
   if (
     appointment.status === AppointmentStatus.CANCELLED ||
@@ -524,17 +530,12 @@ export function isAppointmentOverdue(
   if (appointment.status === AppointmentStatus.OVERDUE) {
     return true;
   }
-  const today = getLocalDateString(referenceDate);
-  const currentTime = `${referenceDate
-    .getHours()
-    .toString()
-    .padStart(2, "0")}:${referenceDate
-    .getMinutes()
-    .toString()
-    .padStart(2, "0")}`;
+  const currentDateTime = getDateTimeContext(referenceDate, timeZone);
+  const today = currentDateTime.date;
   const isPastDate = appointment.date < today;
   const isPastTime =
     appointment.date === today &&
-    normalizeTime(appointment.endTime || appointment.startTime) < currentTime;
+    timeToMinutes(normalizeTime(appointment.endTime || appointment.startTime)) <
+      currentDateTime.totalMinutes;
   return isPastDate || isPastTime;
 }
