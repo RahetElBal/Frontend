@@ -826,6 +826,10 @@ export const ar = {
         title: "تم إرسال تأكيد واتساب",
         message: "{{client}} - {{service}}",
       },
+      freeTrialExpiryReminder: {
+        title: "ستنتهي التجربة المجانية قريبًا",
+        message: "{{salon}} - تنتهي خلال {{threshold}}",
+      },
     },
   },
 
@@ -928,6 +932,9 @@ export const ar = {
       cropImage: "قص الصورة",
       cropImageDescription: "اسحب لإعادة التموضع واضبط التكبير",
       zoom: "تكبير",
+      freeTrialLabel: "تجربة مجانية (3 أشهر)",
+      freeTrialDescription:
+        "عرض إطلاق محدود لأول 10 صالونات فقط. تنبيهات تلقائية قبل نهاية التجربة بـ7 أيام و72 ساعة و48 ساعة.",
     },
     services: {
       title: "الخدمات",
@@ -1185,6 +1192,22 @@ export const ar = {
     },
   },
   planWarning: {
+    threshold7Days: "7 أيام",
+    threshold72Hours: "72 ساعة",
+    threshold48Hours: "48 ساعة",
+    trialEndingSoonTitle: "ستنتهي تجربتك المجانية قريبًا",
+    subscriptionEndingSoonTitle: "سينتهي اشتراكك قريبًا",
+    trialEndingSoonDescription:
+      "ستنتهي تجربتك المجانية خلال أقل من {{threshold}}. فعّل اشتراكك لتجنب أي انقطاع.",
+    subscriptionEndingSoonDescription:
+      "سينتهي اشتراكك خلال أقل من {{threshold}}. جدد الآن للحفاظ على الوصول دون انقطاع.",
+    risksTitle: "ما الذي قد تخسره:",
+    risksWhatsAppReminders: "تذكيرات واتساب التلقائية",
+    risksAdvancedAnalytics: "لوحة التحليلات المتقدمة",
+    risksPrioritySupport: "الدعم ذو الأولوية",
+    estimatedTimeLeft: "الوقت المتبقي المقدر: {{hours}} ساعة",
+    contactSupport: "التواصل مع الدعم",
+    manageSubscription: "إدارة اشتراكي",
     title: "الخطة على وشك الانتهاء",
     message:
       "سيتم إيقاف الخطة خلال {{days}} يومًا. يرجى التواصل مع الدعم للتجديد.",

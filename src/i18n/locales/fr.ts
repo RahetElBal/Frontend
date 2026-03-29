@@ -890,6 +890,10 @@ export const fr = {
         title: "Confirmation WhatsApp envoyée",
         message: "{{client}} - {{service}}",
       },
+      freeTrialExpiryReminder: {
+        title: "Fin d'essai bientot",
+        message: "{{salon}} - fin dans {{threshold}}",
+      },
     },
   },
 
@@ -1170,6 +1174,9 @@ export const fr = {
       cropImageDescription:
         "Faites glisser pour repositionner et ajuster le zoom",
       zoom: "Zoom",
+      freeTrialLabel: "Essai gratuit (3 mois)",
+      freeTrialDescription:
+        "Offre de lancement limitée aux 10 premiers salons. Alertes automatiques 7 jours, 72 heures et 48 heures avant la fin de l’essai.",
     },
     services: {
       title: "Services",
@@ -1435,6 +1442,22 @@ export const fr = {
     },
   },
   planWarning: {
+    threshold7Days: "7 jours",
+    threshold72Hours: "72 heures",
+    threshold48Hours: "48 heures",
+    trialEndingSoonTitle: "Votre essai gratuit se termine bientot",
+    subscriptionEndingSoonTitle: "Votre abonnement se termine bientot",
+    trialEndingSoonDescription:
+      "Votre essai gratuit expire dans moins de {{threshold}}. Activez votre abonnement pour eviter toute interruption.",
+    subscriptionEndingSoonDescription:
+      "Votre abonnement expire dans moins de {{threshold}}. Renouvelez maintenant pour conserver vos acces sans interruption.",
+    risksTitle: "Ce que vous risquez de perdre :",
+    risksWhatsAppReminders: "Rappels WhatsApp automatiques",
+    risksAdvancedAnalytics: "Tableau analytique avance",
+    risksPrioritySupport: "Support prioritaire",
+    estimatedTimeLeft: "Temps restant estime : {{hours}} heure(s)",
+    contactSupport: "Contacter le support",
+    manageSubscription: "Gerer mon abonnement",
     title: "Plan bientôt expiré",
     message:
       "Votre plan sera désactivé dans {{days}} jours. Veuillez contacter le support pour renouveler.",

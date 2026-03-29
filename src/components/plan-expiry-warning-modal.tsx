@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 import {
   AlertDialog,
@@ -22,23 +23,27 @@ interface PlanWarningState {
   isTrial: boolean;
 }
 
-function resolveThresholdLabel(hours: number) {
+function resolveThresholdLabel(
+  hours: number,
+  t: (key: string) => string,
+) {
   if (hours === 168) {
-    return "7 jours";
+    return t("planWarning.threshold7Days");
   }
 
   if (hours === 72) {
-    return "72 heures";
+    return t("planWarning.threshold72Hours");
   }
 
   if (hours === 48) {
-    return "48 heures";
+    return t("planWarning.threshold48Hours");
   }
 
-  return `${hours} heures`;
+  return `${hours} ${t("common.hours")}`;
 }
 
 export function PlanExpiryWarningModal() {
+  const { t } = useTranslation();
   const { user } = useAuthContext();
   const [referenceTime] = useState(() => Date.now());
   const [dismissedStorageKey, setDismissedStorageKey] = useState<string | null>(null);
@@ -99,7 +104,18 @@ export function PlanExpiryWarningModal() {
     return null;
   }
 
-  const thresholdLabel = resolveThresholdLabel(warningState.thresholdHours);
+  const thresholdLabel = resolveThresholdLabel(warningState.thresholdHours, t);
+  let title = t("planWarning.subscriptionEndingSoonTitle");
+  let description = t("planWarning.subscriptionEndingSoonDescription", {
+    threshold: thresholdLabel,
+  });
+
+  if (warningState.isTrial) {
+    title = t("planWarning.trialEndingSoonTitle");
+    description = t("planWarning.trialEndingSoonDescription", {
+      threshold: thresholdLabel,
+    });
+  }
 
   return (
     <AlertDialog
@@ -113,51 +129,37 @@ export function PlanExpiryWarningModal() {
     >
       <AlertDialogContent className="max-w-xl">
         <AlertDialogHeader>
-          <AlertDialogTitle>
-            {warningState.isTrial
-              ? "Votre essai gratuit se termine bientot"
-              : "Votre abonnement se termine bientot"}
-          </AlertDialogTitle>
-          <AlertDialogDescription>
-            {warningState.isTrial ? (
-              <>
-                Votre essai gratuit arrive a expiration dans moins de{" "}
-                <strong>{thresholdLabel}</strong>. Activez votre abonnement pour
-                eviter toute interruption.
-              </>
-            ) : (
-              <>
-                Votre abonnement expire dans moins de{" "}
-                <strong>{thresholdLabel}</strong>. Renouvelez maintenant pour
-                conserver vos acces sans interruption.
-              </>
-            )}
-          </AlertDialogDescription>
+          <AlertDialogTitle>{title}</AlertDialogTitle>
+          <AlertDialogDescription>{description}</AlertDialogDescription>
         </AlertDialogHeader>
 
         {warningState.isTrial ? (
           <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
-            <p className="font-medium">Ce que vous risquez de perdre:</p>
+            <p className="font-medium">{t("planWarning.risksTitle")}</p>
             <ul className="mt-2 list-disc space-y-1 ps-5">
-              <li>Rappels WhatsApp automatiques</li>
-              <li>Tableau analytique avance</li>
-              <li>Support prioritaire</li>
+              <li>{t("planWarning.risksWhatsAppReminders")}</li>
+              <li>{t("planWarning.risksAdvancedAnalytics")}</li>
+              <li>{t("planWarning.risksPrioritySupport")}</li>
             </ul>
           </div>
         ) : null}
 
         <p className="text-xs text-muted-foreground">
-          Temps restant estime: {warningState.hoursLeft} heure(s)
+          {t("planWarning.estimatedTimeLeft", {
+            hours: warningState.hoursLeft,
+          })}
         </p>
 
         <AlertDialogFooter className="gap-2">
           <Button variant="outline" asChild onClick={handleDismiss}>
             <a href="mailto:support@beautiq-app.com?subject=Renouvellement%20abonnement%20Beautiq">
-              Contacter le support
+              {t("planWarning.contactSupport")}
             </a>
           </Button>
           <Button asChild onClick={handleDismiss}>
-            <Link to={ROUTES.SALON_SETTINGS}>Gerer mon abonnement</Link>
+            <Link to={ROUTES.SALON_SETTINGS}>
+              {t("planWarning.manageSubscription")}
+            </Link>
           </Button>
         </AlertDialogFooter>
       </AlertDialogContent>

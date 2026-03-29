@@ -10,6 +10,7 @@ export const AdminNotificationType = {
   SALE_CREATED: "sale.created",
   SALE_COMPLETED: "sale.completed",
   SALE_REFUNDED: "sale.refunded",
+  FREE_TRIAL_EXPIRY_REMINDER: "trial.expiry.reminder",
   SUPPORT_TICKET_CREATED: "support.ticket.created",
   SUPPORT_TICKET_CLOSED: "support.ticket.closed",
 } as const;

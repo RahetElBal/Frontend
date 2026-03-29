@@ -744,11 +744,10 @@ export function SalonModals({
                           htmlFor="freeTrial"
                           className="text-sm font-medium text-amber-900"
                         >
-                          Essai gratuit (3 mois)
+                          {t("admin.salons.freeTrialLabel")}
                         </Label>
                         <p className="text-xs text-amber-800">
-                          Offre limitee aux 10 premiers salons. Alertes
-                          automatiques 7 jours, 72h et 48h avant fin d’essai.
+                          {t("admin.salons.freeTrialDescription")}
                         </p>
                       </div>
                     </div>

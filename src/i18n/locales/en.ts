@@ -1439,6 +1439,10 @@ export const en = {
         title: "WhatsApp confirmation sent",
         message: "{{client}} - {{service}}",
       },
+      freeTrialExpiryReminder: {
+        title: "Free trial ending soon",
+        message: "{{salon}} - ends in {{threshold}}",
+      },
     },
   },
 
@@ -1740,6 +1744,9 @@ export const en = {
       cropImage: "Crop image",
       cropImageDescription: "Drag to reposition and adjust zoom",
       zoom: "Zoom",
+      freeTrialLabel: "Free trial (3 months)",
+      freeTrialDescription:
+        "Limited launch offer: first 10 salons only. Automatic alerts 7 days, 72 hours and 48 hours before the trial ends.",
     },
     services: {
       title: "Services",
@@ -2004,6 +2011,22 @@ export const en = {
     message:
       "Your subscription will deactivate in {{days}} days. Please contact support to renew.",
     note: "Staff access will pause when the subscription ends.",
+    threshold7Days: "7 days",
+    threshold72Hours: "72 hours",
+    threshold48Hours: "48 hours",
+    trialEndingSoonTitle: "Your free trial is ending soon",
+    subscriptionEndingSoonTitle: "Your subscription is ending soon",
+    trialEndingSoonDescription:
+      "Your free trial will expire in less than {{threshold}}. Activate your subscription to avoid any interruption.",
+    subscriptionEndingSoonDescription:
+      "Your subscription will expire in less than {{threshold}}. Renew now to keep access without interruption.",
+    risksTitle: "What you may lose:",
+    risksWhatsAppReminders: "Automated WhatsApp reminders",
+    risksAdvancedAnalytics: "Advanced analytics dashboard",
+    risksPrioritySupport: "Priority support",
+    estimatedTimeLeft: "Estimated remaining time: {{hours}} hour(s)",
+    contactSupport: "Contact support",
+    manageSubscription: "Manage my subscription",
   },
   sla: {
     title: "Welcome to Beautiq",

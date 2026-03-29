@@ -301,6 +301,7 @@ export function AdminNotificationsBell() {
   type NotificationPayload = {
     clientName?: string;
     serviceName?: string;
+    salonName?: string;
     date?: string;
     time?: string;
     staffId?: string;
@@ -311,6 +312,7 @@ export function AdminNotificationsBell() {
     status?: string;
     actorName?: string;
     ticketId?: string;
+    thresholdHours?: number | string;
   };
 
   const toPayload = (notification: AdminNotification): NotificationPayload =>
@@ -321,6 +323,27 @@ export function AdminNotificationsBell() {
     const parsed = Number(value);
     if (!Number.isFinite(parsed)) return "";
     return formatCurrency(parsed);
+  };
+
+  const formatTrialThreshold = (value?: number | string) => {
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed) || parsed <= 0) {
+      return "";
+    }
+
+    if (parsed === 168) {
+      return t("planWarning.threshold7Days");
+    }
+
+    if (parsed === 72) {
+      return t("planWarning.threshold72Hours");
+    }
+
+    if (parsed === 48) {
+      return t("planWarning.threshold48Hours");
+    }
+
+    return `${parsed} ${t("common.hours")}`;
   };
 
   const getStatusBadge = (payload: NotificationPayload) => {
@@ -454,6 +477,14 @@ export function AdminNotificationsBell() {
             service: serviceName,
           }),
         };
+      case AdminNotificationType.FREE_TRIAL_EXPIRY_REMINDER:
+        return {
+          title: t("notifications.types.freeTrialExpiryReminder.title"),
+          message: t("notifications.types.freeTrialExpiryReminder.message", {
+            salon: payload.salonName || t("fields.salon"),
+            threshold: formatTrialThreshold(payload.thresholdHours),
+          }),
+        };
       case AdminNotificationType.APPOINTMENT_OVERDUE:
         return {
           title: t("notifications.types.appointmentOverdue.title"),
@@ -484,6 +515,13 @@ export function AdminNotificationsBell() {
 
   const handleNotificationNavigation = (notification: AdminNotification) => {
     const payload = toPayload(notification);
+
+    if (notification.type === AdminNotificationType.FREE_TRIAL_EXPIRY_REMINDER) {
+      navigate(ROUTES.SALON_SETTINGS);
+      setOpen(false);
+      return;
+    }
+
     const isSupportTicketNotification =
       notification.type === AdminNotificationType.SUPPORT_TICKET_CREATED ||
       notification.type === AdminNotificationType.SUPPORT_TICKET_CLOSED;
