@@ -77,6 +77,8 @@ import {
   getServiceImageFallback,
   translateServiceName,
 } from "@/common/service-translations";
+import { ClientAutocomplete } from "./client-autocomplete";
+import { ServiceAutocomplete } from "./service-autocomplete";
 
 const isWalkInClient = (client: Client) =>
   (client.email || "").toLowerCase().startsWith("walkin+");
@@ -299,7 +301,7 @@ export function AppointmentModals({
   const selectedClientId = watch("clientId");
   const walkInEnabled = watch("walkInEnabled");
   const walkInIsMarried = watch("walkInIsMarried");
-  const selectableClients = useMemo(() => {
+  const clientOptions = useMemo(() => {
     if (!selectedClientId) return regularClients;
     const selectedClient = safeClients.find(
       (client) => client.id === selectedClientId,
@@ -338,7 +340,6 @@ export function AppointmentModals({
   }, [selectedAppointment, todayStr, currentMinutes]);
   const forceViewMode =
     !!selectedAppointment && isSelectedAppointmentPast && derived?.isEditMode;
-  const visibleServices = useMemo(() => allServices, [allServices]);
   const selectedService = useMemo(
     () =>
       allServices.find((service) => service.id === selectedServiceId) || null,
@@ -1154,36 +1155,21 @@ export function AppointmentModals({
                     }}
                   />
                 </div>
-                <Select
-                  value={form.watch("clientId")}
-                  onValueChange={(value) => form.setValue("clientId", value)}
+                <ClientAutocomplete
+                  key={walkInEnabled ? "walk-in-client" : "registered-client"}
+                  clients={clientOptions}
+                  value={form.watch("clientId") || ""}
+                  onValueChange={(value) =>
+                    form.setValue("clientId", value, {
+                      shouldDirty: true,
+                      shouldTouch: true,
+                      shouldValidate: true,
+                    })
+                  }
                   disabled={!!walkInEnabled || isReferenceDataLoading}
-                >
-                  <SelectTrigger className="bg-white text-black">
-                    <SelectValue placeholder={t("agenda.selectClient")} />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white text-black">
-                    {selectableClients.length === 0 ? (
-                      <div className="p-2 text-center text-muted-foreground text-sm">
-                        {t("clients.noClients")}
-                      </div>
-                    ) : (
-                      selectableClients.map((client) => (
-                        <SelectItem key={client.id} value={client.id}>
-                          <div className="flex items-center gap-2">
-                            <User className="h-4 w-4 text-muted-foreground" />
-                            {client.firstName} {client.lastName}
-                            {client.phone && (
-                              <span className="text-muted-foreground text-xs">
-                                ({client.phone})
-                              </span>
-                            )}
-                          </div>
-                        </SelectItem>
-                      ))
-                    )}
-                  </SelectContent>
-                </Select>
+                  placeholder={String(t("clients.searchPlaceholder"))}
+                  emptyLabel={String(t("clients.noClients"))}
+                />
                 <FormErrorMessage message={getErrorMessage("clientId")} />
               </div>
 
@@ -1253,41 +1239,20 @@ export function AppointmentModals({
 
               <div className="space-y-2">
                 <Label>{t("fields.service")} *</Label>
-                <Select
-                  value={form.watch("serviceId")}
-                  onValueChange={(value) => form.setValue("serviceId", value)}
+                <ServiceAutocomplete
+                  services={allServices}
+                  value={form.watch("serviceId") || ""}
+                  onValueChange={(value) =>
+                    form.setValue("serviceId", value, {
+                      shouldDirty: true,
+                      shouldTouch: true,
+                      shouldValidate: true,
+                    })
+                  }
                   disabled={isReferenceDataLoading}
-                >
-                  <SelectTrigger className="bg-white text-black">
-                    <SelectValue placeholder={t("agenda.selectService")} />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white text-black">
-                    {visibleServices.length === 0 ? (
-                      <div className="p-2 text-center text-muted-foreground text-sm">
-                        {t("services.services")} - {t("common.noResults")}
-                      </div>
-                    ) : (
-                      visibleServices.map((service) => (
-                        <SelectItem key={service.id} value={service.id}>
-                          <div className="flex items-center justify-between w-full gap-4">
-                            <div className="flex items-center gap-2">
-                              <Scissors className="h-4 w-4 text-accent-pink" />
-                              {translateServiceName(t, service)}
-                              {service.isPack && (
-                                <Badge variant="info">
-                                  {t("services.pack")}
-                                </Badge>
-                              )}
-                            </div>
-                            <span className="text-muted-foreground text-sm">
-                              {service.duration}min
-                            </span>
-                          </div>
-                        </SelectItem>
-                      ))
-                    )}
-                  </SelectContent>
-                </Select>
+                  placeholder={String(t("services.searchPlaceholder"))}
+                  emptyLabel={`${t("services.services")} - ${t("common.noResults")}`}
+                />
                 <FormErrorMessage message={getErrorMessage("serviceId")} />
               </div>
 
