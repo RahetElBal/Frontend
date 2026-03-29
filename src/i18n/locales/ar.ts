@@ -64,6 +64,9 @@ export const ar = {
     total: "الإجمالي",
     new: "جديد",
   },
+  search: {
+    searchPlaceholder: "بحث...",
+  },
 
   // ============================================
   // APP UPDATE

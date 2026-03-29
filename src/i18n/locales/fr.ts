@@ -70,6 +70,9 @@ export const fr = {
     total: "Total",
     new: "Nouveau",
   },
+  search: {
+    searchPlaceholder: "Rechercher...",
+  },
 
   // ============================================
   // APP UPDATE

@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import type { UseFormReturn } from "react-hook-form";
 import { Controller } from "react-hook-form";
 import {
+  Check,
   User,
   Scissors,
   Clock,
@@ -10,6 +11,7 @@ import {
   Trash2,
   DollarSign,
   UserPlus,
+  Phone,
 } from "lucide-react";
 import {
   Dialog,
@@ -77,11 +79,57 @@ import {
   getServiceImageFallback,
   translateServiceName,
 } from "@/common/service-translations";
-import { ClientAutocomplete } from "./client-autocomplete";
-import { ServiceAutocomplete } from "./service-autocomplete";
+import { Autocomplete } from "@/components/autocomplete";
 
 const isWalkInClient = (client: Client) =>
   (client.email || "").toLowerCase().startsWith("walkin+");
+
+const getClientAutocompleteName = (client: Client) =>
+  `${client.firstName || ""} ${client.lastName || ""}`.trim();
+
+const getClientAutocompleteLabel = (client: Client) => {
+  const name = getClientAutocompleteName(client);
+
+  if (name && client.phone) {
+    return `${name} - ${client.phone}`;
+  }
+
+  if (name) {
+    return name;
+  }
+
+  if (client.phone) {
+    return client.phone;
+  }
+
+  if (client.email) {
+    return client.email;
+  }
+
+  return client.id;
+};
+
+const getClientAutocompleteSearchText = (client: Client) =>
+  [
+    getClientAutocompleteName(client),
+    client.phone,
+    client.email,
+    getClientAutocompleteLabel(client),
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+const getServiceAutocompleteCategory = (service: Service) => {
+  if (typeof service.category === "string") {
+    return service.category;
+  }
+
+  if (service.category && typeof service.category.name === "string") {
+    return service.category.name;
+  }
+
+  return "";
+};
 
 const toNumber = (value: unknown, fallback = 0): number => {
   if (typeof value === "number") {
@@ -1155,20 +1203,57 @@ export function AppointmentModals({
                     }}
                   />
                 </div>
-                <ClientAutocomplete
-                  key={walkInEnabled ? "walk-in-client" : "registered-client"}
-                  clients={clientOptions}
-                  value={form.watch("clientId") || ""}
-                  onValueChange={(value) =>
-                    form.setValue("clientId", value, {
+                <Autocomplete
+                  options={clientOptions}
+                  value={form.watch("clientId") || null}
+                  onChange={(value) =>
+                    form.setValue("clientId", value || "", {
                       shouldDirty: true,
                       shouldTouch: true,
                       shouldValidate: true,
                     })
                   }
+                  getOptionValue={(client) => client.id}
+                  getOptionSearchText={getClientAutocompleteSearchText}
+                  renderValue={(client) =>
+                    client ? getClientAutocompleteLabel(client) : null
+                  }
+                  renderOption={(client, selected) => {
+                    const clientName = getClientAutocompleteName(client);
+
+                    return (
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0 space-y-1">
+                          <div className="flex items-center gap-2">
+                            <User className="h-4 w-4 shrink-0 text-muted-foreground" />
+                            <span className="truncate text-sm font-medium text-foreground">
+                              {clientName ||
+                                client.email ||
+                                client.phone ||
+                                client.id}
+                            </span>
+                          </div>
+                          <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                            {client.phone && (
+                              <span className="inline-flex items-center gap-1">
+                                <Phone className="h-3 w-3" />
+                                {client.phone}
+                              </span>
+                            )}
+                            {client.email && (
+                              <span className="truncate">{client.email}</span>
+                            )}
+                          </div>
+                        </div>
+                        {selected && (
+                          <Check className="mt-0.5 h-4 w-4 shrink-0 text-accent-pink" />
+                        )}
+                      </div>
+                    );
+                  }}
                   disabled={!!walkInEnabled || isReferenceDataLoading}
-                  placeholder={String(t("clients.searchPlaceholder"))}
-                  emptyLabel={String(t("clients.noClients"))}
+                  placeholder={String(t("agenda.selectClient"))}
+                  emptyMessage={String(t("clients.noClients"))}
                 />
                 <FormErrorMessage message={getErrorMessage("clientId")} />
               </div>
@@ -1239,19 +1324,68 @@ export function AppointmentModals({
 
               <div className="space-y-2">
                 <Label>{t("fields.service")} *</Label>
-                <ServiceAutocomplete
-                  services={allServices}
-                  value={form.watch("serviceId") || ""}
-                  onValueChange={(value) =>
-                    form.setValue("serviceId", value, {
+                <Autocomplete
+                  options={allServices}
+                  value={form.watch("serviceId") || null}
+                  onChange={(value) =>
+                    form.setValue("serviceId", value || "", {
                       shouldDirty: true,
                       shouldTouch: true,
                       shouldValidate: true,
                     })
                   }
+                  getOptionValue={(service) => service.id}
+                  getOptionSearchText={(service) =>
+                    [
+                      translateServiceName(t, service),
+                      service.name,
+                      getServiceAutocompleteCategory(service),
+                    ]
+                      .filter(Boolean)
+                      .join(" ")
+                  }
+                  renderValue={(service) =>
+                    service ? translateServiceName(t, service) : null
+                  }
+                  renderOption={(service, selected) => {
+                    const categoryLabel = getServiceAutocompleteCategory(service);
+
+                    return (
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0 space-y-1">
+                          <div className="flex items-center gap-2">
+                            <Scissors className="h-4 w-4 shrink-0 text-accent-pink" />
+                            <span className="truncate text-sm font-medium text-foreground">
+                              {translateServiceName(t, service)}
+                            </span>
+                            {service.isPack && (
+                              <span className="rounded-full bg-accent-pink/10 px-2 py-0.5 text-[10px] font-medium text-accent-pink">
+                                {t("services.pack")}
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                            <span className="inline-flex items-center gap-1">
+                              <Clock className="h-3 w-3" />
+                              {service.duration} min
+                            </span>
+                            {categoryLabel && <span>{categoryLabel}</span>}
+                          </div>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <span className="text-sm font-medium text-foreground">
+                            {service.price}
+                          </span>
+                          {selected && (
+                            <Check className="mt-0.5 h-4 w-4 shrink-0 text-accent-pink" />
+                          )}
+                        </div>
+                      </div>
+                    );
+                  }}
                   disabled={isReferenceDataLoading}
-                  placeholder={String(t("services.searchPlaceholder"))}
-                  emptyLabel={`${t("services.services")} - ${t("common.noResults")}`}
+                  placeholder={String(t("agenda.selectService"))}
+                  emptyMessage={`${t("services.services")} - ${t("common.noResults")}`}
                 />
                 <FormErrorMessage message={getErrorMessage("serviceId")} />
               </div>

@@ -53,6 +53,9 @@ export interface TranslationKeys {
     new: string;
     detectAddress: string;
   };
+  search: {
+    searchPlaceholder: string;
+  };
   appUpdate: {
     title: string;
     message: string;
@@ -585,6 +588,9 @@ export const en = {
     success: "Success",
     total: "Total",
     new: "New",
+  },
+  search: {
+    searchPlaceholder: "Search...",
   },
 
   // ============================================

@@ -64,6 +64,9 @@ export const es = {
     total: "Total",
     new: "Nuevo",
   },
+  search: {
+    searchPlaceholder: "Buscar...",
+  },
 
   // ============================================
   // APP UPDATE
