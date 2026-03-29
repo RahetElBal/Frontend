@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 
 import {
@@ -20,100 +20,94 @@ interface PlanWarningState {
   thresholdHours: number;
   hoursLeft: number;
   isTrial: boolean;
-  planLabel: string;
-}
-
-function resolvePlanLabel(planTier?: string) {
-  const normalized = String(planTier || "standard").toLowerCase();
-  if (normalized === "pro") return "Pro";
-  if (
-    normalized === "all-in" ||
-    normalized === "all_in" ||
-    normalized === "allin"
-  ) {
-    return "All-In";
-  }
-  return "Standard";
 }
 
 function resolveThresholdLabel(hours: number) {
-  if (hours === 168) return "7 jours";
-  if (hours === 72) return "72 heures";
-  if (hours === 48) return "48 heures";
+  if (hours === 168) {
+    return "7 jours";
+  }
+
+  if (hours === 72) {
+    return "72 heures";
+  }
+
+  if (hours === 48) {
+    return "48 heures";
+  }
+
   return `${hours} heures`;
 }
 
 export function PlanExpiryWarningModal() {
   const { user } = useAuthContext();
-  const [open, setOpen] = useState(false);
-  const [warningState, setWarningState] = useState<PlanWarningState | null>(null);
+  const [referenceTime] = useState(() => Date.now());
+  const [dismissedStorageKey, setDismissedStorageKey] = useState<string | null>(null);
 
-  const computedWarning = useMemo<PlanWarningState | null>(() => {
-    if (!user || user.isSuperadmin) return null;
+  const warningState = useMemo<PlanWarningState | null>(() => {
+    if (!user || user.isSuperadmin) {
+      return null;
+    }
+
     const salon = user.salon;
-    if (!salon?.id || !salon.planEndAt) return null;
+    if (!salon?.id || !salon.planEndAt) {
+      return null;
+    }
 
     const planEndMs = new Date(salon.planEndAt).getTime();
-    if (!Number.isFinite(planEndMs)) return null;
+    if (!Number.isFinite(planEndMs)) {
+      return null;
+    }
 
-    const hoursLeft = (planEndMs - Date.now()) / (1000 * 60 * 60);
-    if (hoursLeft <= 0) return null;
+    const hoursLeft = (planEndMs - referenceTime) / (1000 * 60 * 60);
+    if (hoursLeft <= 0) {
+      return null;
+    }
 
     const dueThresholds = WARNING_THRESHOLDS_HOURS.filter(
       (threshold) => hoursLeft <= threshold,
     );
-    if (dueThresholds.length === 0) return null;
+    if (dueThresholds.length === 0) {
+      return null;
+    }
 
     const thresholdHours = Math.min(...dueThresholds);
-    const storageKey = `plan-expiry-warning:${salon.id}:${salon.planEndAt}:${thresholdHours}`;
-
     return {
-      storageKey,
+      storageKey: `plan-expiry-warning:${salon.id}:${salon.planEndAt}:${thresholdHours}`,
       thresholdHours,
       hoursLeft: Math.ceil(hoursLeft),
       isTrial: salon.isOnFreeTrial === true,
-      planLabel: resolvePlanLabel(salon.planTier),
     };
-  }, [user]);
-
-  useEffect(() => {
-    if (!computedWarning) {
-      setWarningState(null);
-      setOpen(false);
-      return;
-    }
-
-    const alreadyDismissed =
-      localStorage.getItem(computedWarning.storageKey) === "dismissed";
-    if (alreadyDismissed) {
-      setWarningState(null);
-      setOpen(false);
-      return;
-    }
-
-    setWarningState(computedWarning);
-    setOpen(true);
-  }, [computedWarning]);
+  }, [referenceTime, user]);
 
   const handleDismiss = () => {
-    if (warningState) {
-      localStorage.setItem(warningState.storageKey, "dismissed");
+    if (!warningState) {
+      return;
     }
-    setOpen(false);
+
+    localStorage.setItem(warningState.storageKey, "dismissed");
+    setDismissedStorageKey(warningState.storageKey);
   };
 
-  if (!warningState) return null;
+  if (!warningState) {
+    return null;
+  }
+
+  const isDismissed =
+    dismissedStorageKey === warningState.storageKey ||
+    localStorage.getItem(warningState.storageKey) === "dismissed";
+  if (isDismissed) {
+    return null;
+  }
 
   const thresholdLabel = resolveThresholdLabel(warningState.thresholdHours);
 
   return (
     <AlertDialog
-      open={open}
+      open
       onOpenChange={(nextOpen) => {
         if (!nextOpen) {
           handleDismiss();
-        } else {
-          setOpen(true);
+          return;
         }
       }}
     >
@@ -121,21 +115,21 @@ export function PlanExpiryWarningModal() {
         <AlertDialogHeader>
           <AlertDialogTitle>
             {warningState.isTrial
-              ? "Votre essai gratuit se termine bientôt"
-              : "Votre offre se termine bientôt"}
+              ? "Votre essai gratuit se termine bientot"
+              : "Votre abonnement se termine bientot"}
           </AlertDialogTitle>
           <AlertDialogDescription>
             {warningState.isTrial ? (
               <>
-                Votre essai gratuit ({warningState.planLabel}) arrive à expiration
-                dans moins de <strong>{thresholdLabel}</strong>. Passez à une
-                offre payante pour éviter l’interruption.
+                Votre essai gratuit arrive a expiration dans moins de{" "}
+                <strong>{thresholdLabel}</strong>. Activez votre abonnement pour
+                eviter toute interruption.
               </>
             ) : (
               <>
-                Votre offre {warningState.planLabel} expire dans moins de{" "}
+                Votre abonnement expire dans moins de{" "}
                 <strong>{thresholdLabel}</strong>. Renouvelez maintenant pour
-                conserver vos accès sans interruption.
+                conserver vos acces sans interruption.
               </>
             )}
           </AlertDialogDescription>
@@ -146,28 +140,24 @@ export function PlanExpiryWarningModal() {
             <p className="font-medium">Ce que vous risquez de perdre:</p>
             <ul className="mt-2 list-disc space-y-1 ps-5">
               <li>Rappels WhatsApp automatiques</li>
-              <li>Tableau analytique avancé</li>
-              <li>Support prioritaire (prise en charge accélérée)</li>
+              <li>Tableau analytique avance</li>
+              <li>Support prioritaire</li>
             </ul>
           </div>
         ) : null}
 
         <p className="text-xs text-muted-foreground">
-          Temps restant estimé: {warningState.hoursLeft} heure(s)
+          Temps restant estime: {warningState.hoursLeft} heure(s)
         </p>
 
         <AlertDialogFooter className="gap-2">
-          <Button
-            variant="outline"
-            asChild
-            onClick={handleDismiss}
-          >
-            <a href="mailto:support@beautiq-app.com?subject=Renouvellement%20offre%20Beautiq">
+          <Button variant="outline" asChild onClick={handleDismiss}>
+            <a href="mailto:support@beautiq-app.com?subject=Renouvellement%20abonnement%20Beautiq">
               Contacter le support
             </a>
           </Button>
           <Button asChild onClick={handleDismiss}>
-            <Link to={ROUTES.SALON_SETTINGS}>Mettre à niveau / payer</Link>
+            <Link to={ROUTES.SALON_SETTINGS}>Gerer mon abonnement</Link>
           </Button>
         </AlertDialogFooter>
       </AlertDialogContent>

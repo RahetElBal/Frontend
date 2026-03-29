@@ -20,6 +20,7 @@ import { usePost } from "@/hooks/usePost";
 import { usePostAction } from "@/hooks/usePostAction";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useUser } from "@/hooks/useUser";
+import { MVP_VISIBILITY } from "@/constants/mvp";
 import {
   Dialog,
   DialogContent,
@@ -66,8 +67,9 @@ export function ClientModals({
   const { t } = useTranslation();
   const { formatCurrency } = useLanguage();
   const { user } = useUser();
+  const loyaltyVisible = MVP_VISIBILITY.loyalty;
   const canManageLoyalty =
-    user?.isSuperadmin || user?.role === AppRole.ADMIN;
+    loyaltyVisible && (user?.isSuperadmin || user?.role === AppRole.ADMIN);
   const getErrorMessage = (name: keyof ClientFormData): string | undefined => {
     const maybeGetError = (
       form as UseFormReturn<ClientFormData> & {
@@ -352,51 +354,54 @@ export function ClientModals({
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                  <div className="flex items-center gap-3">
-                    <Award className="h-5 w-5 text-muted-foreground" />
-                    <div>
-                      <p className="text-sm text-muted-foreground">
-                        {t("fields.loyaltyPoints")}
-                      </p>
-                      <Badge
-                        variant={
-                          selectedClient.loyaltyPoints >= 500
-                            ? "success"
-                            : "default"
-                        }
-                      >
-                        {selectedClient.loyaltyPoints} pts
-                      </Badge>
+                {loyaltyVisible && (
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                    <div className="flex items-center gap-3">
+                      <Award className="h-5 w-5 text-muted-foreground" />
+                      <div>
+                        <p className="text-sm text-muted-foreground">
+                          {t("fields.loyaltyPoints")}
+                        </p>
+                        <Badge
+                          variant={
+                            selectedClient.loyaltyPoints >= 500
+                              ? "success"
+                              : "default"
+                          }
+                        >
+                          {selectedClient.loyaltyPoints} pts
+                        </Badge>
+                      </div>
                     </div>
+                    {canManageLoyalty && (
+                      <div className="flex gap-1">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => addLoyaltyPoints({ points: 10 })}
+                          disabled={isAddingPoints}
+                          title={t("clients.addPoints")}
+                        >
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => deductLoyaltyPoints({ points: 10 })}
+                          disabled={
+                            isDeductingPoints ||
+                            selectedClient.loyaltyPoints < 10
+                          }
+                          title={t("clients.deductPoints")}
+                        >
+                          <Minus className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    )}
                   </div>
-                  {canManageLoyalty && (
-                    <div className="flex gap-1">
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={() => addLoyaltyPoints({ points: 10 })}
-                        disabled={isAddingPoints}
-                        title={t("clients.addPoints")}
-                      >
-                        <Plus className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={() => deductLoyaltyPoints({ points: 10 })}
-                        disabled={
-                          isDeductingPoints || selectedClient.loyaltyPoints < 10
-                        }
-                        title={t("clients.deductPoints")}
-                      >
-                        <Minus className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  )}
-                </div>
+                )}
 
                 <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
                   <DollarSign className="h-5 w-5 text-muted-foreground" />
@@ -423,7 +428,7 @@ export function ClientModals({
                         <span className="text-muted-foreground text-sm ml-2">
                           ({t("fields.lastVisit")}:{" "}
                           {new Date(
-                            selectedClient.lastVisit
+                            selectedClient.lastVisit,
                           ).toLocaleDateString()}
                           )
                         </span>
@@ -520,7 +525,11 @@ export function ClientModals({
             </div>
             <div className="space-y-2">
               <Label htmlFor="birthDate">{t("fields.dateOfBirth")}</Label>
-              <Input id="birthDate" type="date" {...form.register("birthDate")} />
+              <Input
+                id="birthDate"
+                type="date"
+                {...form.register("birthDate")}
+              />
               <FormErrorMessage message={getErrorMessage("birthDate")} />
             </div>
             <div className="flex items-center justify-between rounded-lg border p-3">

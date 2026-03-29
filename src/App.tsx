@@ -15,6 +15,7 @@ import PrivacyPage from "@/routes/privacy";
 import { UserLayout } from "@/layouts/user-layout";
 import { AdminLayout } from "@/layouts/admin-layout";
 import { SuperadminLayout } from "@/layouts/superadmin-layout";
+import { MVP_VISIBILITY } from "@/constants/mvp";
 import { ROUTES } from "@/constants/navigation";
 
 const AdminDashboardPage = lazy(() => import("./pages/admin/dashboard"));
@@ -105,6 +106,18 @@ function AgendaPageWrapper() {
 }
 
 function App() {
+  let loyaltyPageElement = <LoyaltyPage />;
+  if (!MVP_VISIBILITY.loyalty) {
+    loyaltyPageElement = <Navigate to={ROUTES.DASHBOARD} replace />;
+  }
+
+  let loyaltySettingsPageElement = <SalonSettingsPage />;
+  if (!MVP_VISIBILITY.loyalty) {
+    loyaltySettingsPageElement = (
+      <Navigate to={ROUTES.SALON_SETTINGS_GENERAL} replace />
+    );
+  }
+
   return (
     <BrowserRouter>
       <Routes>
@@ -120,21 +133,21 @@ function App() {
 
         {/* User routes - with UserLayout */}
         <Route element={<UserLayout />}>
-        <Route path={ROUTES.DASHBOARD} element={<DashboardPage />} />
-        <Route path={ROUTES.CLIENTS} element={<ClientsPage />} />
-        <Route path={ROUTES.AGENDA} element={<AgendaPageWrapper />} />
-        <Route
-          path="/agenda/history"
-          element={<Navigate to={ROUTES.AGENDA_HISTORY} replace />}
-        />
-        <Route path={ROUTES.AGENDA_HISTORY} element={<AgendaHistoryPage />} />
-        <Route path={ROUTES.SERVICES} element={<ServicesPage />} />
+          <Route path={ROUTES.DASHBOARD} element={<DashboardPage />} />
+          <Route path={ROUTES.CLIENTS} element={<ClientsPage />} />
+          <Route path={ROUTES.AGENDA} element={<AgendaPageWrapper />} />
+          <Route
+            path="/agenda/history"
+            element={<Navigate to={ROUTES.AGENDA_HISTORY} replace />}
+          />
+          <Route path={ROUTES.AGENDA_HISTORY} element={<AgendaHistoryPage />} />
+          <Route path={ROUTES.SERVICES} element={<ServicesPage />} />
           <Route path={ROUTES.STAFF} element={<StaffPage />} />
           <Route path={ROUTES.PRODUCTS} element={<ProductsPage />} />
           <Route path={ROUTES.SALES} element={<SalesPage />} />
           <Route path={ROUTES.PROMOTIONS} element={<PromotionsPage />} />
           <Route path={ROUTES.ANALYTICS} element={<AnalyticsPage />} />
-          <Route path={ROUTES.LOYALTY} element={<LoyaltyPage />} />
+          <Route path={ROUTES.LOYALTY} element={loyaltyPageElement} />
           <Route
             path={ROUTES.SALON_SETTINGS}
             element={<Navigate to={ROUTES.SALON_SETTINGS_GENERAL} replace />}
@@ -153,7 +166,7 @@ function App() {
           />
           <Route
             path={ROUTES.SALON_SETTINGS_LOYALTY}
-            element={<SalonSettingsPage />}
+            element={loyaltySettingsPageElement}
           />
           <Route path={ROUTES.SETTINGS} element={<SettingsPage />} />
           <Route path={ROUTES.PROFILE} element={<SettingsPage />} />

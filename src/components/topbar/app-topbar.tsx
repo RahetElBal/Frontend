@@ -1,6 +1,5 @@
 import { cn } from "@/lib/utils";
 import { AdminNotificationsBell } from "./admin-notifications-bell";
-import { PlanBadge } from "./plan-badge";
 
 interface AppTopbarProps {
   className?: string;
@@ -14,9 +13,6 @@ export function AppTopbar({ className }: AppTopbarProps) {
         className,
       )}
     >
-      <div className="min-w-0 flex-1">
-        <PlanBadge />
-      </div>
       <div className="ms-auto flex items-center">
         <AdminNotificationsBell />
       </div>

@@ -14,7 +14,6 @@ import type { SettingsSectionProps } from "../types";
 
 export function NotificationSettings({
   formData,
-  isWhatsappAutomationProEnabled = false,
   updateField,
 }: SettingsSectionProps) {
   const { t } = useTranslation();
@@ -34,24 +33,16 @@ export function NotificationSettings({
             <p className="text-sm text-muted-foreground">
               {t("salonSettings.appointmentReminderDescription")}
             </p>
-            {!isWhatsappAutomationProEnabled ? (
-              <p className="text-xs mt-1 text-amber-600">
-                WhatsApp reminders are available for Pro offer only.
-              </p>
-            ) : null}
           </div>
           <Switch
-            checked={
-              isWhatsappAutomationProEnabled && formData.sendAppointmentReminder
-            }
-            disabled={!isWhatsappAutomationProEnabled}
+            checked={Boolean(formData.sendAppointmentReminder)}
             onCheckedChange={(checked) =>
               updateField("sendAppointmentReminder", checked)
             }
           />
         </div>
 
-        {isWhatsappAutomationProEnabled && formData.sendAppointmentReminder && (
+        {formData.sendAppointmentReminder && (
           <div className="ps-4 space-y-2">
             <Label>{t("salonSettings.reminderTiming")}</Label>
             <Select
@@ -87,17 +78,9 @@ export function NotificationSettings({
             <p className="text-sm text-muted-foreground">
               {t("salonSettings.birthdayGreetingDescription")}
             </p>
-            {!isWhatsappAutomationProEnabled ? (
-              <p className="text-xs mt-1 text-amber-600">
-                Birthday WhatsApp greetings are available for Pro offer only.
-              </p>
-            ) : null}
           </div>
           <Switch
-            checked={
-              isWhatsappAutomationProEnabled && formData.sendBirthdayGreeting
-            }
-            disabled={!isWhatsappAutomationProEnabled}
+            checked={Boolean(formData.sendBirthdayGreeting)}
             onCheckedChange={(checked) =>
               updateField("sendBirthdayGreeting", checked)
             }

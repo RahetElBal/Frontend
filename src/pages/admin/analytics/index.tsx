@@ -12,7 +12,6 @@ import {
   Heart,
   BadgePercent,
 } from "lucide-react";
-import { ProFeatureGate } from "@/components/pro-feature-gate";
 import { selectCollectionData } from "@/common/utils";
 
 import { PageHeader } from "@/components/page-header";
@@ -215,65 +214,64 @@ export function AnalyticsPage() {
         />
       </div>
 
-      <ProFeatureGate featureKey="advancedAnalytics">
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
-          <StatsCard
-            title={t("analytics.totalAppointments")}
-            value={analytics.totalAppointments}
-            loading={isLoading}
-            icon={Calendar}
-            iconColor="text-purple-600"
-            iconBgColor="bg-purple-100"
-          />
-          <StatsCard
-            title={t("analytics.newClients")}
-            value={analytics.newClients}
-            loading={isLoading}
-            icon={Users}
-            iconColor="text-amber-600"
-            iconBgColor="bg-amber-100"
-          />
-          <StatsCard
-            title={t("analytics.marriedClients")}
-            value={analytics.marriedClientsCount}
-            loading={isLoading}
-            icon={Heart}
-            iconColor="text-rose-600"
-            iconBgColor="bg-rose-100"
-          />
-          <StatsCard
-            title={t("analytics.packRevenue")}
-            value={formatCurrency(toNumber(analytics.packRevenue))}
-            loading={isLoading}
-            icon={Package}
-            iconColor="text-indigo-600"
-            iconBgColor="bg-indigo-100"
-          />
-          <StatsCard
-            title={t("analytics.packSold")}
-            value={analytics.packCount}
-            loading={isLoading}
-            icon={Package}
-            iconColor="text-indigo-600"
-            iconBgColor="bg-indigo-100"
-          />
-          <StatsCard
-            title={t("analytics.packShare")}
-            value={`${analytics.packShare.toFixed(1)}%`}
-            loading={isLoading}
-            icon={BadgePercent}
-            iconColor="text-amber-600"
-            iconBgColor="bg-amber-100"
-          />
-        </div>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
+        <StatsCard
+          title={t("analytics.totalAppointments")}
+          value={analytics.totalAppointments}
+          loading={isLoading}
+          icon={Calendar}
+          iconColor="text-purple-600"
+          iconBgColor="bg-purple-100"
+        />
+        <StatsCard
+          title={t("analytics.newClients")}
+          value={analytics.newClients}
+          loading={isLoading}
+          icon={Users}
+          iconColor="text-amber-600"
+          iconBgColor="bg-amber-100"
+        />
+        <StatsCard
+          title={t("analytics.marriedClients")}
+          value={analytics.marriedClientsCount}
+          loading={isLoading}
+          icon={Heart}
+          iconColor="text-rose-600"
+          iconBgColor="bg-rose-100"
+        />
+        <StatsCard
+          title={t("analytics.packRevenue")}
+          value={formatCurrency(toNumber(analytics.packRevenue))}
+          loading={isLoading}
+          icon={Package}
+          iconColor="text-indigo-600"
+          iconBgColor="bg-indigo-100"
+        />
+        <StatsCard
+          title={t("analytics.packSold")}
+          value={analytics.packCount}
+          loading={isLoading}
+          icon={Package}
+          iconColor="text-indigo-600"
+          iconBgColor="bg-indigo-100"
+        />
+        <StatsCard
+          title={t("analytics.packShare")}
+          value={`${analytics.packShare.toFixed(1)}%`}
+          loading={isLoading}
+          icon={BadgePercent}
+          iconColor="text-amber-600"
+          iconBgColor="bg-amber-100"
+        />
+      </div>
 
-        {isLoading ? (
-          <Card className="p-6">
-            <LoadingPanel label={t("common.loading")} />
-          </Card>
-        ) : !analytics.hasData ? (
-          <Card className="p-12 text-center">
-            <Layers className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+      {isLoading ? (
+        <Card className="p-6">
+          <LoadingPanel label={t("common.loading")} />
+        </Card>
+      ) : !analytics.hasData ? (
+        <Card className="p-12 text-center">
+          <Layers className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
           <h3 className="text-lg font-semibold mb-2">
             {t("analytics.noData")}
           </h3>
@@ -338,7 +336,9 @@ export function AnalyticsPage() {
                         <div className="h-2 rounded-full bg-muted">
                           <div
                             className={`h-2 rounded-full transition-all duration-500 ${colors[idx % colors.length]}`}
-                            style={{ width: `${Math.min(category.percent, 100)}%` }}
+                            style={{
+                              width: `${Math.min(category.percent, 100)}%`,
+                            }}
                           />
                         </div>
                       </div>
@@ -363,7 +363,9 @@ export function AnalyticsPage() {
                   <div className="h-2 rounded-full bg-muted">
                     <div
                       className="h-2 rounded-full bg-emerald-500 transition-all duration-500"
-                      style={{ width: `${Math.min(analytics.serviceShare, 100)}%` }}
+                      style={{
+                        width: `${Math.min(analytics.serviceShare, 100)}%`,
+                      }}
                     />
                   </div>
                 </div>
@@ -378,7 +380,9 @@ export function AnalyticsPage() {
                     <div className="h-2 rounded-full bg-muted">
                       <div
                         className="h-2 rounded-full bg-indigo-500 transition-all duration-500"
-                        style={{ width: `${Math.min(analytics.packShare, 100)}%` }}
+                        style={{
+                          width: `${Math.min(analytics.packShare, 100)}%`,
+                        }}
                       />
                     </div>
                   </div>
@@ -415,7 +419,9 @@ export function AnalyticsPage() {
                         <div className="h-2 rounded-full bg-muted">
                           <div
                             className="h-2 rounded-full bg-emerald-500 transition-all duration-500"
-                            style={{ width: `${Math.min(service.percent, 100)}%` }}
+                            style={{
+                              width: `${Math.min(service.percent, 100)}%`,
+                            }}
                           />
                         </div>
                       </div>
@@ -463,7 +469,6 @@ export function AnalyticsPage() {
           </div>
         </>
       )}
-      </ProFeatureGate>
     </div>
   );
 }

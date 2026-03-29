@@ -1,5 +1,4 @@
 export const PlanTier = {
-  STANDARD: "standard",
   PRO: "pro",
 } as const;
 

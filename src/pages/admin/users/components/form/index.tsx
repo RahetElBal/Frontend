@@ -32,9 +32,6 @@ import type { Salon } from "@/pages/admin/salon/types";
 import type { UserFormData } from "./validation";
 import { STAFF_PERMISSIONS, type StaffPermission } from "./validation";
 import { parseValidationMsg } from "@/common/validator/zodI18n";
-import { useUser } from "@/hooks/useUser";
-import { ProFeatureGate } from "@/components/pro-feature-gate";
-import { isProPlan } from "@/lib/plan";
 
 interface UserFormProps {
   form: UseFormReturn<UserFormData>;
@@ -69,10 +66,7 @@ export function UserForm({
   onCancel,
 }: UserFormProps) {
   const { t } = useTranslation();
-  const { salon: currentSalon } = useUser();
   const currentRole = form.watch("role");
-  const isPro = isProPlan(currentSalon?.planTier);
-  const isProLikePlan = isPro;
   const getErrorMessage = (message?: string): string | undefined => {
     if (!message) return undefined;
     if (message.startsWith("validation.") || message.startsWith("errors.")) {
@@ -140,12 +134,10 @@ export function UserForm({
               {getErrorMessage(form.formState.errors.phone.message as string)}
             </p>
           )}
-          {!isSuperadmin &&
-          isCreateMode &&
-          currentRole === AppRole.USER &&
-          isProLikePlan ? (
+          {!isSuperadmin && isCreateMode && currentRole === AppRole.USER ? (
             <p className="text-xs text-muted-foreground">
-              Offre Pro: demandez le numero WhatsApp du membre pour recevoir les rappels automatiques.
+              Demandez le numero WhatsApp du membre pour activer les rappels
+              automatiques.
             </p>
           ) : null}
         </div>
@@ -258,41 +250,38 @@ export function UserForm({
             </div>
           </div>
         )}
-        {/* Advanced Permissions - Pro plan only, staff users only */}
         {currentRole === AppRole.USER && (
-          <ProFeatureGate featureKey="advancedPermissions" compact>
-            <div className="space-y-3">
-              <Label>{t("proFeatures.advancedPermissions.title")}</Label>
-              <div className="grid grid-cols-2 gap-2">
-                {STAFF_PERMISSIONS.map((perm) => {
-                  const meta = PERMISSION_META[perm];
-                  const Icon = meta.icon;
-                  const currentPerms = form.watch("permissions") ?? [];
-                  const checked = currentPerms.includes(perm);
-                  return (
-                    <label
-                      key={perm}
-                      className="flex cursor-pointer items-center gap-2.5 rounded-lg border p-2.5 transition-colors hover:bg-muted/50 has-[data-state=checked]:border-accent-blue-300 has-[data-state=checked]:bg-accent-blue-50/50"
-                    >
-                      <Checkbox
-                        checked={checked}
-                        onCheckedChange={(val) => {
-                          const next = val
-                            ? [...currentPerms, perm]
-                            : currentPerms.filter((p) => p !== perm);
-                          form.setValue("permissions", next, {
-                            shouldDirty: true,
-                          });
-                        }}
-                      />
-                      <Icon className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm">{t(meta.labelKey)}</span>
-                    </label>
-                  );
-                })}
-              </div>
+          <div className="space-y-3">
+            <Label>{t("proFeatures.advancedPermissions.title")}</Label>
+            <div className="grid grid-cols-2 gap-2">
+              {STAFF_PERMISSIONS.map((perm) => {
+                const meta = PERMISSION_META[perm];
+                const Icon = meta.icon;
+                const currentPerms = form.watch("permissions") ?? [];
+                const checked = currentPerms.includes(perm);
+                return (
+                  <label
+                    key={perm}
+                    className="flex cursor-pointer items-center gap-2.5 rounded-lg border p-2.5 transition-colors hover:bg-muted/50 has-[data-state=checked]:border-accent-blue-300 has-[data-state=checked]:bg-accent-blue-50/50"
+                  >
+                    <Checkbox
+                      checked={checked}
+                      onCheckedChange={(val) => {
+                        const next = val
+                          ? [...currentPerms, perm]
+                          : currentPerms.filter((p) => p !== perm);
+                        form.setValue("permissions", next, {
+                          shouldDirty: true,
+                        });
+                      }}
+                    />
+                    <Icon className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm">{t(meta.labelKey)}</span>
+                  </label>
+                );
+              })}
             </div>
-          </ProFeatureGate>
+          </div>
         )}
       </div>
 

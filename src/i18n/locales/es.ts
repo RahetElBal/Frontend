@@ -70,9 +70,9 @@ export const es = {
   // ============================================
   appUpdate: {
     title: "Nueva versión disponible",
-    message: "La versión {{version}} está disponible. Descarga el APK más reciente.",
+    message:
+      "La versión {{version}} está disponible. Descarga el APK más reciente.",
   },
-
 
   // ============================================
   // AUTHENTICATION
@@ -987,7 +987,7 @@ export const es = {
     titleLine1: "Eleva la gestion",
     titleLine2: "de tu salon",
     description:
-      "Beautiq centraliza CRM, agenda, ventas y fidelizacion para salones de belleza en Argelia. Gestiona web y movil desde una sola plataforma.",
+      "Beautiq centraliza CRM, agenda y ventas para salones de belleza en Argelia. Gestiona web y movil desde una sola plataforma.",
     ctaLogin: "Acceder al login",
     ctaMobile: "App movil",
     highlights: {
@@ -1006,25 +1006,25 @@ export const es = {
     },
     pricing: {
       badge: "Precios",
-      title: "Planes para cada etapa de crecimiento",
+      title: "Todo lo que incluye Beautiq",
       launchNote:
-        "Lanzamiento: los primeros 10 socios de pago reciben 2 anos de suscripcion incluidos.",
+        "Oferta de lanzamiento limitada: los primeros 10 clientes reciben 3 meses gratis.",
       recommended: "Recomendado",
       start: "Empezar",
     },
     plans: {
       standard: {
         name: "Standard",
-        subtitle: "Por oferta",
+        subtitle: "Todas las funciones avanzadas incluidas",
         item1: "Usuario admin incluido",
         item2: "5 plazas para la app movil",
         item3: "Implementacion rapida",
         item4: "Soporte inicial",
       },
       pro: {
-        name: "Pro",
-        subtitle: "Por oferta",
-        item1: "Todo Standard +",
+        name: "Beautiq",
+        subtitle: "Todas las funciones avanzadas incluidas",
+        item1: "Cuenta admin y acceso del equipo incluidos",
         item2: "Recordatorios automaticos por WhatsApp",
         item3: "Configuracion de recordatorios y confirmaciones por WhatsApp",
         item4: "Analitica avanzada",
@@ -1089,8 +1089,8 @@ export const es = {
       currentOffer: "Oferta actual:",
       predictedPriority: "Prioridad estimada:",
       description:
-        "Los reportes se envían a {{email}} y se clasifican con una insignia de oferta y prioridad.",
-      lastTicket: "Último ticket enviado: {{ticketId}}",
+        "Los reportes se envian a {{email}} y se priorizan segun el tipo de solicitud.",
+      lastTicket: "Ultimo ticket enviado: {{ticketId}}",
     },
     planTier: {
       standard: "Standard",
@@ -1106,7 +1106,8 @@ export const es = {
     types: {
       technical_issue: {
         label: "Problema técnico",
-        description: "Comportamiento de la app, rendimiento o problemas de sincronización.",
+        description:
+          "Comportamiento de la app, rendimiento o problemas de sincronización.",
       },
       bug_report: {
         label: "Reporte de error",
@@ -1122,7 +1123,8 @@ export const es = {
       },
       incident: {
         label: "Incidente crítico",
-        description: "Interrupción urgente del servicio que requiere respuesta rápida.",
+        description:
+          "Interrupción urgente del servicio que requiere respuesta rápida.",
       },
       feature_request: {
         label: "Solicitud de funcionalidad",

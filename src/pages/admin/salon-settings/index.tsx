@@ -16,7 +16,7 @@ import { useUser } from "@/hooks/useUser";
 import { useSalonSettings } from "@/hooks/useSalonSettings";
 import { useSalonServices } from "@/hooks/useSalonServices";
 import { ROUTES } from "@/constants/navigation";
-import { isProPlan } from "@/lib/plan";
+import { MVP_VISIBILITY } from "@/constants/mvp";
 import { GeneralSettings } from "./components/general-settings";
 import { WorkingHoursSettings } from "./components/working-hours-settings";
 import { LoyaltySettings } from "./components/loyalty-settings";
@@ -28,11 +28,7 @@ import {
   mergeFormData,
 } from "./components/utils";
 
-type SettingsPage =
-  | "general"
-  | "hours"
-  | "notifications"
-  | "loyalty";
+type SettingsPage = "general" | "hours" | "notifications" | "loyalty";
 
 export function SalonSettingsPage() {
   const { t } = useTranslation();
@@ -47,7 +43,10 @@ export function SalonSettingsPage() {
       case ROUTES.SALON_SETTINGS_NOTIFICATIONS:
         return "notifications";
       case ROUTES.SALON_SETTINGS_LOYALTY:
-        return "loyalty";
+        if (MVP_VISIBILITY.loyalty) {
+          return "loyalty";
+        }
+        return "general";
       case ROUTES.SALON_SETTINGS_GENERAL:
       default:
         return "general";
@@ -65,7 +64,6 @@ export function SalonSettingsPage() {
 
   // Use latest salon settings when available
   const currentSalon = cachedSalon || userSalon;
-  const isWhatsappAutomationProEnabled = isProPlan(currentSalon?.planTier);
 
   // Settings are stored within the salon entity
   const settings = currentSalon?.settings as SalonSettingsExtended | undefined;
@@ -73,7 +71,10 @@ export function SalonSettingsPage() {
   const { services, isLoading: servicesLoading } = useSalonServices(
     currentSalon?.id,
     {
-      enabled: activePage === "loyalty" && !!currentSalon?.id,
+      enabled:
+        MVP_VISIBILITY.loyalty &&
+        activePage === "loyalty" &&
+        !!currentSalon?.id,
     },
   );
 
@@ -116,17 +117,9 @@ export function SalonSettingsPage() {
   );
 
   const handleSave = () => {
-    const nextSettings = isWhatsappAutomationProEnabled
-      ? formData
-      : {
-          ...formData,
-          sendAppointmentReminder: false,
-          sendBirthdayGreeting: false,
-        };
-
-    applyOptimisticSettings(nextSettings);
+    applyOptimisticSettings(formData);
     saveSettings.mutate(
-      { settings: nextSettings },
+      { settings: formData },
       {
         onError: () => {
           void refreshSalon();
@@ -159,13 +152,16 @@ export function SalonSettingsPage() {
       label: t("salonSettings.tabs.notifications"),
       icon: Bell,
     },
-    {
+  ];
+
+  if (MVP_VISIBILITY.loyalty) {
+    tabs.push({
       id: "loyalty",
       href: ROUTES.SALON_SETTINGS_LOYALTY,
       label: t("salonSettings.tabs.loyalty"),
       icon: Heart,
-    },
-  ];
+    });
+  }
 
   return (
     <div className="space-y-6">
@@ -230,13 +226,10 @@ export function SalonSettingsPage() {
               {activePage === "notifications" && (
                 <NotificationSettings
                   formData={formData}
-                  isWhatsappAutomationProEnabled={
-                    isWhatsappAutomationProEnabled
-                  }
                   updateField={updateField}
                 />
               )}
-              {activePage === "loyalty" && (
+              {MVP_VISIBILITY.loyalty && activePage === "loyalty" && (
                 <LoyaltySettings
                   formData={formData}
                   updateField={updateField}

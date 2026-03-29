@@ -50,7 +50,6 @@ export interface SalonSettingsExtended extends BaseEntity {
 
 export interface SettingsSectionProps {
   formData: Partial<SalonSettingsExtended>;
-  isWhatsappAutomationProEnabled?: boolean;
   updateField: <K extends keyof SalonSettingsExtended>(
     field: K,
     value: SalonSettingsExtended[K],

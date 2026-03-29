@@ -32,7 +32,6 @@ export const createSalonFormSchema = (
           val.startsWith("/"),
         t("validation.url"),
       ),
-    planTier: z.enum(["standard", "pro"]).optional(),
     freeTrial: z.boolean().optional(),
   });
 

@@ -1027,11 +1027,11 @@ export const en = {
     deleteAppointmentConfirm:
       "Are you sure you want to delete the appointment with {{client}}?",
     notesPlaceholder: "Additional notes...",
-      breakTime: "Break",
-      closedDay: "This day is marked as closed in salon settings.",
-      timeOutsideWorkingHours: "Selected time is outside working hours.",
-      pastAppointmentNotAllowed: "Appointments can't be scheduled in the past.",
-      timeSlotOccupied: "This time slot is already booked.",
+    breakTime: "Break",
+    closedDay: "This day is marked as closed in salon settings.",
+    timeOutsideWorkingHours: "Selected time is outside working hours.",
+    pastAppointmentNotAllowed: "Appointments can't be scheduled in the past.",
+    timeSlotOccupied: "This time slot is already booked.",
     timeSlotOccupiedDetails: "Conflicts with {{client}} ({{start}}-{{end}}).",
     recordPayment: "Record Payment",
     paymentRecorded: "Payment recorded",
@@ -1056,10 +1056,10 @@ export const en = {
     walkInOptionalDetails: "Optional details (can be added later)",
     walkInPhone: "Walk-in phone",
     walkInPhonePlaceholder: "Auto-filled if empty",
-      walkInEmail: "Walk-in email",
-      walkInEmailPlaceholder: "Auto-filled if empty",
-      walkInEmailExists:
-        "This user is already registered. Select them from the client list.",
+    walkInEmail: "Walk-in email",
+    walkInEmailPlaceholder: "Auto-filled if empty",
+    walkInEmailExists:
+      "This user is already registered. Select them from the client list.",
     walkInNameRequired: "Walk-in name is required",
     walkInLastNameFallback: "Walk-in",
     autoArchiveWalkIns: "Auto-archive walk-ins after payment",
@@ -1424,7 +1424,8 @@ export const en = {
       },
       appointmentPaymentRecorded: {
         title: "Payment recorded",
-        message: "Payment recorded for {{client}} - {{service}} on {{date}} at {{time}}",
+        message:
+          "Payment recorded for {{client}} - {{service}} on {{date}} at {{time}}",
       },
       saleCreated: {
         title: "Payment recorded",
@@ -1715,12 +1716,12 @@ export const en = {
       deleteSalonConfirm:
         "Are you sure you want to delete {{name}}? This action cannot be undone.",
       owner: "Owner",
-        salonOwner: "Salon Owner",
-        selectOwner: "Select an admin as owner",
-        selectOwnerRequired: "Please select a salon owner",
-        noAdmins: "No admins available",
-        createAdmin: "Create an admin",
-        searchSalons: "Look for salons...",
+      salonOwner: "Salon Owner",
+      selectOwner: "Select an admin as owner",
+      selectOwnerRequired: "Please select a salon owner",
+      noAdmins: "No admins available",
+      createAdmin: "Create an admin",
+      searchSalons: "Look for salons...",
       ownerHelp: "Choose which admin will own and manage this salon",
       ownerAutoAssigned:
         "You will be automatically assigned as the owner of this salon",
@@ -1808,7 +1809,7 @@ export const en = {
     titleLine1: "Elevate Your Salon",
     titleLine2: "Management",
     description:
-      "Beautiq centralizes CRM, scheduling, sales and loyalty for beauty salons in Algeria. Manage web and mobile from one platform.",
+      "Beautiq centralizes CRM, scheduling and sales for beauty salons in Algeria. Manage web and mobile from one platform.",
     ctaLogin: "Access login",
     ctaMobile: "Mobile app",
     highlights: {
@@ -1827,9 +1828,9 @@ export const en = {
     },
     pricing: {
       badge: "Pricing",
-      title: "Plans for every growth stage",
+      title: "Everything Beautiq includes",
       launchNote:
-        "Launch partnership: first 10 paying partners get 2 years of subscription included.",
+        "Limited launch offer: the first 10 clients get 3 months free.",
       recommended: "Recommended",
       start: "Get started",
     },
@@ -1843,9 +1844,9 @@ export const en = {
         item4: "Onboarding support",
       },
       pro: {
-        name: "Pro",
-        subtitle: "Per offer",
-        item1: "Everything in Standard +",
+        name: "Beautiq",
+        subtitle: "All premium features included",
+        item1: "Admin account and team access included",
         item2: "Automated WhatsApp reminders",
         item3: "WhatsApp reminders and confirmations setup",
         item4: "Advanced analytics",
@@ -1910,7 +1911,7 @@ export const en = {
       currentOffer: "Current offer:",
       predictedPriority: "Predicted priority:",
       description:
-        "Reports are sent to {{email}} and classified with an offer badge plus priority.",
+        "Reports are sent to {{email}} and prioritized according to the ticket type.",
       lastTicket: "Last submitted ticket: {{ticketId}}",
     },
     planTier: {
@@ -1999,10 +2000,10 @@ export const en = {
     },
   },
   planWarning: {
-    title: "Plan ending soon",
+    title: "Subscription ending soon",
     message:
-      "Your plan will deactivate in {{days}} days. Please contact support to renew.",
-    note: "Staff access will pause when the plan ends.",
+      "Your subscription will deactivate in {{days}} days. Please contact support to renew.",
+    note: "Staff access will pause when the subscription ends.",
   },
   sla: {
     title: "Welcome to Beautiq",
@@ -2023,4 +2024,3 @@ export const en = {
     },
   },
 } as const;
-

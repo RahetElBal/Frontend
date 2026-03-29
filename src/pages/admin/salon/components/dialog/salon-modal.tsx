@@ -90,7 +90,6 @@ export function SalonModals({
       phone: "",
       email: "",
       logo: "",
-      planTier: "standard",
       freeTrial: false,
     },
   });
@@ -320,7 +319,7 @@ export function SalonModals({
       form.setValue("logo", response.url, { shouldDirty: true });
       setIsCropOpen(false);
       toast.success(t("success.saved"));
-    } catch (error) {
+    } catch {
       toast.error(t("common.error"));
     } finally {
       setIsUploadingLogo(false);
@@ -366,7 +365,6 @@ export function SalonModals({
             phone: "",
             email: "",
             logo: "",
-            planTier: "standard",
             freeTrial: false,
           },
           {
@@ -388,7 +386,6 @@ export function SalonModals({
             phone: selectedSalon.phone || "",
             email: selectedSalon.email || "",
             logo: selectedSalon.logo || "",
-            planTier: selectedSalon.planTier === "pro" ? "pro" : "standard",
             freeTrial: selectedSalon.isOnFreeTrial === true,
           },
           {
@@ -414,7 +411,8 @@ export function SalonModals({
   }, [logoPreview]);
 
   useEffect(() => {
-    if (!modalState || modalState.salonId !== "create") return;
+    const isCreateModal = modalState?.salonId === "create";
+    if (!isCreateModal) return;
     if (user?.isSuperadmin !== true) return;
     if (!selectedOwnerId) return;
 
@@ -724,31 +722,6 @@ export function SalonModals({
               </div>
               {derived.isSuperadmin && derived.isCreateMode && (
                 <div>
-                  <Label htmlFor="planTier">{t("admin.salons.plan")} *</Label>
-                  <Controller
-                    name="planTier"
-                    control={form.control}
-                    render={({ field }) => (
-                      <Select
-                        value={field.value || "standard"}
-                        onValueChange={(value) =>
-                          field.onChange(value as "standard" | "pro")
-                        }
-                      >
-                        <SelectTrigger id="planTier">
-                          <SelectValue
-                            placeholder={t("admin.salons.selectPlan")}
-                          />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="standard">
-                            {t("plans.standard")}
-                          </SelectItem>
-                          <SelectItem value="pro">{t("plans.pro")}</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    )}
-                  />
                   <div className="mt-3 rounded-md border border-amber-200 bg-amber-50 px-3 py-2">
                     <div className="flex items-start gap-2">
                       <Checkbox
@@ -766,10 +739,10 @@ export function SalonModals({
                           htmlFor="freeTrial"
                           className="text-sm font-medium text-amber-900"
                         >
-                          Essai gratuit (1 mois)
+                          Essai gratuit (3 mois)
                         </Label>
                         <p className="text-xs text-amber-800">
-                          Offre limitée aux 20 premiers salons. Alertes
+                          Offre limitee aux 10 premiers salons. Alertes
                           automatiques 7 jours, 72h et 48h avant fin d’essai.
                         </p>
                       </div>

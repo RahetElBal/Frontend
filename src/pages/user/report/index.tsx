@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ComponentType } from "react";
+import { useMemo, useState, type ComponentType } from "react";
 import {
   AlertTriangle,
   Bug,
@@ -45,7 +45,6 @@ type SupportReportType =
   | "other";
 
 type SupportPriority = "low" | "normal" | "high" | "urgent";
-type PlanTier = "standard" | "pro" | "all-in";
 type SupportTicketStatus =
   | "open"
   | "queued"
@@ -66,7 +65,6 @@ interface CreateSupportReportPayload {
 interface CreateSupportReportResponse {
   ticketId: string;
   priority: SupportPriority;
-  planTier: string;
   status: SupportTicketStatus;
   emailSent: boolean;
   storagePath: string;
@@ -85,7 +83,6 @@ interface SupportTicket {
   createdAt: string;
   updatedAt: string;
   priority: SupportPriority;
-  planTier: PlanTier;
   status: SupportTicketStatus;
   type: string;
   subject: string;
@@ -137,19 +134,9 @@ const reportTypeOptions: Array<{
   },
 ];
 
-function resolvePlanTier(raw?: string): PlanTier {
-  const normalized = String(raw || "").toLowerCase();
-  if (normalized === "pro") return "pro";
-  if (normalized === "all-in" || normalized === "all_in" || normalized === "allin") {
-    return "all-in";
-  }
-  return "standard";
-}
+const BASE_PRIORITY_BOOST = 1;
 
-function computePriority(
-  planTier: PlanTier,
-  type: SupportReportType,
-): SupportPriority {
+function computePriority(type: SupportReportType): SupportPriority {
   const typeScore: Record<SupportReportType, number> = {
     incident: 3,
     technical_issue: 2,
@@ -160,13 +147,7 @@ function computePriority(
     other: 0,
   };
 
-  const planBoost: Record<PlanTier, number> = {
-    standard: 0,
-    pro: 1,
-    "all-in": 2,
-  };
-
-  const score = typeScore[type] + planBoost[planTier];
+  const score = typeScore[type] + BASE_PRIORITY_BOOST;
   if (score >= 5) return "urgent";
   if (score >= 3) return "high";
   if (score >= 2) return "normal";
@@ -180,12 +161,6 @@ const priorityStyles: Record<SupportPriority, string> = {
   urgent: "bg-red-100 text-red-700",
 };
 
-const planStyles: Record<PlanTier, string> = {
-  standard: "bg-accent-pink-100 text-accent-pink-500",
-  pro: "bg-accent-blue-100 text-accent-blue-500",
-  "all-in": "bg-emerald-100 text-emerald-700",
-};
-
 const statusStyles: Record<SupportTicketStatus, string> = {
   open: "bg-slate-100 text-slate-700",
   queued: "bg-purple-100 text-purple-700",
@@ -195,6 +170,7 @@ const statusStyles: Record<SupportTicketStatus, string> = {
 };
 
 const SUPPORT_TICKETS_QUERY_KEY = ["support-reports", "mine", {}] as const;
+const EMPTY_TICKETS: SupportTicket[] = [];
 
 function formatDateTime(value?: string | null): string {
   if (!value) return "-";
@@ -207,7 +183,6 @@ export default function SupportReportPage() {
   const { t } = useTranslation();
   const location = useLocation();
   const { user, salon } = useUser();
-  const planTier = resolvePlanTier(salon?.planTier);
   const supportResponder = Boolean(
     user?.isSuperadmin || user?.role === AppRole.SUPER_ADMIN,
   );
@@ -233,11 +208,7 @@ export default function SupportReportPage() {
     () => localizedTypeOptions.find((option) => option.value === type),
     [localizedTypeOptions, type],
   );
-  const predictedPriority = useMemo(
-    () => computePriority(planTier, type),
-    [planTier, type],
-  );
-  const normalizedPlanKey = planTier === "all-in" ? "allIn" : planTier;
+  const predictedPriority = useMemo(() => computePriority(type), [type]);
   const queryClient = useQueryClient();
   const ticketsQuery = useGet<SupportTicket[]>({
     path: "support-reports/mine",
@@ -247,7 +218,7 @@ export default function SupportReportPage() {
     },
   });
 
-  const tickets = ticketsQuery.data ?? [];
+  const tickets = ticketsQuery.data ?? EMPTY_TICKETS;
 
   const readTicketsCache = () =>
     queryClient.getQueryData<SupportTicket[]>(SUPPORT_TICKETS_QUERY_KEY) ?? [];
@@ -261,29 +232,37 @@ export default function SupportReportPage() {
     );
   };
 
-  useEffect(() => {
+  const requestedTicketId = useMemo(() => {
+    return new URLSearchParams(location.search).get("ticketId");
+  }, [location.search]);
+
+  const resolvedActiveTicketId = useMemo(() => {
     if (!tickets.length) {
-      setActiveTicketId(null);
-      return;
+      return null;
     }
 
-    const requestedTicketId = new URLSearchParams(location.search).get("ticketId");
     if (
       requestedTicketId &&
       tickets.some((ticket) => ticket.ticketId === requestedTicketId)
     ) {
-      setActiveTicketId(requestedTicketId);
-      return;
+      return requestedTicketId;
     }
 
-    if (!activeTicketId || !tickets.some((ticket) => ticket.ticketId === activeTicketId)) {
-      setActiveTicketId(tickets[0].ticketId);
+    if (
+      activeTicketId &&
+      tickets.some((ticket) => ticket.ticketId === activeTicketId)
+    ) {
+      return activeTicketId;
     }
-  }, [tickets, activeTicketId, location.search]);
+
+    return tickets[0].ticketId;
+  }, [tickets, requestedTicketId, activeTicketId]);
 
   const activeTicket = useMemo(
-    () => tickets.find((ticket) => ticket.ticketId === activeTicketId) ?? null,
-    [tickets, activeTicketId],
+    () =>
+      tickets.find((ticket) => ticket.ticketId === resolvedActiveTicketId) ??
+      null,
+    [tickets, resolvedActiveTicketId],
   );
 
   const sendReply = usePost<SupportTicket, AddSupportReplyPayload>(
@@ -433,8 +412,7 @@ export default function SupportReportPage() {
         ticketId: tempTicketId,
         createdAt: now,
         updatedAt: now,
-        priority: computePriority(planTier, payload.type),
-        planTier,
+        priority: computePriority(payload.type),
         status: hasActiveTicket ? "queued" : "open",
         type: payload.type,
         subject: payload.subject.trim(),
@@ -463,7 +441,6 @@ export default function SupportReportPage() {
       const resolvedStatus: SupportTicketStatus = response.status || "open";
 
       writeTicketsCache((current) => {
-        const normalizedPlanTier = resolvePlanTier(response.planTier);
         let replaced = false;
         const next = current.map((ticket) => {
           if (!tempTicketId || ticket.ticketId !== tempTicketId) {
@@ -474,7 +451,6 @@ export default function SupportReportPage() {
             ...ticket,
             ticketId: response.ticketId,
             priority: response.priority,
-            planTier: normalizedPlanTier,
             status: resolvedStatus,
             canReply: resolvedStatus !== "queued",
             updatedAt: now,
@@ -488,7 +464,6 @@ export default function SupportReportPage() {
           createdAt: now,
           updatedAt: now,
           priority: response.priority,
-          planTier: normalizedPlanTier,
           status: resolvedStatus,
           type: variables.type,
           subject: variables.subject.trim(),
@@ -577,7 +552,6 @@ export default function SupportReportPage() {
             userAgent: navigator.userAgent,
             timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
             appUserRole: user?.role ?? null,
-            appPlanTier: planTier,
           }
         : undefined,
     });
@@ -630,12 +604,6 @@ export default function SupportReportPage() {
             </CardHeader>
             <CardContent className="space-y-3 text-sm">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="text-muted-foreground">
-                  {t("supportReport.routing.currentOffer")}
-                </span>
-                <span className={`rounded-full px-2.5 py-1 text-xs font-semibold uppercase ${planStyles[planTier]}`}>
-                  {t(`supportReport.planTier.${normalizedPlanKey}`)}
-                </span>
                 <span className="text-muted-foreground">
                   {t("supportReport.routing.predictedPriority")}
                 </span>

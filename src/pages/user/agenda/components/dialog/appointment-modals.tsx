@@ -55,6 +55,7 @@ import type { AppointmentFormData } from "../validation";
 import type { AppointmentModalState } from "../../types";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useUser } from "@/hooks/useUser";
+import { MVP_VISIBILITY } from "@/constants/mvp";
 import {
   statusColors,
   canRecordAppointmentPayment,
@@ -152,7 +153,10 @@ interface AppointmentModalsProps {
     appointment: Appointment,
     options?: { redeemLoyalty?: boolean },
   ) => void;
-  onUpdateStatus?: (appointment: Appointment, status: AppointmentStatus) => void;
+  onUpdateStatus?: (
+    appointment: Appointment,
+    status: AppointmentStatus,
+  ) => void;
   isCreatingSale?: boolean;
   isUpdatingStatus?: boolean;
   isReferenceDataLoading?: boolean;
@@ -183,12 +187,6 @@ export function AppointmentModals({
   const { user, salon, isAdmin, isSuperadmin } = useUser();
   const canViewPayment = isAdmin || isSuperadmin;
   const [redeemLoyalty, setRedeemLoyalty] = useState(false);
-  const modalKey = modalState
-    ? `${modalState.appointmentId}-${modalState.mode}-${modalState.nonce ?? 0}`
-    : "";
-  const [initializedModalKey, setInitializedModalKey] = useState<string | null>(
-    null,
-  );
   const getErrorMessage = (
     name: keyof AppointmentFormData,
   ): string | undefined => {
@@ -225,10 +223,12 @@ export function AppointmentModals({
     };
   }, [modalState]);
 
-  const effectiveSalonSettings = (salonSettings ??
-    salon?.settings) as SalonSettingsLike | undefined;
+  const effectiveSalonSettings = (salonSettings ?? salon?.settings) as
+    | SalonSettingsLike
+    | undefined;
+  const loyaltyVisible = MVP_VISIBILITY.loyalty;
   const loyaltySettings = effectiveSalonSettings;
-  const loyaltyEnabled = !!loyaltySettings?.loyaltyEnabled;
+  const loyaltyEnabled = loyaltyVisible && !!loyaltySettings?.loyaltyEnabled;
   const loyaltyRewardServiceId = loyaltySettings?.loyaltyRewardServiceId || "";
   const loyaltyMinimumRedemption = Number(
     loyaltySettings?.loyaltyMinimumRedemption || 0,
@@ -242,7 +242,7 @@ export function AppointmentModals({
     loyaltyServiceMatch &&
     loyaltyClientPoints >= loyaltyMinimumRedemption &&
     loyaltyMinimumRedemption > 0;
-  const canRedeemLoyalty = isAdmin || isSuperadmin;
+  const canRedeemLoyalty = loyaltyVisible && (isAdmin || isSuperadmin);
 
   // Safe arrays
   const safeClients = useMemo(
@@ -340,7 +340,8 @@ export function AppointmentModals({
     !!selectedAppointment && isSelectedAppointmentPast && derived?.isEditMode;
   const visibleServices = useMemo(() => allServices, [allServices]);
   const selectedService = useMemo(
-    () => allServices.find((service) => service.id === selectedServiceId) || null,
+    () =>
+      allServices.find((service) => service.id === selectedServiceId) || null,
     [allServices, selectedServiceId],
   );
   const selectedServiceBasePrice = useMemo(
@@ -445,7 +446,6 @@ export function AppointmentModals({
 
   const conflict = useMemo(() => {
     if (!derived?.isEditMode) return null;
-    if (initializedModalKey !== modalKey) return null;
     if (!selectedDate || !selectedStartTime) return null;
     const durationMinutes = selectedService?.duration || bookingSlotMinutes;
     const endTime = addMinutesToTime(selectedStartTime, durationMinutes);
@@ -468,8 +468,6 @@ export function AppointmentModals({
     selectedStaff,
     selectedStaffId,
     user?.id,
-    initializedModalKey,
-    modalKey,
   ]);
 
   const normalizedWalkInEmail = (walkInEmail || "").trim().toLowerCase();
@@ -486,7 +484,8 @@ export function AppointmentModals({
   useEffect(() => {
     if (!walkInEnabled) {
       if (
-        form.formState.errors.walkInEmail?.message === "agenda.walkInEmailExists"
+        form.formState.errors.walkInEmail?.message ===
+        "agenda.walkInEmailExists"
       ) {
         form.clearErrors("walkInEmail");
       }
@@ -512,11 +511,8 @@ export function AppointmentModals({
   // Reset form when modal state changes
   useEffect(() => {
     if (!modalState) {
-      setInitializedModalKey(null);
       return;
     }
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setRedeemLoyalty(false);
 
     if (derived?.isCreateMode) {
       reset({
@@ -525,7 +521,8 @@ export function AppointmentModals({
         date: modalState?.prefillDate || getLocalDateString(),
         startTime: modalState?.prefillTime || "09:00",
         notes: "",
-        staffId: modalState?.prefillStaffId || selectedStaffId || user?.id || "",
+        staffId:
+          modalState?.prefillStaffId || selectedStaffId || user?.id || "",
         walkInEnabled: false,
         walkInName: "",
         walkInPhone: "",
@@ -535,7 +532,6 @@ export function AppointmentModals({
         discount: "",
         priceOverrideEnabled: false,
       });
-      setInitializedModalKey(modalKey);
     } else if (selectedAppointment && derived?.isEditMode) {
       reset({
         clientId: selectedAppointment.clientId,
@@ -543,7 +539,8 @@ export function AppointmentModals({
         date: selectedAppointment.date,
         startTime: selectedAppointment.startTime,
         notes: selectedAppointment.notes || "",
-        staffId: selectedAppointment.staffId || selectedStaffId || user?.id || "",
+        staffId:
+          selectedAppointment.staffId || selectedStaffId || user?.id || "",
         walkInEnabled: false,
         walkInName: "",
         walkInPhone: "",
@@ -553,9 +550,6 @@ export function AppointmentModals({
         discount: "",
         priceOverrideEnabled: false,
       });
-      setInitializedModalKey(modalKey);
-    } else {
-      setInitializedModalKey(modalKey);
     }
   }, [
     modalState,
@@ -565,12 +559,14 @@ export function AppointmentModals({
     reset,
     selectedStaffId,
     user?.id,
-    modalKey,
   ]);
 
   if (!derived) return null;
 
-  const handleClose = () => setModalState(null);
+  const handleClose = () => {
+    setRedeemLoyalty(false);
+    setModalState(null);
+  };
 
   const handleFormSubmit = (data: AppointmentFormData) => {
     if (isReferenceDataLoading) {
@@ -735,20 +731,21 @@ export function AppointmentModals({
       selectedAppointment.status !== AppointmentStatus.CANCELLED &&
       selectedAppointment.status !== AppointmentStatus.COMPLETED &&
       selectedAppointment.status !== AppointmentStatus.NO_SHOW &&
-      (displayStatus === AppointmentStatus.OVERDUE || isSelectedAppointmentPast);
+      (displayStatus === AppointmentStatus.OVERDUE ||
+        isSelectedAppointmentPast);
     const canCancelSelectedAppointment =
       !!selectedAppointment &&
       selectedAppointment.status !== AppointmentStatus.CANCELLED &&
       selectedAppointment.status !== AppointmentStatus.COMPLETED &&
       selectedAppointment.status !== AppointmentStatus.NO_SHOW &&
       !selectedAppointment.paid &&
-      (displayStatus === AppointmentStatus.OVERDUE || !isSelectedAppointmentPast);
+      (displayStatus === AppointmentStatus.OVERDUE ||
+        !isSelectedAppointmentPast);
     const showStatusActions =
       canMarkConfirmed || canMarkInProgress || canMarkFinished || canMarkNoShow;
-    const paymentActionLabel =
-      isOverdueUnpaidAppointment
-        ? t("agenda.completeAndPay")
-        : displayStatus === AppointmentStatus.COMPLETED
+    const paymentActionLabel = isOverdueUnpaidAppointment
+      ? t("agenda.completeAndPay")
+      : displayStatus === AppointmentStatus.COMPLETED
         ? t("agenda.recordPayment")
         : t("agenda.completeAndPay");
     const openCancelAppointmentDialog = () => {
@@ -809,53 +806,53 @@ export function AppointmentModals({
                 </Badge>
               </div>
 
-                <div className="grid gap-4">
-                  {canViewPayment && (
-                    <div className="flex flex-col gap-3 rounded-lg bg-muted/50 p-3 sm:flex-row sm:items-center sm:justify-between">
-                      <div className="flex items-center gap-3">
-                        <DollarSign className="h-5 w-5 text-muted-foreground" />
-                        <div>
-                          <p className="text-sm text-muted-foreground">
-                            {t("agenda.paymentStatus")}
-                          </p>
-                          <p className="font-medium">
-                            {selectedAppointment.paid
-                              ? t("agenda.paymentPaid")
-                              : t("agenda.paymentUnpaid")}
-                          </p>
-                        </div>
+              <div className="grid gap-4">
+                {canViewPayment && (
+                  <div className="flex flex-col gap-3 rounded-lg bg-muted/50 p-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex items-center gap-3">
+                      <DollarSign className="h-5 w-5 text-muted-foreground" />
+                      <div>
+                        <p className="text-sm text-muted-foreground">
+                          {t("agenda.paymentStatus")}
+                        </p>
+                        <p className="font-medium">
+                          {selectedAppointment.paid
+                            ? t("agenda.paymentPaid")
+                            : t("agenda.paymentUnpaid")}
+                        </p>
                       </div>
-                      {(canCancelSelectedAppointment ||
-                        canRecordSelectedAppointmentPayment) && (
-                        <div className="flex flex-col gap-2 sm:flex-row">
-                          {isOverdueUnpaidAppointment &&
-                            canCancelSelectedAppointment && (
-                              <Button
-                                variant="outline"
-                                className="text-destructive"
-                                onClick={openCancelAppointmentDialog}
-                                disabled={isPending}
-                              >
-                                <Trash2 className="h-4 w-4 me-2" />
-                                {t("common.cancel")}
-                              </Button>
-                            )}
-                          {canRecordSelectedAppointmentPayment && (
+                    </div>
+                    {(canCancelSelectedAppointment ||
+                      canRecordSelectedAppointmentPayment) && (
+                      <div className="flex flex-col gap-2 sm:flex-row">
+                        {isOverdueUnpaidAppointment &&
+                          canCancelSelectedAppointment && (
                             <Button
-                              className="shrink-0"
-                              onClick={handleRecordPayment}
-                              disabled={isPending || isCreatingSale}
+                              variant="outline"
+                              className="text-destructive"
+                              onClick={openCancelAppointmentDialog}
+                              disabled={isPending}
                             >
-                              <DollarSign className="h-4 w-4 me-2" />
-                              {isCreatingSale
-                                ? t("common.loading")
-                                : paymentActionLabel}
+                              <Trash2 className="h-4 w-4 me-2" />
+                              {t("common.cancel")}
                             </Button>
                           )}
-                        </div>
-                      )}
-                    </div>
-                  )}
+                        {canRecordSelectedAppointmentPayment && (
+                          <Button
+                            className="shrink-0"
+                            onClick={handleRecordPayment}
+                            disabled={isPending || isCreatingSale}
+                          >
+                            <DollarSign className="h-4 w-4 me-2" />
+                            {isCreatingSale
+                              ? t("common.loading")
+                              : paymentActionLabel}
+                          </Button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
                 {canRecordSelectedAppointmentPayment &&
                   loyaltyEnabled &&
                   canRedeemLoyalty && (
@@ -1066,15 +1063,15 @@ export function AppointmentModals({
                 <>
                   {canCancelSelectedAppointment &&
                     !isOverdueUnpaidAppointment && (
-                    <Button
-                      variant="outline"
-                      className="text-destructive"
-                      onClick={openCancelAppointmentDialog}
-                    >
-                      <Trash2 className="h-4 w-4 me-2" />
-                      {t("common.delete")}
-                    </Button>
-                  )}
+                      <Button
+                        variant="outline"
+                        className="text-destructive"
+                        onClick={openCancelAppointmentDialog}
+                      >
+                        <Trash2 className="h-4 w-4 me-2" />
+                        {t("common.delete")}
+                      </Button>
+                    )}
                 </>
               )}
             </div>
@@ -1162,10 +1159,10 @@ export function AppointmentModals({
                   onValueChange={(value) => form.setValue("clientId", value)}
                   disabled={!!walkInEnabled || isReferenceDataLoading}
                 >
-                <SelectTrigger className="bg-white text-black">
-                  <SelectValue placeholder={t("agenda.selectClient")} />
-                </SelectTrigger>
-                <SelectContent className="bg-white text-black">
+                  <SelectTrigger className="bg-white text-black">
+                    <SelectValue placeholder={t("agenda.selectClient")} />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white text-black">
                     {selectableClients.length === 0 ? (
                       <div className="p-2 text-center text-muted-foreground text-sm">
                         {t("clients.noClients")}
@@ -1214,7 +1211,9 @@ export function AppointmentModals({
                         />
                       )}
                     />
-                    <FormErrorMessage message={getErrorMessage("walkInPhone")} />
+                    <FormErrorMessage
+                      message={getErrorMessage("walkInPhone")}
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label>{t("agenda.walkInEmail")}</Label>
@@ -1222,7 +1221,9 @@ export function AppointmentModals({
                       {...form.register("walkInEmail")}
                       placeholder={t("agenda.walkInEmailPlaceholder")}
                     />
-                    <FormErrorMessage message={getErrorMessage("walkInEmail")} />
+                    <FormErrorMessage
+                      message={getErrorMessage("walkInEmail")}
+                    />
                   </div>
                   <div className="flex items-center justify-between rounded-lg border p-3">
                     <div>
@@ -1305,28 +1306,29 @@ export function AppointmentModals({
                       {formatCurrency(displayServicePrice)}
                     </p>
                   </div>
-                  {selectedService.isPack && selectedPackServices.length > 0 && (
-                    <div className="mt-2 space-y-1 text-xs text-muted-foreground">
-                      <div>
-                        {t("services.packIncludes")}:{" "}
-                        {selectedPackServices
-                          .map((service) => translateServiceName(t, service))
-                          .join(", ")}
-                      </div>
-                      <div>
-                        {t("services.packValue")}:{" "}
-                        {formatCurrency(packRegularPrice)} |{" "}
-                        {t("services.packSavings")}:{" "}
-                        {formatCurrency(packSavings)}
-                      </div>
-                      {packRegularDuration > 0 && (
+                  {selectedService.isPack &&
+                    selectedPackServices.length > 0 && (
+                      <div className="mt-2 space-y-1 text-xs text-muted-foreground">
                         <div>
-                          {t("services.packDuration")}: {packRegularDuration}{" "}
-                          min
+                          {t("services.packIncludes")}:{" "}
+                          {selectedPackServices
+                            .map((service) => translateServiceName(t, service))
+                            .join(", ")}
                         </div>
-                      )}
-                    </div>
-                  )}
+                        <div>
+                          {t("services.packValue")}:{" "}
+                          {formatCurrency(packRegularPrice)} |{" "}
+                          {t("services.packSavings")}:{" "}
+                          {formatCurrency(packSavings)}
+                        </div>
+                        {packRegularDuration > 0 && (
+                          <div>
+                            {t("services.packDuration")}: {packRegularDuration}{" "}
+                            min
+                          </div>
+                        )}
+                      </div>
+                    )}
                 </Card>
               )}
 
@@ -1412,10 +1414,10 @@ export function AppointmentModals({
                     onValueChange={(value) => form.setValue("startTime", value)}
                     disabled={isClosedDay || availableSlots.length === 0}
                   >
-                  <SelectTrigger className="bg-white text-black">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white text-black">
+                    <SelectTrigger className="bg-white text-black">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white text-black">
                       {availableSlots.length === 0 ? (
                         <div className="p-2 text-center text-muted-foreground text-sm">
                           {t("common.noResults")}
@@ -1488,7 +1490,10 @@ export function AppointmentModals({
               <Button type="button" variant="outline" onClick={handleClose}>
                 {t("common.cancel")}
               </Button>
-              <Button type="submit" disabled={isPending || isReferenceDataLoading}>
+              <Button
+                type="submit"
+                disabled={isPending || isReferenceDataLoading}
+              >
                 {isPending || isReferenceDataLoading
                   ? t("common.loading")
                   : t("common.save")}

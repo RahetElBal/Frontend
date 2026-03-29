@@ -15,6 +15,7 @@ import {
   LifeBuoy,
 } from "lucide-react";
 import { AppRole } from "@/constants/enum";
+import { MVP_VISIBILITY } from "@/constants/mvp";
 import type { NavSection } from "@/types/navigation";
 
 // ============================================
@@ -205,12 +206,6 @@ export const ADMIN_SALON_NAVIGATION: NavSection[] = [
         href: ROUTES.SERVICES,
         icon: Scissors,
       },
-      {
-        id: "loyalty",
-        titleKey: "nav.loyalty",
-        href: ROUTES.LOYALTY,
-        icon: Heart,
-      },
     ],
   },
   {
@@ -330,12 +325,26 @@ export const ADMIN_NAVIGATION: NavSection[] = [
   },
 ];
 
+if (MVP_VISIBILITY.loyalty) {
+  const managementSection = ADMIN_SALON_NAVIGATION.find(
+    (section) => section.id === "management",
+  );
+  if (managementSection) {
+    managementSection.items.push({
+      id: "loyalty",
+      titleKey: "nav.loyalty",
+      href: ROUTES.LOYALTY,
+      icon: Heart,
+    });
+  }
+}
+
 /**
  * Get navigation based on user role
  */
 export function getNavigationForRole(
   role: AppRole,
-  isInAdminPanel: boolean = false
+  isInAdminPanel: boolean = false,
 ): NavSection[] {
   if (isInAdminPanel) {
     if (role === AppRole.SUPER_ADMIN) {
@@ -344,7 +353,9 @@ export function getNavigationForRole(
     if (role === AppRole.ADMIN) {
       return ADMIN_NAVIGATION.map((section) => ({
         ...section,
-        items: section.items.filter((item) => item.id !== "admin-support-report"),
+        items: section.items.filter(
+          (item) => item.id !== "admin-support-report",
+        ),
       }));
     }
     return [];
@@ -357,9 +368,11 @@ export function getNavigationForRole(
         section.id === "management"
           ? {
               ...section,
-              items: section.items.filter((item) => item.id !== "agenda-history"),
+              items: section.items.filter(
+                (item) => item.id !== "agenda-history",
+              ),
             }
-          : section
+          : section,
       );
     case AppRole.ADMIN:
       return ADMIN_SALON_NAVIGATION.map((section) =>
@@ -368,7 +381,7 @@ export function getNavigationForRole(
               ...section,
               items: section.items.filter((item) => item.id !== "services"),
             }
-          : section
+          : section,
       );
     case AppRole.USER:
     default:

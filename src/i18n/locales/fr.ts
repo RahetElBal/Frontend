@@ -76,9 +76,9 @@ export const fr = {
   // ============================================
   appUpdate: {
     title: "Nouvelle version disponible",
-    message: "La version {{version}} est disponible. Téléchargez le dernier APK.",
+    message:
+      "La version {{version}} est disponible. Téléchargez le dernier APK.",
   },
-
 
   // ============================================
   // AUTHENTICATION
@@ -1240,7 +1240,7 @@ export const fr = {
     titleLine1: "Élevez la gestion",
     titleLine2: "de votre salon",
     description:
-      "Beautiq centralise CRM, agenda, ventes et fidélisation pour les salons de beauté en Algérie. Gérez web et mobile depuis une seule plateforme.",
+      "Beautiq centralise CRM, agenda et ventes pour les salons de beauté en Algérie. Gérez web et mobile depuis une seule plateforme.",
     ctaLogin: "Accéder à la connexion",
     ctaMobile: "App mobile",
     highlights: {
@@ -1255,13 +1255,14 @@ export const fr = {
       agendaTitle: "Agenda intelligent",
       agendaDescription: "Rendez-vous, disponibilités et rappels automatiques.",
       cashTitle: "Caisse + performance",
-      cashDescription: "Paiements, remboursements et performance en temps réel.",
+      cashDescription:
+        "Paiements, remboursements et performance en temps réel.",
     },
     pricing: {
       badge: "Tarifs",
-      title: "Offres pour chaque niveau de croissance",
+      title: "Tout ce que Beautiq inclut",
       launchNote:
-        "Partenariat de lancement : les 10 premiers partenaires payants ont 2 ans d'abonnement inclus.",
+        "Offre de lancement limitee : les 10 premiers clients beneficient de 3 mois gratuits.",
       recommended: "Recommandé",
       start: "Démarrer",
     },
@@ -1275,9 +1276,9 @@ export const fr = {
         item4: "Support de démarrage",
       },
       pro: {
-        name: "Pro",
-        subtitle: "Par offre",
-        item1: "Tout Standard +",
+        name: "Beautiq",
+        subtitle: "Toutes les fonctions avancees incluses",
+        item1: "Compte admin et acces equipe inclus",
         item2: "Rappels WhatsApp automatiques",
         item3: "Configuration rappels et confirmations WhatsApp",
         item4: "Analyses avancées",
@@ -1327,7 +1328,8 @@ export const fr = {
     manifestUpdated: "Manifeste mis à jour",
     sha256: "SHA-256",
     releaseNotes: "Notes de version",
-    manifestUnavailable: "Manifeste API indisponible — utilisation de l'APK intégré.",
+    manifestUnavailable:
+      "Manifeste API indisponible — utilisation de l'APK intégré.",
     directDownload: "Téléchargement direct",
     iosTitle: "Distribution iOS",
     iosNotConfigured:
@@ -1338,12 +1340,12 @@ export const fr = {
     description:
       "Envoyez une demande de support structurée directement au support Beautiq.",
     routing: {
-      title: "Routage et priorité",
+      title: "Routage et priorite",
       currentOffer: "Offre actuelle :",
-      predictedPriority: "Priorité estimée :",
+      predictedPriority: "Priorite estimee :",
       description:
-        "Les rapports sont envoyés à {{email}} et classés avec un badge d'offre et une priorité.",
-      lastTicket: "Dernier ticket envoyé : {{ticketId}}",
+        "Les rapports sont envoyes a {{email}} et priorises selon le type de demande.",
+      lastTicket: "Dernier ticket envoye : {{ticketId}}",
     },
     planTier: {
       standard: "Standard",
@@ -1359,7 +1361,8 @@ export const fr = {
     types: {
       technical_issue: {
         label: "Problème technique",
-        description: "Comportement de l'application, performance ou synchronisation.",
+        description:
+          "Comportement de l'application, performance ou synchronisation.",
       },
       bug_report: {
         label: "Signalement de bug",
@@ -1375,7 +1378,8 @@ export const fr = {
       },
       incident: {
         label: "Incident critique",
-        description: "Interruption urgente du service nécessitant une réponse rapide.",
+        description:
+          "Interruption urgente du service nécessitant une réponse rapide.",
       },
       feature_request: {
         label: "Demande de fonctionnalité",
@@ -1455,4 +1459,3 @@ export const fr = {
     },
   },
 } as const;
-
