@@ -3,11 +3,13 @@ import { apiClient, parseError } from "@/lib/http";
 
 type QueryValue = string | number | boolean | null | undefined;
 type QueryParams = Record<string, QueryValue>;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type UseGetQueryOptions<TData> = Omit<UseQueryOptions<any, Error, TData>, "queryKey" | "queryFn">;
 
 export interface UseGetProps<TData = unknown> {
   path: string;
   query?: QueryParams;
-  options?: Partial<Omit<UseQueryOptions<any, Error, TData>, "queryKey" | "queryFn">>;
+  options?: Partial<UseGetQueryOptions<TData>>;
   defaultOperation?: "blob" | "json" | "text" | "arrayBuffer";
   skip?: number;
 }
@@ -39,16 +41,29 @@ export const useGet = <TData,>({
   const pathParts = path.split("/").filter(Boolean);
   const haveParams = Object.keys(normalizedQuery).length > 0;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return useQuery<any, Error, TData>({
     queryKey: [...pathParts, normalizedQuery],
     retry: 1,
     queryFn: async () => {
       try {
-        const response = apiClient.get(path, {
+        const response = await apiClient.get(path, {
           searchParams: haveParams ? normalizedQuery : undefined,
         });
-        const result = await response[defaultOperation]();
-        return result;
+
+        if (defaultOperation === "blob") {
+          return (await response.blob()) as TData;
+        }
+
+        if (defaultOperation === "text") {
+          return (await response.text()) as TData;
+        }
+
+        if (defaultOperation === "arrayBuffer") {
+          return (await response.arrayBuffer()) as TData;
+        }
+
+        return (await response.json()) as TData;
       } catch (error) {
         const parsedError = await parseError(error);
         const queryError = new Error(parsedError.message);

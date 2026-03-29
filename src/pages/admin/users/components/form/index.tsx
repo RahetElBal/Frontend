@@ -4,12 +4,6 @@ import {
   UserCog,
   UserPlus,
   Phone,
-  Users,
-  Calendar,
-  ShoppingCart,
-  Package,
-  Scissors,
-  Settings,
 } from "lucide-react";
 import type { UseFormReturn } from "react-hook-form";
 import { Controller } from "react-hook-form";
@@ -18,7 +12,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PhoneNumberInput } from "@/components/ui/phone-input";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -30,7 +23,6 @@ import { DialogFooter } from "@/components/ui/dialog";
 import type { User } from "../../types";
 import type { Salon } from "@/pages/admin/salon/types";
 import type { UserFormData } from "./validation";
-import { STAFF_PERMISSIONS, type StaffPermission } from "./validation";
 import { parseValidationMsg } from "@/common/validator/zodI18n";
 
 interface UserFormProps {
@@ -43,18 +35,6 @@ interface UserFormProps {
   onSubmit: (data: UserFormData) => void;
   onCancel: () => void;
 }
-
-const PERMISSION_META: Record<
-  StaffPermission,
-  { icon: typeof Users; labelKey: string }
-> = {
-  clients: { icon: Users, labelKey: "nav.clients" },
-  agenda: { icon: Calendar, labelKey: "nav.agenda" },
-  sales: { icon: ShoppingCart, labelKey: "nav.sales" },
-  products: { icon: Package, labelKey: "nav.products" },
-  services: { icon: Scissors, labelKey: "nav.services" },
-  settings: { icon: Settings, labelKey: "nav.settings" },
-};
 
 export function UserForm({
   form,
@@ -247,39 +227,6 @@ export function UserForm({
                   si nécessaire.
                 </p>
               </div>
-            </div>
-          </div>
-        )}
-        {currentRole === AppRole.USER && (
-          <div className="space-y-3">
-            <Label>{t("proFeatures.advancedPermissions.title")}</Label>
-            <div className="grid grid-cols-2 gap-2">
-              {STAFF_PERMISSIONS.map((perm) => {
-                const meta = PERMISSION_META[perm];
-                const Icon = meta.icon;
-                const currentPerms = form.watch("permissions") ?? [];
-                const checked = currentPerms.includes(perm);
-                return (
-                  <label
-                    key={perm}
-                    className="flex cursor-pointer items-center gap-2.5 rounded-lg border p-2.5 transition-colors hover:bg-muted/50 has-[data-state=checked]:border-accent-blue-300 has-[data-state=checked]:bg-accent-blue-50/50"
-                  >
-                    <Checkbox
-                      checked={checked}
-                      onCheckedChange={(val) => {
-                        const next = val
-                          ? [...currentPerms, perm]
-                          : currentPerms.filter((p) => p !== perm);
-                        form.setValue("permissions", next, {
-                          shouldDirty: true,
-                        });
-                      }}
-                    />
-                    <Icon className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm">{t(meta.labelKey)}</span>
-                  </label>
-                );
-              })}
             </div>
           </div>
         )}

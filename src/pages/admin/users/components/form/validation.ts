@@ -2,17 +2,6 @@ import { z } from "zod";
 import { AppRole } from "@/constants/enum";
 import { isValidPhoneForAllowedCountries } from "@/common/phone";
 
-export const STAFF_PERMISSIONS = [
-  "clients",
-  "agenda",
-  "sales",
-  "products",
-  "services",
-  "settings",
-] as const;
-
-export type StaffPermission = (typeof STAFF_PERMISSIONS)[number];
-
 export const createUserFormSchema = (
   t: (key: string, options?: Record<string, string>) => string,
 ) =>
@@ -31,7 +20,6 @@ export const createUserFormSchema = (
     role: z.enum([AppRole.USER, AppRole.ADMIN] as const),
     salonId: z.string().optional(),
     managedById: z.string().optional(),
-    permissions: z.array(z.enum(STAFF_PERMISSIONS)).optional(),
   });
 
 export type UserFormData = z.infer<ReturnType<typeof createUserFormSchema>>;

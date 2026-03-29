@@ -340,7 +340,12 @@ export function SalonModals({
       if (result.displayAddress) {
         form.setValue("address", result.displayAddress);
       }
-    } catch {
+    } catch (error) {
+      if (error instanceof Error && error.message.trim() !== "") {
+        toast.error(error.message);
+        return;
+      }
+
       toast.error(t("common.error"));
     }
   };

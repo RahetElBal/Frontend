@@ -1,9 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useGet } from "@/hooks/useGet";
 import type {
   GeoAddress,
   GeoCoordinates,
-  PendingGeoAddressRequest,
   ReverseGeocodeResponse,
 } from "@/constants/types";
 
@@ -36,78 +34,104 @@ const mapGeoAddress = (data: ReverseGeocodeResponse): GeoAddress => ({
   region: data.address?.state,
 });
 
-export function useDetectAddress() {
-  const [coords, setCoords] = useState<GeoCoordinates | null>(null);
-  const [requestToken, setRequestToken] = useState(0);
-  const pendingRequestRef = useRef<PendingGeoAddressRequest | null>(null);
+const buildReverseGeocodeUrl = ({ latitude, longitude }: GeoCoordinates) => {
+  const url = new URL(NOMINATIM_URL);
+  url.searchParams.set("format", "jsonv2");
+  url.searchParams.set("lat", String(latitude));
+  url.searchParams.set("lon", String(longitude));
+  return url.toString();
+};
 
-  const query = useGet<GeoAddress>({
-    path: NOMINATIM_URL,
-    query: coords
-      ? {
-          format: "jsonv2",
-          lat: coords.latitude,
-          lon: coords.longitude,
-        }
-      : { format: "jsonv2" },
-    options: {
-      enabled: !!coords,
-      retry: false,
-      staleTime: 1000 * 60 * 5,
-      refetchOnWindowFocus: false,
-      refetchOnReconnect: false,
-      select: (data) => mapGeoAddress(data as ReverseGeocodeResponse),
+const getDetectAddressError = async (response: Response): Promise<Error> => {
+  try {
+    const payload = (await response.json()) as { error?: string; message?: string };
+    const message = payload.error || payload.message;
+
+    if (typeof message === "string" && message.trim() !== "") {
+      return new Error(message);
+    }
+  } catch (error) {
+    void error;
+  }
+
+  return new Error("Failed to detect address");
+};
+
+const fetchReverseGeocode = async (
+  coords: GeoCoordinates,
+): Promise<GeoAddress> => {
+  const response = await fetch(buildReverseGeocodeUrl(coords), {
+    cache: "no-store",
+    headers: {
+      Accept: "application/json",
+      "Accept-Language": navigator.language || "en",
     },
   });
 
-  useEffect(() => {
-    if (!pendingRequestRef.current || requestToken === 0) {
-      return;
-    }
+  if (!response.ok) {
+    throw await getDetectAddressError(response);
+  }
 
-    if (query.error) {
-      pendingRequestRef.current.reject(query.error);
-      pendingRequestRef.current = null;
-      return;
-    }
+  const data = (await response.json()) as ReverseGeocodeResponse;
+  return mapGeoAddress(data);
+};
 
-    if (!query.isFetching && query.data) {
-      pendingRequestRef.current.resolve(query.data);
-      pendingRequestRef.current = null;
-    }
-  }, [requestToken, query.data, query.error, query.isFetching]);
+export function useDetectAddress() {
+  const [data, setData] = useState<GeoAddress | undefined>(undefined);
+  const [error, setError] = useState<Error | null>(null);
+  const [isDetecting, setIsDetecting] = useState(false);
+  const requestIdRef = useRef(0);
+  const isMountedRef = useRef(true);
 
   useEffect(() => {
     return () => {
-      if (pendingRequestRef.current) {
-        pendingRequestRef.current.reject(
-          new Error("Address detection cancelled"),
-        );
-        pendingRequestRef.current = null;
-      }
+      isMountedRef.current = false;
+      requestIdRef.current += 1;
     };
   }, []);
 
   const detectAddress = useCallback(async (): Promise<GeoAddress> => {
-    if (pendingRequestRef.current) {
-      pendingRequestRef.current.reject(
-        new Error("Address detection superseded"),
-      );
-      pendingRequestRef.current = null;
+    requestIdRef.current += 1;
+    const requestId = requestIdRef.current;
+
+    if (isMountedRef.current) {
+      setIsDetecting(true);
+      setError(null);
     }
 
-    const nextCoords = await getCurrentPosition();
-    setCoords(nextCoords);
+    try {
+      const nextCoords = await getCurrentPosition();
+      const nextAddress = await fetchReverseGeocode(nextCoords);
 
-    return await new Promise<GeoAddress>((resolve, reject) => {
-      pendingRequestRef.current = { resolve, reject };
-      setRequestToken((current) => current + 1);
-    });
+      if (isMountedRef.current && requestId === requestIdRef.current) {
+        setData(nextAddress);
+      }
+
+      return nextAddress;
+    } catch (caughtError) {
+      const nextError =
+        caughtError instanceof Error
+          ? caughtError
+          : new Error("Failed to detect address");
+
+      if (isMountedRef.current && requestId === requestIdRef.current) {
+        setError(nextError);
+      }
+
+      throw nextError;
+    } finally {
+      if (isMountedRef.current && requestId === requestIdRef.current) {
+        setIsDetecting(false);
+      }
+    }
   }, []);
 
   return {
-    ...query,
+    data,
+    error,
     detectAddress,
-    isDetecting: query.isFetching,
+    isDetecting,
+    isFetching: isDetecting,
+    isLoading: isDetecting,
   };
 }
