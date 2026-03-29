@@ -15,6 +15,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Spinner } from "@/components/spinner";
 import { cn } from "@/lib/utils";
 import type { UseTableReturn, SortDirection } from "@/hooks/useTable";
+import { MobileCards } from "./mobile-cards";
 
 // ============================================
 // TYPES
@@ -77,7 +78,7 @@ export function DataTable<T extends { id: string }>({
     <div className="space-y-4">
       {/* Search */}
       <div className="flex items-center gap-2">
-        <div className="relative flex-1 max-w-sm">
+        <div className="relative w-full flex-1 sm:max-w-sm">
           <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder={searchPlaceholder || t("common.search")}
@@ -97,7 +98,16 @@ export function DataTable<T extends { id: string }>({
       </div>
 
       {/* Table */}
-      <div className="rounded-md border">
+      <MobileCards
+        items={table.items}
+        columns={columns}
+        onRowClick={onRowClick}
+        emptyMessage={emptyMessage || t("common.noResults")}
+        loading={loading}
+        loadingLabel={t("common.loading")}
+      />
+
+      <div className="hidden rounded-md border md:block">
         <Table>
           <TableHeader>
             <TableRow>
@@ -210,24 +220,28 @@ export function TablePagination<T extends { id: string }>({
   table,
 }: TablePaginationProps<T>) {
   const { t } = useTranslation();
+  const showingFrom =
+    table.totalItems === 0 ? 0 : (table.page - 1) * table.perPage + 1;
+  const showingTo =
+    table.totalItems === 0 ? 0 : Math.min(table.page * table.perPage, table.totalItems);
 
   return (
-    <div className="relative z-10 flex items-center justify-between gap-3">
+    <div className="relative z-10 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
       <p className="text-sm text-muted-foreground">
         {table.selectedCount > 0
           ? t("common.selectedCount", { count: table.selectedCount })
           : t("common.showingCount", {
-              from: (table.page - 1) * table.perPage + 1,
-              to: Math.min(table.page * table.perPage, table.totalItems),
+              from: showingFrom,
+              to: showingTo,
               total: table.totalItems,
             })}
       </p>
-      <div className="flex items-center gap-2">
+      <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
         <Button
           type="button"
           variant="outline"
           size="sm"
-          className="pointer-events-auto"
+          className="pointer-events-auto flex-1 sm:flex-none"
           onClick={table.prevPage}
           disabled={!table.canPrevPage}
         >
@@ -240,7 +254,7 @@ export function TablePagination<T extends { id: string }>({
           type="button"
           variant="outline"
           size="sm"
-          className="pointer-events-auto"
+          className="pointer-events-auto flex-1 sm:flex-none"
           onClick={table.nextPage}
           disabled={!table.canNextPage}
         >

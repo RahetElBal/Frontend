@@ -1,14 +1,8 @@
-import { Suspense } from "react";
 import { Outlet, Navigate } from "react-router-dom";
 
 import { AppRole } from "@/constants/enum";
-import { cn } from "@/lib/utils";
-import { AppSidebar } from "@/components/sidebar/app-sidebar";
-import { LoadingPanel } from "@/components/loading-panel";
 import { Spinner } from "@/components/spinner";
-import { AppTopbar } from "@/components/topbar/app-topbar";
-import { PlanExpiryBanner } from "@/components/plan-expiry-banner";
-import { MainLayout } from "@/layouts/main-layout";
+import { PanelLayout } from "@/layouts/panel-layout";
 import { useUser } from "@/hooks/useUser";
 import { ROUTES } from "@/constants/navigation";
 import type { Salon } from "@/pages/admin/salon/types";
@@ -52,27 +46,13 @@ export function UserLayout() {
   const userRole = user.role || AppRole.USER;
 
   return (
-    <MainLayout>
-      <AppSidebar
-        user={user}
-        userRole={userRole}
-        currentSalon={user?.salon as Salon}
-        isInAdminPanel={false}
-      />
-
-      {/* Main Content Area */}
-      <main
-        className={cn("min-h-screen w-full transition-all duration-300")}
-        style={{ paddingInlineStart: "var(--app-sidebar-width, 256px)" }}
-      >
-        <div className="w-full p-6 space-y-6">
-          <PlanExpiryBanner />
-          <AppTopbar />
-          <Suspense fallback={<LoadingPanel className="min-h-[60vh]" />}>
-            <Outlet />
-          </Suspense>
-        </div>
-      </main>
-    </MainLayout>
+    <PanelLayout
+      user={user}
+      userRole={userRole}
+      currentSalon={user?.salon as Salon}
+      isInAdminPanel={false}
+    >
+      <Outlet />
+    </PanelLayout>
   );
 }

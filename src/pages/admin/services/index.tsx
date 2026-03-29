@@ -574,78 +574,67 @@ export default function AdminServicesPage() {
 
       {selectedSalonId && (
         <Card>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{t("admin.services.name")}</TableHead>
-                <TableHead>{t("admin.services.category")}</TableHead>
-                <TableHead>{t("admin.services.duration")}</TableHead>
-                <TableHead>{t("admin.services.price")}</TableHead>
-                <TableHead className="text-end">
-                  {t("common.actions")}
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {(servicesTable.isLoading || servicesTable.isFetching) &&
-                services.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={5} className="h-24">
-                    <div className="flex items-center justify-center gap-2 text-muted-foreground">
-                      <Spinner size="sm" />
-                      <span className="text-sm">{t("common.loading")}</span>
+          <div className="space-y-4 p-4 md:hidden">
+            {(servicesTable.isLoading || servicesTable.isFetching) &&
+              services.length === 0 && (
+                <div className="flex min-h-40 items-center justify-center gap-2 text-muted-foreground">
+                  <Spinner size="sm" />
+                  <span className="text-sm">{t("common.loading")}</span>
+                </div>
+              )}
+            {!servicesTable.isLoading &&
+              !servicesTable.isFetching &&
+              services.length === 0 && (
+                <div className="py-6 text-center text-sm text-muted-foreground">
+                  {t("admin.services.noServices")}
+                </div>
+              )}
+            {!servicesTable.isLoading &&
+              Object.entries(groupedServices).map(([category, items]) => (
+                <div key={category} className="space-y-3">
+                  {groupByCategory && (
+                    <div className="px-1 text-sm font-semibold text-muted-foreground">
+                      {translateServiceCategory(t, category).toUpperCase()}
                     </div>
-                  </TableCell>
-                </TableRow>
-              )}
-              {!servicesTable.isLoading &&
-                !servicesTable.isFetching &&
-                services.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center">
-                    {t("admin.services.noServices")}
-                  </TableCell>
-                </TableRow>
-              )}
-              {!servicesTable.isLoading &&
-                Object.entries(groupedServices).map(([category, items]) => (
-                  <Fragment key={category}>
-                    {groupByCategory && (
-                      <TableRow className="bg-muted/50">
-                        <TableCell colSpan={5} className="font-semibold">
-                          {translateServiceCategory(t, category).toUpperCase()}
-                        </TableCell>
-                      </TableRow>
-                    )}
-                    {items.map((service) => (
-                      <TableRow key={service.id}>
-                        <TableCell className="font-medium">
-                          <div className="flex items-center gap-2">
-                            {getServiceImage(service) && (
-                              <img
-                                src={getServiceImage(service)}
-                                alt={translateServiceName(t, service)}
-                                className="h-8 w-8 rounded-md object-cover"
-                                loading="lazy"
-                                onError={(event) => {
-                                  const fallback =
-                                    getServiceImageFallback(service);
-                                  if (
-                                    fallback &&
-                                    event.currentTarget.src !== fallback
-                                  ) {
-                                    event.currentTarget.src = fallback;
-                                  }
-                                }}
-                              />
-                            )}
-                            <span>{translateServiceName(t, service)}</span>
+                  )}
+                  {items.map((service) => (
+                    <div
+                      key={service.id}
+                      className="space-y-4 rounded-xl border bg-card p-4 shadow-sm"
+                    >
+                      <div className="flex items-start gap-3">
+                        {getServiceImage(service) && (
+                          <img
+                            src={getServiceImage(service)}
+                            alt={translateServiceName(t, service)}
+                            className="h-12 w-12 rounded-lg object-cover"
+                            loading="lazy"
+                            onError={(event) => {
+                              const fallback = getServiceImageFallback(service);
+                              if (
+                                fallback &&
+                                event.currentTarget.src !== fallback
+                              ) {
+                                event.currentTarget.src = fallback;
+                              }
+                            }}
+                          />
+                        )}
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="font-medium">
+                              {translateServiceName(t, service)}
+                            </p>
                             {service.isPack && (
-                              <Badge variant="info">
-                                {t("services.pack")}
-                              </Badge>
+                              <Badge variant="info">{t("services.pack")}</Badge>
                             )}
                           </div>
+                          <p className="text-sm text-muted-foreground">
+                            {translateServiceCategory(
+                              t,
+                              getCategoryName(service.category),
+                            ).toUpperCase()}
+                          </p>
                           {service.isPack &&
                             service.packServiceIds &&
                             service.packServiceIds.length > 0 && (
@@ -655,15 +644,20 @@ export default function AdminServicesPage() {
                                 })}
                               </p>
                             )}
-                        </TableCell>
-                        <TableCell>
-                          {translateServiceCategory(
-                            t,
-                            getCategoryName(service.category),
-                          ).toUpperCase()}
-                        </TableCell>
-                        <TableCell>{service.duration} min</TableCell>
-                        <TableCell>
+                        </div>
+                      </div>
+
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <div className="space-y-1">
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                            {t("admin.services.duration")}
+                          </p>
+                          <p className="text-sm">{service.duration} min</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                            {t("admin.services.price")}
+                          </p>
                           <Input
                             type="number"
                             min="0"
@@ -672,33 +666,161 @@ export default function AdminServicesPage() {
                             onChange={(event) =>
                               handlePriceChange(service.id, event.target.value)
                             }
-                            className="w-32"
                           />
-                        </TableCell>
-                        <TableCell className="text-end">
-                          <div className="flex justify-end gap-2">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => openEditModal(service)}
-                            >
-                              {t("common.edit")}
-                            </Button>
-                            <Button
-                              size="sm"
-                              onClick={() => handleSave(service.id)}
-                              disabled={isUpdatingId === service.id}
-                            >
-                              {t("admin.services.updatePrice")}
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </Fragment>
-                ))}
-            </TableBody>
-          </Table>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col gap-2 sm:flex-row">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="w-full sm:w-auto"
+                          onClick={() => openEditModal(service)}
+                        >
+                          {t("common.edit")}
+                        </Button>
+                        <Button
+                          size="sm"
+                          className="w-full sm:w-auto"
+                          onClick={() => handleSave(service.id)}
+                          disabled={isUpdatingId === service.id}
+                        >
+                          {t("admin.services.updatePrice")}
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ))}
+          </div>
+
+          <div className="hidden md:block">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t("admin.services.name")}</TableHead>
+                  <TableHead>{t("admin.services.category")}</TableHead>
+                  <TableHead>{t("admin.services.duration")}</TableHead>
+                  <TableHead>{t("admin.services.price")}</TableHead>
+                  <TableHead className="text-end">
+                    {t("common.actions")}
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {(servicesTable.isLoading || servicesTable.isFetching) &&
+                  services.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={5} className="h-24">
+                        <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                          <Spinner size="sm" />
+                          <span className="text-sm">{t("common.loading")}</span>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                {!servicesTable.isLoading &&
+                  !servicesTable.isFetching &&
+                  services.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center">
+                        {t("admin.services.noServices")}
+                      </TableCell>
+                    </TableRow>
+                  )}
+                {!servicesTable.isLoading &&
+                  Object.entries(groupedServices).map(([category, items]) => (
+                    <Fragment key={category}>
+                      {groupByCategory && (
+                        <TableRow className="bg-muted/50">
+                          <TableCell colSpan={5} className="font-semibold">
+                            {translateServiceCategory(t, category).toUpperCase()}
+                          </TableCell>
+                        </TableRow>
+                      )}
+                      {items.map((service) => (
+                        <TableRow key={service.id}>
+                          <TableCell className="font-medium">
+                            <div className="flex items-center gap-2">
+                              {getServiceImage(service) && (
+                                <img
+                                  src={getServiceImage(service)}
+                                  alt={translateServiceName(t, service)}
+                                  className="h-8 w-8 rounded-md object-cover"
+                                  loading="lazy"
+                                  onError={(event) => {
+                                    const fallback =
+                                      getServiceImageFallback(service);
+                                    if (
+                                      fallback &&
+                                      event.currentTarget.src !== fallback
+                                    ) {
+                                      event.currentTarget.src = fallback;
+                                    }
+                                  }}
+                                />
+                              )}
+                              <span>{translateServiceName(t, service)}</span>
+                              {service.isPack && (
+                                <Badge variant="info">
+                                  {t("services.pack")}
+                                </Badge>
+                              )}
+                            </div>
+                            {service.isPack &&
+                              service.packServiceIds &&
+                              service.packServiceIds.length > 0 && (
+                                <p className="text-xs text-muted-foreground">
+                                  {t("admin.services.packItems", {
+                                    count: service.packServiceIds.length,
+                                  })}
+                                </p>
+                              )}
+                          </TableCell>
+                          <TableCell>
+                            {translateServiceCategory(
+                              t,
+                              getCategoryName(service.category),
+                            ).toUpperCase()}
+                          </TableCell>
+                          <TableCell>{service.duration} min</TableCell>
+                          <TableCell>
+                            <Input
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              value={priceEdits[service.id] ?? ""}
+                              onChange={(event) =>
+                                handlePriceChange(service.id, event.target.value)
+                              }
+                              className="w-32"
+                            />
+                          </TableCell>
+                          <TableCell className="text-end">
+                            <div className="flex justify-end gap-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => openEditModal(service)}
+                              >
+                                {t("common.edit")}
+                              </Button>
+                              <Button
+                                size="sm"
+                                onClick={() => handleSave(service.id)}
+                                disabled={isUpdatingId === service.id}
+                              >
+                                {t("admin.services.updatePrice")}
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </Fragment>
+                  ))}
+              </TableBody>
+            </Table>
+          </div>
         </Card>
       )}
 

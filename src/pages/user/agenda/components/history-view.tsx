@@ -265,7 +265,7 @@ export function HistoryView({
 
       <div className="space-y-4">
         <div className="flex items-center gap-2">
-          <div className="relative flex-1 max-w-sm">
+          <div className="relative w-full flex-1 sm:max-w-sm">
             <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder={t("common.search")}
@@ -285,7 +285,91 @@ export function HistoryView({
           </div>
         </div>
 
-        <div className="rounded-md border">
+        <div className="grid gap-3 md:hidden">
+          {isLoading ? (
+            <div className="rounded-xl border bg-card px-4 py-10 text-center">
+              <div className="flex flex-col items-center justify-center gap-2 text-muted-foreground">
+                <Spinner size="sm" />
+                <span className="text-sm">{t("common.loading")}</span>
+              </div>
+            </div>
+          ) : rows.length === 0 ? (
+            <div className="rounded-xl border bg-card px-4 py-10 text-center text-sm text-muted-foreground">
+              {t("common.noResults")}
+            </div>
+          ) : (
+            rows.map((row) => (
+              <div
+                key={row.id}
+                className={
+                  onSelectAppointment
+                    ? "space-y-3 rounded-xl border bg-card p-4 shadow-sm cursor-pointer"
+                    : "space-y-3 rounded-xl border bg-card p-4 shadow-sm"
+                }
+                onClick={() => onSelectAppointment?.(row)}
+              >
+                <div className="space-y-1">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                    {t("fields.date")}
+                  </p>
+                  <p className="text-sm">{row.date}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                    {t("fields.time")}
+                  </p>
+                  <p className="text-sm">{row.timeRange}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                    {t("fields.client")}
+                  </p>
+                  <p className="text-sm">{row.clientName}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                    {t("fields.service")}
+                  </p>
+                  <p className="text-sm">{row.serviceName}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                    {t("fields.staff")}
+                  </p>
+                  <p className="text-sm">{row.staffName}</p>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="space-y-1">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                      {t("fields.status")}
+                    </p>
+                    <Badge variant={statusColors[row.displayStatus]}>
+                      {row.statusLabel}
+                    </Badge>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                      {t("agenda.paymentStatus")}
+                    </p>
+                    <Badge variant={row.paid ? "success" : "warning"}>
+                      {row.paymentLabel}
+                    </Badge>
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                    {t("fields.total")}
+                  </p>
+                  <p className="text-sm font-semibold">
+                    {formatCurrency(row.priceValue)}
+                  </p>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
+        <div className="hidden rounded-md border md:block">
           <Table>
             <TableHeader>
               <TableRow>
@@ -349,7 +433,7 @@ export function HistoryView({
           </Table>
         </div>
 
-        <div className="relative z-10 flex items-center justify-between gap-3">
+        <div className="relative z-10 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm text-muted-foreground">
             {t("common.showingCount", {
               from: showingFrom,
@@ -357,12 +441,12 @@ export function HistoryView({
               total: totalItems,
             })}
           </p>
-          <div className="flex items-center gap-2">
+          <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
             <Button
               type="button"
               variant="outline"
               size="sm"
-              className="pointer-events-auto"
+              className="pointer-events-auto flex-1 sm:flex-none"
               onClick={() => onPageChange(page + 1)}
               disabled={!canGoToOlderPage}
             >
@@ -375,7 +459,7 @@ export function HistoryView({
               type="button"
               variant="outline"
               size="sm"
-              className="pointer-events-auto"
+              className="pointer-events-auto flex-1 sm:flex-none"
               onClick={() => onPageChange(page - 1)}
               disabled={!canGoToNewerPage}
             >

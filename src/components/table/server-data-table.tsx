@@ -15,6 +15,7 @@ import { Spinner } from "@/components/spinner";
 import { cn } from "@/lib/utils";
 
 import type { Column } from "./data-table";
+import { MobileCards } from "./mobile-cards";
 import { ServerPagination } from "./server-pagination";
 
 interface ServerDataTableProps<T extends { id: string }> {
@@ -55,7 +56,7 @@ export function ServerDataTable<T extends { id: string }>({
     <div className="space-y-4">
       {showSearch && (
         <div className="flex items-center gap-2">
-          <div className="relative flex-1 max-w-sm">
+          <div className="relative w-full flex-1 sm:max-w-sm">
             <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder={searchPlaceholder || t("common.search")}
@@ -76,7 +77,16 @@ export function ServerDataTable<T extends { id: string }>({
         </div>
       )}
 
-      <div className="rounded-md border">
+      <MobileCards
+        items={items}
+        columns={columns}
+        onRowClick={onRowClick}
+        emptyMessage={emptyMessage || t("common.noResults")}
+        loading={loading}
+        loadingLabel={t("common.loading")}
+      />
+
+      <div className="hidden rounded-md border md:block">
         <Table>
           <TableHeader>
             <TableRow>

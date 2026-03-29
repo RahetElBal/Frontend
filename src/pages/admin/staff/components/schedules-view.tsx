@@ -76,7 +76,7 @@ export function SchedulesView({
             </div>
           </div>
           <div className="p-4">
-            <div className="grid grid-cols-7 gap-2">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-7">
               {DAYS_OF_WEEK.map((day) => {
                 const schedule = getStaffScheduleForDay(staff.id, day);
                 return (

@@ -78,11 +78,18 @@
 
   html {
     @apply scroll-smooth;
+    overflow-x: clip;
   }
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
     min-height: 100vh;
+    overflow-x: clip;
+  }
+
+  #root {
+    min-height: 100vh;
+    overflow-x: clip;
   }
 
   /* RTL support for Arabic */

@@ -27,7 +27,7 @@ export function ServerPagination({
   const canNextPage = safePage < safeTotalPages;
 
   return (
-    <div className="relative z-10 flex items-center justify-between gap-3">
+    <div className="relative z-10 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
       <p className="text-sm text-muted-foreground">
         {t("common.showingCount", {
           from: showingFrom,
@@ -35,12 +35,12 @@ export function ServerPagination({
           total: totalItems,
         })}
       </p>
-      <div className="flex items-center gap-2">
+      <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
         <Button
           type="button"
           variant="outline"
           size="sm"
-          className="pointer-events-auto"
+          className="pointer-events-auto flex-1 sm:flex-none"
           onClick={() => onPageChange(safePage - 1)}
           disabled={!canPrevPage}
         >
@@ -53,7 +53,7 @@ export function ServerPagination({
           type="button"
           variant="outline"
           size="sm"
-          className="pointer-events-auto"
+          className="pointer-events-auto flex-1 sm:flex-none"
           onClick={() => onPageChange(safePage + 1)}
           disabled={!canNextPage}
         >

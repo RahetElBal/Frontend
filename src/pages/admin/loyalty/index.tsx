@@ -407,55 +407,107 @@ export function LoyaltyPage() {
             {t("loyalty.recentPayments")}
           </h2>
           <div className="border rounded-lg overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t("loyalty.paymentDate")}</TableHead>
-                  <TableHead>{t("loyalty.paymentClient")}</TableHead>
-                  <TableHead>{t("loyalty.paymentStatus")}</TableHead>
-                  <TableHead className="text-right">
-                    {t("loyalty.paymentTotal")}
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {showLoyaltyLoading ? (
-                  <TableRow>
-                    <TableCell colSpan={4}>
-                      <LoadingPanel
-                        label={t("common.loading")}
-                        className="py-6"
-                      />
-                    </TableCell>
-                  </TableRow>
-                ) : sales.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
-                      {t("loyalty.noPayments")}
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  sales.map((sale) => (
-                    <TableRow key={sale.id}>
-                      <TableCell>
+            <div className="space-y-3 p-4 md:hidden">
+              {showLoyaltyLoading ? (
+                <LoadingPanel label={t("common.loading")} className="py-6" />
+              ) : sales.length === 0 ? (
+                <div className="py-8 text-center text-sm text-muted-foreground">
+                  {t("loyalty.noPayments")}
+                </div>
+              ) : (
+                sales.map((sale) => (
+                  <div
+                    key={sale.id}
+                    className="space-y-3 rounded-xl border bg-card p-4 shadow-sm"
+                  >
+                    <div className="space-y-1">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                        {t("loyalty.paymentDate")}
+                      </p>
+                      <p className="text-sm">
                         {new Date(sale.createdAt).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell>
+                      </p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                        {t("loyalty.paymentClient")}
+                      </p>
+                      <p className="text-sm">
                         {sale.client
                           ? `${sale.client.firstName} ${sale.client.lastName}`
                           : t("common.unknown")}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="default">{sale.status}</Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
+                      </p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                        {t("loyalty.paymentStatus")}
+                      </p>
+                      <Badge variant="default">{sale.status}</Badge>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                        {t("loyalty.paymentTotal")}
+                      </p>
+                      <p className="text-sm font-semibold">
                         {formatCurrency(Number(sale.total || 0))}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div className="hidden md:block">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{t("loyalty.paymentDate")}</TableHead>
+                    <TableHead>{t("loyalty.paymentClient")}</TableHead>
+                    <TableHead>{t("loyalty.paymentStatus")}</TableHead>
+                    <TableHead className="text-right">
+                      {t("loyalty.paymentTotal")}
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {showLoyaltyLoading ? (
+                    <TableRow>
+                      <TableCell colSpan={4}>
+                        <LoadingPanel
+                          label={t("common.loading")}
+                          className="py-6"
+                        />
                       </TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+                  ) : sales.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={4} className="py-8 text-center text-muted-foreground">
+                        {t("loyalty.noPayments")}
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    sales.map((sale) => (
+                      <TableRow key={sale.id}>
+                        <TableCell>
+                          {new Date(sale.createdAt).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell>
+                          {sale.client
+                            ? `${sale.client.firstName} ${sale.client.lastName}`
+                            : t("common.unknown")}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="default">{sale.status}</Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {formatCurrency(Number(sale.total || 0))}
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           </div>
         </Card>
       </div>

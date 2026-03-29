@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { PanelLeftClose, PanelLeft } from "lucide-react";
+import { PanelLeftClose, PanelLeft, X } from "lucide-react";
+import { useLocation } from "react-router-dom";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -22,51 +23,96 @@ import { getNavigationForRole } from "@/constants/navigation";
 const DEFAULT_SALON_IMAGE = "/salon-placeholder.svg";
 
 interface AppSidebarProps {
+  collapsed: boolean;
   user: AuthUser;
   userRole: AppRole;
   currentSalon?: Salon | null;
   isInAdminPanel?: boolean; // Add this
+  isMobile?: boolean;
+  mobileOpen?: boolean;
   className?: string;
+  onCollapsedChange: (collapsed: boolean) => void;
+  onMobileOpenChange: (open: boolean) => void;
 }
 
 export function AppSidebar({
+  collapsed,
   user,
   userRole,
   currentSalon,
   isInAdminPanel = false,
+  isMobile = false,
+  mobileOpen = false,
   className,
+  onCollapsedChange,
+  onMobileOpenChange,
 }: AppSidebarProps) {
   const { t } = useTranslation();
-  const [collapsed, setCollapsed] = useState(false);
+  const location = useLocation();
   const navigation = getNavigationForRole(userRole, isInAdminPanel);
   const visibleNavigation = useMemo(() => navigation, [navigation]);
+  const previousLocation = useRef(`${location.pathname}${location.search}`);
 
   useEffect(() => {
-    const width = collapsed ? SIDEBAR_WIDTH_COLLAPSED : SIDEBAR_WIDTH;
-    document.documentElement.style.setProperty(
-      "--app-sidebar-width",
-      `${width}px`,
-    );
-  }, [collapsed]);
+    const nextLocation = `${location.pathname}${location.search}`;
+
+    if (!isMobile) {
+      previousLocation.current = nextLocation;
+      return;
+    }
+
+    if (mobileOpen && previousLocation.current !== nextLocation) {
+      onMobileOpenChange(false);
+    }
+
+    previousLocation.current = nextLocation;
+  }, [isMobile, location.pathname, location.search, mobileOpen, onMobileOpenChange]);
 
   return (
     <TooltipProvider>
+      {isMobile && mobileOpen && (
+        <button
+          type="button"
+          aria-label={t("common.close")}
+          className="fixed inset-0 z-40 bg-foreground/20 backdrop-blur-sm lg:hidden"
+          onClick={() => onMobileOpenChange(false)}
+        />
+      )}
       <aside
         className={cn(
-          "fixed inset-y-0 start-0 z-40 flex flex-col border-e border-border bg-card transition-all duration-300",
-          collapsed ? "w-18" : "w-64",
+          "fixed inset-y-0 start-0 z-50 flex flex-col border-e border-border bg-card transition-all duration-300",
+          isMobile
+            ? "w-[280px] max-w-[calc(100vw-2rem)] shadow-xl"
+            : collapsed
+              ? "w-[72px]"
+              : "w-64",
+          isMobile
+            ? mobileOpen
+              ? "translate-x-0"
+              : "-translate-x-full"
+            : "translate-x-0",
           className,
         )}
       >
         {/* Header */}
         <div className="flex h-16 items-center justify-between border-b border-border px-4">
           <SidebarLogo collapsed={collapsed} />
-          {!collapsed && (
+          {isMobile && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 shrink-0 lg:hidden"
+              onClick={() => onMobileOpenChange(false)}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          )}
+          {!isMobile && !collapsed && (
             <Button
               variant="ghost"
               size="icon"
               className="h-8 w-8 shrink-0"
-              onClick={() => setCollapsed(true)}
+              onClick={() => onCollapsedChange(true)}
             >
               <PanelLeftClose className="h-4 w-4" />
             </Button>
@@ -74,13 +120,13 @@ export function AppSidebar({
         </div>
 
         {/* Expand button when collapsed */}
-        {collapsed && (
+        {!isMobile && collapsed && (
           <div className="flex justify-center py-2">
             <Button
               variant="ghost"
               size="icon"
               className="h-8 w-8"
-              onClick={() => setCollapsed(false)}
+              onClick={() => onCollapsedChange(false)}
             >
               <PanelLeft className="h-4 w-4" />
             </Button>
@@ -151,6 +197,3 @@ export function AppSidebar({
     </TooltipProvider>
   );
 }
-
-export const SIDEBAR_WIDTH = 256;
-export const SIDEBAR_WIDTH_COLLAPSED = 72;
