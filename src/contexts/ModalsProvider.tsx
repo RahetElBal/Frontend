@@ -9,6 +9,7 @@ interface ModalsContextValue {
   modals: ModalState;
   openModal: (modalId: string) => void;
   closeModal: (modalId: string) => void;
+  setModalOpen: (modalId: string, isOpen: boolean) => void;
   toggleModal: (modalId: string) => void;
   isModalOpen: (modalId: string) => boolean;
 }
@@ -30,6 +31,10 @@ export function ModalsProvider({ children }: ModalsProviderProps) {
     setModals((prev) => ({ ...prev, [modalId]: false }));
   }, []);
 
+  const setModalOpen = useCallback((modalId: string, isOpen: boolean) => {
+    setModals((prev) => ({ ...prev, [modalId]: isOpen }));
+  }, []);
+
   const toggleModal = useCallback((modalId: string) => {
     setModals((prev) => ({ ...prev, [modalId]: !prev[modalId] }));
   }, []);
@@ -45,6 +50,7 @@ export function ModalsProvider({ children }: ModalsProviderProps) {
     modals,
     openModal,
     closeModal,
+    setModalOpen,
     toggleModal,
     isModalOpen,
   };
@@ -60,4 +66,17 @@ export function useModalsContext() {
     throw new Error('useModalsContext must be used within a ModalsProvider');
   }
   return context;
+}
+
+export function useModalState(modalId: string) {
+  const { isModalOpen, openModal, closeModal, setModalOpen, toggleModal } =
+    useModalsContext();
+
+  return {
+    isOpen: isModalOpen(modalId),
+    open: () => openModal(modalId),
+    close: () => closeModal(modalId),
+    setOpen: (nextOpen: boolean) => setModalOpen(modalId, nextOpen),
+    toggle: () => toggleModal(modalId),
+  };
 }

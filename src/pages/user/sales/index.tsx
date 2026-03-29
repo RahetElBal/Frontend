@@ -35,12 +35,9 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { useTable } from "@/hooks/useTable";
 import { useUser } from "@/hooks/useUser";
 import { ROUTES } from "@/constants/navigation";
-import {
-  useBusinessSummaryContext,
-  useSalonBusinessSummary,
-} from "@/contexts/BusinessSummaryProvider";
+import { useSalonBusinessSummary } from "@/hooks/useSalonBusinessSummary";
 import { SaleStatus } from "./enum";
-import type { Sale, SaleItem } from "./types";
+import type { Sale } from "./types";
 import { useGet } from "@/hooks/useGet";
 import { usePost } from "@/hooks/usePost";
 import { toast } from "@/lib/toast";
@@ -48,6 +45,9 @@ import { getSalesColumns } from "./components/list/columns";
 import {
   formatSaleDate,
   formatSaleTime,
+  getPaymentMethodLabel,
+  getSaleDiscountSummary,
+  getSaleItemPricing,
   getSalePaymentStatusLabel,
   getSaleStatusLabel,
   saleStatusColors,
@@ -57,37 +57,6 @@ import { normalizeSale } from "@/utils/normalize-sales";
 
 const SALES_PAGE_SIZE = 20;
 
-const getSaleItemPricing = (item: SaleItem) => {
-  const quantity = Math.max(1, toNumber(item.quantity, 1));
-  const baseUnitPrice = toNumber(
-    item.unitPrice ??
-      item.price ??
-      (item.total !== undefined ? toNumber(item.total) / quantity : undefined),
-  );
-  const baseLineTotal = baseUnitPrice * quantity;
-  const lineTotal = toNumber(item.total ?? baseLineTotal);
-  const discountFromLine = Math.max(0, baseLineTotal - lineTotal);
-  const discountFromField = Math.max(0, toNumber(item.discount, 0));
-  const shouldUseDiscountField =
-    discountFromField > 0 && discountFromLine < 0.01;
-  const discount = shouldUseDiscountField
-    ? discountFromField
-    : Math.max(discountFromLine, discountFromField);
-  const finalLineTotal = Math.max(
-    0,
-    shouldUseDiscountField ? baseLineTotal - discount : lineTotal,
-  );
-  const finalUnitPrice = finalLineTotal / quantity;
-
-  return {
-    quantity,
-    baseUnitPrice,
-    finalUnitPrice,
-    lineTotal: finalLineTotal,
-    discount,
-  };
-};
-
 export function SalesPage() {
   const { t } = useTranslation();
   const { formatCurrency } = useLanguage();
@@ -95,21 +64,16 @@ export function SalesPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { invalidateBusinessSummary } = useBusinessSummaryContext();
   const [refundingSaleId, setRefundingSaleId] = useState<string | null>(null);
   const [salePendingRefund, setSalePendingRefund] = useState<Sale | null>(null);
   const [statusFilter, setStatusFilter] = useState<SaleStatus | "all">("all");
-
-  if (!isAdmin && !isSuperadmin) {
-    return <Navigate to={ROUTES.DASHBOARD} replace />;
-  }
-
+  const canViewSales = isAdmin || isSuperadmin;
   const salonId = user?.salon?.id;
   const salesStaleTime = 1000 * 60;
   const { summary, isLoading: isSummaryLoading } = useSalonBusinessSummary(
     salonId,
     {
-      enabled: !!salonId,
+      enabled: canViewSales && !!salonId,
     },
   );
   const salesTable = useTable<Sale>({
@@ -121,7 +85,7 @@ export function SalesPage() {
       sortBy: "createdAt",
       sortOrder: "desc",
     },
-    enabled: !!salonId,
+    enabled: canViewSales && !!salonId,
     initialPerPage: SALES_PAGE_SIZE,
     options: {
       staleTime: salesStaleTime,
@@ -170,7 +134,7 @@ export function SalesPage() {
   const { data: selectedSaleDetails } = useGet<Sale>({
     path: selectedSaleId ? `sales/${selectedSaleId}` : "sales",
     options: {
-      enabled: !!selectedSaleId,
+      enabled: canViewSales && !!selectedSaleId,
       staleTime: 1000 * 60,
       select: normalizeSale,
     },
@@ -184,9 +148,6 @@ export function SalesPage() {
         queryClient.invalidateQueries({
           queryKey: ["sales", variables.id],
         });
-        if (salonId) {
-          invalidateBusinessSummary(salonId);
-        }
         setSalePendingRefund(null);
         setRefundingSaleId(null);
         toast.success(t("sales.refundSuccess"));
@@ -241,40 +202,23 @@ export function SalesPage() {
     [isRefunding],
   );
 
-  const columns = getSalesColumns({
-    t,
-    formatCurrency,
-    onRefund: handleRefund,
-    isRefunding: (sale) => isRefunding && refundingSaleId === sale.id,
-    onView: (sale) => setSelectedSaleId(sale.id),
-  });
+  const columns = useMemo(() => {
+    return getSalesColumns({
+      t,
+      formatCurrency,
+      onRefund: handleRefund,
+      isRefunding: (sale) => isRefunding && refundingSaleId === sale.id,
+      onView: (sale) => setSelectedSaleId(sale.id),
+    });
+  }, [formatCurrency, handleRefund, isRefunding, refundingSaleId, setSelectedSaleId, t]);
 
-  const paymentMethodLabel = (method?: string) => {
-    switch (method) {
-      case "card":
-        return t("sales.card");
-      case "bank_transfer":
-        return t("sales.bankTransfer");
-      case "other":
-        return t("sales.other");
-      case "cash":
-      default:
-        return t("sales.cash");
-    }
-  };
+  const selectedSaleDiscount = useMemo(() => {
+    return getSaleDiscountSummary(selectedSale);
+  }, [selectedSale]);
 
-  const selectedSaleItemDiscountTotal = selectedSale
-    ? (selectedSale.items ?? []).reduce(
-        (sum, item) => sum + getSaleItemPricing(item).discount,
-        0,
-      )
-    : 0;
-  const selectedSaleDiscount = toNumber(selectedSale?.discount ?? 0);
-  const displayDiscount =
-    selectedSaleDiscount > 0
-      ? selectedSaleDiscount
-      : selectedSaleItemDiscountTotal;
-  const showDiscount = displayDiscount > 0.009;
+  if (!canViewSales) {
+    return <Navigate to={ROUTES.DASHBOARD} replace />;
+  }
 
   return (
     <div className="space-y-6">
@@ -503,7 +447,7 @@ export function SalesPage() {
                     {t("sales.paymentMethod")}
                   </p>
                   <p className="font-medium">
-                    {paymentMethodLabel(selectedSale.paymentMethod)}
+                    {getPaymentMethodLabel(t, selectedSale.paymentMethod)}
                   </p>
                 </div>
                 <div>
@@ -576,12 +520,14 @@ export function SalesPage() {
                   </span>
                   <span>{formatCurrency(toNumber(selectedSale.subtotal))}</span>
                 </div>
-                {showDiscount && (
+                {selectedSaleDiscount.showDiscount && (
                   <div className="flex items-center justify-between">
                     <span className="text-muted-foreground">
                       {t("sales.discount")}
                     </span>
-                    <span>-{formatCurrency(displayDiscount)}</span>
+                    <span>
+                      -{formatCurrency(selectedSaleDiscount.displayDiscount)}
+                    </span>
                   </div>
                 )}
                 <div className="flex items-center justify-between text-base font-semibold">

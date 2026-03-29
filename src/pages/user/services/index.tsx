@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { Plus, Clock, Edit, DollarSign } from "lucide-react";
@@ -42,11 +43,7 @@ import type { Service } from "./types";
 import type { ApiError } from "@/types/api";
 import { useTable } from "@/hooks/useTable";
 import { usePost } from "@/hooks/usePost";
-import {
-  useCategoriesContext,
-  useSalonCategories,
-} from "@/contexts/CategoriesProvider";
-import { useServicesContext } from "@/contexts/ServicesProvider";
+import { useSalonCategories } from "@/hooks/useSalonCategories";
 import { post } from "@/lib/http";
 import { ServiceCard } from "./components/service-card";
 import {
@@ -107,8 +104,7 @@ export function ServicesPage() {
   const { t } = useTranslation();
   const { formatCurrency } = useLanguage();
   const { user, isSuperadmin } = useUser();
-  const { invalidateServices } = useServicesContext();
-  const { invalidateCategories } = useCategoriesContext();
+  const queryClient = useQueryClient();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   // Unified modal state
@@ -171,10 +167,6 @@ export function ServicesPage() {
     invalidate: ["services"],
     onSuccess: () => {
       toast.success(t("services.addService") + " - " + t("common.success"));
-      if (salonId) {
-        invalidateServices(salonId);
-        invalidateCategories(salonId);
-      }
       setModalState(null);
     },
     onError: (error) => {
@@ -191,10 +183,6 @@ export function ServicesPage() {
     invalidate: ["services"],
     onSuccess: () => {
       toast.success(t("common.edit") + " - " + t("common.success"));
-      if (salonId) {
-        invalidateServices(salonId);
-        invalidateCategories(salonId);
-      }
       setModalState(null);
     },
     onError: (error) => {
@@ -209,13 +197,9 @@ export function ServicesPage() {
       method: "DELETE",
       invalidate: ["services"],
       onSuccess: () => {
-      toast.success(t("common.delete") + " - " + t("common.success"));
-      if (salonId) {
-        invalidateServices(salonId);
-        invalidateCategories(salonId);
-      }
-      setModalState(null);
-    },
+        toast.success(t("common.delete") + " - " + t("common.success"));
+        setModalState(null);
+      },
       onError: (error) => {
         toast.error(error.message || t("common.error"));
       },
@@ -227,11 +211,7 @@ export function ServicesPage() {
     post<Service, undefined>(`services/${serviceId}/toggle`, undefined)
       .then(() => {
         toast.success(t("common.success"));
-        if (salonId) {
-          invalidateServices(salonId);
-          invalidateCategories(salonId);
-        }
-        void servicesTable.refetch();
+        void queryClient.invalidateQueries({ queryKey: ["services"] });
       })
       .catch((error: ApiError) => {
         toast.error(error.message || t("common.error"));

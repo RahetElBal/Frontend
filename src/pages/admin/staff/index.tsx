@@ -5,10 +5,11 @@ import { Plus, User } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/lib/toast";
+import { useModalState } from "@/contexts/ModalsProvider";
 import type { StaffSchedule } from "./types";
 import { useGet } from "@/hooks/useGet";
 import { usePost } from "@/hooks/usePost";
-import { useSalonStaff } from "@/contexts/StaffProvider";
+import { useSalonStaff } from "@/hooks/useSalonStaff";
 import { useUser } from "@/hooks/useUser";
 import { SchedulesView } from "./components/schedules-view";
 import { ScheduleModal } from "./components/dialog/schedule-modal";
@@ -17,8 +18,8 @@ import type { CreateScheduleDto } from "./types";
 export function StaffPage() {
   const { t } = useTranslation();
   const { user } = useUser();
+  const scheduleModal = useModalState("admin-staff-schedule");
   const [selectedStaff, setSelectedStaff] = useState<string | null>(null);
-  const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
   const [editingSchedule, setEditingSchedule] = useState<StaffSchedule | null>(
     null,
   );
@@ -46,7 +47,8 @@ export function StaffPage() {
       invalidate: ["staff-schedules"],
       onSuccess: () => {
         toast.success(t("staff.scheduleUpdated"));
-        setIsScheduleModalOpen(false);
+        setEditingSchedule(null);
+        scheduleModal.close();
       },
       onError: (error) => toast.error(error.message || t("common.error")),
     },
@@ -63,7 +65,12 @@ export function StaffPage() {
         description={t("staff.description")}
         actions={
           <div className="flex gap-2">
-            <Button onClick={() => setIsScheduleModalOpen(true)}>
+            <Button
+              onClick={() => {
+                setEditingSchedule(null);
+                scheduleModal.open();
+              }}
+            >
               <Plus className="h-4 w-4 me-2" />
               {t("staff.addSchedule")}
             </Button>
@@ -108,15 +115,15 @@ export function StaffPage() {
         getStaffScheduleForDay={getStaffScheduleForDay}
         onEditSchedule={(schedule) => {
           setEditingSchedule(schedule);
-          setIsScheduleModalOpen(true);
+          scheduleModal.open();
         }}
       />
 
       {/* Schedule Modal */}
       <ScheduleModal
-        isOpen={isScheduleModalOpen}
+        isOpen={scheduleModal.isOpen}
         onClose={() => {
-          setIsScheduleModalOpen(false);
+          scheduleModal.close();
           setEditingSchedule(null);
         }}
         staffMembers={staffMembers}

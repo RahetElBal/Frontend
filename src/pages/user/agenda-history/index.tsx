@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Spinner } from "@/components/spinner";
 import { useGet } from "@/hooks/useGet";
 import { useTable } from "@/hooks/useTable";
-import { useSalonStaff } from "@/contexts/StaffProvider";
+import { useSalonStaff } from "@/hooks/useSalonStaff";
 import { useUser } from "@/hooks/useUser";
 import { useLanguage } from "@/hooks/useLanguage";
 import { ROUTES } from "@/constants/navigation";

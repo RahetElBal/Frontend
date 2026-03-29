@@ -13,6 +13,7 @@ import {
   BadgePercent,
 } from "lucide-react";
 import { ProFeatureGate } from "@/components/pro-feature-gate";
+import { selectCollectionData } from "@/common/utils";
 
 import { PageHeader } from "@/components/page-header";
 import { Card } from "@/components/ui/card";
@@ -28,27 +29,16 @@ import {
 import { useLanguage } from "@/hooks/useLanguage";
 import { useUser } from "@/hooks/useUser";
 import { useGet } from "@/hooks/useGet";
-import { useSalonBusinessSummary } from "@/contexts/BusinessSummaryProvider";
-import { useSalonServices } from "@/contexts/ServicesProvider";
-import {
-  translateServiceCategory,
-  translateServiceName,
-} from "@/common/service-translations";
+import { useSalonBusinessSummary } from "@/hooks/useSalonBusinessSummary";
+import { useSalonServices } from "@/hooks/useSalonServices";
 import type { Appointment } from "@/pages/user/agenda/types";
 import type { Client } from "@/pages/user/clients/types";
 import type { Sale } from "@/pages/user/sales/types";
-import { normalizeSalesResponse } from "@/utils/normalize-sales";
+import { normalizeSale } from "@/utils/normalize-sales";
 import { ROUTES } from "@/constants/navigation";
 import {
-  aggregateCategorySales,
-  aggregateSalesItems,
-  filterAppointmentsByRange,
-  filterClientsByRange,
-  filterSalesByRange,
-  getPeriodRange,
-  getTopItemsBy,
+  buildAnalyticsViewModel,
   toNumber,
-  type AggregatedItem,
   type AnalyticsPeriod,
 } from "./components/utils";
 
@@ -66,11 +56,7 @@ export function AnalyticsPage() {
     enabled: !!salonId && canViewAnalytics,
   });
 
-  const { data: salesResponse, isLoading: loadingSales } = useGet<
-    {
-      data: Sale[];
-    }
-  >({
+  const { data: sales = [], isLoading: loadingSales } = useGet<Sale[]>({
     path: "sales",
     query: {
       salonId,
@@ -83,14 +69,15 @@ export function AnalyticsPage() {
       enabled: !!salonId && canViewAnalytics,
       staleTime: 1000 * 60 * 5,
       refetchOnWindowFocus: false,
-      select: normalizeSalesResponse,
+      select: (response) =>
+        selectCollectionData(response as { data?: Sale[] } | Sale[]).map(
+          normalizeSale,
+        ),
     },
   });
 
-  const { data: appointmentsResponse, isLoading: loadingAppointments } = useGet<
-    {
-      data: Appointment[];
-    }
+  const { data: appointments = [], isLoading: loadingAppointments } = useGet<
+    Appointment[]
   >({
     path: "appointments",
     query: { salonId, perPage: 10, summary: true },
@@ -98,20 +85,22 @@ export function AnalyticsPage() {
       enabled: !!salonId && canViewAnalytics,
       staleTime: 1000 * 60 * 5,
       refetchOnWindowFocus: false,
+      select: (response) =>
+        selectCollectionData(
+          response as { data?: Appointment[] } | Appointment[],
+        ),
     },
   });
 
-  const { data: clientsResponse, isLoading: loadingClients } = useGet<
-    {
-      data: Client[];
-    }
-  >({
+  const { data: clients = [], isLoading: loadingClients } = useGet<Client[]>({
     path: "clients",
     query: { salonId, perPage: 10 },
     options: {
       enabled: !!salonId && canViewAnalytics,
       staleTime: 1000 * 60 * 5,
       refetchOnWindowFocus: false,
+      select: (response) =>
+        selectCollectionData(response as { data?: Client[] } | Client[]),
     },
   });
 
@@ -122,95 +111,17 @@ export function AnalyticsPage() {
   // Move all data extraction and useMemo hooks before early returns
   const isLoading =
     loadingSales || loadingAppointments || loadingClients || loadingServices;
-
-  // Wrap data arrays in useMemo to ensure stable references
-  const sales = useMemo(() => salesResponse?.data ?? [], [salesResponse?.data]);
-  const appointments = useMemo(
-    () => appointmentsResponse?.data ?? [],
-    [appointmentsResponse?.data],
-  );
-  const clients = useMemo(
-    () => clientsResponse?.data ?? [],
-    [clientsResponse?.data],
-  );
-  const serviceLookup = useMemo(
-    () => new Map(services.map((service) => [service.id, service])),
-    [services],
-  );
-  const packServices = useMemo(
-    () => services.filter((service) => service.isPack),
-    [services],
-  );
-  const packServiceIds = useMemo(
-    () => new Set(packServices.map((service) => service.id)),
-    [packServices],
-  );
-
-  const { start, end } = useMemo(() => getPeriodRange(period), [period]);
-
-  const salesInRange = useMemo(
-    () => filterSalesByRange(sales, start, end),
-    [sales, start, end],
-  );
-  const completedSalesInRange = useMemo(
-    () => salesInRange.filter((sale) => sale.status === "completed"),
-    [salesInRange],
-  );
-  const appointmentsInRange = useMemo(
-    () => filterAppointmentsByRange(appointments, start, end),
-    [appointments, start, end],
-  );
-  const clientsInRange = useMemo(
-    () => filterClientsByRange(clients, start, end),
-    [clients, start, end],
-  );
-  const marriedClientsInRange = useMemo(
-    () => clientsInRange.filter((client) => client.isMarried),
-    [clientsInRange],
-  );
-  const packItems = useMemo(() => {
-    if (packServiceIds.size === 0) return [];
-    const totals: Record<
-      string,
-      { name: string; count: number; revenue: number; itemId: string; type: "service" }
-    > = {};
-    completedSalesInRange.forEach((sale) => {
-      const items = Array.isArray(sale.items) ? sale.items : [];
-      items.forEach((item) => {
-        if (item.type !== "service") return;
-        if (!packServiceIds.has(item.itemId)) return;
-        const quantity = Math.max(1, toNumber(item.quantity));
-        const unitPrice = toNumber(
-          item.unitPrice ??
-            item.price ??
-            (item.total ? item.total / quantity : 0),
-        );
-        const lineTotal = toNumber(item.total ?? unitPrice * quantity);
-        if (!totals[item.itemId]) {
-          const packName =
-            item.name ||
-            packServices.find((service) => service.id === item.itemId)?.name ||
-            t("services.pack");
-          totals[item.itemId] = {
-            name: packName,
-            count: 0,
-            revenue: 0,
-            itemId: item.itemId,
-            type: "service",
-          };
-        }
-        totals[item.itemId].count += quantity;
-        totals[item.itemId].revenue += lineTotal;
-      });
+  const analytics = useMemo(() => {
+    return buildAnalyticsViewModel({
+      sales,
+      appointments,
+      clients,
+      services,
+      businessSummary,
+      period,
+      t,
     });
-    return Object.values(totals);
-  }, [packServiceIds, packServices, completedSalesInRange, t]);
-
-  const getServiceDisplayName = (item: AggregatedItem) => {
-    if (item.type !== "service" || !item.itemId) return item.name;
-    const service = serviceLookup.get(item.itemId);
-    return service ? translateServiceName(t, service) : item.name;
-  };
+  }, [appointments, businessSummary, clients, period, sales, services, t]);
 
   if (userLoading) {
     return (
@@ -223,99 +134,6 @@ export function AnalyticsPage() {
   if (!canViewAnalytics) {
     return <Navigate to={ROUTES.DASHBOARD} replace />;
   }
-
-  const periodRevenue = salesInRange.reduce(
-    (sum, sale) =>
-      sale.status === "completed" || sale.status === "refunded"
-        ? sum + toNumber(sale.total)
-        : sum,
-    0,
-  );
-  const periodCanceledRevenueImpact = salesInRange.reduce(
-    (sum, sale) =>
-      sale.status === "cancelled" ? sum - Math.abs(toNumber(sale.total)) : sum,
-    0,
-  );
-  const periodRefundedRevenueImpact = salesInRange.reduce(
-    (sum, sale) =>
-      sale.status === "refunded" ? sum - Math.abs(toNumber(sale.total)) : sum,
-    0,
-  );
-  const periodNetRevenue = Math.max(
-    0,
-    periodRevenue + periodCanceledRevenueImpact + periodRefundedRevenueImpact,
-  );
-  const periodTransactions = salesInRange.filter(
-    (sale) => sale.status === "completed",
-  ).length;
-  const periodRefundedCount = salesInRange.filter(
-    (sale) => sale.status === "refunded",
-  ).length;
-  const periodRefundedAmount = Math.abs(periodRefundedRevenueImpact);
-  const hasBusinessSummary =
-    businessSummary.updatedAt > 0 ||
-    businessSummary.grossRevenue !== 0 ||
-    businessSummary.netRevenue !== 0 ||
-    businessSummary.transactionCount !== 0 ||
-    businessSummary.canceledCount !== 0 ||
-    businessSummary.refundedCount !== 0;
-  const totalNetRevenue = hasBusinessSummary
-    ? businessSummary.netRevenue
-    : periodNetRevenue;
-  const totalGrossRevenue = hasBusinessSummary
-    ? businessSummary.grossRevenue
-    : periodRevenue;
-  const totalTransactions = hasBusinessSummary
-    ? businessSummary.transactionCount
-    : periodTransactions;
-  const refundedPaymentsCount = hasBusinessSummary
-    ? businessSummary.refundedCount
-    : periodRefundedCount;
-  const refundedRevenueAmount = Math.abs(
-    hasBusinessSummary
-      ? businessSummary.refundedRevenueImpact
-      : periodRefundedAmount,
-  );
-  const averageTicket =
-    totalTransactions > 0 ? totalNetRevenue / totalTransactions : 0;
-  const totalAppointments = appointmentsInRange.length;
-  const newClients = clientsInRange.length;
-
-  const allServiceItems = aggregateSalesItems(completedSalesInRange, "service");
-  const bestSeller = getTopItemsBy(allServiceItems, "count", 1)[0];
-
-  const topServices = getTopItemsBy(allServiceItems, "count", 5);
-
-  const topCategories = getTopItemsBy(
-    aggregateCategorySales(
-      completedSalesInRange,
-      services,
-      [],
-      t("common.other"),
-      "service",
-    ),
-    "revenue",
-    5,
-  );
-
-  const safeServiceRevenue = allServiceItems.reduce(
-    (sum, item) => sum + item.revenue,
-    0,
-  );
-  const serviceShare = safeServiceRevenue > 0 ? 100 : 0;
-  const packRevenue = packItems.reduce(
-    (sum, item) => sum + item.revenue,
-    0,
-  );
-  const packCount = packItems.reduce((sum, item) => sum + item.count, 0);
-  const packShare =
-    safeServiceRevenue > 0 ? (packRevenue / safeServiceRevenue) * 100 : 0;
-  const topPacks = getTopItemsBy(packItems, "revenue", 5);
-
-  const hasData =
-    completedSalesInRange.length > 0 ||
-    appointmentsInRange.length > 0 ||
-    clientsInRange.length > 0;
 
   return (
     <div className="space-y-6">
@@ -346,7 +164,7 @@ export function AnalyticsPage() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <StatsCard
           title={t("analytics.netRevenue")}
-          value={formatCurrency(toNumber(totalNetRevenue))}
+          value={formatCurrency(toNumber(analytics.totalNetRevenue))}
           loading={isLoading}
           icon={DollarSign}
           iconColor="text-green-600"
@@ -354,7 +172,7 @@ export function AnalyticsPage() {
         />
         <StatsCard
           title={t("analytics.grossRevenue")}
-          value={formatCurrency(toNumber(totalGrossRevenue))}
+          value={formatCurrency(toNumber(analytics.totalGrossRevenue))}
           loading={isLoading}
           icon={DollarSign}
           iconColor="text-emerald-700"
@@ -362,7 +180,7 @@ export function AnalyticsPage() {
         />
         <StatsCard
           title={t("sales.transactions")}
-          value={totalTransactions}
+          value={analytics.totalTransactions}
           loading={isLoading}
           icon={ShoppingCart}
           iconColor="text-blue-600"
@@ -375,11 +193,11 @@ export function AnalyticsPage() {
                 {t("analytics.refundedPayments")}
               </p>
               <p className="text-2xl font-bold text-rose-600">
-                {refundedPaymentsCount}
+                {analytics.refundedPaymentsCount}
               </p>
               <p className="text-xs text-muted-foreground">
                 {t("analytics.refundedAmount")}:{" "}
-                {formatCurrency(refundedRevenueAmount)}
+                {formatCurrency(analytics.refundedRevenueAmount)}
               </p>
             </div>
             <div className="rounded-lg bg-rose-100 p-3">
@@ -389,7 +207,7 @@ export function AnalyticsPage() {
         </Card>
         <StatsCard
           title={t("analytics.averageTicket")}
-          value={formatCurrency(toNumber(averageTicket))}
+          value={formatCurrency(toNumber(analytics.averageTicket))}
           loading={isLoading}
           icon={TrendingUp}
           iconColor="text-accent-pink"
@@ -401,7 +219,7 @@ export function AnalyticsPage() {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
           <StatsCard
             title={t("analytics.totalAppointments")}
-            value={totalAppointments}
+            value={analytics.totalAppointments}
             loading={isLoading}
             icon={Calendar}
             iconColor="text-purple-600"
@@ -409,7 +227,7 @@ export function AnalyticsPage() {
           />
           <StatsCard
             title={t("analytics.newClients")}
-            value={newClients}
+            value={analytics.newClients}
             loading={isLoading}
             icon={Users}
             iconColor="text-amber-600"
@@ -417,7 +235,7 @@ export function AnalyticsPage() {
           />
           <StatsCard
             title={t("analytics.marriedClients")}
-            value={marriedClientsInRange.length}
+            value={analytics.marriedClientsCount}
             loading={isLoading}
             icon={Heart}
             iconColor="text-rose-600"
@@ -425,7 +243,7 @@ export function AnalyticsPage() {
           />
           <StatsCard
             title={t("analytics.packRevenue")}
-            value={formatCurrency(toNumber(packRevenue))}
+            value={formatCurrency(toNumber(analytics.packRevenue))}
             loading={isLoading}
             icon={Package}
             iconColor="text-indigo-600"
@@ -433,7 +251,7 @@ export function AnalyticsPage() {
           />
           <StatsCard
             title={t("analytics.packSold")}
-            value={packCount}
+            value={analytics.packCount}
             loading={isLoading}
             icon={Package}
             iconColor="text-indigo-600"
@@ -441,7 +259,7 @@ export function AnalyticsPage() {
           />
           <StatsCard
             title={t("analytics.packShare")}
-            value={`${packShare.toFixed(1)}%`}
+            value={`${analytics.packShare.toFixed(1)}%`}
             loading={isLoading}
             icon={BadgePercent}
             iconColor="text-amber-600"
@@ -453,7 +271,7 @@ export function AnalyticsPage() {
           <Card className="p-6">
             <LoadingPanel label={t("common.loading")} />
           </Card>
-        ) : !hasData ? (
+        ) : !analytics.hasData ? (
           <Card className="p-12 text-center">
             <Layers className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
           <h3 className="text-lg font-semibold mb-2">
@@ -470,17 +288,17 @@ export function AnalyticsPage() {
               <h3 className="text-lg font-semibold mb-4">
                 {t("analytics.bestSeller")}
               </h3>
-              {bestSeller ? (
+              {analytics.bestSeller ? (
                 <div className="space-y-3">
                   <p className="text-2xl font-bold text-balance">
-                    {getServiceDisplayName(bestSeller)}
+                    {analytics.bestSeller.displayName}
                   </p>
                   <div className="flex items-center gap-3 text-sm text-muted-foreground">
                     <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-emerald-700 font-medium">
-                      {bestSeller.count} {t("analytics.sold")}
+                      {analytics.bestSeller.count} {t("analytics.sold")}
                     </span>
                     <span className="font-semibold text-foreground">
-                      {formatCurrency(bestSeller.revenue)}
+                      {formatCurrency(analytics.bestSeller.revenue)}
                     </span>
                   </div>
                 </div>
@@ -494,14 +312,12 @@ export function AnalyticsPage() {
                 {t("analytics.topCategories")}
               </h3>
               <div className="space-y-4">
-                {topCategories.length === 0 ? (
+                {analytics.topCategories.length === 0 ? (
                   <p className="text-muted-foreground">
                     {t("common.noResults")}
                   </p>
                 ) : (
-                  topCategories.map((category, idx) => {
-                    const totalRevenue = topCategories.reduce((sum, c) => sum + c.revenue, 0) || 1;
-                    const percent = (category.revenue / totalRevenue) * 100;
+                  analytics.topCategories.map((category, idx) => {
                     const colors = [
                       "bg-accent-pink-500",
                       "bg-emerald-500",
@@ -513,7 +329,7 @@ export function AnalyticsPage() {
                       <div key={category.name}>
                         <div className="flex items-center justify-between text-sm mb-1.5">
                           <span className="font-medium">
-                            {translateServiceCategory(t, category.name)}
+                            {category.displayName}
                           </span>
                           <span className="font-semibold">
                             {formatCurrency(category.revenue)}
@@ -522,7 +338,7 @@ export function AnalyticsPage() {
                         <div className="h-2 rounded-full bg-muted">
                           <div
                             className={`h-2 rounded-full transition-all duration-500 ${colors[idx % colors.length]}`}
-                            style={{ width: `${Math.min(percent, 100)}%` }}
+                            style={{ width: `${Math.min(category.percent, 100)}%` }}
                           />
                         </div>
                       </div>
@@ -541,28 +357,28 @@ export function AnalyticsPage() {
                   <div className="flex items-center justify-between text-sm mb-1.5">
                     <span className="font-medium">{t("nav.services")}</span>
                     <span className="font-semibold">
-                      {formatCurrency(safeServiceRevenue)}
+                      {formatCurrency(analytics.serviceRevenue)}
                     </span>
                   </div>
                   <div className="h-2 rounded-full bg-muted">
                     <div
                       className="h-2 rounded-full bg-emerald-500 transition-all duration-500"
-                      style={{ width: `${Math.min(serviceShare, 100)}%` }}
+                      style={{ width: `${Math.min(analytics.serviceShare, 100)}%` }}
                     />
                   </div>
                 </div>
-                {packRevenue > 0 && (
+                {analytics.packRevenue > 0 && (
                   <div>
                     <div className="flex items-center justify-between text-sm mb-1.5">
                       <span className="font-medium">{t("services.pack")}</span>
                       <span className="font-semibold">
-                        {formatCurrency(packRevenue)}
+                        {formatCurrency(analytics.packRevenue)}
                       </span>
                     </div>
                     <div className="h-2 rounded-full bg-muted">
                       <div
                         className="h-2 rounded-full bg-indigo-500 transition-all duration-500"
-                        style={{ width: `${Math.min(packShare, 100)}%` }}
+                        style={{ width: `${Math.min(analytics.packShare, 100)}%` }}
                       />
                     </div>
                   </div>
@@ -576,19 +392,17 @@ export function AnalyticsPage() {
               <h3 className="text-lg font-semibold mb-4">
                 {t("analytics.topServices")}
               </h3>
-              {topServices.length === 0 ? (
+              {analytics.topServices.length === 0 ? (
                 <p className="text-muted-foreground">{t("common.noResults")}</p>
               ) : (
                 <div className="space-y-4">
-                  {topServices.map((service, index) => {
-                    const maxRevenue = topServices[0]?.revenue || 1;
-                    const percent = (service.revenue / maxRevenue) * 100;
+                  {analytics.topServices.map((service, index) => {
                     return (
                       <div key={`${service.name}-${index}`}>
                         <div className="flex items-center justify-between text-sm mb-1.5">
                           <div>
                             <span className="font-medium">
-                              {getServiceDisplayName(service)}
+                              {service.displayName}
                             </span>
                             <span className="text-muted-foreground ms-2">
                               {service.count} {t("analytics.sold")}
@@ -601,7 +415,7 @@ export function AnalyticsPage() {
                         <div className="h-2 rounded-full bg-muted">
                           <div
                             className="h-2 rounded-full bg-emerald-500 transition-all duration-500"
-                            style={{ width: `${Math.min(percent, 100)}%` }}
+                            style={{ width: `${Math.min(service.percent, 100)}%` }}
                           />
                         </div>
                       </div>
@@ -614,19 +428,17 @@ export function AnalyticsPage() {
               <h3 className="text-lg font-semibold mb-4">
                 {t("analytics.topPacks")}
               </h3>
-              {topPacks.length === 0 ? (
+              {analytics.topPacks.length === 0 ? (
                 <p className="text-muted-foreground">{t("common.noResults")}</p>
               ) : (
                 <div className="space-y-4">
-                  {topPacks.map((pack, index) => {
-                    const maxRevenue = topPacks[0]?.revenue || 1;
-                    const percent = (pack.revenue / maxRevenue) * 100;
+                  {analytics.topPacks.map((pack, index) => {
                     return (
                       <div key={`${pack.name}-${index}`}>
                         <div className="flex items-center justify-between text-sm mb-1.5">
                           <div>
                             <span className="font-medium">
-                              {getServiceDisplayName(pack)}
+                              {pack.displayName}
                             </span>
                             <span className="text-muted-foreground ms-2">
                               {pack.count} {t("analytics.sold")}
@@ -639,7 +451,7 @@ export function AnalyticsPage() {
                         <div className="h-2 rounded-full bg-muted">
                           <div
                             className="h-2 rounded-full bg-indigo-500 transition-all duration-500"
-                            style={{ width: `${Math.min(percent, 100)}%` }}
+                            style={{ width: `${Math.min(pack.percent, 100)}%` }}
                           />
                         </div>
                       </div>

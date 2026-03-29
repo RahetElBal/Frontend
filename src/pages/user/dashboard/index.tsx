@@ -4,7 +4,7 @@ import { selectCollectionData } from "@/common/utils";
 import { useUser } from "@/hooks/useUser";
 import { Spinner } from "@/components/spinner";
 import { PageHeader } from "@/components/page-header";
-import { useSalonBusinessSummary } from "@/contexts/BusinessSummaryProvider";
+import { useSalonBusinessSummary } from "@/hooks/useSalonBusinessSummary";
 import { TodaysAppointments } from "./components/todays-appointments";
 import { TopServices } from "./components/top-services";
 import { StatsGrid } from "./components/stats-grid";

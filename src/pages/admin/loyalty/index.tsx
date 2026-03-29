@@ -33,12 +33,12 @@ import {
   DialogFooter,
   DialogDescription,
 } from "@/components/ui/dialog";
+import { useModalState } from "@/contexts/ModalsProvider";
 import { cn } from "@/lib/utils";
 import { toast } from "@/lib/toast";
-import { useBusinessSummaryContext } from "@/contexts/BusinessSummaryProvider";
-import { useSalonSettings } from "@/contexts/SalonSettingsProvider";
-import { useSalonServices } from "@/contexts/ServicesProvider";
-import { useLoyaltyContext, useSalonLoyaltyData } from "@/contexts/LoyaltyProvider";
+import { useSalonLoyaltyData } from "@/hooks/useSalonLoyaltyData";
+import { useSalonServices } from "@/hooks/useSalonServices";
+import { useSalonSettings } from "@/hooks/useSalonSettings";
 import { usePost } from "@/hooks/usePost";
 import { useUser } from "@/hooks/useUser";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -64,15 +64,13 @@ export function LoyaltyPage() {
   /* cSpell:ignore Superadmin */
   const { salon, isAdmin, isSuperadmin } = useUser();
   const { formatCurrency } = useLanguage();
-  const { invalidateLoyaltyData } = useLoyaltyContext();
-  const { invalidateBusinessSummary } = useBusinessSummaryContext();
-  const [isRedeemModalOpen, setIsRedeemModalOpen] = useState(false);
+  const redeemModal = useModalState("admin-loyalty-redeem");
   const [redeemClientId, setRedeemClientId] = useState("");
   const [redeemServiceId, setRedeemServiceId] = useState("");
   const salonId = salon?.id;
   const canRedeem = isAdmin || isSuperadmin;
   const shouldLoadData = !!salonId;
-  const shouldLoadServices = !!salonId && canRedeem && isRedeemModalOpen;
+  const shouldLoadServices = !!salonId && canRedeem && redeemModal.isOpen;
   const { settings: salonSettings } = useSalonSettings(salonId, {
     enabled: shouldLoadData,
   });
@@ -164,6 +162,12 @@ export function LoyaltyPage() {
     requiredRedeemPoints,
   );
 
+  const closeRedeemModal = () => {
+    redeemModal.close();
+    setRedeemClientId("");
+    setRedeemServiceId("");
+  };
+
   const { mutate: createRedeemSale, isPending: isRedeeming } = usePost<
     Sale,
     {
@@ -181,16 +185,8 @@ export function LoyaltyPage() {
   >("sales", {
     invalidate: ["sales", "clients"],
     onSuccess: () => {
-      if (salonId) {
-        invalidateBusinessSummary(salonId);
-      }
-      if (salonId) {
-        invalidateLoyaltyData(salonId);
-      }
       toast.success(t("loyalty.redeemSuccess"));
-      setIsRedeemModalOpen(false);
-      setRedeemClientId("");
-      setRedeemServiceId("");
+      closeRedeemModal();
     },
     onError: (error) => toast.error(error.message || t("common.error")),
   });
@@ -246,7 +242,7 @@ export function LoyaltyPage() {
                   setRedeemServiceId(
                     derivedSettings.loyaltyRewardServiceId || "",
                   );
-                  setIsRedeemModalOpen(true);
+                  redeemModal.open();
                 }}
               >
                 <Award className="h-4 w-4" />
@@ -464,7 +460,17 @@ export function LoyaltyPage() {
         </Card>
       </div>
 
-      <Dialog open={isRedeemModalOpen} onOpenChange={setIsRedeemModalOpen}>
+      <Dialog
+        open={redeemModal.isOpen}
+        onOpenChange={(open) => {
+          if (open) {
+            redeemModal.open();
+            return;
+          }
+
+          closeRedeemModal();
+        }}
+      >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>{t("loyalty.redeemPoints")}</DialogTitle>
@@ -545,10 +551,7 @@ export function LoyaltyPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsRedeemModalOpen(false)}
-            >
+            <Button variant="outline" onClick={closeRedeemModal}>
               {t("common.cancel")}
             </Button>
             <Button

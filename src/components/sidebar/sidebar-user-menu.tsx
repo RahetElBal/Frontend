@@ -34,7 +34,6 @@ import {
 import { useAuthentication } from "@/hooks/useAuthentication";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useUser } from "@/hooks/useUser";
-import { useViewMode } from "@/contexts/ViewModeProvider";
 import { ROUTES } from "@/constants/navigation";
 import type { AuthUser } from "@/types/user";
 
@@ -49,7 +48,6 @@ export function SidebarUserMenu({ user, collapsed }: SidebarUserMenuProps) {
   const location = useLocation();
   const { logout } = useAuthentication();
   const { languages, currentLanguage, changeLanguage } = useLanguage();
-  const { setViewMode } = useViewMode();
   const { isSuperadmin, isAdmin } = useUser();
 
   const canSwitchMode = isAdmin && !isSuperadmin;
@@ -84,13 +82,13 @@ export function SidebarUserMenu({ user, collapsed }: SidebarUserMenuProps) {
 
   const handleViewModeChange = (mode: string) => {
     const viewMode = mode as "admin" | "user";
-    setViewMode(viewMode);
 
     if (viewMode === "admin") {
       navigate("/admin");
-    } else {
-      navigate("/dashboard");
+      return;
     }
+
+    navigate("/dashboard");
   };
 
   const menuContent = (

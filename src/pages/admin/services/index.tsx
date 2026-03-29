@@ -1,4 +1,5 @@
 import { Fragment, useEffect, useRef, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Navigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { selectCollectionData } from "@/common/utils";
@@ -37,10 +38,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { toast } from "@/lib/toast";
+import { useModalState } from "@/contexts/ModalsProvider";
 import { useGet } from "@/hooks/useGet";
 import { useTable } from "@/hooks/useTable";
-import { useCategoriesContext } from "@/contexts/CategoriesProvider";
-import { useServicesContext } from "@/contexts/ServicesProvider";
+import { useSalonCategories } from "@/hooks/useSalonCategories";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useUser } from "@/hooks/useUser";
 import { ROUTES } from "@/constants/navigation";
@@ -54,7 +55,6 @@ import {
 import type { Salon } from "@/pages/admin/salon/types";
 import type { Service } from "@/pages/user/services/types";
 import { Badge } from "@/components/badge";
-import { useSalonCategories } from "@/contexts/CategoriesProvider";
 import {
   ADMIN_SERVICES_PAGE_SIZE,
   PACK_CATEGORY,
@@ -86,8 +86,8 @@ export default function AdminServicesPage() {
   const { t } = useTranslation();
   const { formatCurrency } = useLanguage();
   const { isSuperadmin, isAdmin, isLoading, user } = useUser();
-  const { invalidateCategories } = useCategoriesContext();
-  const { invalidateServices } = useServicesContext();
+  const queryClient = useQueryClient();
+  const serviceModal = useModalState("admin-services-form");
   const salonsStaleTime = 1000 * 60 * 10;
   const servicesStaleTime = 1000 * 60 * 5;
   const adminSalonId = !isSuperadmin ? (user?.salon?.id ?? "") : "";
@@ -100,7 +100,6 @@ export default function AdminServicesPage() {
   );
   const [isSavingAll, setIsSavingAll] = useState(false);
   const [isUpdatingId, setIsUpdatingId] = useState<string | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<ServiceModalMode>("create");
   const [editingServiceId, setEditingServiceId] = useState<string | null>(null);
   const [isSavingService, setIsSavingService] = useState(false);
@@ -149,7 +148,7 @@ export default function AdminServicesPage() {
         }
       : undefined,
     options: {
-      enabled: isModalOpen && !!selectedSalonId,
+      enabled: serviceModal.isOpen && !!selectedSalonId,
       staleTime: servicesStaleTime,
       select: (response) =>
         selectCollectionData(response as { data?: Service[] } | Service[]),
@@ -217,11 +216,7 @@ export default function AdminServicesPage() {
         price,
       });
       toast.success(t("admin.services.priceUpdated"));
-      if (selectedSalonId) {
-        invalidateServices(selectedSalonId);
-        invalidateCategories(selectedSalonId);
-      }
-      void servicesTable.refetch();
+      await queryClient.invalidateQueries({ queryKey: ["services"] });
     } catch (error) {
       const message =
         error instanceof Error ? error.message : t("common.error");
@@ -257,11 +252,7 @@ export default function AdminServicesPage() {
         }),
       );
       toast.success(t("admin.services.bulkUpdated"));
-      if (selectedSalonId) {
-        invalidateServices(selectedSalonId);
-        invalidateCategories(selectedSalonId);
-      }
-      void servicesTable.refetch();
+      await queryClient.invalidateQueries({ queryKey: ["services"] });
     } catch (error) {
       const message =
         error instanceof Error ? error.message : t("common.error");
@@ -280,7 +271,7 @@ export default function AdminServicesPage() {
     setEditingServiceId(null);
     setLastNonPackCategory("");
     setFormValues(createDefaultServiceFormValues());
-    setIsModalOpen(true);
+    serviceModal.open();
   };
 
   const openEditModal = (service: Service) => {
@@ -289,7 +280,7 @@ export default function AdminServicesPage() {
     const nextState = getEditServiceFormState(service, services);
     setLastNonPackCategory(nextState.lastNonPackCategory);
     setFormValues(nextState.formValues);
-    setIsModalOpen(true);
+    serviceModal.open();
   };
 
   const handleFormChange = (
@@ -412,12 +403,8 @@ export default function AdminServicesPage() {
         toast.success(t("admin.services.updated"));
       }
 
-      if (selectedSalonId) {
-        invalidateServices(selectedSalonId);
-        invalidateCategories(selectedSalonId);
-      }
-      setIsModalOpen(false);
-      void servicesTable.refetch();
+      await queryClient.invalidateQueries({ queryKey: ["services"] });
+      serviceModal.close();
     } catch (error) {
       const message =
         error instanceof Error ? error.message : t("common.error");
@@ -725,7 +712,7 @@ export default function AdminServicesPage() {
         />
       )}
 
-      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+      <Dialog open={serviceModal.isOpen} onOpenChange={serviceModal.setOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
@@ -960,7 +947,7 @@ export default function AdminServicesPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsModalOpen(false)}>
+            <Button variant="outline" onClick={serviceModal.close}>
               {t("common.cancel")}
             </Button>
             <Button onClick={handleSubmitService} disabled={isSavingService}>

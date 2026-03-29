@@ -1,3 +1,4 @@
+import type { TFunction } from "i18next";
 import type {
   Category,
   Service,
@@ -6,6 +7,10 @@ import type { Product } from "@/pages/user/products/types";
 import type { Appointment } from "@/pages/user/agenda/types";
 import type { Client } from "@/pages/user/clients/types";
 import type { Sale } from "@/pages/user/sales/types";
+import {
+  translateServiceCategory,
+  translateServiceName,
+} from "@/common/service-translations";
 
 export interface AggregatedItem {
   name: string;
@@ -15,7 +20,44 @@ export interface AggregatedItem {
   type?: "service" | "product";
 }
 
+export interface AnalyticsDisplayItem extends AggregatedItem {
+  displayName: string;
+  percent: number;
+}
+
 export type AnalyticsPeriod = "daily" | "weekly" | "monthly";
+
+interface BusinessSummaryLike {
+  grossRevenue: number;
+  netRevenue: number;
+  transactionCount: number;
+  canceledCount: number;
+  refundedCount: number;
+  refundedRevenueImpact: number;
+  updatedAt: number;
+}
+
+export interface AnalyticsViewModel {
+  totalNetRevenue: number;
+  totalGrossRevenue: number;
+  totalTransactions: number;
+  refundedPaymentsCount: number;
+  refundedRevenueAmount: number;
+  averageTicket: number;
+  serviceRevenue: number;
+  totalAppointments: number;
+  newClients: number;
+  marriedClientsCount: number;
+  packRevenue: number;
+  packCount: number;
+  packShare: number;
+  serviceShare: number;
+  hasData: boolean;
+  bestSeller: AnalyticsDisplayItem | null;
+  topCategories: AnalyticsDisplayItem[];
+  topServices: AnalyticsDisplayItem[];
+  topPacks: AnalyticsDisplayItem[];
+}
 
 export const toNumber = (value?: number | null) =>
   typeof value === "number" && Number.isFinite(value) ? value : 0;
@@ -232,3 +274,273 @@ export const getTopItemsBy = (
   metric: "count" | "revenue",
   limit = 5,
 ) => [...items].sort((a, b) => b[metric] - a[metric]).slice(0, limit);
+
+const buildPackItems = (
+  sales: Sale[],
+  packServices: Service[],
+  packServiceIds: Set<string>,
+  t: TFunction,
+) => {
+  if (packServiceIds.size === 0) {
+    return [];
+  }
+
+  const totals: Record<
+    string,
+    { name: string; count: number; revenue: number; itemId: string; type: "service" }
+  > = {};
+
+  sales.forEach((sale) => {
+    const items = Array.isArray(sale.items) ? sale.items : [];
+
+    items.forEach((item) => {
+      if (item.type !== "service") {
+        return;
+      }
+
+      if (!packServiceIds.has(item.itemId)) {
+        return;
+      }
+
+      const quantity = Math.max(1, toNumber(item.quantity));
+      const unitPrice = toNumber(
+        item.unitPrice ??
+          item.price ??
+          (item.total ? item.total / quantity : 0),
+      );
+      const lineTotal = toNumber(item.total ?? unitPrice * quantity);
+
+      if (!totals[item.itemId]) {
+        const packName =
+          item.name ||
+          packServices.find((service) => service.id === item.itemId)?.name ||
+          t("services.pack");
+
+        totals[item.itemId] = {
+          name: packName,
+          count: 0,
+          revenue: 0,
+          itemId: item.itemId,
+          type: "service",
+        };
+      }
+
+      totals[item.itemId].count += quantity;
+      totals[item.itemId].revenue += lineTotal;
+    });
+  });
+
+  return Object.values(totals);
+};
+
+const getDisplayName = (
+  item: AggregatedItem,
+  t: TFunction,
+  serviceLookup: Map<string, Service>,
+) => {
+  if (item.type !== "service" || !item.itemId) {
+    return item.name;
+  }
+
+  const service = serviceLookup.get(item.itemId);
+
+  if (!service) {
+    return item.name;
+  }
+
+  return translateServiceName(t, service);
+};
+
+const toDisplayItems = (
+  items: AggregatedItem[],
+  metric: "count" | "revenue",
+  t: TFunction,
+  serviceLookup: Map<string, Service>,
+) => {
+  const maxValue = items[0]?.[metric] || 1;
+
+  return items.map((item) => {
+    const percent = (item[metric] / maxValue) * 100;
+
+    return {
+      ...item,
+      displayName: getDisplayName(item, t, serviceLookup),
+      percent,
+    };
+  });
+};
+
+export const buildAnalyticsViewModel = ({
+  sales,
+  appointments,
+  clients,
+  services,
+  businessSummary,
+  period,
+  t,
+}: {
+  sales: Sale[];
+  appointments: Appointment[];
+  clients: Client[];
+  services: Service[];
+  businessSummary: BusinessSummaryLike;
+  period: AnalyticsPeriod;
+  t: TFunction;
+}): AnalyticsViewModel => {
+  const { start, end } = getPeriodRange(period);
+  const serviceLookup = new Map(services.map((service) => [service.id, service]));
+  const packServices = services.filter((service) => service.isPack);
+  const packServiceIds = new Set(packServices.map((service) => service.id));
+  const salesInRange = filterSalesByRange(sales, start, end);
+  const completedSalesInRange = salesInRange.filter(
+    (sale) => sale.status === "completed",
+  );
+  const appointmentsInRange = filterAppointmentsByRange(appointments, start, end);
+  const clientsInRange = filterClientsByRange(clients, start, end);
+  const marriedClientsCount = clientsInRange.filter(
+    (client) => client.isMarried,
+  ).length;
+  const packItems = buildPackItems(
+    completedSalesInRange,
+    packServices,
+    packServiceIds,
+    t,
+  );
+
+  const periodRevenue = salesInRange.reduce((sum, sale) => {
+    if (sale.status === "completed" || sale.status === "refunded") {
+      return sum + toNumber(sale.total);
+    }
+
+    return sum;
+  }, 0);
+  const periodCanceledRevenueImpact = salesInRange.reduce((sum, sale) => {
+    if (sale.status === "cancelled") {
+      return sum - Math.abs(toNumber(sale.total));
+    }
+
+    return sum;
+  }, 0);
+  const periodRefundedRevenueImpact = salesInRange.reduce((sum, sale) => {
+    if (sale.status === "refunded") {
+      return sum - Math.abs(toNumber(sale.total));
+    }
+
+    return sum;
+  }, 0);
+  const periodNetRevenue = Math.max(
+    0,
+    periodRevenue + periodCanceledRevenueImpact + periodRefundedRevenueImpact,
+  );
+  const periodTransactions = salesInRange.filter(
+    (sale) => sale.status === "completed",
+  ).length;
+  const periodRefundedCount = salesInRange.filter(
+    (sale) => sale.status === "refunded",
+  ).length;
+  const periodRefundedAmount = Math.abs(periodRefundedRevenueImpact);
+  const hasBusinessSummary =
+    businessSummary.updatedAt > 0 ||
+    businessSummary.grossRevenue !== 0 ||
+    businessSummary.netRevenue !== 0 ||
+    businessSummary.transactionCount !== 0 ||
+    businessSummary.canceledCount !== 0 ||
+    businessSummary.refundedCount !== 0;
+  const totalNetRevenue = hasBusinessSummary
+    ? businessSummary.netRevenue
+    : periodNetRevenue;
+  const totalGrossRevenue = hasBusinessSummary
+    ? businessSummary.grossRevenue
+    : periodRevenue;
+  const totalTransactions = hasBusinessSummary
+    ? businessSummary.transactionCount
+    : periodTransactions;
+  const refundedPaymentsCount = hasBusinessSummary
+    ? businessSummary.refundedCount
+    : periodRefundedCount;
+  const refundedRevenueAmount = Math.abs(
+    hasBusinessSummary
+      ? businessSummary.refundedRevenueImpact
+      : periodRefundedAmount,
+  );
+  const averageTicket =
+    totalTransactions > 0 ? totalNetRevenue / totalTransactions : 0;
+  const allServiceItems = aggregateSalesItems(completedSalesInRange, "service");
+  const topServices = toDisplayItems(
+    getTopItemsBy(allServiceItems, "count", 5),
+    "revenue",
+    t,
+    serviceLookup,
+  );
+  const topCategories = getTopItemsBy(
+    aggregateCategorySales(
+      completedSalesInRange,
+      services,
+      [],
+      t("common.other"),
+      "service",
+    ).map((item) => ({
+      ...item,
+      displayName: translateServiceCategory(t, item.name),
+    })),
+    "revenue",
+    5,
+  ).map((item, _index, items) => {
+    const totalRevenue = items.reduce((sum, currentItem) => {
+      return sum + currentItem.revenue;
+    }, 0);
+
+    return {
+      ...item,
+      displayName: translateServiceCategory(t, item.name),
+      percent: totalRevenue > 0 ? (item.revenue / totalRevenue) * 100 : 0,
+    };
+  });
+  const topPacks = toDisplayItems(
+    getTopItemsBy(packItems, "revenue", 5),
+    "revenue",
+    t,
+    serviceLookup,
+  );
+  const safeServiceRevenue = allServiceItems.reduce((sum, item) => {
+    return sum + item.revenue;
+  }, 0);
+  const packRevenue = packItems.reduce((sum, item) => {
+    return sum + item.revenue;
+  }, 0);
+  const packCount = packItems.reduce((sum, item) => {
+    return sum + item.count;
+  }, 0);
+  const bestSellerRaw = getTopItemsBy(allServiceItems, "count", 1)[0];
+
+  return {
+    totalNetRevenue,
+    totalGrossRevenue,
+    totalTransactions,
+    refundedPaymentsCount,
+    refundedRevenueAmount,
+    averageTicket,
+    serviceRevenue: safeServiceRevenue,
+    totalAppointments: appointmentsInRange.length,
+    newClients: clientsInRange.length,
+    marriedClientsCount,
+    packRevenue,
+    packCount,
+    packShare: safeServiceRevenue > 0 ? (packRevenue / safeServiceRevenue) * 100 : 0,
+    serviceShare: safeServiceRevenue > 0 ? 100 : 0,
+    hasData:
+      completedSalesInRange.length > 0 ||
+      appointmentsInRange.length > 0 ||
+      clientsInRange.length > 0,
+    bestSeller: bestSellerRaw
+      ? {
+          ...bestSellerRaw,
+          displayName: getDisplayName(bestSellerRaw, t, serviceLookup),
+          percent: 100,
+        }
+      : null,
+    topCategories,
+    topServices,
+    topPacks,
+  };
+};

@@ -2,7 +2,7 @@ import { useTranslation } from "react-i18next";
 import { selectCollectionData } from "@/common/utils";
 import { useUser } from "@/hooks/useUser";
 import { useGet } from "@/hooks/useGet";
-import { useSalonBusinessSummary } from "@/contexts/BusinessSummaryProvider";
+import { useSalonBusinessSummary } from "@/hooks/useSalonBusinessSummary";
 import { Spinner } from "@/components/spinner";
 import { PageHeader } from "@/components/page-header";
 import type { Salon } from "@/pages/admin/salon/types";

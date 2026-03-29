@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import {
@@ -47,11 +47,14 @@ import { usePost } from "@/hooks/usePost";
 import { usePostAction } from "@/hooks/usePostAction";
 import { useGet } from "@/hooks/useGet";
 import { useTable } from "@/hooks/useTable";
-import {
-  useCategoriesContext,
-  useSalonCategories,
-} from "@/contexts/CategoriesProvider";
+import { useSalonCategories } from "@/hooks/useSalonCategories";
 import { getProductColumns } from "./components/list/columns";
+import {
+  getProductCategoryValue,
+  getSelectedProductById,
+  getStockAlertCounts,
+  PRODUCT_FORM_DEFAULTS,
+} from "./utils";
 
 // Modal state type
 type ProductModalState = {
@@ -80,7 +83,6 @@ export function ProductsPage() {
   const { t } = useTranslation();
   const { formatCurrency } = useLanguage();
   const { user } = useUser();
-  const { invalidateCategories } = useCategoriesContext();
 
   // Unified modal state
   const [modalState, setModalState] = useState<ProductModalState>(null);
@@ -111,13 +113,9 @@ export function ProductsPage() {
     options: { enabled: !!salonId, staleTime: 1000 * 60 * 2 },
   });
 
-  // Helper functions
-  const getSelectedProduct = (): Product | null => {
-    if (!modalState || modalState.productId === "create") return null;
-    return products.find((p) => p.id === modalState.productId) || null;
-  };
-
-  const selectedProduct = getSelectedProduct();
+  const selectedProduct = useMemo(() => {
+    return getSelectedProductById(products, modalState?.productId);
+  }, [modalState?.productId, products]);
   const isCreateMode = modalState?.productId === "create";
   const isEditMode = modalState?.mode === "edit" && !isCreateMode;
   const isViewMode = modalState?.mode === "view";
@@ -126,38 +124,16 @@ export function ProductsPage() {
   // Form setup
   const form = useForm<ProductFormData>({
     schema: productFormSchema,
-    defaultValues: {
-      name: "",
-      reference: "",
-      description: "",
-      price: 0,
-      stock: 0,
-      alertThreshold: 5,
-      category: "",
-      brand: "",
-      isActive: true,
-    },
+    defaultValues: PRODUCT_FORM_DEFAULTS,
   });
 
   // Reset form when modal state changes
   useEffect(() => {
     if (isCreateMode) {
-      form.reset({
-        name: "",
-        reference: "",
-        description: "",
-        price: 0,
-        stock: 0,
-        alertThreshold: 5,
-        category: "",
-        brand: "",
-        isActive: true,
-      });
-    } else if (selectedProduct && isEditMode) {
-      const categoryValue =
-        typeof selectedProduct.category === "string"
-          ? selectedProduct.category
-          : selectedProduct.category?.name || "";
+      form.reset(PRODUCT_FORM_DEFAULTS);
+    }
+
+    if (selectedProduct && isEditMode) {
       form.reset({
         name: selectedProduct.name,
         reference: selectedProduct.reference || "",
@@ -165,7 +141,7 @@ export function ProductsPage() {
         price: selectedProduct.price,
         stock: selectedProduct.stock,
         alertThreshold: selectedProduct.minStock || 5,
-        category: categoryValue,
+        category: getProductCategoryValue(selectedProduct),
         brand: selectedProduct.brand || "",
         isActive: selectedProduct.isActive ?? true,
       });
@@ -181,9 +157,6 @@ export function ProductsPage() {
     invalidate: ["products"],
     onSuccess: () => {
       toast.success(t("products.addProduct") + " - " + t("common.success"));
-      if (salonId) {
-        invalidateCategories(salonId);
-      }
       setModalState(null);
     },
     onError: (error) => {
@@ -200,9 +173,6 @@ export function ProductsPage() {
     invalidate: ["products"],
     onSuccess: () => {
       toast.success(t("common.edit") + " - " + t("common.success"));
-      if (salonId) {
-        invalidateCategories(salonId);
-      }
       setModalState(null);
     },
     onError: (error) => {
@@ -215,14 +185,11 @@ export function ProductsPage() {
     `products/${selectedProduct?.id}`,
     {
       method: "DELETE",
-    invalidate: ["products"],
-    onSuccess: () => {
-      toast.success(t("common.delete") + " - " + t("common.success"));
-      if (salonId) {
-        invalidateCategories(salonId);
-      }
-      setModalState(null);
-    },
+      invalidate: ["products"],
+      onSuccess: () => {
+        toast.success(t("common.delete") + " - " + t("common.success"));
+        setModalState(null);
+      },
       onError: (error) => {
         toast.error(error.message || t("common.error"));
       },
@@ -241,59 +208,68 @@ export function ProductsPage() {
   // Stock adjustment state
   const [stockAdjustment, setStockAdjustment] = useState<number>(0);
 
-  const handleStockUpdate = (type: "add" | "remove") => {
-    if (stockAdjustment <= 0) {
-      toast.error(t("products.enterQuantity"));
-      return;
-    }
-    updateStock({ quantity: stockAdjustment, type });
-    setStockAdjustment(0);
-  };
+  const handleStockUpdate = useCallback(
+    (type: "add" | "remove") => {
+      if (stockAdjustment <= 0) {
+        toast.error(t("products.enterQuantity"));
+        return;
+      }
+
+      updateStock({ quantity: stockAdjustment, type });
+      setStockAdjustment(0);
+    },
+    [stockAdjustment, t, updateStock],
+  );
 
   const showTableLoading =
     (productsTable.isLoading || productsTable.isFetching) &&
     products.length === 0;
-
-  // Use the dedicated low-stock endpoint for counts
-  const lowStockCount = lowStockProducts.filter((p) => p.stock > 0).length;
-  const outOfStockCount = lowStockProducts.filter((p) => p.stock === 0).length;
+  const { lowStockCount, outOfStockCount } = useMemo(() => {
+    return getStockAlertCounts(lowStockProducts);
+  }, [lowStockProducts]);
 
   // Handlers
-  const handleView = (product: Product) => {
+  const handleView = useCallback((product: Product) => {
     setModalState({ productId: product.id, mode: "view" });
-  };
+  }, []);
 
-  const handleEdit = (product: Product) => {
+  const handleEdit = useCallback((product: Product) => {
     setModalState({ productId: product.id, mode: "edit" });
-  };
+  }, []);
 
-  const handleDelete = (product: Product) => {
+  const handleDelete = useCallback((product: Product) => {
     setModalState({ productId: product.id, mode: "delete" });
-  };
+  }, []);
 
-  const handleSubmit = (data: ProductFormData) => {
-    if (!salonId) {
-      toast.error(t("common.error"));
-      return;
-    }
-    
-    if (isEditMode) {
-      updateProduct(data);
-    } else {
+  const handleSubmit = useCallback(
+    (data: ProductFormData) => {
+      if (!salonId) {
+        toast.error(t("common.error"));
+        return;
+      }
+
+      if (isEditMode) {
+        updateProduct(data);
+        return;
+      }
+
       createProduct({
         ...data,
         salonId,
       });
-    }
-  };
+    },
+    [createProduct, isEditMode, salonId, t, updateProduct],
+  );
 
-  const columns = getProductColumns({
-    t,
-    formatCurrency,
-    onView: handleView,
-    onEdit: handleEdit,
-    onDelete: handleDelete,
-  });
+  const columns = useMemo(() => {
+    return getProductColumns({
+      t,
+      formatCurrency,
+      onView: handleView,
+      onEdit: handleEdit,
+      onDelete: handleDelete,
+    });
+  }, [formatCurrency, handleDelete, handleEdit, handleView, t]);
 
   return (
     <div className="space-y-6">

@@ -20,11 +20,10 @@ import {
 } from "@/components/ui/select";
 import { toast } from "@/lib/toast";
 import { useGet } from "@/hooks/useGet";
-import { useBusinessSummaryContext } from "@/contexts/BusinessSummaryProvider";
 import { usePost } from "@/hooks/usePost";
-import { useSalonSettings } from "@/contexts/SalonSettingsProvider";
-import { useSalonServices } from "@/contexts/ServicesProvider";
-import { useSalonStaff } from "@/contexts/StaffProvider";
+import { useSalonSettings } from "@/hooks/useSalonSettings";
+import { useSalonServices } from "@/hooks/useSalonServices";
+import { useSalonStaff } from "@/hooks/useSalonStaff";
 import { useForm } from "@/hooks/useForm";
 import { useUser } from "@/hooks/useUser";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -82,7 +81,6 @@ export function AgendaPage() {
   const { user, isAdmin, isSuperadmin } = useUser();
   const { formatCurrency } = useLanguage();
   const queryClient = useQueryClient();
-  const { invalidateBusinessSummary } = useBusinessSummaryContext();
   const canRecordPayment = isAdmin || isSuperadmin;
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [modalState, setModalStateState] = useState<AppointmentModalState>(null);
@@ -1065,9 +1063,6 @@ export function AgendaPage() {
         toast.success(
           t("agenda.paymentRecorded") + " - " + t("common.success"),
         );
-        if (variables?.salonId) {
-          invalidateBusinessSummary(variables.salonId);
-        }
         queryClient.setQueryData<Appointment[] | undefined>(
           appointmentsQueryKey,
           (current) => {

@@ -35,6 +35,9 @@ interface UseLanguageReturn {
   formatCurrency: (value: number) => string;
 }
 
+const supportedLanguages = Object.values(SUPPORTED_LANGUAGES);
+const noDecimalCurrencies = ['DZD', 'MAD', 'TND'];
+
 export function useLanguage(): UseLanguageReturn {
   const { t, i18n } = useTranslation();
   const { direction, isRTL, isLTR } = useDirection();
@@ -44,51 +47,59 @@ export function useLanguage(): UseLanguageReturn {
   // Initialize currency from localStorage or language default
   const [currencyCode, setCurrencyCode] = useState<string>(() => {
     const stored = localStorage.getItem(CURRENCY_STORAGE_KEY);
-    if (stored && AVAILABLE_CURRENCIES.find(c => c.code === stored)) {
+    if (stored && AVAILABLE_CURRENCIES.find((currency) => currency.code === stored)) {
       return stored;
     }
+
     return LANGUAGE_CURRENCIES[currentLanguage]?.code || 'EUR';
   });
 
-  const languages: LanguageOption[] = Object.values(SUPPORTED_LANGUAGES).map((code) => ({
-    code,
-    name: LANGUAGE_NAMES[code],
-    nativeName: t(`languages.${code}`),
-    flag: LANGUAGE_FLAGS[code],
-  }));
+  const languages = useMemo<LanguageOption[]>(() => {
+    return supportedLanguages.map((code) => ({
+      code,
+      name: LANGUAGE_NAMES[code],
+      nativeName: t(`languages.${code}`),
+      flag: LANGUAGE_FLAGS[code],
+    }));
+  }, [t]);
 
   const changeLanguage = useCallback(
     (language: SupportedLanguage) => {
-      if (Object.values(SUPPORTED_LANGUAGES).includes(language)) {
+      if (supportedLanguages.includes(language)) {
         void loadAndChangeLanguage(language);
       }
     },
-    [i18n]
+    []
   );
 
-  // Change currency
   const changeCurrency = useCallback((code: string) => {
-    const found = AVAILABLE_CURRENCIES.find(c => c.code === code);
+    const found = AVAILABLE_CURRENCIES.find((currency) => currency.code === code);
     if (found) {
       setCurrencyCode(code);
       localStorage.setItem(CURRENCY_STORAGE_KEY, code);
     }
   }, []);
 
-  // Get currency config
   const currency = useMemo(() => {
-    return AVAILABLE_CURRENCIES.find(c => c.code === currencyCode) || LANGUAGE_CURRENCIES[currentLanguage] || AVAILABLE_CURRENCIES[0];
+    const matchedCurrency = AVAILABLE_CURRENCIES.find(
+      (availableCurrency) => availableCurrency.code === currencyCode
+    );
+    if (matchedCurrency) {
+      return matchedCurrency;
+    }
+
+    return LANGUAGE_CURRENCIES[currentLanguage] || AVAILABLE_CURRENCIES[0];
   }, [currencyCode, currentLanguage]);
 
-  // Format currency based on selected currency
   const formatCurrency = useCallback(
     (value: number): string => {
       const safeValue = Number.isFinite(value) ? value : 0;
       try {
-        // Use no decimal places for DZD, MAD, TND
-        const noDecimalCurrencies = ['DZD', 'MAD', 'TND'];
-        const decimals = noDecimalCurrencies.includes(currency.code) ? 0 : 2;
-        
+        let decimals = 2;
+        if (noDecimalCurrencies.includes(currency.code)) {
+          decimals = 0;
+        }
+
         return new Intl.NumberFormat(currency.locale, {
           style: 'currency',
           currency: currency.code,
@@ -96,7 +107,6 @@ export function useLanguage(): UseLanguageReturn {
           maximumFractionDigits: decimals,
         }).format(safeValue);
       } catch {
-        // Fallback if locale not supported
         return `${currency.symbol}${safeValue.toFixed(2)}`;
       }
     },
