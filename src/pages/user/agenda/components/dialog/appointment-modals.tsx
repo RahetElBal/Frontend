@@ -494,6 +494,12 @@ export function AppointmentModals({
     bookingSlotMinutes,
   ]);
   const isClosedDay = !workingHoursForDate.isOpen;
+  const selectedStartMinutes = selectedStartTime
+    ? timeToMinutes(selectedStartTime)
+    : 0;
+  const cannotScheduleInPast =
+    !!selectedStartTime &&
+    (isPastDate || (isToday && selectedStartMinutes < currentMinutes));
 
   const conflict = useMemo(() => {
     if (!derived?.isEditMode) return null;
@@ -522,6 +528,8 @@ export function AppointmentModals({
   ]);
 
   const normalizedWalkInEmail = (walkInEmail || "").trim().toLowerCase();
+  const walkInEmailErrorMessage = form.formState.errors.walkInEmail?.message;
+  const startTimeErrorMessage = form.formState.errors.startTime?.message;
   const emailConflict = useMemo(() => {
     if (!walkInEnabled || !normalizedWalkInEmail) return null;
     return (
@@ -534,35 +542,37 @@ export function AppointmentModals({
 
   useEffect(() => {
     if (!walkInEnabled) {
-      if (
-        form.formState.errors.walkInEmail?.message ===
-        "agenda.walkInEmailExists"
-      ) {
+      if (walkInEmailErrorMessage === "agenda.walkInEmailExists") {
         form.clearErrors("walkInEmail");
       }
       return;
     }
-    if (emailConflict) {
+
+    if (emailConflict && walkInEmailErrorMessage !== "agenda.walkInEmailExists") {
       form.setError("walkInEmail", {
         type: "custom",
         message: "agenda.walkInEmailExists",
       });
-    } else if (
-      form.formState.errors.walkInEmail?.message === "agenda.walkInEmailExists"
-    ) {
+      return;
+    }
+
+    if (!emailConflict && walkInEmailErrorMessage === "agenda.walkInEmailExists") {
       form.clearErrors("walkInEmail");
     }
-  }, [
-    emailConflict,
-    walkInEnabled,
-    form,
-    form.formState.errors.walkInEmail?.message,
-  ]);
+  }, [emailConflict, walkInEnabled, form, walkInEmailErrorMessage]);
+
+  useEffect(() => {
+    if (
+      !cannotScheduleInPast &&
+      startTimeErrorMessage === "agenda.pastAppointmentNotAllowed"
+    ) {
+      form.clearErrors("startTime");
+    }
+  }, [cannotScheduleInPast, form, startTimeErrorMessage]);
 
   // Reset form when modal state changes
   useEffect(() => {
     if (!modalState) {
-      setIsCancelConfirmOpen(false);
       return;
     }
 
@@ -626,6 +636,15 @@ export function AppointmentModals({
     if (isReferenceDataLoading) {
       return;
     }
+
+    if (cannotScheduleInPast) {
+      form.setError("startTime", {
+        type: "custom",
+        message: "agenda.pastAppointmentNotAllowed",
+      });
+      return;
+    }
+
     if (data.walkInEnabled && emailConflict) {
       form.setError("walkInEmail", {
         type: "custom",
@@ -1167,6 +1186,13 @@ export function AppointmentModals({
 
   // EDIT/CREATE MODE
   if (derived.isEditMode) {
+    const cannotSaveAppointment =
+      isPending ||
+      isReferenceDataLoading ||
+      cannotScheduleInPast ||
+      isClosedDay ||
+      !!conflict;
+
     return (
       <Dialog open={!!modalState} onOpenChange={handleClose}>
         <DialogContent className="sm:max-w-125">
@@ -1176,12 +1202,15 @@ export function AppointmentModals({
                 ? t("agenda.newAppointment")
                 : t("common.edit")}
             </DialogTitle>
-            {!derived.isCreateMode && selectedAppointment && (
-              <DialogDescription>
-                {selectedAppointment.client?.firstName}{" "}
-                {selectedAppointment.client?.lastName}
-              </DialogDescription>
-            )}
+            <DialogDescription
+              className={derived.isCreateMode ? "sr-only" : undefined}
+            >
+              {derived.isCreateMode
+                ? t("agenda.newAppointment")
+                : `${selectedAppointment?.client?.firstName || ""} ${
+                    selectedAppointment?.client?.lastName || ""
+                  }`.trim()}
+            </DialogDescription>
           </DialogHeader>
           <form onSubmit={form.handleSubmit(handleFormSubmit)}>
             <div className="space-y-4 py-4">
@@ -1545,7 +1574,13 @@ export function AppointmentModals({
                   <Label htmlFor="startTime">{t("fields.time")} *</Label>
                   <Select
                     value={form.watch("startTime")}
-                    onValueChange={(value) => form.setValue("startTime", value)}
+                    onValueChange={(value) =>
+                      form.setValue("startTime", value, {
+                        shouldDirty: true,
+                        shouldTouch: true,
+                        shouldValidate: true,
+                      })
+                    }
                     disabled={isClosedDay || availableSlots.length === 0}
                   >
                     <SelectTrigger className="bg-white text-black">
@@ -1585,12 +1620,19 @@ export function AppointmentModals({
                       )}
                     </SelectContent>
                   </Select>
+                  <FormErrorMessage message={getErrorMessage("startTime")} />
                 </div>
               </div>
 
               {isClosedDay && (
                 <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
                   {t("agenda.closedDay")}
+                </div>
+              )}
+
+              {cannotScheduleInPast && (
+                <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                  {t("agenda.pastAppointmentNotAllowed")}
                 </div>
               )}
 
@@ -1624,10 +1666,7 @@ export function AppointmentModals({
               <Button type="button" variant="outline" onClick={handleClose}>
                 {t("common.cancel")}
               </Button>
-              <Button
-                type="submit"
-                disabled={isPending || isReferenceDataLoading}
-              >
+              <Button type="submit" disabled={cannotSaveAppointment}>
                 {isPending || isReferenceDataLoading
                   ? t("common.loading")
                   : t("common.save")}
