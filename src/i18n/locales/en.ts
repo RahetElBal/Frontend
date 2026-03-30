@@ -1374,7 +1374,7 @@ export const en = {
     language: "Language",
     languageDescription: "Choose your preferred language",
     currency: "Currency",
-    currencyDescription: "Currency is set automatically based on language",
+    currencyDescription: "Choose your preferred currency",
     appearance: "Appearance",
     appearanceDescription: "Customize the app appearance",
     light: "Light",

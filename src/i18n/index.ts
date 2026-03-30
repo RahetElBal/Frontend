@@ -37,18 +37,13 @@ const localeLoaders: Record<
   },
 };
 
-// Get saved or browser language
+// Get saved language or fall back to the app default.
 const getSavedLanguage = (): SupportedLanguage => {
   const saved = localStorage.getItem(LANGUAGE_STORAGE_KEY) as SupportedLanguage | null;
   if (saved && Object.values(SUPPORTED_LANGUAGES).includes(saved)) {
     return saved;
   }
-  
-  const browserLang = navigator.language.split('-')[0] as SupportedLanguage;
-  if (Object.values(SUPPORTED_LANGUAGES).includes(browserLang)) {
-    return browserLang;
-  }
-  
+
   return DEFAULT_LANGUAGE;
 };
 

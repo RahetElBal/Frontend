@@ -25,13 +25,15 @@ export const LANGUAGE_FLAGS: Record<SupportedLanguage, string> = {
   ar: '🇩🇿',
 };
 
-export const DEFAULT_LANGUAGE: SupportedLanguage = SUPPORTED_LANGUAGES.EN;
+export const DEFAULT_LANGUAGE: SupportedLanguage = SUPPORTED_LANGUAGES.FR;
 
 // ============================================
 // CURRENCY CONFIGURATION
 // ============================================
 
 export const CURRENCY_STORAGE_KEY = 'currency';
+export const CURRENCY_PREFERENCE_STORAGE_KEY = 'currency_preference_set';
+export const DEFAULT_CURRENCY_CODE = 'DZD';
 
 export interface CurrencyConfig {
   code: string;
@@ -101,10 +103,3 @@ export const AVAILABLE_CURRENCIES: CurrencyConfig[] = [
   },
 ];
 
-// Default currency per language (for initial setting)
-export const LANGUAGE_CURRENCIES: Record<SupportedLanguage, CurrencyConfig> = {
-  en: AVAILABLE_CURRENCIES.find(c => c.code === 'USD')!,
-  fr: AVAILABLE_CURRENCIES.find(c => c.code === 'EUR')!,
-  es: AVAILABLE_CURRENCIES.find(c => c.code === 'EUR')!,
-  ar: AVAILABLE_CURRENCIES.find(c => c.code === 'DZD')!,
-};

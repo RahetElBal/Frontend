@@ -821,8 +821,7 @@ export const fr = {
     language: "Langue",
     languageDescription: "Choisir votre langue préférée",
     currency: "Devise",
-    currencyDescription:
-      "La devise est définie automatiquement selon la langue",
+    currencyDescription: "Choisir votre devise préférée",
     appearance: "Apparence",
     appearanceDescription: "Personnaliser l'apparence de l'application",
     light: "Clair",

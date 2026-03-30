@@ -761,7 +761,7 @@ export const ar = {
     language: "اللغة",
     languageDescription: "اختر لغتك المفضلة",
     currency: "العملة",
-    currencyDescription: "يتم تحديد العملة تلقائياً حسب اللغة",
+    currencyDescription: "اختر عملتك المفضلة",
     appearance: "المظهر",
     appearanceDescription: "تخصيص مظهر التطبيق",
     light: "فاتح",

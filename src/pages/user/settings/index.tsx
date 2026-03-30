@@ -51,7 +51,6 @@ export function SettingsPage() {
     currency,
     availableCurrencies,
     changeCurrency,
-    isCurrencyLocked,
   } = useLanguage();
 
   // Unified modal state
@@ -175,7 +174,6 @@ export function SettingsPage() {
             <Select
               value={currency.code}
               onValueChange={(value) => changeCurrency(value)}
-              disabled={isCurrencyLocked}
             >
               <SelectTrigger className="w-50">
                 <SelectValue>

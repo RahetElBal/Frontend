@@ -747,8 +747,7 @@ export const es = {
     language: "Idioma",
     languageDescription: "Elegir tu idioma preferido",
     currency: "Moneda",
-    currencyDescription:
-      "La moneda se establece automáticamente según el idioma",
+    currencyDescription: "Elegir tu moneda preferida",
     appearance: "Apariencia",
     appearanceDescription: "Personalizar la apariencia de la app",
     light: "Claro",
