@@ -74,21 +74,16 @@ export const getClientColumns = ({
       key: "visitCount",
       header: t("fields.visits"),
       sortable: true,
-      render: (client) =>
-        isWalkInClient(client) ? (
-          <span className="text-muted-foreground">-</span>
-        ) : (
-          <span className="text-muted-foreground">{client.visitCount}</span>
-        ),
+      render: (client) => (
+        <span className="text-muted-foreground">{client.visitCount}</span>
+      ),
     },
     {
       key: "lastVisit",
       header: t("fields.lastVisit"),
       sortable: true,
       render: (client) =>
-        isWalkInClient(client) ? (
-          <span className="text-muted-foreground">-</span>
-        ) : client.lastVisit ? (
+        client.lastVisit ? (
           formatDate(client.lastVisit)
         ) : (
           <span className="text-muted-foreground">-</span>
