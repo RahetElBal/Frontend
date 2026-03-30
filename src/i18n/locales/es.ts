@@ -778,6 +778,10 @@ export const es = {
         title: "Nueva cita",
         message: "{{client}} - {{service}} el {{date}} a las {{time}}",
       },
+      appointmentConfirmationPending: {
+        title: "Confirmacion pendiente",
+        message: "{{client}} - {{service}} el {{date}} a las {{time}} espera confirmacion",
+      },
       appointmentCancelled: {
         title: "Cita cancelada",
         message: "{{client}} - {{service}} el {{date}} a las {{time}}",

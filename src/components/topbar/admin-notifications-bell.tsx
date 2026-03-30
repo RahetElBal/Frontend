@@ -405,6 +405,16 @@ export function AdminNotificationsBell() {
             time,
           }),
         };
+      case AdminNotificationType.APPOINTMENT_CONFIRMATION_PENDING:
+        return {
+          title: t("notifications.types.appointmentConfirmationPending.title"),
+          message: t("notifications.types.appointmentConfirmationPending.message", {
+            client: clientName,
+            service: serviceName,
+            date,
+            time,
+          }),
+        };
       case AdminNotificationType.APPOINTMENT_CANCELLED:
         return {
           title: t("notifications.types.appointmentCancelled.title"),

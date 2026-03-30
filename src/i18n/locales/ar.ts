@@ -792,6 +792,10 @@ export const ar = {
         title: "موعد جديد",
         message: "{{client}} - {{service}} في {{date}} على {{time}}",
       },
+      appointmentConfirmationPending: {
+        title: "تأكيد الموعد مطلوب",
+        message: "{{client}} - {{service}} في {{date}} على {{time}} بانتظار التأكيد",
+      },
       appointmentCancelled: {
         title: "تم إلغاء الموعد",
         message: "{{client}} - {{service}} في {{date}} على {{time}}",

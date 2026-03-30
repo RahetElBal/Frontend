@@ -783,8 +783,7 @@ export function AppointmentModals({
       selectedAppointment?.status === AppointmentStatus.PENDING;
     const canMarkInProgress =
       displayStatus !== AppointmentStatus.OVERDUE &&
-      (selectedAppointment?.status === AppointmentStatus.PENDING ||
-        selectedAppointment?.status === AppointmentStatus.CONFIRMED);
+      selectedAppointment?.status === AppointmentStatus.CONFIRMED;
     const isOverdueUnpaidAppointment =
       displayStatus === AppointmentStatus.OVERDUE && !selectedAppointment?.paid;
     const canMarkFinished =

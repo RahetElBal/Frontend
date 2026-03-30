@@ -481,6 +481,10 @@ export interface TranslationKeys {
         title: string;
         message: string;
       };
+      appointmentConfirmationPending: {
+        title: string;
+        message: string;
+      };
       appointmentCancelled: {
         title: string;
         message: string;

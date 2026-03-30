@@ -1,5 +1,6 @@
 export const AdminNotificationType = {
   APPOINTMENT_CREATED: "appointment.created",
+  APPOINTMENT_CONFIRMATION_PENDING: "appointment.confirmation.pending",
   APPOINTMENT_CANCELLED: "appointment.cancelled",
   APPOINTMENT_REMINDER: "appointment.reminder",
   APPOINTMENT_ASSIGNED: "appointment.assigned",

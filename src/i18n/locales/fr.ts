@@ -855,6 +855,10 @@ export const fr = {
         title: "Nouveau rendez-vous",
         message: "{{client}} - {{service}} le {{date}} à {{time}}",
       },
+      appointmentConfirmationPending: {
+        title: "Confirmation en attente",
+        message: "{{client}} - {{service}} le {{date}} à {{time}} attend une confirmation",
+      },
       appointmentCancelled: {
         title: "Rendez-vous annulé",
         message: "{{client}} - {{service}} le {{date}} à {{time}}",
