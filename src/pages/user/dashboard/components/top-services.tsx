@@ -2,12 +2,13 @@ import { useTranslation } from "react-i18next";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import type { TopService } from "../types";
-import { formatCurrency } from "@/common/utils";
+import { useLanguage } from "@/hooks/useLanguage";
 
 const topServices: TopService[] = [];
 
 export function TopServices() {
   const { t } = useTranslation();
+  const { formatCurrency } = useLanguage();
 
   return (
     <Card className="p-6">

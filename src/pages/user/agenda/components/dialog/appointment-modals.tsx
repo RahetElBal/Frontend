@@ -236,6 +236,7 @@ export function AppointmentModals({
   const { formatCurrency } = useLanguage();
   const { user, salon, isAdmin, isSuperadmin } = useUser();
   const canViewPayment = isAdmin || isSuperadmin;
+  const [isCancelConfirmOpen, setIsCancelConfirmOpen] = useState(false);
   const [redeemLoyalty, setRedeemLoyalty] = useState(false);
   const getErrorMessage = (
     name: keyof AppointmentFormData,
@@ -561,6 +562,7 @@ export function AppointmentModals({
   // Reset form when modal state changes
   useEffect(() => {
     if (!modalState) {
+      setIsCancelConfirmOpen(false);
       return;
     }
 
@@ -615,6 +617,7 @@ export function AppointmentModals({
   if (!derived) return null;
 
   const handleClose = () => {
+    setIsCancelConfirmOpen(false);
     setRedeemLoyalty(false);
     setModalState(null);
   };
@@ -801,11 +804,11 @@ export function AppointmentModals({
         : t("agenda.completeAndPay");
     const openCancelAppointmentDialog = () => {
       if (!selectedAppointment) return;
-      setModalState({
-        appointmentId: selectedAppointment.id,
-        mode: "delete",
-        nonce: Date.now(),
-      });
+      setIsCancelConfirmOpen(true);
+    };
+    const handleConfirmCancellation = () => {
+      setIsCancelConfirmOpen(false);
+      onDelete();
     };
     const handleRecordPayment = () => {
       if (!selectedAppointment || !onCreateSale) return;
@@ -814,7 +817,8 @@ export function AppointmentModals({
       });
     };
     return (
-      <Dialog open={!!modalState} onOpenChange={handleClose}>
+      <>
+        <Dialog open={!!modalState} onOpenChange={handleClose}>
         <DialogContent className="sm:max-w-4xl w-full overflow-x-hidden">
           <DialogHeader>
             <DialogTitle>{t("agenda.appointmentDetails")}</DialogTitle>
@@ -1129,6 +1133,35 @@ export function AppointmentModals({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+        <AlertDialog
+          open={isCancelConfirmOpen}
+          onOpenChange={setIsCancelConfirmOpen}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>
+                {t("agenda.deleteAppointment")}
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                {t("agenda.deleteAppointmentConfirm", {
+                  client: selectedAppointment?.client
+                    ? `${selectedAppointment.client.firstName} ${selectedAppointment.client.lastName}`
+                    : "",
+                })}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleConfirmCancellation}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {isPending ? t("common.loading") : t("common.delete")}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </>
     );
   }
 

@@ -12,6 +12,7 @@ import {
 } from '@/constants/i18n';
 import { changeLanguage as loadAndChangeLanguage } from '@/i18n';
 import { useDirection, type Direction } from './useDirection';
+import { useAuthContext } from '@/contexts/AuthProvider';
 
 interface LanguageOption {
   code: SupportedLanguage;
@@ -33,6 +34,7 @@ interface UseLanguageReturn {
   availableCurrencies: CurrencyConfig[];
   changeCurrency: (currencyCode: string) => void;
   formatCurrency: (value: number) => string;
+  isCurrencyLocked: boolean;
 }
 
 const supportedLanguages = Object.values(SUPPORTED_LANGUAGES);
@@ -41,8 +43,24 @@ const noDecimalCurrencies = ['DZD', 'MAD', 'TND'];
 export function useLanguage(): UseLanguageReturn {
   const { t, i18n } = useTranslation();
   const { direction, isRTL, isLTR } = useDirection();
+  const { user } = useAuthContext();
 
   const currentLanguage = (i18n.language || 'en') as SupportedLanguage;
+  const salonCurrencyCode = useMemo(() => {
+    const value = user?.salon?.settings?.currency;
+    if (typeof value !== 'string') {
+      return null;
+    }
+
+    const normalized = value.trim().toUpperCase();
+    if (!normalized) {
+      return null;
+    }
+
+    return AVAILABLE_CURRENCIES.some((currency) => currency.code === normalized)
+      ? normalized
+      : null;
+  }, [user?.salon?.settings?.currency]);
 
   // Initialize currency from localStorage or language default
   const [currencyCode, setCurrencyCode] = useState<string>(() => {
@@ -73,14 +91,28 @@ export function useLanguage(): UseLanguageReturn {
   );
 
   const changeCurrency = useCallback((code: string) => {
+    if (salonCurrencyCode) {
+      return;
+    }
+
     const found = AVAILABLE_CURRENCIES.find((currency) => currency.code === code);
     if (found) {
       setCurrencyCode(code);
       localStorage.setItem(CURRENCY_STORAGE_KEY, code);
     }
-  }, []);
+  }, [salonCurrencyCode]);
 
   const currency = useMemo(() => {
+    if (salonCurrencyCode) {
+      const salonCurrency = AVAILABLE_CURRENCIES.find(
+        (availableCurrency) => availableCurrency.code === salonCurrencyCode
+      );
+
+      if (salonCurrency) {
+        return salonCurrency;
+      }
+    }
+
     const matchedCurrency = AVAILABLE_CURRENCIES.find(
       (availableCurrency) => availableCurrency.code === currencyCode
     );
@@ -89,7 +121,7 @@ export function useLanguage(): UseLanguageReturn {
     }
 
     return LANGUAGE_CURRENCIES[currentLanguage] || AVAILABLE_CURRENCIES[0];
-  }, [currencyCode, currentLanguage]);
+  }, [currencyCode, currentLanguage, salonCurrencyCode]);
 
   const formatCurrency = useCallback(
     (value: number): string => {
@@ -125,5 +157,6 @@ export function useLanguage(): UseLanguageReturn {
     availableCurrencies: AVAILABLE_CURRENCIES,
     changeCurrency,
     formatCurrency,
+    isCurrencyLocked: !!salonCurrencyCode,
   };
 }
