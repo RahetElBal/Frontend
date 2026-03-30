@@ -12,12 +12,6 @@ export const clientFormSchema = z.object({
       message: "validation.custom.phoneInvalid",
     },
   ),
-  birthDate: z
-    .string()
-    .optional()
-    .refine((value) => !value || /^\d{4}-\d{2}-\d{2}$/.test(value), {
-      message: "validation.date.invalid",
-    }),
   isMarried: z.boolean().optional(),
   salonId: z.string().uuid().optional(),
 });

@@ -415,30 +415,6 @@ export function SalonModals({
     };
   }, [logoPreview]);
 
-  useEffect(() => {
-    const isCreateModal = modalState?.salonId === "create";
-    if (!isCreateModal) return;
-    if (user?.isSuperadmin !== true) return;
-    if (!selectedOwnerId) return;
-
-    const selectedAdmin = admins.find((admin) => admin.id === selectedOwnerId);
-    if (!selectedAdmin?.email) return;
-
-    const currentEmail = form.getValues("email");
-    if (currentEmail === selectedAdmin.email) return;
-
-    form.setValue("email", selectedAdmin.email, {
-      shouldDirty: true,
-      shouldValidate: true,
-    });
-  }, [
-    modalState?.salonId,
-    user?.isSuperadmin,
-    selectedOwnerId,
-    admins,
-    form,
-  ]);
-
   if (!derived) return null;
 
   const showNoAdmins = adminsLoaded && admins.length === 0;
@@ -455,12 +431,20 @@ export function SalonModals({
     }
 
     const normalizedPhone = normalizePhone(data.phone);
-    const payload = {
-      ...data,
-      phone: normalizedPhone || data.phone,
-      logo: data.logo?.trim() || undefined,
-      ...(derived.isSuperadmin && { ownerId: selectedOwnerId }),
-    };
+    const payload = derived.isCreateMode
+      ? {
+          name: data.name,
+          address: data.address,
+          logo: data.logo?.trim() || undefined,
+          freeTrial: data.freeTrial,
+          ...(derived.isSuperadmin && { ownerId: selectedOwnerId }),
+        }
+      : {
+          ...data,
+          phone: normalizedPhone || data.phone,
+          logo: data.logo?.trim() || undefined,
+          ...(derived.isSuperadmin && { ownerId: selectedOwnerId }),
+        };
 
     // CRUD logic based on salonId
     if (derived.isCreateMode) {
@@ -642,39 +626,43 @@ export function SalonModals({
                 </div>
                 <Input id="address" {...form.register("address")} />
               </div>
-              <div>
-                <Label htmlFor="phone">{t("admin.salons.phone")}</Label>
-                <Controller
-                  name="phone"
-                  control={form.control}
-                  render={({ field }) => (
-                    <PhoneNumberInput
-                      id="phone"
-                      value={field.value}
-                      onChange={field.onChange}
-                      onBlur={field.onBlur}
+              {!derived.isCreateMode && (
+                <>
+                  <div>
+                    <Label htmlFor="phone">{t("admin.salons.phone")}</Label>
+                    <Controller
+                      name="phone"
+                      control={form.control}
+                      render={({ field }) => (
+                        <PhoneNumberInput
+                          id="phone"
+                          value={field.value}
+                          onChange={field.onChange}
+                          onBlur={field.onBlur}
+                        />
+                      )}
                     />
-                  )}
-                />
-                {form.formState.errors.phone && (
-                  <p className="text-sm text-destructive mt-1">
-                    {getErrorMessage(
-                      form.formState.errors.phone.message as string,
+                    {form.formState.errors.phone && (
+                      <p className="text-sm text-destructive mt-1">
+                        {getErrorMessage(
+                          form.formState.errors.phone.message as string,
+                        )}
+                      </p>
                     )}
-                  </p>
-                )}
-              </div>
-              <div>
-                <Label htmlFor="email">{t("admin.salons.email")}</Label>
-                <Input id="email" type="email" {...form.register("email")} />
-                {form.formState.errors.email && (
-                  <p className="text-sm text-destructive mt-1">
-                    {getErrorMessage(
-                      form.formState.errors.email.message as string,
+                  </div>
+                  <div>
+                    <Label htmlFor="email">{t("admin.salons.email")}</Label>
+                    <Input id="email" type="email" {...form.register("email")} />
+                    {form.formState.errors.email && (
+                      <p className="text-sm text-destructive mt-1">
+                        {getErrorMessage(
+                          form.formState.errors.email.message as string,
+                        )}
+                      </p>
                     )}
-                  </p>
-                )}
-              </div>
+                  </div>
+                </>
+              )}
               <div>
                 <Label>{t("admin.salons.logo")}</Label>
                 <div className="flex items-center gap-3">

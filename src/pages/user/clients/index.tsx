@@ -96,7 +96,6 @@ export function ClientsPage() {
       lastName: "",
       email: "",
       phone: "",
-      birthDate: "",
       isMarried: false,
     },
   });
