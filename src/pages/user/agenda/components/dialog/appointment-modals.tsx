@@ -74,15 +74,13 @@ import {
 import { getValidationErrorMessage } from "@/pages/user/utils";
 import { FormErrorMessage } from "@/pages/user/components/form-error-message";
 import { normalizePhone } from "@/common/phone";
+import { isWalkInClient } from "@/common/client";
 import {
   getServiceImage,
   getServiceImageFallback,
   translateServiceName,
 } from "@/common/service-translations";
 import { Autocomplete } from "@/components/autocomplete";
-
-const isWalkInClient = (client: Client) =>
-  (client.email || "").toLowerCase().startsWith("walkin+");
 
 const getClientAutocompleteName = (client: Client) =>
   `${client.firstName || ""} ${client.lastName || ""}`.trim();

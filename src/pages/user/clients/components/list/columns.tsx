@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { MVP_VISIBILITY } from "@/constants/mvp";
+import { isWalkInClient } from "@/common/client";
 import type { Client } from "../../types";
 
 interface ClientColumnsProps {
@@ -20,9 +21,6 @@ interface ClientColumnsProps {
   onEdit: (client: Client) => void;
   onDelete: (client: Client) => void;
 }
-
-const isWalkInClient = (client: Client) =>
-  (client.email || "").toLowerCase().startsWith("walkin+");
 
 export const getClientColumns = ({
   t,
@@ -100,33 +98,41 @@ export const getClientColumns = ({
       key: "actions",
       header: "",
       className: "w-12",
-      render: (client) => (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-8 w-8">
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => onView(client)}>
-              <Eye className="h-4 w-4 me-2" />
-              {t("common.view")}
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onEdit(client)}>
-              <Edit className="h-4 w-4 me-2" />
-              {t("common.edit")}
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onClick={() => onDelete(client)}
-              className="text-destructive"
-            >
-              <Trash2 className="h-4 w-4 me-2" />
-              {t("common.delete")}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      ),
+      render: (client) => {
+        const walkInClient = isWalkInClient(client);
+
+        return (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8">
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => onView(client)}>
+                <Eye className="h-4 w-4 me-2" />
+                {t("common.view")}
+              </DropdownMenuItem>
+              {!walkInClient && (
+                <>
+                  <DropdownMenuItem onClick={() => onEdit(client)}>
+                    <Edit className="h-4 w-4 me-2" />
+                    {t("common.edit")}
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={() => onDelete(client)}
+                    className="text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4 me-2" />
+                    {t("common.delete")}
+                  </DropdownMenuItem>
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        );
+      },
     },
   ];
 

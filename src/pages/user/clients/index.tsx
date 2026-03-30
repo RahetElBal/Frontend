@@ -8,6 +8,7 @@ import { ServerDataTable } from "@/components/table";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useSalonDateTime } from "@/hooks/useSalonDateTime";
 import { useForm } from "@/hooks/useForm";
+import { isWalkInClient } from "@/common/client";
 import type { Client } from "./types";
 import { ClientModals } from "./components/dialog/client-modals";
 import type { ClientModalState } from "./types";
@@ -105,10 +106,20 @@ export function ClientsPage() {
   };
 
   const handleEdit = (client: Client) => {
+    if (isWalkInClient(client)) {
+      setModalState({ clientId: client.id, mode: "view" });
+      return;
+    }
+
     setModalState({ clientId: client.id, mode: "edit" });
   };
 
   const handleDelete = (client: Client) => {
+    if (isWalkInClient(client)) {
+      setModalState({ clientId: client.id, mode: "view" });
+      return;
+    }
+
     setModalState({ clientId: client.id, mode: "delete" });
   };
 

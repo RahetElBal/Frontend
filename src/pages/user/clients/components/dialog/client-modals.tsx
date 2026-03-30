@@ -39,6 +39,7 @@ import { getValidationErrorMessage } from "@/pages/user/utils";
 import { FormErrorMessage } from "@/pages/user/components/form-error-message";
 import { normalizePhone } from "@/common/phone";
 import { useSalonDateTime } from "@/hooks/useSalonDateTime";
+import { isWalkInClient } from "@/common/client";
 
 interface ClientModalsProps {
   modalState: ClientModalState;
@@ -78,6 +79,7 @@ export function ClientModals({
     if (!modalState || modalState.clientId === "create") return null;
     return clients.find((c) => c.id === modalState.clientId) || null;
   }, [modalState, clients]);
+  const selectedClientIsWalkIn = isWalkInClient(selectedClient);
 
   const { mutate: createClientMutate, isPending: isCreating } = usePost<
     Client,
@@ -204,11 +206,30 @@ export function ClientModals({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [modalState, selectedClient]);
 
+  useEffect(() => {
+    if (!modalState) return;
+    if (modalState.clientId === "create") return;
+    if (!selectedClient) return;
+    if (!selectedClientIsWalkIn) return;
+    if (modalState.mode === "view") return;
+
+    setModalState({ clientId: selectedClient.id, mode: "view" });
+  }, [modalState, selectedClient, selectedClientIsWalkIn, setModalState]);
+
   if (!derived) return null;
+
+  if (!derived.isCreateMode && selectedClientIsWalkIn && derived.mode !== "view") {
+    return null;
+  }
 
   const handleClose = () => setModalState(null);
 
   const handleSubmit = (data: ClientFormData) => {
+    if (!derived.isCreateMode && selectedClientIsWalkIn) {
+      toast.error(t("common.error"));
+      return;
+    }
+
     const normalizedEmail = data.email?.trim();
     const normalizedPhone = normalizePhone(data.phone);
     const payload: ClientFormData = {
@@ -231,6 +252,11 @@ export function ClientModals({
   };
 
   const handleDelete = () => {
+    if (selectedClientIsWalkIn) {
+      toast.error(t("common.error"));
+      return;
+    }
+
     deleteClientMutate();
   };
 
@@ -339,7 +365,7 @@ export function ClientModals({
                         </Badge>
                       </div>
                     </div>
-                    {canManageLoyalty && (
+                    {canManageLoyalty && !selectedClientIsWalkIn && (
                       <div className="flex gap-1">
                         <Button
                           variant="outline"
@@ -405,7 +431,7 @@ export function ClientModals({
           )}
           <DialogFooter className="flex-col sm:flex-row gap-2">
             <div className="flex gap-2">
-              {selectedClient && selectedClient.isActive && (
+              {selectedClient && selectedClient.isActive && !selectedClientIsWalkIn && (
                 <Button
                   variant="outline"
                   onClick={() => archiveClientMutate(selectedClient.id)}
@@ -420,7 +446,7 @@ export function ClientModals({
               <Button variant="outline" onClick={handleClose}>
                 {t("common.close")}
               </Button>
-              {selectedClient && (
+              {selectedClient && !selectedClientIsWalkIn && (
                 <Button
                   onClick={() =>
                     setModalState({ clientId: selectedClient.id, mode: "edit" })
