@@ -29,6 +29,7 @@ import { useUser } from "@/hooks/useUser";
 import { useLanguage } from "@/hooks/useLanguage";
 import { getCurrentDateTimeInTimeZone } from "@/common/date";
 import { normalizePhone } from "@/common/phone";
+import { AppRole } from "@/constants/enum";
 import { patch, post } from "@/lib/http";
 import type { ApiError } from "@/types/api";
 import type { SalonSettings } from "@/pages/admin/salon/types";
@@ -386,7 +387,12 @@ export function AgendaPage() {
   }, [staffMembers, user, canSelectStaff, viewMode, t]);
   const availabilityStaffMembers = useMemo(() => {
     const list: User[] = [];
-    if (user?.role === "user" && user?.id) {
+
+    const shouldIncludeCurrentUser =
+      !!user?.id &&
+      (user.role === AppRole.USER || user.role === AppRole.ADMIN);
+
+    if (shouldIncludeCurrentUser) {
       list.push(user as User);
     }
     const deduped = new Set(list.map((member) => member.id));

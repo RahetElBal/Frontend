@@ -844,11 +844,14 @@ export const fr = {
     actor: "Par {{name}}",
     statuses: {
       paid: "Payé",
+      confirmed: "Confirmé",
       pending: "En attente",
       in_progress: "En cours",
       cancelled: "Annulé",
       completed: "Terminé",
       overdue: "En retard",
+      refunded: "Remboursé",
+      reimbursed: "Remboursé",
     },
     types: {
       appointmentCreated: {

@@ -767,11 +767,14 @@ export const es = {
     actor: "Por {{name}}",
     statuses: {
       paid: "Pagado",
+      confirmed: "Confirmado",
       pending: "Pendiente",
       in_progress: "En curso",
       cancelled: "Cancelado",
       completed: "Completado",
       overdue: "Retrasado",
+      refunded: "Reembolsado",
+      reimbursed: "Reembolsado",
     },
     types: {
       appointmentCreated: {

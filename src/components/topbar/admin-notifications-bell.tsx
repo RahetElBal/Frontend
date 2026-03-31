@@ -31,6 +31,11 @@ import { ROUTES } from "@/constants/navigation";
 import { API_BASE_URL } from "@/lib/http";
 import { AdminNotificationType } from "@/pages/user/notifications/enum";
 import type { AdminNotification } from "@/pages/user/notifications/types";
+import {
+  getNotificationStatusBadge,
+  getNotificationStatusLabel,
+  type NotificationPayload,
+} from "@/pages/user/notifications/utils";
 
 const NOTIFICATIONS_POLL_MS = 15000;
 const STREAM_RETRY_MS = 5000;
@@ -298,23 +303,6 @@ export function AdminNotificationsBell() {
     return null;
   }
 
-  type NotificationPayload = {
-    clientName?: string;
-    serviceName?: string;
-    salonName?: string;
-    date?: string;
-    time?: string;
-    staffId?: string;
-    appointmentId?: string;
-    saleId?: string;
-    total?: number | string;
-    paymentStatus?: string;
-    status?: string;
-    actorName?: string;
-    ticketId?: string;
-    thresholdHours?: number | string;
-  };
-
   const toPayload = (notification: AdminNotification): NotificationPayload =>
     (notification.payload || {}) as NotificationPayload;
 
@@ -346,31 +334,6 @@ export function AdminNotificationsBell() {
     return `${parsed} ${t("common.hours")}`;
   };
 
-  const getStatusBadge = (payload: NotificationPayload) => {
-    const rawStatus = payload.paymentStatus || payload.status;
-    if (!rawStatus) return null;
-    const normalized = String(rawStatus).toLowerCase();
-    if (normalized === "paid") {
-      return { label: t("notifications.statuses.paid"), variant: "success" as const };
-    }
-    if (normalized === "pending") {
-      return { label: t("notifications.statuses.pending"), variant: "warning" as const };
-    }
-    if (normalized === "in_progress") {
-      return { label: t("notifications.statuses.in_progress"), variant: "info" as const };
-    }
-    if (normalized === "cancelled") {
-      return { label: t("notifications.statuses.cancelled"), variant: "error" as const };
-    }
-    if (normalized === "overdue") {
-      return { label: t("notifications.statuses.overdue"), variant: "error" as const };
-    }
-    if (normalized === "completed") {
-      return { label: t("notifications.statuses.completed"), variant: "success" as const };
-    }
-    return null;
-  };
-
   const getNotificationContent = (notification: AdminNotification) => {
     const payload = toPayload(notification);
     const hasPayload =
@@ -388,11 +351,7 @@ export function AdminNotificationsBell() {
     const date = payload.date || "";
     const time = payload.time || "";
     const amount = formatAmount(payload.total);
-    const statusLabel =
-      payload.status &&
-      t(`notifications.statuses.${String(payload.status).toLowerCase()}`, {
-        defaultValue: String(payload.status),
-      });
+    const statusLabel = getNotificationStatusLabel(t, payload.status);
 
     switch (notification.type) {
       case AdminNotificationType.APPOINTMENT_CREATED:
@@ -674,7 +633,11 @@ export function AdminNotificationsBell() {
                 typeof payload.actorName === "string" && payload.actorName.trim()
                   ? payload.actorName.trim()
                   : null;
-              const statusBadge = getStatusBadge(payload);
+              const statusBadge = getNotificationStatusBadge(
+                t,
+                notification,
+                payload,
+              );
               const content = getNotificationContent(notification);
               return (
                 <DropdownMenuItem

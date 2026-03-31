@@ -471,10 +471,14 @@ export interface TranslationKeys {
     actor: string;
     statuses: {
       paid: string;
+      confirmed: string;
       pending: string;
+      in_progress: string;
       overdue: string;
       cancelled: string;
       completed: string;
+      refunded: string;
+      reimbursed: string;
     };
     types: {
       appointmentCreated: {
@@ -1401,11 +1405,14 @@ export const en = {
     actor: "By {{name}}",
     statuses: {
       paid: "Paid",
+      confirmed: "Confirmed",
       pending: "Pending",
       in_progress: "In progress",
       cancelled: "Cancelled",
       completed: "Completed",
       overdue: "Overdue",
+      refunded: "Refunded",
+      reimbursed: "Refunded",
     },
     types: {
       appointmentCreated: {

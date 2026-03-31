@@ -781,11 +781,14 @@ export const ar = {
     actor: "بواسطة {{name}}",
     statuses: {
       paid: "مدفوع",
+      confirmed: "مؤكد",
       pending: "قيد الانتظار",
       in_progress: "قيد التنفيذ",
       cancelled: "ملغى",
       completed: "مكتمل",
       overdue: "متأخر",
+      refunded: "مسترد",
+      reimbursed: "مسترد",
     },
     types: {
       appointmentCreated: {
