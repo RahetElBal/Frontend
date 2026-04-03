@@ -1057,6 +1057,18 @@ export const fr = {
     appointmentReminder: "Rappel de rendez-vous",
     appointmentReminderDescription: "Envoyer un rappel avant le rendez-vous",
     reminderTiming: "Envoyer le rappel",
+    appointmentConfirmationReminder: "Relance de confirmation",
+    appointmentConfirmationReminderDescription:
+      "Envoyer un rappel WhatsApp si le client n'a toujours pas confirme",
+    confirmationReminderTiming: "Envoyer la relance",
+    appointmentConfirmationPdf: "PDF de confirmation",
+    appointmentConfirmationPdfDescription:
+      "Envoyer un PDF elegant avec les details du rendez-vous apres confirmation",
+    appointmentPdfBackgroundImage: "URL image de fond du PDF",
+    appointmentPdfBackgroundImageDescription:
+      "Image optionnelle du salon pour le fond du PDF. Si vide, le logo du salon sera utilise quand il est disponible.",
+    appointmentPdfBackgroundImagePlaceholder:
+      "https://votre-cdn.com/fond-salon.jpg",
     birthdayGreeting: "Voeux d'anniversaire",
     birthdayGreetingDescription: "Envoyer des voeux d'anniversaire aux clients",
     reviewRequest: "Demande d'avis",

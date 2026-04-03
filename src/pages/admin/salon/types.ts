@@ -26,6 +26,14 @@ export interface SalonSettings {
   loyaltyRewardServiceId?: string;
   loyaltyRewardDiscountType?: LoyaltyRewardDiscountType;
   loyaltyRewardDiscountValue?: number;
+  sendAppointmentConfirmation?: boolean;
+  sendAppointmentReminder?: boolean;
+  reminderHoursBefore?: number;
+  sendAppointmentConfirmationReminder?: boolean;
+  confirmationReminderHoursBefore?: number;
+  sendAppointmentConfirmationPdf?: boolean;
+  appointmentPdfBackgroundImage?: string;
+  sendBirthdayGreeting?: boolean;
 }
 
 export interface Salon extends BaseEntity {

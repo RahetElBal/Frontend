@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 
 import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -17,6 +18,7 @@ export function NotificationSettings({
   updateField,
 }: SettingsSectionProps) {
   const { t } = useTranslation();
+  const reminderOptions = [1, 2, 4, 6, 12, 24, 48];
 
   return (
     <Card className="p-6 space-y-6">
@@ -25,6 +27,65 @@ export function NotificationSettings({
       </h2>
 
       <div className="space-y-4">
+        <div className="flex items-center justify-between p-4 border rounded-lg">
+          <div>
+            <p className="font-medium">
+              {t("salonSettings.appointmentConfirmation")}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              {t("salonSettings.appointmentConfirmationDescription")}
+            </p>
+          </div>
+          <Switch
+            checked={Boolean(formData.sendAppointmentConfirmation)}
+            onCheckedChange={(checked) =>
+              updateField("sendAppointmentConfirmation", checked)
+            }
+          />
+        </div>
+
+        <div className="flex items-center justify-between p-4 border rounded-lg">
+          <div>
+            <p className="font-medium">
+              {t("salonSettings.appointmentConfirmationReminder")}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              {t("salonSettings.appointmentConfirmationReminderDescription")}
+            </p>
+          </div>
+          <Switch
+            checked={Boolean(formData.sendAppointmentConfirmationReminder)}
+            onCheckedChange={(checked) =>
+              updateField("sendAppointmentConfirmationReminder", checked)
+            }
+          />
+        </div>
+
+        {formData.sendAppointmentConfirmationReminder && (
+          <div className="ps-4 space-y-2">
+            <Label>{t("salonSettings.confirmationReminderTiming")}</Label>
+            <Select
+              value={String(formData.confirmationReminderHoursBefore ?? 24)}
+              onValueChange={(value) =>
+                updateField("confirmationReminderHoursBefore", parseInt(value))
+              }
+            >
+              <SelectTrigger className="w-48">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {reminderOptions.map((hours) => (
+                  <SelectItem key={hours} value={String(hours)}>
+                    {hours}{" "}
+                    {hours === 1 ? t("common.hour") : t("common.hours")}{" "}
+                    {t("common.before")}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+
         <div className="flex items-center justify-between p-4 border rounded-lg">
           <div>
             <p className="font-medium">
@@ -46,7 +107,7 @@ export function NotificationSettings({
           <div className="ps-4 space-y-2">
             <Label>{t("salonSettings.reminderTiming")}</Label>
             <Select
-              value={String(formData.reminderHoursBefore)}
+              value={String(formData.reminderHoursBefore ?? 2)}
               onValueChange={(value) =>
                 updateField("reminderHoursBefore", parseInt(value))
               }
@@ -55,20 +116,50 @@ export function NotificationSettings({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="1">
-                  1 {t("common.hour")} {t("common.before")}
-                </SelectItem>
-                <SelectItem value="2">
-                  2 {t("common.hours")} {t("common.before")}
-                </SelectItem>
-                <SelectItem value="24">
-                  24 {t("common.hours")} {t("common.before")}
-                </SelectItem>
-                <SelectItem value="48">
-                  48 {t("common.hours")} {t("common.before")}
-                </SelectItem>
+                {reminderOptions.map((hours) => (
+                  <SelectItem key={hours} value={String(hours)}>
+                    {hours}{" "}
+                    {hours === 1 ? t("common.hour") : t("common.hours")}{" "}
+                    {t("common.before")}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
+          </div>
+        )}
+
+        <div className="flex items-center justify-between p-4 border rounded-lg">
+          <div>
+            <p className="font-medium">
+              {t("salonSettings.appointmentConfirmationPdf")}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              {t("salonSettings.appointmentConfirmationPdfDescription")}
+            </p>
+          </div>
+          <Switch
+            checked={Boolean(formData.sendAppointmentConfirmationPdf)}
+            onCheckedChange={(checked) =>
+              updateField("sendAppointmentConfirmationPdf", checked)
+            }
+          />
+        </div>
+
+        {formData.sendAppointmentConfirmationPdf && (
+          <div className="ps-4 space-y-2">
+            <Label>{t("salonSettings.appointmentPdfBackgroundImage")}</Label>
+            <Input
+              value={formData.appointmentPdfBackgroundImage ?? ""}
+              onChange={(event) =>
+                updateField("appointmentPdfBackgroundImage", event.target.value)
+              }
+              placeholder={t(
+                "salonSettings.appointmentPdfBackgroundImagePlaceholder",
+              )}
+            />
+            <p className="text-sm text-muted-foreground">
+              {t("salonSettings.appointmentPdfBackgroundImageDescription")}
+            </p>
           </div>
         )}
 
