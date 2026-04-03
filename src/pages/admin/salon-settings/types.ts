@@ -20,10 +20,6 @@ export interface SalonSettingsExtended extends BaseEntity {
   sendAppointmentConfirmation: boolean;
   sendAppointmentReminder: boolean;
   reminderHoursBefore: number;
-  sendAppointmentConfirmationReminder: boolean;
-  confirmationReminderHoursBefore: number;
-  sendAppointmentConfirmationPdf: boolean;
-  appointmentPdfBackgroundImage?: string;
   sendBirthdayGreeting: boolean;
   taxEnabled: boolean;
   taxRate: number;

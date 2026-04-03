@@ -29,10 +29,6 @@ export interface SalonSettings {
   sendAppointmentConfirmation?: boolean;
   sendAppointmentReminder?: boolean;
   reminderHoursBefore?: number;
-  sendAppointmentConfirmationReminder?: boolean;
-  confirmationReminderHoursBefore?: number;
-  sendAppointmentConfirmationPdf?: boolean;
-  appointmentPdfBackgroundImage?: string;
   sendBirthdayGreeting?: boolean;
 }
 

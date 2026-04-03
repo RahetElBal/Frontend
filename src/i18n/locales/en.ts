@@ -1622,21 +1622,9 @@ export const en = {
     appointmentConfirmation: "Appointment confirmation",
     appointmentConfirmationDescription:
       "Send confirmation when appointment is booked",
-    appointmentConfirmationReminder: "Pending confirmation reminder",
-    appointmentConfirmationReminderDescription:
-      "Send a WhatsApp follow-up when the client still has not confirmed",
     appointmentReminder: "Appointment reminder",
     appointmentReminderDescription: "Send reminder before appointment",
     reminderTiming: "Send reminder",
-    confirmationReminderTiming: "Send confirmation reminder",
-    appointmentConfirmationPdf: "Confirmation PDF",
-    appointmentConfirmationPdfDescription:
-      "Send a branded PDF with the appointment details after confirmation",
-    appointmentPdfBackgroundImage: "PDF background image URL",
-    appointmentPdfBackgroundImageDescription:
-      "Optional salon image used in the PDF background. If empty, the salon logo is used when available.",
-    appointmentPdfBackgroundImagePlaceholder:
-      "https://your-cdn.com/salon-background.jpg",
     birthdayGreeting: "Birthday greeting",
     birthdayGreetingDescription: "Send birthday wishes to clients",
     reviewRequest: "Review request",

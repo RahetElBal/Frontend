@@ -1,7 +1,6 @@
 import { useTranslation } from "react-i18next";
 
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -47,48 +46,6 @@ export function NotificationSettings({
         <div className="flex items-center justify-between p-4 border rounded-lg">
           <div>
             <p className="font-medium">
-              {t("salonSettings.appointmentConfirmationReminder")}
-            </p>
-            <p className="text-sm text-muted-foreground">
-              {t("salonSettings.appointmentConfirmationReminderDescription")}
-            </p>
-          </div>
-          <Switch
-            checked={Boolean(formData.sendAppointmentConfirmationReminder)}
-            onCheckedChange={(checked) =>
-              updateField("sendAppointmentConfirmationReminder", checked)
-            }
-          />
-        </div>
-
-        {formData.sendAppointmentConfirmationReminder && (
-          <div className="ps-4 space-y-2">
-            <Label>{t("salonSettings.confirmationReminderTiming")}</Label>
-            <Select
-              value={String(formData.confirmationReminderHoursBefore ?? 24)}
-              onValueChange={(value) =>
-                updateField("confirmationReminderHoursBefore", parseInt(value))
-              }
-            >
-              <SelectTrigger className="w-48">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {reminderOptions.map((hours) => (
-                  <SelectItem key={hours} value={String(hours)}>
-                    {hours}{" "}
-                    {hours === 1 ? t("common.hour") : t("common.hours")}{" "}
-                    {t("common.before")}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
-
-        <div className="flex items-center justify-between p-4 border rounded-lg">
-          <div>
-            <p className="font-medium">
               {t("salonSettings.appointmentReminder")}
             </p>
             <p className="text-sm text-muted-foreground">
@@ -125,41 +82,6 @@ export function NotificationSettings({
                 ))}
               </SelectContent>
             </Select>
-          </div>
-        )}
-
-        <div className="flex items-center justify-between p-4 border rounded-lg">
-          <div>
-            <p className="font-medium">
-              {t("salonSettings.appointmentConfirmationPdf")}
-            </p>
-            <p className="text-sm text-muted-foreground">
-              {t("salonSettings.appointmentConfirmationPdfDescription")}
-            </p>
-          </div>
-          <Switch
-            checked={Boolean(formData.sendAppointmentConfirmationPdf)}
-            onCheckedChange={(checked) =>
-              updateField("sendAppointmentConfirmationPdf", checked)
-            }
-          />
-        </div>
-
-        {formData.sendAppointmentConfirmationPdf && (
-          <div className="ps-4 space-y-2">
-            <Label>{t("salonSettings.appointmentPdfBackgroundImage")}</Label>
-            <Input
-              value={formData.appointmentPdfBackgroundImage ?? ""}
-              onChange={(event) =>
-                updateField("appointmentPdfBackgroundImage", event.target.value)
-              }
-              placeholder={t(
-                "salonSettings.appointmentPdfBackgroundImagePlaceholder",
-              )}
-            />
-            <p className="text-sm text-muted-foreground">
-              {t("salonSettings.appointmentPdfBackgroundImageDescription")}
-            </p>
           </div>
         )}
 
