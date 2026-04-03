@@ -1343,8 +1343,20 @@ export function AppointmentModals({
                         />
                       )}
                     />
+                    <p className="text-xs text-muted-foreground">
+                      {t("common.whatsappClientHint")}
+                    </p>
                     <FormErrorMessage
                       message={getErrorMessage("walkInPhone")}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="notes">{t("fields.notes")}</Label>
+                    <Textarea
+                      id="notes"
+                      {...form.register("notes")}
+                      rows={2}
+                      placeholder={t("agenda.notesPlaceholder")}
                     />
                   </div>
                   <div className="space-y-2">
@@ -1648,15 +1660,17 @@ export function AppointmentModals({
                 </div>
               )}
 
-              <div className="space-y-2">
-                <Label htmlFor="notes">{t("fields.notes")}</Label>
-                <Textarea
-                  id="notes"
-                  {...form.register("notes")}
-                  rows={2}
-                  placeholder={t("agenda.notesPlaceholder")}
-                />
-              </div>
+              {!walkInEnabled && (
+                <div className="space-y-2">
+                  <Label htmlFor="notes">{t("fields.notes")}</Label>
+                  <Textarea
+                    id="notes"
+                    {...form.register("notes")}
+                    rows={2}
+                    placeholder={t("agenda.notesPlaceholder")}
+                  />
+                </div>
+              )}
             </div>
 
             <DialogFooter>

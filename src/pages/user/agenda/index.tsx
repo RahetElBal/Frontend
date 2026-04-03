@@ -804,7 +804,15 @@ export function AgendaPage() {
             nextAppointments.push(nextAppointment);
           }
         } else {
-          nextAppointments[targetIndex] = nextAppointment;
+          const previousAppointment = nextAppointments[targetIndex];
+          nextAppointments[targetIndex] = {
+            ...previousAppointment,
+            ...nextAppointment,
+            client: nextAppointment.client ?? previousAppointment?.client,
+            service: nextAppointment.service ?? previousAppointment?.service,
+            staff: nextAppointment.staff ?? previousAppointment?.staff,
+            salon: nextAppointment.salon ?? previousAppointment?.salon,
+          };
         }
         const nextDeletedIds = new Set(base.deletedIds);
         if (replacedAppointmentId) {

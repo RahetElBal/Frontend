@@ -69,6 +69,8 @@ export const fr = {
     success: "Succès",
     total: "Total",
     new: "Nouveau",
+    whatsappClientHint:
+      "Demander au client s'il a WhatsApp pour qu'il reçoive tout.",
   },
   search: {
     searchPlaceholder: "Rechercher...",

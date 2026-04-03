@@ -512,6 +512,10 @@ export function ClientModals({
                   />
                 )}
               />
+              <p className="text-xs text-muted-foreground">
+                {t("common.whatsappClientHint")}
+              </p>
+              <FormErrorMessage message={getErrorMessage("phone")} />
             </div>
             <div className="flex items-center justify-between rounded-lg border p-3">
               <div>

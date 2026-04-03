@@ -51,6 +51,7 @@ export interface TranslationKeys {
     success: string;
     total: string;
     new: string;
+    whatsappClientHint: string;
     detectAddress: string;
   };
   search: {
@@ -596,6 +597,8 @@ export const en = {
     success: "Success",
     total: "Total",
     new: "New",
+    whatsappClientHint:
+      "Ask the client if they have WhatsApp so they can receive everything.",
   },
   search: {
     searchPlaceholder: "Search...",
