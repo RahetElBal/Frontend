@@ -1755,6 +1755,7 @@ export const en = {
       addSalonDescription: "Add a salon",
       editSalonDescription: "Edit salon details",
       address: "Address",
+      mapsUrl: "Google Maps link",
       phone: "Phone Number",
       email: "Email",
       plan: "Plan",

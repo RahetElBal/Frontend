@@ -9,6 +9,13 @@ export const createSalonFormSchema = (
       .string()
       .min(1, t("validation.required", { field: t("fields.name") })),
     address: z.string().optional(),
+    mapsUrl: z
+      .string()
+      .optional()
+      .refine(
+        (val) => !val || z.string().url().safeParse(val).success,
+        t("validation.url"),
+      ),
     phone: z
       .string()
       .optional()

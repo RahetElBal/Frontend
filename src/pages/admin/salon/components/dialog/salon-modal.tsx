@@ -57,6 +57,19 @@ interface SalonModalProps {
   adminsLoaded: boolean;
 }
 
+type SalonMutationPayload = {
+  name: string;
+  address?: string;
+  phone?: string;
+  email?: string;
+  logo?: string;
+  settings?: {
+    mapsUrl?: string;
+  };
+  ownerId?: string;
+  freeTrial?: boolean;
+};
+
 export function SalonModals({
   modalState,
   setModalState,
@@ -87,6 +100,7 @@ export function SalonModals({
     defaultValues: {
       name: "",
       address: "",
+      mapsUrl: "",
       phone: "",
       email: "",
       logo: "",
@@ -118,7 +132,7 @@ export function SalonModals({
   // Mutations - defined inside the modal component
   const { mutate: createSalonMutate, isPending: isCreating } = usePost<
     Salon,
-    SalonFormData & { ownerId?: string }
+    SalonMutationPayload
   >("salons", {
     invalidate: ["salons", "salons/stats/summary"],
     onSuccess: () => {
@@ -132,7 +146,7 @@ export function SalonModals({
 
   const { mutate: updateSalonMutate, isPending: isUpdating } = usePost<
     Salon,
-    SalonFormData & { ownerId?: string }
+    SalonMutationPayload
   >(`salons/${selectedSalon?.id}`, {
     method: "PATCH",
     invalidate: ["salons", "salons/stats/summary"],
@@ -367,6 +381,7 @@ export function SalonModals({
           {
             name: "",
             address: "",
+            mapsUrl: "",
             phone: "",
             email: "",
             logo: "",
@@ -388,6 +403,7 @@ export function SalonModals({
           {
             name: selectedSalon.name,
             address: selectedSalon.address || "",
+            mapsUrl: selectedSalon.settings?.mapsUrl || "",
             phone: selectedSalon.phone || "",
             email: selectedSalon.email || "",
             logo: selectedSalon.logo || "",
@@ -431,18 +447,27 @@ export function SalonModals({
     }
 
     const normalizedPhone = normalizePhone(data.phone);
+    const trimmedMapsUrl = data.mapsUrl?.trim() || undefined;
     const payload = derived.isCreateMode
       ? {
           name: data.name,
           address: data.address,
           logo: data.logo?.trim() || undefined,
+          settings: {
+            mapsUrl: trimmedMapsUrl,
+          },
           freeTrial: data.freeTrial,
           ...(derived.isSuperadmin && { ownerId: selectedOwnerId }),
         }
       : {
-          ...data,
+          name: data.name,
+          address: data.address,
           phone: normalizedPhone || data.phone,
+          email: data.email,
           logo: data.logo?.trim() || undefined,
+          settings: {
+            mapsUrl: trimmedMapsUrl,
+          },
           ...(derived.isSuperadmin && { ownerId: selectedOwnerId }),
         };
 
@@ -537,6 +562,21 @@ export function SalonModals({
               </p>
             </div>
             <div>
+              <Label>{t("admin.salons.mapsUrl")}</Label>
+              {selectedSalon?.settings?.mapsUrl ? (
+                <a
+                  href={selectedSalon.settings.mapsUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-sm text-primary underline underline-offset-4 break-all"
+                >
+                  {selectedSalon.settings.mapsUrl}
+                </a>
+              ) : (
+                <p className="text-sm text-muted-foreground">-</p>
+              )}
+            </div>
+            <div>
               <Label>{t("admin.salons.phone")}</Label>
               <p className="text-sm text-muted-foreground">
                 {selectedSalon?.phone || "-"}
@@ -625,6 +665,22 @@ export function SalonModals({
                   </Button>
                 </div>
                 <Input id="address" {...form.register("address")} />
+              </div>
+              <div>
+                <Label htmlFor="mapsUrl">{t("admin.salons.mapsUrl")}</Label>
+                <Input
+                  id="mapsUrl"
+                  type="url"
+                  placeholder="https://maps.google.com/..."
+                  {...form.register("mapsUrl")}
+                />
+                {form.formState.errors.mapsUrl && (
+                  <p className="text-sm text-destructive mt-1">
+                    {getErrorMessage(
+                      form.formState.errors.mapsUrl.message as string,
+                    )}
+                  </p>
+                )}
               </div>
               {!derived.isCreateMode && (
                 <>

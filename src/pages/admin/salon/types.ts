@@ -30,6 +30,7 @@ export interface SalonSettings {
   sendAppointmentReminder?: boolean;
   reminderHoursBefore?: number;
   sendBirthdayGreeting?: boolean;
+  mapsUrl?: string;
 }
 
 export interface Salon extends BaseEntity {

@@ -1175,6 +1175,7 @@ export const fr = {
       addSalonDescription: "Ajouter un salon",
       editSalonDescription: "Modifier les informations du salon",
       address: "Adresse",
+      mapsUrl: "Lien Google Maps",
       phone: "Numéro de téléphone",
       email: "Email",
       plan: "Offre",
