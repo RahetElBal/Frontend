@@ -68,8 +68,6 @@ import {
   getDirtyServiceIds,
   getEditServiceFormState,
   getGroupedServices,
-  getPackDiscountValue,
-  getPackFinalPrice,
   getPackServiceOptions,
   getPackTotals,
   getPriceEditsMap,
@@ -166,12 +164,16 @@ export default function AdminServicesPage() {
     packServiceOptions,
   );
   const packTotals = getPackTotals(selectedPackServices);
-  const packDiscountValue = getPackDiscountValue(formValues);
-  const packFinalPrice = getPackFinalPrice(
-    formValues,
-    packTotals,
-    packDiscountValue,
-  );
+  const packPriceValue = Number(formValues.price);
+  const hasPackPriceInput = formValues.price.trim() !== "";
+  const hasValidPackPrice =
+    hasPackPriceInput &&
+    Number.isFinite(packPriceValue) &&
+    packPriceValue >= 0;
+  const packSavings =
+    formValues.isPack && hasValidPackPrice
+      ? Math.max(0, packTotals.totalPrice - packPriceValue)
+      : 0;
 
   useEffect(() => {
     if (!isSuperadmin) {
@@ -277,7 +279,7 @@ export default function AdminServicesPage() {
   const openEditModal = (service: Service) => {
     setModalMode("edit");
     setEditingServiceId(service.id);
-    const nextState = getEditServiceFormState(service, services);
+    const nextState = getEditServiceFormState(service);
     setLastNonPackCategory(nextState.lastNonPackCategory);
     setFormValues(nextState.formValues);
     serviceModal.open();
@@ -314,19 +316,14 @@ export default function AdminServicesPage() {
 
   const handleSubmitService = async () => {
     const rawDuration = Number(formValues.duration);
+    const hasPriceInput = formValues.price.trim() !== "";
     const price = Number(formValues.price);
-    const discount = Number(formValues.packDiscount);
-    let resolvedDiscount = 0;
     let duration = rawDuration;
     let resolvedPrice = price;
 
-    if (Number.isFinite(discount)) {
-      resolvedDiscount = discount;
-    }
-
     if (formValues.isPack) {
       duration = packTotals.totalDuration;
-      resolvedPrice = Math.max(0, packTotals.totalPrice - resolvedDiscount);
+      resolvedPrice = price;
     }
     if (!formValues.name.trim()) {
       toast.error(t("admin.services.nameRequired"));
@@ -334,6 +331,13 @@ export default function AdminServicesPage() {
     }
     if (!formValues.category.trim()) {
       toast.error(t("admin.services.categoryRequired"));
+      return;
+    }
+    if (
+      formValues.isPack &&
+      formValues.packServiceIds.length === 0
+    ) {
+      toast.error(t("admin.services.packServicesRequired"));
       return;
     }
     if (
@@ -345,16 +349,7 @@ export default function AdminServicesPage() {
       toast.error(t("admin.services.durationInvalid"));
       return;
     }
-    if (formValues.isPack && formValues.packServiceIds.length === 0) {
-      toast.error(t("admin.services.packServicesRequired"));
-      return;
-    }
-    if (formValues.isPack) {
-      if (!Number.isFinite(discount) || discount < 0) {
-        toast.error(t("admin.services.priceInvalid"));
-        return;
-      }
-    } else if (!Number.isFinite(price) || price < 0) {
+    if (!hasPriceInput || !Number.isFinite(price) || price < 0) {
       toast.error(t("admin.services.priceInvalid"));
       return;
     }
@@ -890,45 +885,45 @@ export default function AdminServicesPage() {
                   type="number"
                   min={String(SERVICE_DURATION_STEP_MINUTES)}
                   step={String(SERVICE_DURATION_STEP_MINUTES)}
-                  value={formValues.duration}
-                  onChange={(event) =>
-                    handleFormChange("duration", event.target.value)
+                  value={
+                    formValues.isPack
+                      ? String(packTotals.totalDuration || "")
+                      : formValues.duration
                   }
+                  onChange={(event) => {
+                    if (!formValues.isPack) {
+                      handleFormChange("duration", event.target.value);
+                    }
+                  }}
+                  disabled={formValues.isPack}
                 />
                 <p className="mt-1 text-xs text-muted-foreground">
-                  {t("validation.number.multipleOf", {
-                    field: t("fields.duration"),
-                    value: SERVICE_DURATION_STEP_MINUTES,
-                  })}
+                  {formValues.isPack
+                    ? t("services.packDuration")
+                    : t("validation.number.multipleOf", {
+                        field: t("fields.duration"),
+                        value: SERVICE_DURATION_STEP_MINUTES,
+                      })}
                 </p>
               </div>
-              {formValues.isPack ? (
-                <div>
-                  <Label>{t("sales.discount")}</Label>
-                  <Input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={formValues.packDiscount}
-                    onChange={(event) =>
-                      handleFormChange("packDiscount", event.target.value)
-                    }
-                  />
-                </div>
-              ) : (
-                <div>
-                  <Label>{t("admin.services.priceLabel")}</Label>
-                  <Input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={formValues.price}
-                    onChange={(event) =>
-                      handleFormChange("price", event.target.value)
-                    }
-                  />
-                </div>
-              )}
+              <div>
+                <Label>{t("admin.services.priceLabel")}</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={formValues.price}
+                  onChange={(event) =>
+                    handleFormChange("price", event.target.value)
+                  }
+                />
+                {formValues.isPack && (
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {t("services.packValue")}:{" "}
+                    {formatCurrency(packTotals.totalPrice)}
+                  </p>
+                )}
+              </div>
             </div>
             <div className="rounded-lg border p-3 space-y-3">
               <div className="flex items-center justify-between gap-4">
@@ -988,13 +983,25 @@ export default function AdminServicesPage() {
                       </div>
                     )}
                   </div>
-                  <div className="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2 text-sm">
-                    <span className="text-muted-foreground">
-                      {t("fields.total")}
-                    </span>
-                    <span className="font-semibold text-foreground">
-                      {formatCurrency(packFinalPrice)}
-                    </span>
+                  <div className="rounded-lg bg-muted/50 px-3 py-2 text-sm">
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-muted-foreground">
+                        {t("admin.services.priceLabel")}
+                      </span>
+                      <span className="font-semibold text-foreground">
+                        {hasValidPackPrice
+                          ? formatCurrency(packPriceValue)
+                          : "-"}
+                      </span>
+                    </div>
+                    <div className="mt-1 flex items-center justify-between gap-3">
+                      <span className="text-muted-foreground">
+                        {t("services.packSavings")}
+                      </span>
+                      <span className="font-medium text-foreground">
+                        {formatCurrency(packSavings)}
+                      </span>
+                    </div>
                   </div>
                 </div>
               )}

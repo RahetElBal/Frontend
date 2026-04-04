@@ -24,7 +24,6 @@ export interface ServiceFormValues {
   category: string;
   duration: string;
   price: string;
-  packDiscount: string;
   description: string;
   image: string;
   isActive: boolean;
@@ -47,7 +46,6 @@ export const createDefaultServiceFormValues = (): ServiceFormValues => ({
   category: "",
   duration: "",
   price: "",
-  packDiscount: "",
   description: "",
   image: "",
   isActive: true,
@@ -153,33 +151,6 @@ export const getPackTotals = (services: Service[]): PackTotals => {
   return { totalDuration, totalPrice };
 };
 
-export const getPackDiscountValue = (
-  formValues: ServiceFormValues,
-): number => {
-  if (!formValues.isPack) {
-    return 0;
-  }
-
-  const parsed = Number(formValues.packDiscount);
-  if (!Number.isFinite(parsed)) {
-    return 0;
-  }
-
-  return parsed;
-};
-
-export const getPackFinalPrice = (
-  formValues: ServiceFormValues,
-  packTotals: PackTotals,
-  packDiscountValue: number,
-): number => {
-  if (!formValues.isPack) {
-    return 0;
-  }
-
-  return Math.max(0, packTotals.totalPrice - packDiscountValue);
-};
-
 export const getPriceEditsMap = (
   services: Service[],
 ): Record<string, string> => {
@@ -204,20 +175,8 @@ export const getDirtyServiceIds = (
 
 export const getEditServiceFormState = (
   service: Service,
-  services: Service[],
 ): EditServiceFormState => {
   const categoryName = getCategoryName(service.category);
-  let packBasePrice = 0;
-
-  (service.packServiceIds ?? []).forEach((serviceId) => {
-    const packService = services.find((entry) => entry.id === serviceId);
-    packBasePrice += Number(packService?.price) || 0;
-  });
-
-  let packDiscount = 0;
-  if (service.isPack) {
-    packDiscount = Math.max(0, packBasePrice - Number(service.price ?? 0));
-  }
 
   let lastNonPackCategory = categoryName;
   if (service.isPack) {
@@ -229,11 +188,6 @@ export const getEditServiceFormState = (
     category = PACK_CATEGORY;
   }
 
-  let packDiscountValue = "";
-  if (service.isPack) {
-    packDiscountValue = String(packDiscount);
-  }
-
   return {
     lastNonPackCategory,
     formValues: {
@@ -241,7 +195,6 @@ export const getEditServiceFormState = (
       category,
       duration: String(service.duration ?? ""),
       price: String(service.price ?? ""),
-      packDiscount: packDiscountValue,
       description: service.description ?? "",
       image: service.image ?? "",
       isActive: service.isActive ?? true,
@@ -275,7 +228,6 @@ export const updateServiceFormValues = (
           ...previousValues,
           isPack: true,
           category: PACK_CATEGORY,
-          packDiscount: "",
         },
       };
     }
@@ -291,7 +243,6 @@ export const updateServiceFormValues = (
         ...previousValues,
         isPack: false,
         category: restoredCategory || "",
-        packDiscount: "",
         packServiceIds: [],
       },
     };
