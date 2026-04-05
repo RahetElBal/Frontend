@@ -7,7 +7,6 @@ import { QueryProvider } from "@/contexts/QueryProvider";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { Toaster } from "@/components/ui/sonner";
 import { SlaWelcomeModal } from "@/components/sla-welcome-modal";
-import { PlanExpiryWarningModal } from "@/components/plan-expiry-warning-modal";
 
 import { initI18n } from "@/i18n";
 import "@/index.css";
@@ -24,7 +23,6 @@ const bootstrap = async () => {
         <QueryProvider>
           <AuthProvider>
             <SlaWelcomeModal />
-            <PlanExpiryWarningModal />
             <ModalsProvider>
               <App />
               <Toaster />

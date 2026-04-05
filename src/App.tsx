@@ -12,6 +12,7 @@ import AuthCallback from "@/routes/auth-callback";
 import LandingPage from "@/routes/landing";
 import TermsPage from "@/routes/terms";
 import PrivacyPage from "@/routes/privacy";
+import { PlanExpiryWarningModal } from "@/components/plan-expiry-warning-modal";
 import { UserLayout } from "@/layouts/user-layout";
 import { AdminLayout } from "@/layouts/admin-layout";
 import { SuperadminLayout } from "@/layouts/superadmin-layout";
@@ -120,6 +121,7 @@ function App() {
 
   return (
     <BrowserRouter>
+      <PlanExpiryWarningModal />
       <Routes>
         {/* Public landing page */}
         <Route path={ROUTES.HOME} element={<LandingPage />} />
